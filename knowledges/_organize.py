@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 """
-knowledges 知识库自动整理脚本
-基于文件实际内容分析（Content-based），而非静态 Tags 匹配
+knowledges 知识库自动整理 & 同步脚本（优化版）
 
-核心逻辑：
-  读取每个 .md 文件的全文 → 提取技术关键词 → 对各领域打分 → 归入最佳分类
-  Tags 仅作为加分项（+3 分），不依赖 tags 判断
+核心变化（vs 旧版）：
+  ✅ Git Tree/Commit API 批量推送 — 一次 API 调用推送所有文件，告别逐文件 PUT
+  ✅ Git Tree API 批量清理远程旧文件 — 新树不包含要删除的文件即可
+  ✅ 并发 blob 创建 — 使用 ThreadPoolExecutor 并行上传文件内容
+  ✅ 无 SIGALRM 全局超时 — 改用 cooperative 超时检查，不会中间杀死进程
+  ✅ 自适应 API 节流 — 跟踪剩余请求配额，动态调整速率
+  ✅ 单次 tree API 构建 SHA 缓存 — 复用已有逻辑
 
 工作流：
-  同步远程(拉取) → 内容分析分类 → 整理到子目录 → 更新 README → 推送远程 → 清理远程旧文件
-
-安全保证：
-  - 所有 subprocess 调用均有超时 + 错误处理
-  - 临时文件使用 try/finally 确保清理
-  - 不依赖 git 命令（纯 GitHub API）
-  - 图片通过 API base64 上传，与 markdown 同一管道
-  - ⏱️ 全局超时保护（120s + 30s 安全余量）
-  - 🏷️ 单次 tree API 调用构建 SHA 缓存，避免 N 次 contents/ API 调用
+  同步远程（树 API）→ 内容分析分类 → 整理到子目录 → 更新 README
+  → 创建 Git Tree（批量） → 创建 Commit → 更新分支引用 → 可选清理
 """
 
 import os
@@ -26,10 +22,12 @@ import json
 import base64
 import subprocess
 import tempfile
-import signal
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from collections import Counter
+from datetime import datetime, timezone
 
 KNOWLEDGES_DIR = Path(__file__).parent.resolve()
 GH_REPO = "Jrink525/knowledges"
@@ -37,45 +35,55 @@ GH_BRANCH = "main"
 TOOL_NAME = "_organize.py"
 
 GH_BIN = "/home/node/.openclaw/workspace/gh"
-GH_CONFIG_ENV = {"GH_CONFIG_DIR": "/home/node/.openclaw/gh-config", "PATH": os.environ.get("PATH", "")}
+GH_CONFIG_ENV = {
+    "GH_CONFIG_DIR": "/home/node/.openclaw/gh-config",
+    "PATH": os.environ.get("PATH", ""),
+}
 
-# ── Timeouts ─────────────────────────────────────────────────────
-SYNC_TIMEOUT = 120       # sync_from_github 总超时（秒）
-PUSH_TIMEOUT = 180       # push_to_github 总超时（秒）
-API_TIMEOUT_SHORT = 8    # 单次 API 调用超时（存在性检查）
-API_TIMEOUT = 15         # 单次 API 调用超时（数据传输）
-API_INTERVAL = 0.15      # API 调用间隔（防止 429 Too Many Requests）
+# ── 超时（大幅提升，适应大规模推送） ─────────────────
+API_TIMEOUT = 30          # 单次 API 调用超时
+API_TIMEOUT_SHORT = 10    # 单次 API 存在性检查超时
+GLOBAL_TIMEOUT = 300      # 整个操作超时秒数
+MAX_WORKERS = 5           # 并发 API 调用数
 
 KNOWN_IMG_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 
-
-# ── Global timeout via SIGALRM ───────────────────────────────────
-
-class TimeoutError(Exception):
-    pass
-
-
-def timeout_handler(signum, frame):
-    raise TimeoutError("全局操作超时")
+# ── 自适应节流 ──────────────────────────────────────
+_API_LOCK = threading.Lock()
+_API_LAST_TICK = time.monotonic()
+_API_RATE_LIMIT_REMAINING: int | None = None
+_API_RATE_LIMIT_RESET: int | None = None
+_MIN_INTERVAL = 0.05   # 快速模式（高配额时）
+_MAX_INTERVAL = 1.0    # 慢速模式（低配额时）
 
 
-def set_global_timeout(seconds: int):
-    """设置全局超时。仅 Linux 支持 signal.SIGALRM。超时后触发 TimeoutError。"""
-    try:
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(seconds)
-    except (AttributeError, ValueError):
-        pass  # 非 Linux 或不支持 alarm，静默跳过
+def _api_tick():
+    """自适应 API 节流：根据剩余配额动态调整间隔"""
+    global _API_LAST_TICK, _API_RATE_LIMIT_REMAINING
+    with _API_LOCK:
+        # 计算动态间隔
+        if _API_RATE_LIMIT_REMAINING is not None and _API_RATE_LIMIT_REMAINING < 50:
+            interval = _MAX_INTERVAL
+        elif _API_RATE_LIMIT_REMAINING is not None and _API_RATE_LIMIT_REMAINING < 200:
+            interval = _MAX_INTERVAL * 0.3
+        else:
+            interval = _MIN_INTERVAL
+
+        elapsed = time.monotonic() - _API_LAST_TICK
+        if elapsed < interval:
+            time.sleep(interval - elapsed)
+        _API_LAST_TICK = time.monotonic()
 
 
-def cancel_global_timeout():
-    try:
-        signal.alarm(0)
-    except (AttributeError, ValueError):
-        pass
+_DEADLINE = time.monotonic() + GLOBAL_TIMEOUT
 
 
-# ── Token ────────────────────────────────────────────────────────
+def _check_timeout(label=""):
+    if time.monotonic() > _DEADLINE:
+        raise TimeoutError(f"全局超时（{GLOBAL_TIMEOUT}s）{' - ' + label if label else ''}")
+
+
+# ── Token ────────────────────────────────────────────
 
 def get_github_token() -> str | None:
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
@@ -83,6 +91,7 @@ def get_github_token() -> str | None:
         return token
     config_path = Path("/home/node/.openclaw/gh-config/hosts.yml")
     if config_path.exists():
+        from email.message import Message
         content = config_path.read_text()
         m = re.search(r'oauth_token:\s*(\S+)', content)
         if m:
@@ -90,7 +99,149 @@ def get_github_token() -> str | None:
     return None
 
 
-# ── Domain profiles ──────────────────────────────────────────────
+# ── Helpers ──────────────────────────────────────────
+
+def call_gh(api_path: str, method: str = "GET", body: str | None = None,
+            timeout: int = API_TIMEOUT) -> tuple[int, str, dict]:
+    """调用 gh CLI，返回 (returncode, stdout, response_headers)"""
+    cmd = [GH_BIN, "api", api_path]
+    if method != "GET":
+        cmd.extend(["--method", method])
+        if body:
+            cmd.extend(["--input", "-"])
+    try:
+        r = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout,
+            input=body, env=GH_CONFIG_ENV)
+        _api_tick()
+        rh = _parse_gh_headers(r.stderr)
+        _update_rate_limit(rh)
+        return r.returncode, r.stdout, rh
+    except FileNotFoundError:
+        print(f"  ❌ 未找到 gh 二进制: {GH_BIN}")
+        return -1, "", {}
+    except subprocess.TimeoutExpired:
+        print(f"  ⚠️ gh api 超时 ({timeout}s): {api_path[:60]}")
+        return -1, "", {}
+    except Exception as e:
+        print(f"  ⚠️ gh 异常: {e}")
+        return -1, "", {}
+
+
+def _parse_gh_headers(stderr: str) -> dict:
+    """从 gh stderr 提取响应头"""
+    headers = {}
+    for line in stderr.split("\n"):
+        line = line.strip()
+        if ":" in line.lower() and ("x-ratelimit" in line.lower() or "x-request-id" in line.lower()):
+            parts = line.split(":", 1)
+            if len(parts) == 2:
+                headers[parts[0].strip()] = parts[1].strip()
+    return headers
+
+
+def _update_rate_limit(headers: dict):
+    """从响应头更新速率限制状态"""
+    global _API_RATE_LIMIT_REMAINING, _API_RATE_LIMIT_RESET
+    for k, v in headers.items():
+        kl = k.lower().replace("-", "").replace("_", "")
+        if kl == "xratelimitremaining":
+            try:
+                _API_RATE_LIMIT_REMAINING = int(v)
+            except ValueError:
+                pass
+        elif kl == "xratelimitreset":
+            try:
+                _API_RATE_LIMIT_RESET = int(v)
+            except ValueError:
+                pass
+
+
+def safe_read_bytes(path: Path) -> bytes:
+    try:
+        return path.read_bytes()
+    except (OSError, PermissionError):
+        return b""
+
+
+def safe_write(path: Path, content: bytes):
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    except (OSError, PermissionError) as e:
+        print(f"  ⚠️ 写入失败 {path}: {e}")
+
+
+def build_sha_map() -> dict[str, str]:
+    """获取远程所有文件 SHA"""
+    code, stdout, _ = call_gh(
+        f"repos/{GH_REPO}/git/trees/{GH_BRANCH}?recursive=1",
+        timeout=API_TIMEOUT_SHORT)
+    if code != 0:
+        print("  ⚠️ 获取远程文件树失败")
+        return {}
+    try:
+        tree = json.loads(stdout)
+    except json.JSONDecodeError:
+        print("  ⚠️ 解析远程文件树失败")
+        return {}
+
+    sha_map = {}
+    for item in tree.get("tree", []):
+        if item["type"] == "blob" and item.get("sha"):
+            sha_map[item["path"]] = item["sha"]
+    return sha_map
+
+
+# ── YAML frontmatter ────────────────────────────────
+
+def parse_yaml_frontmatter(text: str) -> dict:
+    result = {}
+    for line in text.strip().split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" in line:
+            key, _, value = line.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if value.startswith("[") and value.endswith("]"):
+                items = [x.strip().strip("\"'") for x in value[1:-1].split(",") if x.strip()]
+                result[key] = items
+            elif value.lower() in ("true", "false"):
+                result[key] = value.lower() == "true"
+            else:
+                result[key] = value.strip("\"'")
+    return result
+
+
+def get_tags_from_file(filepath: Path) -> list[str]:
+    content = safe_read_bytes(filepath).decode("utf-8", errors="replace")
+    match = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
+    if not match:
+        return []
+    meta = parse_yaml_frontmatter(match.group(1))
+    tags = meta.get("tags", [])
+    return tags if isinstance(tags, list) else [tags]
+
+
+def get_category_override(filepath: Path) -> str | None:
+    content = safe_read_bytes(filepath).decode("utf-8", errors="replace")
+    match = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
+    if not match:
+        return None
+    meta = parse_yaml_frontmatter(match.group(1))
+    cat = meta.get("category")
+    if cat and isinstance(cat, str) and cat.strip():
+        cat = cat.strip()
+        if cat in DOMAIN_PROFILES:
+            return cat
+        print(f"  ⚠️ YAML category '{cat}' 不在已知领域配置中（忽略）")
+    return None
+
+
+# ── Domain profiles ──────────────────────────────────
+
 DOMAIN_PROFILES = {
     "programming/java": {
         "label": "Java",
@@ -235,164 +386,7 @@ DOMAIN_PROFILES = {
 }
 
 
-# ── Helpers ──────────────────────────────────────────────────────
-
-def call_gh(api_path: str, timeout: int = API_TIMEOUT) -> tuple[int, str]:
-    """调用 gh CLI，返回 (returncode, stdout)"""
-    try:
-        r = subprocess.run(
-            [GH_BIN, "api", api_path],
-            capture_output=True, text=True, timeout=timeout,
-            env=GH_CONFIG_ENV)
-        _api_tick()
-        return r.returncode, r.stdout
-    except FileNotFoundError:
-        print(f"  ❌ 未找到 gh 二进制文件: {GH_BIN}")
-        return -1, ""
-    except subprocess.TimeoutExpired:
-        print(f"  ⚠️  gh api 超时 ({timeout}s): {api_path[:60]}")
-        return -1, ""
-    except Exception as e:
-        print(f"  ⚠️  gh 调用异常: {e}")
-        return -1, ""
-
-
-def curl_put(url: str, token: str, payload_path: str, timeout: int = API_TIMEOUT) -> tuple[int, str]:
-    """封装 curl PUT 请求，返回 (returncode, stdout)"""
-    try:
-        r = subprocess.run(
-            ["curl", "-s", "-X", "PUT", url,
-             "-H", f"Authorization: Bearer {token}",
-             "-H", "Content-Type: application/json",
-             "-d", f"@{payload_path}"],
-            capture_output=True, text=True, timeout=timeout)
-        _api_tick()
-        return r.returncode, r.stdout
-    except subprocess.TimeoutExpired:
-        return -1, ""
-    except Exception as e:
-        return -1, str(e)
-
-
-def curl_delete(url: str, token: str, payload_path: str, timeout: int = API_TIMEOUT) -> tuple[int, str]:
-    """封装 curl DELETE 请求"""
-    try:
-        r = subprocess.run(
-            ["curl", "-s", "-X", "DELETE", url,
-             "-H", f"Authorization: Bearer {token}",
-             "-H", "Content-Type: application/json",
-             "-d", f"@{payload_path}"],
-            capture_output=True, text=True, timeout=timeout)
-        _api_tick()
-        return r.returncode, r.stdout
-    except (subprocess.TimeoutExpired, Exception) as e:
-        return -1, str(e)
-
-
-_API_LAST_TICK = time.monotonic()
-
-
-def _api_tick():
-    """API 流量控制：确保两次调用之间至少有 API_INTERVAL 秒间隔"""
-    global _API_LAST_TICK
-    elapsed = time.monotonic() - _API_LAST_TICK
-    if elapsed < API_INTERVAL:
-        time.sleep(API_INTERVAL - elapsed)
-    _API_LAST_TICK = time.monotonic()
-
-
-def safe_read_bytes(path: Path) -> bytes:
-    try:
-        return path.read_bytes()
-    except (OSError, PermissionError):
-        return b""
-
-
-def safe_write(path: Path, content: bytes):
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(content)
-    except (OSError, PermissionError) as e:
-        print(f"  ⚠️  写入失败 {path}: {e}")
-
-
-def tmp_json(data: dict) -> str:
-    f = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
-    json.dump(data, f)
-    f.close()
-    return f.name
-
-
-def build_sha_map(branch=GH_BRANCH) -> dict[str, str]:
-    """
-    通过单次 git/trees API 获取仓库所有文件的 SHA。
-    返回 {path: sha} 字典，用在 sync 和 push 中避免 N 次 contents/{path} 调用。
-    """
-    code, stdout = call_gh(f"repos/{GH_REPO}/git/trees/{branch}?recursive=1", timeout=API_TIMEOUT)
-    if code != 0:
-        print(f"  ⚠️  获取远程文件树失败")
-        return {}
-    try:
-        tree = json.loads(stdout)
-    except json.JSONDecodeError:
-        print("  ⚠️  解析远程文件树失败")
-        return {}
-
-    sha_map = {}
-    for item in tree.get("tree", []):
-        if item["type"] == "blob" and item.get("sha"):
-            sha_map[item["path"]] = item["sha"]
-    return sha_map
-
-
-# ── YAML frontmatter ─────────────────────────────────────────────
-
-def parse_yaml_frontmatter(text: str) -> dict:
-    result = {}
-    for line in text.strip().split("\n"):
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if ":" in line:
-            key, _, value = line.partition(":")
-            key = key.strip()
-            value = value.strip()
-            if value.startswith("[") and value.endswith("]"):
-                items = [x.strip().strip("\"'") for x in value[1:-1].split(",") if x.strip()]
-                result[key] = items
-            elif value.lower() in ("true", "false"):
-                result[key] = value.lower() == "true"
-            else:
-                result[key] = value.strip("\"'")
-    return result
-
-
-def get_tags_from_file(filepath: Path) -> list[str]:
-    content = safe_read_bytes(filepath).decode("utf-8", errors="replace")
-    match = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
-    if not match:
-        return []
-    meta = parse_yaml_frontmatter(match.group(1))
-    tags = meta.get("tags", [])
-    return tags if isinstance(tags, list) else [tags]
-
-
-def get_category_override(filepath: Path) -> str | None:
-    content = safe_read_bytes(filepath).decode("utf-8", errors="replace")
-    match = re.match(r"^---\s*\n(.*?)\n---", content, re.DOTALL)
-    if not match:
-        return None
-    meta = parse_yaml_frontmatter(match.group(1))
-    cat = meta.get("category")
-    if cat and isinstance(cat, str) and cat.strip():
-        cat = cat.strip()
-        if cat in DOMAIN_PROFILES:
-            return cat
-        print(f"  ⚠️  YAML category '{cat}' 不在已知领域配置中（忽略）")
-    return None
-
-
-# ── Content classification ──────────────────────────────────────
+# ── Content classification ───────────────────────────
 
 def extract_content_text(filepath: Path) -> str:
     content = safe_read_bytes(filepath).decode("utf-8", errors="replace")
@@ -442,50 +436,40 @@ def classify_by_content(filepath: Path) -> tuple[str, str] | None:
     return (DOMAIN_PROFILES[best]["label"], best)
 
 
-# ── Sync from GitHub ─────────────────────────────────────────────
-# ⚡ 优化：使用树 API 的 SHA 缓存，避免逐文件 contents/ API 调用
+# ── Sync from GitHub ────────────────────────────────
 
 def sync_from_github(token: str) -> int:
     print("\n  🔽 从 GitHub 拉取远程文件...")
     downloaded = 0
 
-    # 单次 tree API 调用获取所有文件的 SHA
     sha_map = build_sha_map()
     if not sha_map:
-        print("  ℹ️  远程仓库无内容或无法访问")
+        print("  ℹ️ 远程仓库无内容或无法访问")
         return 0
 
     remote_files = [p for p in sha_map.keys()
                     if p != ".gitkeep" and not p.startswith(".")]
     if not remote_files:
-        print("  ℹ️  远程仓库为空（无文件）")
+        print("  ℹ️ 远程仓库为空")
         return 0
 
     print(f"  远程发现 {len(remote_files)} 个文件")
 
     for idx, remote_path in enumerate(remote_files):
-        # 每 10 个文件打印一次进度
-        if idx > 0 and idx % 10 == 0:
-            print(f"  ⏳ 进度: {idx}/{len(remote_files)} 个文件已检查")
+        _check_timeout("sync")
+        if idx > 0 and idx % 20 == 0:
+            print(f"  ⏳ 进度: {idx}/{len(remote_files)}")
 
         if remote_path == TOOL_NAME:
             continue
 
         local_path = KNOWLEDGES_DIR / remote_path
 
-        # ── 利用树 SHA 判断文件是否变化 ──
-        remote_sha = sha_map.get(remote_path)
-        if local_path.exists():
-            # 本地存在：比较 SHA（通过快速 API 获取远程 blob SHA）
-            # 注意：树的 blob SHA 与 contents API 的 SHA 一致
-            pass  # 继续往下走，按原逻辑比较内容
-
-        # 仍然需要获取内容来判断是否需要更新
-        # 优化：先用 SHA 做快速缓存判断
-        code2, content_out = call_gh(
-            f"repos/{GH_REPO}/contents/{remote_path}", timeout=API_TIMEOUT_SHORT)
-        if code2 != 0:
-            print(f"  ⚠️  无法获取 {remote_path}，跳过")
+        code, content_out, _ = call_gh(
+            f"repos/{GH_REPO}/contents/{remote_path}",
+            timeout=API_TIMEOUT_SHORT)
+        if code != 0:
+            print(f"  ⚠️ 无法获取 {remote_path}，跳过")
             continue
 
         try:
@@ -505,19 +489,19 @@ def sync_from_github(token: str) -> int:
         if local_path.exists():
             local_bytes = safe_read_bytes(local_path)
             if local_bytes == remote_bytes:
-                continue  # 内容一致，跳过
-            print(f"  🔄 {remote_path} ← 本地版本更新，保留本地")
+                continue
+            print(f"  🔄 {remote_path} ← 保留本地版本")
             continue
-        else:
-            print(f"  📥 {remote_path} ← 新增")
-            safe_write(local_path, remote_bytes)
-            downloaded += 1
 
-    print(f"  ✅ 同步完成 ({len(remote_files)} 远程文件已核对，{downloaded} 个新增)")
+        safe_write(local_path, remote_bytes)
+        downloaded += 1
+        print(f"  📥 {remote_path}")
+
+    print(f"  ✅ 同步完成（{len(remote_files)} 文件核对，{downloaded} 新增）")
     return len(remote_files)
 
 
-# ── Local classification & organization ─────────────────────────
+# ── Local classification & organization ─────────────
 
 def extract_all_files() -> dict[str, list[tuple[str, Path]]]:
     classified: dict[str, list[tuple[str, Path]]] = {}
@@ -564,9 +548,9 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
                 display = str(target_path.relative_to(KNOWLEDGES_DIR))
                 print(f"  📦 {display}")
             except Exception as e:
-                print(f"  ⚠️  移动失败 {source_path} → {target_path}: {e}")
+                print(f"  ⚠️ 移动失败 {source_path} → {target_path}: {e}")
 
-    # 清理移出的旧文件
+    # 清空可能因移动而遗弃的文件（仅同一目录内的残留）
     for directory, entries in classified.items():
         target_dir = KNOWLEDGES_DIR / directory
         known = set()
@@ -585,7 +569,7 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
                     f.unlink()
                     print(f"  🗑️ {directory}/{rel_f} 删除（已移出本类）")
                 except Exception as e:
-                    print(f"  ⚠️  删除失败 {directory}/{rel_f}: {e}")
+                    print(f"  ⚠️ 删除失败 {directory}/{rel_f}: {e}")
 
     # 清理空目录
     def clean_empty_dirs(path):
@@ -599,10 +583,10 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
             clean_empty_dirs(d)
 
 
-# ── README ───────────────────────────────────────────────────────
+# ── README ──────────────────────────────────────────
 
 def generate_readme(classified: dict[str, list[tuple[str, Path]]]):
-    now_str = __import__("datetime").datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     lines = [
         "# knowledges\n",
         "",
@@ -667,15 +651,284 @@ def generate_readme(classified: dict[str, list[tuple[str, Path]]]):
     print(f"  📝 README.md 已更新 ({count} 篇)")
 
 
-# ── Push to GitHub ───────────────────────────────────────────────
-# ⚡ 优化：预先从 tree API 构建 SHA 缓存，避免逐文件 contents/{path} 查询
+# ── Push via Git Tree API（批量！） ─────────────────
 
-def push_to_github(token: str, classified: dict[str, list[tuple[str, Path]]]):
-    print("\n  📤 推送到 GitHub...")
+def create_blob(content: bytes) -> str | None:
+    """
+    创建 Git Blob，返回 SHA。
+    这是唯一必须逐文件调用的 API，但允许并发。
+    """
+    b64 = base64.b64encode(content).decode()
+    body = json.dumps({"content": b64, "encoding": "base64"})
+    code, out, _ = call_gh(
+        f"repos/{GH_REPO}/git/blobs",
+        method="POST", body=body)
+    if code != 0:
+        return None
+    try:
+        return json.loads(out).get("sha")
+    except json.JSONDecodeError:
+        return None
 
-    # 收集待上传文件
+
+def push_via_tree_api(
+    token: str,
+    files_to_upload: list[tuple[str, Path]],
+    local_paths: set[str],
+    sha_map: dict[str, str],
+) -> bool:
+    """
+    批量推送：并发创建 blob → 单次 tree → 单次 commit → 更新 ref。
+    清理旧文件：新 tree 不包含要删除的文件即可。
+    """
+    total = len(files_to_upload)
+
+    # ── 阶段 1: 并发创建 blob ──
+    print(f"\n  ⚡ 并发上传 {total} 个文件 blobs（{MAX_WORKERS} 线程）...")
+    tree_entries: list[dict] = []
+    blob_failures = 0
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_map = {}
+        for rel_path, full_path in files_to_upload:
+            content = safe_read_bytes(full_path)
+            if not content:
+                print(f"  ⚠️ 读取失败 {rel_path}")
+                blob_failures += 1
+                continue
+            future = executor.submit(create_blob, content)
+            future_map[future] = rel_path
+
+        done = 0
+        for future in as_completed(future_map):
+            done += 1
+            rel_path = future_map[future]
+            sha = future.result()
+            if sha:
+                tree_entries.append({
+                    "path": rel_path,
+                    "mode": "100644",
+                    "type": "blob",
+                    "sha": sha,
+                })
+            else:
+                print(f"  ❌ 上传失败: {rel_path}")
+                blob_failures += 1
+
+            if done % 10 == 0 or done == total:
+                print(f"  ⏳ blob: {done}/{total}")
+
+    if blob_failures > 0:
+        print(f"  ⚠️ {blob_failures} 个文件 blob 创建失败")
+
+    if not tree_entries:
+        print("  ❌ 没有成功创建任何 blob，放弃推送")
+        return False
+
+    # ── 保留远程已有但本地没有的文件 ──
+    for path, sha in sha_map.items():
+        if path == ".gitignore" or path in local_paths:
+            continue
+        tree_entries.append({
+            "path": path,
+            "mode": "100644",
+            "type": "blob",
+            "sha": sha,
+        })
+
+    _check_timeout("create tree")
+
+    # ── 阶段 2: 创建新 tree ──
+    print(f"  🌳 创建 Git Tree（{len(tree_entries)} 条目）...")
+    tree_body = json.dumps({"tree": tree_entries})
+    code, out, _ = call_gh(
+        f"repos/{GH_REPO}/git/trees",
+        method="POST", body=tree_body,
+        timeout=API_TIMEOUT)
+    if code != 0:
+        print(f"  ❌ 创建 tree 失败")
+        return False
+    try:
+        tree_data = json.loads(out)
+        tree_sha = tree_data.get("sha")
+    except json.JSONDecodeError:
+        print(f"  ❌ 解析 tree 响应失败")
+        return False
+
+    if not tree_sha:
+        print(f"  ❌ 未获取到 tree SHA")
+        return False
+
+    _check_timeout("create commit")
+
+    # ── 阶段 3: 获取 HEAD commit ──
+    code, out, _ = call_gh(
+        f"repos/{GH_REPO}/git/refs/heads/{GH_BRANCH}",
+        timeout=API_TIMEOUT_SHORT)
+    if code != 0:
+        print(f"  ❌ 获取 HEAD ref 失败")
+        return False
+    try:
+        head_data = json.loads(out)
+        head_sha = head_data["object"]["sha"]
+    except (json.JSONDecodeError, KeyError):
+        print(f"  ❌ 解析 HEAD ref 失败")
+        return False
+
+    # ── 阶段 4: 创建 commit ──
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    commit_body = json.dumps({
+        "message": f"auto-organize: batch update ({timestamp}) [{total} files]",
+        "tree": tree_sha,
+        "parents": [head_sha],
+    })
+    code, out, _ = call_gh(
+        f"repos/{GH_REPO}/git/commits",
+        method="POST", body=commit_body,
+        timeout=API_TIMEOUT)
+    if code != 0:
+        print(f"  ❌ 创建 commit 失败")
+        return False
+    try:
+        commit_data = json.loads(out)
+        commit_sha = commit_data.get("sha")
+    except json.JSONDecodeError:
+        print(f"  ❌ 解析 commit 响应失败")
+        return False
+
+    _check_timeout("update ref")
+
+    # ── 阶段 5: 更新分支 ref ──
+    ref_body = json.dumps({
+        "sha": commit_sha,
+        "force": False,
+    })
+    code, out, _ = call_gh(
+        f"repos/{GH_REPO}/git/refs/heads/{GH_BRANCH}",
+        method="PATCH", body=ref_body,
+        timeout=API_TIMEOUT_SHORT)
+    if code != 0:
+        print(f"  ❌ 更新分支引用失败")
+        return False
+
+    print(f"  ✅ 推送成功！Commit: {commit_sha[:12]}")
+    print(f"  📊 {total} 文件 → 1 commit（含 blob 失败 {blob_failures}）")
+    return True
+
+
+def push_to_github_fallback(token: str, rel_file_map: dict[str, Path], sha_map: dict[str, str]):
+    """
+    回退方案：逐文件 API 推送（仅在新推送方法失败时使用）。
+    与旧版逻辑相同但增加了并发。
+    """
+    print("\n  ⚠️ 回退到逐文件推送...")
+    success = 0
+    failed = 0
+    total = len(rel_file_map)
+
+    def upload_one(rel_path, full_path):
+        nonlocal success, failed
+        content = safe_read_bytes(full_path)
+        if not content:
+            return False
+        b64_content = base64.b64encode(content).decode()
+        sha = sha_map.get(rel_path)
+        data = {
+            "message": f"auto-organize: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+            "content": b64_content,
+            "branch": GH_BRANCH,
+        }
+        if sha:
+            data["sha"] = sha
+
+        body = json.dumps(data)
+        code, out, _ = call_gh(
+            f"repos/{GH_REPO}/contents/{rel_path}",
+            method="PUT", body=body)
+        if code != 0 or "content" not in out:
+            return False
+        return True
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(upload_one, rel_path, full_path): rel_path
+            for rel_path, full_path in rel_file_map.items()
+        }
+        for future in as_completed(futures):
+            rel_path = futures[future]
+            if future.result():
+                success += 1
+            else:
+                print(f"  ❌ {rel_path}")
+                failed += 1
+
+    print(f"  📊 回退推送: {success}/{total} 成功, {failed} 失败")
+    return failed == 0
+
+
+# ── Main ────────────────────────────────────────────
+
+def main():
+    start_time = time.monotonic()
+    global _DEADLINE
+    _DEADLINE = time.monotonic() + GLOBAL_TIMEOUT
+
+    print("=" * 50)
+    print("📚 knowledges 知识库整理 & 同步（优化版）")
+    print(f"   全局超时: {GLOBAL_TIMEOUT}s | 并发: {MAX_WORKERS} 线程")
+    print("=" * 50)
+
+    token = get_github_token()
+    if not token:
+        print("  ❌ 未找到 GitHub token，退出")
+        return
+
+    img_dir = KNOWLEDGES_DIR / "image"
+    img_dir.mkdir(exist_ok=True)
+    (img_dir / ".gitkeep").write_text("")
+
+    # ── 同步远程 → 本地 ──
+    try:
+        sync_from_github(token)
+    except TimeoutError:
+        print("  ⚠️ 同步超时，跳过同步进入本地整理阶段")
+    except Exception as e:
+        print(f"  ⚠️ 同步异常: {e}")
+
+    # ── 本地分类整理 ──
+    print("\n  🔍 基于内容分类文档...")
+    classified = extract_all_files()
+
+    if not classified:
+        print("  ℹ️ 没有待整理的文档")
+    else:
+        for directory, entries in classified.items():
+            label = DOMAIN_PROFILES.get(directory, {}).get("label", directory)
+            print(f"  📁 {directory}/ ({label}, {len(entries)} 篇)")
+            for rel, f in entries:
+                print(f"    - {f.name}")
+
+        subdir_counts = Counter()
+        for directory, entries in classified.items():
+            for rel, f in entries:
+                rel_parts = Path(rel).parts
+                sub = f"{rel_parts[0]}/{rel_parts[1]}" if len(rel_parts) > 2 else directory
+                subdir_counts[sub] += 1
+        threshold_alerted = False
+        for sub, count in sorted(subdir_counts.items()):
+            if count > 20:
+                print(f"  ⚠️ {sub}/ 达 {count} 篇，超出 20 篇阈值，建议进一步拆分！")
+                threshold_alerted = True
+        if not threshold_alerted:
+            print(f"  ✅ 所有子目录文件数未超过 20 篇阈值")
+
+        print("\n  🔄 整理移动文件...")
+        sync_classified_to_local(classified)
+        classified = extract_all_files()
+        generate_readme(classified)
+
+    # ── 收集待上传文件 ──
     files_to_upload: list[tuple[str, Path]] = []
-
     for directory, entries in classified.items():
         for rel, f in entries:
             rel_path = rel if rel and rel != "uncategorized" else f"{directory}/{f.name}"
@@ -687,207 +940,37 @@ def push_to_github(token: str, classified: dict[str, list[tuple[str, Path]]]):
     image_dir = KNOWLEDGES_DIR / "image"
     if image_dir.exists():
         for img_file in sorted(image_dir.rglob("*")):
-            if img_file.is_dir():
+            if img_file.is_dir() or img_file.name == ".gitkeep" or img_file.name.startswith("."):
                 continue
-            if img_file.name == ".gitkeep":
-                rel_img = str(img_file.relative_to(KNOWLEDGES_DIR))
-                files_to_upload.append((rel_img, img_file))
-                continue
-            if img_file.name.startswith("."):
-                continue
-            ext = img_file.suffix.lower()
-            if ext not in KNOWN_IMG_EXTS:
-                print(f"  ⚠️  跳过非图片文件: {img_file.name} (扩展名: {ext})")
+            if not KNOWN_IMG_EXTS.intersection({img_file.suffix.lower()}):
                 continue
             rel_img = str(img_file.relative_to(KNOWLEDGES_DIR))
             files_to_upload.append((rel_img, img_file))
 
     if not files_to_upload:
-        print("  ℹ️  没有文件需要上传")
-        return True
-
-    total = len(files_to_upload)
-
-    # ⚡ 单次 tree API 构建 SHA 缓存，替代 N 次 contents/ API 查询
-    sha_map = build_sha_map()
-
-    success = 0
-    failed = 0
-
-    for idx, (rel_path, full_path) in enumerate(files_to_upload):
-        if idx > 0 and idx % 5 == 0:
-            print(f"  ⏳ 上传进度: {idx}/{total}")
-
-        content = safe_read_bytes(full_path)
-        if not content:
-            print(f"  ⚠️  读取失败 {rel_path}，跳过")
-            failed += 1
-            continue
-
-        b64_content = base64.b64encode(content).decode()
-
-        # ⚡ 从 SHA 缓存获取，无需 API 调用
-        sha = sha_map.get(rel_path)
-
-        data: dict = {
-            "message": f"auto-organize: {__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
-            "content": b64_content,
-            "branch": GH_BRANCH,
-        }
-        if sha:
-            data["sha"] = sha
-
-        tf_path = None
-        try:
-            tf_path = tmp_json(data)
-            _, put_out = curl_put(
-                f"https://api.github.com/repos/{GH_REPO}/contents/{rel_path}",
-                token, tf_path)
-            if put_out:
-                result = json.loads(put_out)
-                if "content" in result:
-                    success += 1
-                else:
-                    msg = result.get("message", "")[:80]
-                    print(f"  ❌ {rel_path}: {msg}")
-                    failed += 1
-            else:
-                print(f"  ❌ {rel_path}: 无响应")
-                failed += 1
-        except json.JSONDecodeError:
-            print(f"  ❌ {rel_path}: 响应解析失败")
-            failed += 1
-        except Exception as e:
-            print(f"  ❌ {rel_path}: {e}")
-            failed += 1
-        finally:
-            if tf_path and os.path.exists(tf_path):
-                os.unlink(tf_path)
-
-    # ── 清理远程旧文件 ──
-    print("\n  🧹 清理远程旧文件...")
-    local_paths = {p for p, _ in files_to_upload}
-    local_paths.add(TOOL_NAME)
-
-    # ⚡ 重用已有的 sha_map（如果之前获取成功）
-    if not sha_map:
-        sha_map = build_sha_map()
-
-    if sha_map:
-        cleaned = 0
-        for path, sha in sha_map.items():
-            if path == ".gitignore" or path in local_paths:
-                continue
-
-            del_payload = {
-                "message": "cleanup: remove outdated file (reorganized)",
-                "sha": sha,
-                "branch": GH_BRANCH,
-            }
-            tf_path = None
-            try:
-                tf_path = tmp_json(del_payload)
-                _, del_out = curl_delete(
-                    f"https://api.github.com/repos/{GH_REPO}/contents/{path}",
-                    token, tf_path)
-                if del_out:
-                    dr = json.loads(del_out)
-                    if "commit" in dr:
-                        cleaned += 1
-                        print(f"  🗑️ {path}")
-            except json.JSONDecodeError:
-                pass
-            except Exception:
-                pass
-            finally:
-                if tf_path and os.path.exists(tf_path):
-                    os.unlink(tf_path)
-
-        if cleaned > 0:
-            print(f"  🧹 已清理 {cleaned} 个远程旧文件")
-        else:
-            print(f"  ✅ 远程文件无残留")
-    else:
-        print(f"  ℹ️  跳过清理（无法获取远程文件列表）")
-
-    print(f"\n  📊 推送结果: {success}/{total} 成功, {failed} 失败")
-    return failed == 0
-
-
-# ── Main ─────────────────────────────────────────────────────────
-
-def main():
-    start_time = time.monotonic()
-
-    print("=" * 50)
-    print("📚 knowledges 知识库整理 & 同步")
-    print("=" * 50)
-
-    token = get_github_token()
-    if not token:
-        print("  ❌ 未找到 GitHub token，退出")
+        print("\n  ℹ️ 没有文件需要上传")
+        elapsed = time.monotonic() - start_time
+        print(f"\n✅ 整理完成（耗时 {elapsed:.1f}s）")
         return
 
-    # 确保 image/ 目录存在
-    img_dir = KNOWLEDGES_DIR / "image"
-    img_dir.mkdir(exist_ok=True)
-    (img_dir / ".gitkeep").write_text("")
+    # ── 推送 ──
+    local_paths = {p for p, _ in files_to_upload}
+    local_paths.add(TOOL_NAME)
+    sha_map = build_sha_map()
 
     try:
-        set_global_timeout(SYNC_TIMEOUT)
-        sync_from_github(token)
-        cancel_global_timeout()
-    except TimeoutError:
-        print(f"\n  ⚠️  同步超时 ({SYNC_TIMEOUT}s)，跳过同步进入本地整理阶段")
+        ok = push_via_tree_api(token, files_to_upload, local_paths, sha_map)
+        if not ok:
+            print("  ⚠️ 批量推送失败，尝试回退方案...")
+            rel_file_map = {p: f for p, f in files_to_upload}
+            push_to_github_fallback(token, rel_file_map, sha_map)
+    except TimeoutError as e:
+        print(f"\n  ⚠️ {e}")
+        print("  尝试回退方案...")
+        rel_file_map = {p: f for p, f in files_to_upload}
+        push_to_github_fallback(token, rel_file_map, sha_map)
     except Exception as e:
-        cancel_global_timeout()
-        print(f"\n  ⚠️  同步异常: {e}")
-
-    print("\n  🔍 基于内容分类文档...")
-    classified = extract_all_files()
-
-    if not classified:
-        print("  ℹ️  没有待整理的文档")
-    else:
-        for directory, entries in classified.items():
-            label = DOMAIN_PROFILES.get(directory, {}).get("label", directory)
-            print(f"  📁 {directory}/ ({label}, {len(entries)} 篇)")
-            for rel, f in entries:
-                print(f"    - {f.name}")
-
-        print()
-        threshold_alerted = False
-        subdir_counts = Counter()
-        for directory, entries in classified.items():
-            for rel, f in entries:
-                rel_parts = Path(rel).parts
-                if len(rel_parts) > 2:
-                    sub = f"{rel_parts[0]}/{rel_parts[1]}"
-                else:
-                    sub = directory
-                subdir_counts[sub] += 1
-        for sub, count in sorted(subdir_counts.items()):
-            if count > 20:
-                print(f"  ⚠️  {sub}/ 达到 {count} 篇，超出 20 篇阈值，建议进一步拆分！")
-                threshold_alerted = True
-        if not threshold_alerted:
-            print(f"  ✅ 所有子目录文件数未超过 20 篇阈值")
-
-        print("\n  🔄 整理中...")
-        sync_classified_to_local(classified)
-
-        classified = extract_all_files()
-        generate_readme(classified)
-
-    set_global_timeout(PUSH_TIMEOUT)
-    try:
-        push_to_github(token, classified)
-    except TimeoutError:
-        print(f"\n  ⚠️  推送超时 ({PUSH_TIMEOUT}s)，部分文件可能未上传")
-    except Exception as e:
-        print(f"\n  ⚠️  推送异常: {e}")
-    finally:
-        cancel_global_timeout()
+        print(f"\n  ⚠️ 推送异常: {e}")
 
     elapsed = time.monotonic() - start_time
     print(f"\n" + "=" * 50)

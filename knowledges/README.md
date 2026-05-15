@@ -7,13 +7,18 @@
 ## 📂 目录结构
 
 ### ai-tools/ (`AI 工具 & 编程助手`)
+  - `ai-tools/claude-code-complete-setup-guide.md`
+  - `ai-tools/claude-code-large-codebase-best-practices.md`
+  - `ai-tools/obsidian-llm-wiki-complete-guide.md`
   - `ai-tools/spring-ai-bedrock-agentcore-mcp-conference-app.md`
+  - `ai-tools/why-senior-developers-fail-to-communicate-their-expertise.md`
   📁 **agent-engineering/**
     - `ai-tools/agent-engineering/10-claude-code-agents-pipeline.md`
     - `ai-tools/agent-engineering/4-agent-content-production-system.md`
     - `ai-tools/agent-engineering/agent-complexity-ratchet.md`
     - `ai-tools/agent-engineering/agent-engineers-survival-guide.md`
     - `ai-tools/agent-engineering/agent-harness-engineering.md`
+    - `ai-tools/agent-engineering/agent-memory-system-from-basics-to-production.md`
     - `ai-tools/agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md`
     - `ai-tools/agent-engineering/ai-first-engineering-team-guide.md`
     - `ai-tools/agent-engineering/harness-enterprise-ai-infrastructure-2026.md`
@@ -41,9 +46,11 @@
     - `ai-tools/ml-research/why-we-need-continual-learning.md`
 
 ### database/ (`数据库 & 缓存`)
+  - `database/notebooklm-maxxing-complete-guide.md`
   - `database/redis-single-threaded-high-qps.md`
 
 ### infrastructure/ (`基础设施 & 网络`)
+  - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
   - `infrastructure/openclaw-weixin-network-requirements.md`
 
 ### programming/java/ (`Java`)
@@ -52,6 +59,7 @@
   - `programming/java/java-comparator-deep-dive.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
+  - `programming/java/spring-event-comprehensive-guide.md`
 
 ### spring/ (`Spring 框架`)
   - `spring/spring-boot-api-encryption.md`
@@ -64,7 +72,7 @@
 
 ---
 
-总计 **40** 篇知识文档
+总计 **48** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -76,5 +84,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-05-13 16:48 UTC]_
+_[自动生成于 2026-05-15 13:30 UTC]_
 
