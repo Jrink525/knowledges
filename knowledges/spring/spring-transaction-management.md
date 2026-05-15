@@ -1,6 +1,7 @@
 ---
 title: Spring Transaction Management
 tags: [spring, spring-boot, interview, 面试, database]
+category: spring
 ---
 
 # Spring Transaction Management
