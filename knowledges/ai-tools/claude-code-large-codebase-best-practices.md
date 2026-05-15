@@ -402,6 +402,7 @@ Claude Code 的设计前提是**传统的软件工程环境**：
 | **The Developer's Guide to Claude Code: Mastering Skills, Hooks, and Tools** | Apex Neural | 📄 指南 | Skills 注入知识，Hooks 确定性执行规则，MCP 连接外部工具——三支柱体系 | [阅读](https://apexneural.com/blog/the-developer-s-guide-to-claude-code-mastering-skills-hooks-and-tools) |
 | **Claude Code Workflow Examples (2026): Plugins, Memory, Hooks** | Open AI Tools Hub | 📄 博客 | 6 个月 12 个 repo 的 hook 食谱，含回滚经验 | [阅读](https://www.openaitoolshub.org/en/blog/claude-code-workflow-examples) |
 | **Extend Claude Code（官方能力总览）** | code.claude.com | 📄 官方文档 | 理解 CLAUDE.md、Skills、Subagents、Hooks、MCP、Plugins 的分层架构 | [阅读](https://code.claude.com/docs/en/features-overview) |
+| **Agent Hooks: Deterministic Control for Agent Workflows** | Nader Dabit (@dabit3) | 🐦 X Article | **⭐ 重点推荐**。6 个核心生命周期点（SessionStart → UserPromptSubmit → PreToolUse → PostToolUse → Stop → SessionEnd）的完整实战指南，附带可运行的 agent-hooks-demo 项目。用提示词做指引，用 hooks 做控制——最佳 hook/CI/人工审查分工模型 | [阅读](../ai-tools/agent-hooks-deterministic-control.md) |
 
 ---
 
