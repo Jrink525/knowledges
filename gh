@@ -1,3 +1,0 @@
-#!/bin/bash
-export GH_CONFIG_DIR="/home/node/.openclaw/gh-config"
-exec /home/node/.openclaw/workspace/gh-bin "$@"
