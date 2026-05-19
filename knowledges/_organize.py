@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 
 KNOWLEDGES_DIR = Path(__file__).parent.resolve()
 GH_REPO = "Jrink525/knowledges"
-GH_BRANCH = "main"
+GH_BRANCH = "master"
 TOOL_NAME = "_organize.py"
 
 GH_BIN = "/home/node/.openclaw/workspace/gh"
