@@ -287,3 +287,7 @@ Engine 是我们自动化 Agent 改进循环的尝试。Agent 可观测性的难
 ---
 
 *整理于 2026-05-20，来源：https://x.com/palashshah/status/2056786835322687640*
+
+### 关联阅读
+
+- [AI Evaluation 完全入门](../ai-tools/ai-evals-explained.md) — Lotte Verheyden（Langfuse Academy），关于手动评估、代码评估和 LLM-as-a-Judge 的基础方法
