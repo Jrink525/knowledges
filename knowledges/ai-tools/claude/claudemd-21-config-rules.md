@@ -9,17 +9,65 @@ tags:
   - productivity
   - context-engineering
 date: 2026-05-20
-source: "https://x.com/nainsidwiv50980/status/2056406042653909056 + https://x.com/AnatoliKopadze/status/2050225292585607440"
-authors: "nainsidwiv50980 & Anatoli Kopadze"
+source: "https://x.com/0xdepressionn/status/2055999112470839383 + https://x.com/nainsidwiv50980/status/2056406042653909056 + https://x.com/AnatoliKopadze/status/2050225292585607440"
+authors: "0xDepressionn, nainsidwiv50980 & Anatoli Kopadze"
 ---
 
 # CLAUDE.md 完全指南：从哲学到 21 条实战配置
 
-> **本文是两篇精华的合并增强版：**
-> - [Stop Obsessing Over Prompts. Your Real Problem Is Probably CLAUDE.md](https://x.com/nainsidwiv50980/status/2056406042653909056) — nainsidwiv50980
-> - [21 Things Most Claude Users Have Never Set Up](https://x.com/AnatoliKopadze/status/2050225292585607440) — Anatoli Kopadze
+> **本文是散篇精华的合并增强版：**
+> - [Karpathy's CLAUDE.md hit #1 on GitHub — 0xDepressionn](https://x.com/0xdepressionn/status/2055999112470839383)
+> - [Stop Obsessing Over Prompts. Your Real Problem Is Probably CLAUDE.md — nainsidwiv50980](https://x.com/nainsidwiv50980/status/2056406042653909056)
+> - [21 Things Most Claude Users Have Never Set Up — Anatoli Kopadze](https://x.com/AnatoliKopadze/status/2050225292585607440)
 
 ![CLAUDE.md 架构](../image/claudemd-architecture-1.jpg)
+
+---
+
+## 前置：不用 CLAUDE.md 的真实成本
+
+> 作者：0xDepressionn
+
+一份叫 CLAUDE.md 的文件曾登上 GitHub Trending #1。82000 star，7800 fork。
+
+故事起点是 Andrej Karpathy（特斯拉前 AI 总监、OpenAI 创始成员）。他识别出 Claude Code 失败的 4 个关键行为，写进一个文件。一位开发者把这 4 条规则扩展后发布，结果火了——**编码准确率从 65% 提升到 94%**。
+
+大多数日常使用 Claude Code 的开发者至今没设置过这个文件。他们每次会话从零开始——重复解释同样的上下文、清理没人授权的范围蔓延、回退没人要求的重构。
+
+**每次打开 Claude Code 都从空白的起点开始。**
+
+它不知道你的技术栈、你的标准、你的项目上下文、你已经试过什么、三场会话前你明确决定不做的事。所以它猜——猜的时候就会重构你没让它碰的代码，推荐破坏你现有架构的框架，不问就删文件，推翻你已经做过的决策。
+
+CLAUDE.md 就是一个放在项目根目录的纯文本文件。Claude Code 每次会话开始自动读取。一次设置，零重复解释。
+
+### 不用 CLAUDE.md，你在烧多少钱？
+
+**第一部分：DEFAULTS — 每周花 $375 重复解释自己**
+
+开发者平均每天花 30 分钟向 Claude 重新解释上下文。技术栈、编码标准、项目背景、已经试过什么——没有一样在会话之间持久化。
+
+30 分钟/天 × $150/小时（开发者时薪）= $75/天 = **$375/周/人**。
+一个 5 人团队：**$1,875/周**——只在重复解释上下文上。
+
+**第二部分：BEHAVIOR — 每周花 $450 撤销未授权的变更**
+
+你让 Claude 修一个函数。它重构了三个文件，重命名了你的变量，重新组织了 import，重写了你精心打磨的注释——全都不问。
+
+审核和撤销这些变更平均 1 小时/次，$150/小时。一周三次：$450/周/人。
+一个 5 人团队：**$2,250/周**——只为清理没人授权的改动。
+
+**第三部分：MEMORY + STACK — 每周花 $300 从遗忘中恢复**
+
+Claude 在会话之间忘记一切。你做过的每个决策、尝试失败的每个方案、六个月前选 Prisma 而非 Drizzle 的原因、因特定客户需求存在的约束——全忘记了。然后它建议你早已排除的方案。
+
+因此花 2 小时/周恢复：$300/周/人。来自错误的技术栈建议的额外修复：$225/周。
+
+**总计：$975/周/人。一个 5 人团队：$4,875/周。**
+
+而设置 CLAUDE.md 只需要 2 小时。仅 Karpathy 的 4 条规则就能把编码准确率从 65% 提升到 94%。
+
+> 设置了的开发者用的 Claude 能记住决策、不越界、破坏前确认、从不推荐破坏架构的框架。
+> 没设置的每周花 $975 重复自己。
 
 ---
 
@@ -410,6 +458,7 @@ Andrej Karpathy（特斯拉前 AI 总监、OpenAI 创始成员）识别出 Claud
 | **内容创作者** | 锁定声音 + 大改前问 + 改完说明 | 开发者专属 (16~21) |
 | **开发者 (Claude Code)** | 不越界 + 破坏性确认 + Karpathy 四律 | 如果非创作可省略声音定制 |
 | **重度使用 (>4h/天)** | MEMORY.md + 会话总结 + 错误日志 | — |
+| **团队决策者** | 先读成本分析（$975/周/人浪费），再决定全员推行 | — |
 
 ## 从哲学到实践：一张图
 
@@ -439,8 +488,22 @@ CLAUDE.md 层次结构
 
 **建议策略：先加 3-4 条痛点，逐步迭代。** CLAUDE.md 是活的——每次犯错都是完善的机会。几个月后，它会成为你的机构记忆、工作流文档和错误预防系统。那时候 Claude 不是变聪明了，是你的系统进化了。
 
+### 快速开始
+
+> **0xDepressionn 的建议：先加 Karpathy 的 4 条规则。就这 4 条。**
+> 粘贴到一个叫 `CLAUDE.md` 的新文件，放在项目根目录。只需要 2 分钟。
+> 剩下的规则每周加几条——发现缺什么就补什么。
+
+```
+1. 大改前展示完整计划
+2. 只修改我指定的文件
+3. 每步改动都告诉我具体做了什么
+4. 不确定时停下来问，别蒙
+```
+
 ### 参考
 
+- [Karpathy's CLAUDE.md hit #1 on GitHub — 0xDepressionn](https://x.com/0xdepressionn/status/2055999112470839383)
 - [Stop Obsessing Over Prompts — nainsidwiv50980](https://x.com/nainsidwiv50980/status/2056406042653909056)
 - [21 Things Most Claude Users Have Never Set Up — Anatoli Kopadze](https://x.com/AnatoliKopadze/status/2050225292585607440)
 - Karpathy 的 CLAUDE.md：曾登 GitHub Trending #1（82000+ stars）
