@@ -8,20 +8,17 @@ tags:
   - Token 优化
   - 钩子系统
   - Subagents
-  - 权限配置
-  - 自主执行
-date: 2026-05-20
-source: "https://x.com/akshay_pachaar/status/2035341800739877091 + https://github.com/drona23/claude-token-efficient + https://levelup.gitconnected.com/i-spent-6-months-tuning-claude-code-heres-the-exact-setup-that-finally-worked-b41c67628478 + https://x.com/piercezhang34/status/2056669815511867682"
-authors: "Akshay 🚀 (@akshay_pachaar), Anubhav (@anubhavgoyal101), Drona Gangarapu (@drona23), PierceZhang34 (@PierceZhang34)"
+date: 2026-05-14
+source: "https://x.com/akshay_pachaar/status/2035341800739877091 + https://github.com/drona23/claude-token-efficient + https://levelup.gitconnected.com/i-spent-6-months-tuning-claude-code-heres-the-exact-setup-that-finally-worked-b41c67628478"
+authors: "Akshay 🚀 (@akshay_pachaar), Anubhav (@anubhavgoyal101), Drona Gangarapu (@drona23)"
 ---
 
 # Claude Code 完全配置指南：.claude 目录解剖到 Token 优化
 
-> 本文整合了四份高质量 Claude Code 配置资源：
+> 本文整合了三份高质量 Claude Code 配置资源：
 > - **Akshay 🚀** — 《.claude/ 目录解剖》- .claude 目录的完整指南
 > - **Anubhav** — 《6 个月调教 Claude Code 的最终配置》- 实战级配置栈
 > - **Drona Gangarapu** — 《claude-token-efficient》- Token 优化 CLAUDE.md
-> - **PierceZhang34** — 《如何让 Claude Code 彻底"闭嘴"》- 自主执行权限配置
 
 ---
 
@@ -339,108 +336,6 @@ When reviewing code:
 ### settings.local.json
 
 与 `CLAUDE.local.md` 相同的概念。创建 `.claude/settings.local.json` 存放你不想提交的个人权限变更。自动 `.gitignore`。
-
-### 7.4 让 Claude Code 自主执行：权限 + 模式 + 提示词（来自 @PierceZhang34）
-
-很多开发者希望 Claude Code 能像高级工程师一样：自主判断、直接执行，只在真正必要时才提问。以下是三管齐下的实操方案。
-
-#### 方法一：交互式权限配置 `/permissions`
-
-在 Claude Code 会话中输入 `/permissions`，会弹出交互界面，可快速配置：
-- 把 Bash、Edit、Write、Read、MultiEdit 等常用工具设置为 **Allow**
-- 针对具体路径设置规则，例如 `Edit(/src/**)` → 允许自动修改 `src/` 下所有文件
-- 对常用命令直接允许：`Bash(npm run *)`、`Bash(python *)` 等
-- 修改后**立即在当前会话生效**，无需重启
-
-#### 方法二：永久配置（推荐）
-
-创建或编辑 `.claude/settings.local.json`（自动 `.gitignore`，不提交）：
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(npm run *)",
-      "Bash(git status)",
-      "Bash(git diff *)",
-      "Bash(python *)",
-      "Bash(npx *)",
-      "Read",
-      "Write",
-      "Edit",
-      "MultiEdit"
-    ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(curl *)",
-      "Bash(> /dev/sda*)",
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ]
-  }
-}
-```
-
-#### 方法三：启动时指定权限模式
-
-```bash
-# acceptEdits 模式：自动接受所有编辑，运行命令前仍询问
-claude --permission-mode acceptEdits
-
-# dontAsk 模式：彻底激进，全面自主执行（注意安全风险）
-claude --permission-mode dontAsk
-
-# 也可以组合 allow 列表一起使用
-claude --permission-mode dontAsk --allowedTools "Read,Write,Edit,Bash,Bash(npm *)"
-```
-
-三种模式对比：
-
-| 模式 | 编辑文件 | 运行命令 | 典型场景 |
-|------|---------|---------|---------|
-| 默认 | 询问 | 询问 | 安全优先，新手 |
-| `acceptEdits` | ✅ 自动 | ❓ 询问 | 日常开发（推荐）|
-| `dontAsk` | ✅ 自动 | ✅ 自动（白名单内） | CI/CD、信任代码库 |
-
-#### 方法四：提示词模板（自主决策指令）
-
-在每次对话开头加入以下系统级指令（可保存为模板文件或命令）：
-
-> ```
-> ## 自主决策原则
-> 1. 在开始任何任务前，先理解上下文和目标，不需要向我确认
-> 2. 直接使用可用的工具执行任务，无需逐项请示
-> 3. 当你需要编辑文件时，直接编辑，不需要问我"可以编辑吗"
-> 4. 运行命令前先判断是否安全。常见命令（构建、测试、格式化）直接执行
-> 5. 只有在以下情况才主动询问：
->    - 有多个合理方案，需要我选择
->    - 需要访问敏感信息（密钥、密码）
->    - 发现明显需要人工确认的情况（如删除操作）
-> 6. 完成后直接展示结果，以 "✅ 完成：" 开头总结做了什么
-> ```
-
-#### 常见问题排查
-
-| 问题 | 原因与修复 |
-|------|-----------|
-| 修改 `settings.json` 后不生效 | 必须**重启会话**（`exit` 后重新 `claude`），无热重载 |
-| 仍然频繁询问 | 检查当前 `Permission Mode`，输入 `/status` 查看 |
-| 特定命令还是会问 | 在 `/permissions` 中单独 `Allow` 该命令模式 |
-| 想彻底激进 | 使用 `dontAsk` 模式 + 完整 allow 列表（注意安全）|
-
-#### 推荐最终组合方案
-
-```bash
-# Step 1: 永久配置（写入 settings.local.json）
-# Step 2: 启动时指定模式
-claude --permission-mode acceptEdits
-
-# Step 3: 项目根目录放 CLAUDE.md（定义工作流和约束）
-# Step 4: 每次任务开头使用'自主决策'提示词
-# Step 5: 常用 /permissions 微调
-```
-
-> 💡 **核心理念：** 默认的 Claude Code 像一个谨慎的实习生——事事请示。通过权限配置 + 模式切换 + 提示词三管齐下，可以把它变成自主执行的高级工程师。不过安全底线不能丢：不可逆操作（部署、删库、推主分支）宁缺毋滥。
 
 ---
 

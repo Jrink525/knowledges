@@ -7,59 +7,11 @@
 ## 📂 目录结构
 
 ### ai-tools/ (`AI 工具 & 编程助手`)
-  - `ai-tools/10-claude-code-agents-pipeline.md`
-  - `ai-tools/12-claude-code-setup-tricks.md`
-  - `ai-tools/20-claude-prompts-personal-assistant.md`
-  - `ai-tools/20-claude-skills-templates.md`
-  - `ai-tools/4-agent-content-production-system.md`
-  - `ai-tools/7-days-claude-ai-employee-guide.md`
-  - `ai-tools/agent-complexity-ratchet.md`
-  - `ai-tools/agent-engineers-survival-guide.md`
-  - `ai-tools/agent-harness-engineering.md`
-  - `ai-tools/agent-hooks-deterministic-control.md`
-  - `ai-tools/agent-memory-system-from-basics-to-production.md`
-  - `ai-tools/agent-sandbox-infrastructure.md`
-  - `ai-tools/agentic-harness-engineering-ahe.md`
-  - `ai-tools/agentic-memory-detailed-breakdown.md`
-  - `ai-tools/ai-agent-roadmap-2026-what-to-learn-build-skip.md`
-  - `ai-tools/ai-automation-service-guide.md`
-  - `ai-tools/ai-first-engineering-team-guide.md`
-  - `ai-tools/anthropic-prompting-101-workshop.md`
-  - `ai-tools/build-your-own-mcp-server.md`
-  - `ai-tools/claude-code-101-academic-researchers.md`
-  - `ai-tools/claude-code-102-academic-researchers.md`
-  - `ai-tools/claude-code-advanced-tips-guide.md`
   - `ai-tools/claude-code-complete-setup-guide.md`
   - `ai-tools/claude-code-large-codebase-best-practices.md`
-  - `ai-tools/claude-code-routines-full-course.md`
-  - `ai-tools/claude-five-levels-framework.md`
-  - `ai-tools/claudemd-21-config-rules.md`
-  - `ai-tools/dont-outsource-the-learning.md`
-  - `ai-tools/founders-playbook-ai-native-startup.md`
-  - `ai-tools/harness-enterprise-ai-infrastructure-2026.md`
-  - `ai-tools/how-to-actually-use-claude.md`
-  - `ai-tools/how-to-build-ai-agents-2026-full-guide.md`
-  - `ai-tools/langsmith-engine-building-agent-for-improving-agents.md`
-  - `ai-tools/mattpocock-skills-workbook.md`
-  - `ai-tools/most-people-use-10-percent-of-claude-25-steps.md`
-  - `ai-tools/npx-skills-add-flow.md`
-  - `ai-tools/obsidian-business-ops-vault-with-claude-n8n.md`
-  - `ai-tools/obsidian-dashboard-everything-that-matters-today.md`
   - `ai-tools/obsidian-llm-wiki-complete-guide.md`
-  - `ai-tools/oz-multi-harness-agent-orchestration.md`
-  - `ai-tools/prompt-master-workbook.md`
-  - `ai-tools/quarkus-langchain4j-mcp-hybrid-agents.md`
-  - `ai-tools/sft-rl-onpolicy-distillation-distributional-lens.md`
-  - `ai-tools/shopify-claude-code-setup.md`
-  - `ai-tools/skillify-skill-engineering-guide.md`
   - `ai-tools/spring-ai-bedrock-agentcore-mcp-conference-app.md`
-  - `ai-tools/springio-2026-comparing-agentic-ai-frameworks-for-java.md`
-  - `ai-tools/thin-harness-fat-skills-garry-tan.md`
-  - `ai-tools/voice-agent-full-guide.md`
-  - `ai-tools/voice-agent-memory-harder-than-you-think.md`
   - `ai-tools/why-senior-developers-fail-to-communicate-their-expertise.md`
-  - `ai-tools/why-we-need-continual-learning.md`
-  - `ai-tools/zero-to-ai-engineer-14-weeks.md`
   📁 **agent-engineering/**
     - `ai-tools/agent-engineering/10-claude-code-agents-pipeline.md`
     - `ai-tools/agent-engineering/4-agent-content-production-system.md`
@@ -94,7 +46,6 @@
     - `ai-tools/ml-research/why-we-need-continual-learning.md`
 
 ### database/ (`数据库 & 缓存`)
-  - `database/fastjson-deserialization-workbook.md`
   - `database/notebooklm-maxxing-complete-guide.md`
   - `database/redis-single-threaded-high-qps.md`
 
@@ -106,7 +57,6 @@
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
   - `programming/java/java-comparator-deep-dive.md`
-  - `programming/java/java-concurrency-complete-graph.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
   - `programming/java/spring-event-comprehensive-guide.md`
@@ -122,7 +72,7 @@
 
 ---
 
-总计 **98** 篇知识文档
+总计 **48** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -134,5 +84,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-05-20 04:08 UTC]_
+_[自动生成于 2026-05-15 13:30 UTC]_
 
