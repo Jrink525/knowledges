@@ -31,6 +31,12 @@ Spring 全家桶实战案例与核心原理的知识沉淀。
 |------|------|
 | [bean-creation-time-statistics](performance/bean-creation-time-statistics.md) | 自定义 BeanFactory 统计 Bean 创建耗时，定位慢加载 Bean |
 
+### 📁 ai-agent/ — AI Agent 构建
+
+| 文件 | 说明 |
+|------|------|
+| [spring-ai-agent-resources-top30](ai-agent/spring-ai-agent-resources-top30.md) | Spring AI Agent 精选资源 Top 30：GitHub 仓库、文章教程、YouTube/B站视频，含推荐学习路径 |
+
 ### 📁 根目录（未分类 — 等待整理）
 
 | 文件 | 说明 |
