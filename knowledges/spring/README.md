@@ -37,6 +37,8 @@ Spring 全家桶实战案例与核心原理的知识沉淀。
 |------|------|
 | [spring-ai-agent-resources-top30](ai-agent/spring-ai-agent-resources-top30.md) | Spring AI Agent 精选资源 Top 30：GitHub 仓库、文章教程、YouTube/B站视频，含推荐学习路径 |
 | [josh-long-spring-ai-workshop-notes](ai-agent/josh-long-spring-ai-workshop-notes.md) | Josh Long & James Ward Spring AI Workshop 精要：ChatClient、RAG、MCP 工具调用、Agent 架构（含中英对照） |
+| [dan-vega-spring-ai-full-course-notes](ai-agent/dan-vega-spring-ai-full-course-notes.md) | Dan Vega 5.5h Spring AI 全课程笔记：Structured Output、Tool Calling、MCP、Observability、Evaluation |
+| [freecodecamp-spring-ai-full-course-notes](ai-agent/freecodecamp-spring-ai-full-course-notes.md) | freeCodeCamp 4.5h 实战课程笔记：5 个 Spring AI 项目（Chat、RAG、图像生成、语音转文字、集成） |
 
 ### 📁 根目录（未分类 — 等待整理）
 
