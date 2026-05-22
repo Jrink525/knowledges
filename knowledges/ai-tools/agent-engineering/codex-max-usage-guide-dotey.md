@@ -25,7 +25,7 @@ authors: "jason (@jxnlco) / 翻译整理: 宝玉 (@dotey)"
 > **翻译整理**：宝玉（@dotey）  
 > **数据**：1.8K ❤️ · 436 🔁 · 50 💬 · 357K 阅读  
 
-![Cover](../image/codex-max-usage-guide-cover.jpg)
+![Cover](../../image/codex-max-usage-guide-cover.jpg)
 
 ---
 

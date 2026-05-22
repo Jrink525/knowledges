@@ -23,7 +23,7 @@ authors: "aditya (@adxtyahq) — eng @usecodewisp (YC W26)"
 > **数据**：2K ❤️ · 234 🔁 · 3.6K 🔖 · 146K 阅读  
 > **保存日期**：2026-05-22
 
-![RAG 架构图](../image/rag-10m-docs-google-l5.jpg)
+![RAG 架构图](../../image/rag-10m-docs-google-l5.jpg)
 
 > *"Design a RAG pipeline for 10M docs with zero hallucination"*
 >
