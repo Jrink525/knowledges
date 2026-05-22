@@ -1,138 +1,124 @@
-# knowledges
+# Knowledge Base — AI Tools & Agent Engineering
 
+## 目录结构
 
-> 面试 & 技术知识库
-> 由 Jarvis II 按文件内容动态分类
+```
+ai-tools/
+├── agent-engineering/
+│   ├── harness/         ← Agent Harness 基础设施（13 篇）
+│   ├── inference/       ← LLM 推理引擎/硬件/显存（5 篇）
+│   ├── patterns/        ← Agent 架构模式与设计模式（11 篇）
+│   ├── tooling/         ← AI 工具使用与技巧（4 篇）
+│   └── career/          ← 职业成长/团队转型（8 篇）
+├── claude/              ← Claude Code 相关指南（16 篇）
+├── frameworks/          ← 框架比较（3 篇）
+├── ml-research/         ← 机器学习论文笔记（2 篇）
+├── obsidian/            ← Obsidian 工作流（4 篇）
+└── image/               ← 配图（~50 张）
+```
 
-## 📂 目录结构
+### agent-engineering/harness/ — 基础设施层
+| 文件 | 主题 |
+|------|------|
+| agent-harness-engineering.md | Harness 核心理念 |
+| agent-hooks-deterministic-control.md | 确定性 Hook 控制 |
+| agent-sandbox-infrastructure.md | Sandbox 基础设施 |
+| agentic-harness-engineering-ahe.md | Agentic Harness Engineering |
+| build-your-own-mcp-server.md | MCP Server 构建 |
+| harness-enterprise-ai-infrastructure-2026.md | 企业级 Harness 2026 |
+| harness-from-theory-to-practice.md | Harness 从理论到实践 |
+| langsmith-engine-building-agent-for-improving-agents.md | LangSmith 改进 Agent |
+| langsmith-sandbox-auth-proxy.md | Sandbox 网络安全策略 |
+| npx-skills-add-flow.md | npx Skills 添加流程 |
+| oz-multi-harness-agent-orchestration.md | OZ 多 Harness 编排 |
+| skillify-skill-engineering-guide.md | Skillify 技能工程 |
+| thin-harness-fat-skills-garry-tan.md | Thin Harness Fat Skills |
 
-### ai-tools/ (`AI 工具 & 编程助手`)
-  - `ai-tools/10-claude-code-agents-pipeline.md`
-  - `ai-tools/12-claude-code-setup-tricks.md`
-  - `ai-tools/20-claude-prompts-personal-assistant.md`
-  - `ai-tools/20-claude-skills-templates.md`
-  - `ai-tools/4-agent-content-production-system.md`
-  - `ai-tools/7-days-claude-ai-employee-guide.md`
-  - `ai-tools/agent-complexity-ratchet.md`
-  - `ai-tools/agent-engineers-survival-guide.md`
-  - `ai-tools/agent-harness-engineering.md`
-  - `ai-tools/agent-hooks-deterministic-control.md`
-  - `ai-tools/agent-memory-system-from-basics-to-production.md`
-  - `ai-tools/agent-sandbox-infrastructure.md`
-  - `ai-tools/agentic-harness-engineering-ahe.md`
-  - `ai-tools/agentic-memory-detailed-breakdown.md`
-  - `ai-tools/ai-agent-roadmap-2026-what-to-learn-build-skip.md`
-  - `ai-tools/ai-automation-service-guide.md`
-  - `ai-tools/ai-first-engineering-team-guide.md`
-  - `ai-tools/anthropic-prompting-101-workshop.md`
-  - `ai-tools/build-your-own-mcp-server.md`
-  - `ai-tools/claude-code-101-academic-researchers.md`
-  - `ai-tools/claude-code-102-academic-researchers.md`
-  - `ai-tools/claude-code-advanced-tips-guide.md`
-  - `ai-tools/claude-code-complete-setup-guide.md`
-  - `ai-tools/claude-code-large-codebase-best-practices.md`
-  - `ai-tools/claude-code-routines-full-course.md`
-  - `ai-tools/claude-five-levels-framework.md`
-  - `ai-tools/claudemd-21-config-rules.md`
-  - `ai-tools/dont-outsource-the-learning.md`
-  - `ai-tools/founders-playbook-ai-native-startup.md`
-  - `ai-tools/harness-enterprise-ai-infrastructure-2026.md`
-  - `ai-tools/how-to-actually-use-claude.md`
-  - `ai-tools/how-to-build-ai-agents-2026-full-guide.md`
-  - `ai-tools/langsmith-engine-building-agent-for-improving-agents.md`
-  - `ai-tools/mattpocock-skills-workbook.md`
-  - `ai-tools/most-people-use-10-percent-of-claude-25-steps.md`
-  - `ai-tools/npx-skills-add-flow.md`
-  - `ai-tools/obsidian-business-ops-vault-with-claude-n8n.md`
-  - `ai-tools/obsidian-dashboard-everything-that-matters-today.md`
-  - `ai-tools/obsidian-llm-wiki-complete-guide.md`
-  - `ai-tools/oz-multi-harness-agent-orchestration.md`
-  - `ai-tools/prompt-master-workbook.md`
-  - `ai-tools/quarkus-langchain4j-mcp-hybrid-agents.md`
-  - `ai-tools/sft-rl-onpolicy-distillation-distributional-lens.md`
-  - `ai-tools/shopify-claude-code-setup.md`
-  - `ai-tools/skillify-skill-engineering-guide.md`
-  - `ai-tools/spring-ai-bedrock-agentcore-mcp-conference-app.md`
-  - `ai-tools/springio-2026-comparing-agentic-ai-frameworks-for-java.md`
-  - `ai-tools/thin-harness-fat-skills-garry-tan.md`
-  - `ai-tools/voice-agent-full-guide.md`
-  - `ai-tools/voice-agent-memory-harder-than-you-think.md`
-  - `ai-tools/why-senior-developers-fail-to-communicate-their-expertise.md`
-  - `ai-tools/why-we-need-continual-learning.md`
-  - `ai-tools/zero-to-ai-engineer-14-weeks.md`
-  📁 **agent-engineering/**
-    - `ai-tools/agent-engineering/10-claude-code-agents-pipeline.md`
-    - `ai-tools/agent-engineering/4-agent-content-production-system.md`
-    - `ai-tools/agent-engineering/agent-complexity-ratchet.md`
-    - `ai-tools/agent-engineering/agent-engineers-survival-guide.md`
-    - `ai-tools/agent-engineering/agent-harness-engineering.md`
-    - `ai-tools/agent-engineering/agent-memory-system-from-basics-to-production.md`
-    - `ai-tools/agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md`
-    - `ai-tools/agent-engineering/ai-first-engineering-team-guide.md`
-    - `ai-tools/agent-engineering/harness-enterprise-ai-infrastructure-2026.md`
-    - `ai-tools/agent-engineering/how-to-build-ai-agents-2026-full-guide.md`
-    - `ai-tools/agent-engineering/npx-skills-add-flow.md`
-    - `ai-tools/agent-engineering/obsidian-business-ops-vault-with-claude-n8n.md`
-    - `ai-tools/agent-engineering/quarkus-langchain4j-mcp-hybrid-agents.md`
-    - `ai-tools/agent-engineering/skillify-skill-engineering-guide.md`
-    - `ai-tools/agent-engineering/thin-harness-fat-skills-garry-tan.md`
-    - `ai-tools/agent-engineering/voice-agent-memory-harder-than-you-think.md`
-  📁 **claude/**
-    - `ai-tools/claude/20-claude-prompts-personal-assistant.md`
-    - `ai-tools/claude/7-days-claude-ai-employee-guide.md`
-    - `ai-tools/claude/claude-code-101-academic-researchers.md`
-    - `ai-tools/claude/claude-code-102-academic-researchers.md`
-    - `ai-tools/claude/claude-code-advanced-tips-guide.md`
-    - `ai-tools/claude/claude-code-routines-full-course.md`
-    - `ai-tools/claude/claude-five-levels-framework.md`
-    - `ai-tools/claude/claudemd-21-config-rules.md`
-    - `ai-tools/claude/how-to-actually-use-claude.md`
-  📁 **frameworks/**
-    - `ai-tools/frameworks/springio-2026-comparing-agentic-ai-frameworks-for-java.md`
-  📁 **ml-research/**
-    - `ai-tools/ml-research/sft-rl-onpolicy-distillation-distributional-lens.md`
-    - `ai-tools/ml-research/why-we-need-continual-learning.md`
+### agent-engineering/inference/ — LLM 推理
+| 文件 | 主题 |
+|------|------|
+| gpu-memory-math-llms-2026-ahmad.md | GPU 显存计算 |
+| inference-engines-decision-guide-2026-ahmad.md | 推理引擎决策指南 |
+| llms101-practical-guide-2026-ahmad.md | LLMs 101 实践指南 |
+| memory-bandwidth-local-ai-2026-ahmad.md | 内存带宽指南 |
+| rag-pipeline-10m-docs-google-l5.md | RAG 管道设计 |
 
-### database/ (`数据库 & 缓存`)
-  - `database/fastjson-deserialization-workbook.md`
-  - `database/notebooklm-maxxing-complete-guide.md`
-  - `database/redis-single-threaded-high-qps.md`
+### agent-engineering/patterns/ — 架构模式
+| 文件 | 主题 |
+|------|------|
+| 10-claude-code-agents-pipeline.md | Agent Pipeline |
+| 4-agent-content-production-system.md | 内容生产系统 |
+| agent-complexity-ratchet.md | 复杂性棘轮 |
+| agent-memory-system-from-basics-to-production.md | 记忆系统 |
+| agentic-memory-detailed-breakdown.md | Agentic Memory 详解 |
+| ai-automation-service-guide.md | AI 自动化服务 |
+| ai-evals-explained.md | AI 评估详解 |
+| how-to-build-ai-agents-2026-full-guide.md | 构建 Agent 完整指南 |
+| software-factory-trap-dhasandev.md | Software Factory Trap |
+| voice-agent-full-guide.md | Voice Agent 完整指南 |
+| voice-agent-memory-harder-than-you-think.md | Voice Agent 记忆 |
 
-### infrastructure/ (`基础设施 & 网络`)
-  - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
-  - `infrastructure/openclaw-weixin-network-requirements.md`
+### agent-engineering/tooling/ — 工具与技巧
+| 文件 | 主题 |
+|------|------|
+| claude-cowork-9-templates-mnilax.md | 9 个 Cowork 模板 |
+| codex-max-usage-guide-dotey.md | Codex 用到极致 |
+| mattpocock-skills-workbook.md | Skills 工作簿 |
+| prompt-master-workbook.md | Prompt 大师手册 |
 
-### programming/java/ (`Java`)
-  - `programming/java/java-8-function-complete-guide.md`
-  - `programming/java/java-backend-security-concepts.md`
-  - `programming/java/java-comparator-deep-dive.md`
-  - `programming/java/java-concurrency-complete-graph.md`
-  - `programming/java/java-concurrency-fundamentals.md`
-  - `programming/java/java-jvm-memory-model.md`
-  - `programming/java/spring-event-comprehensive-guide.md`
+### agent-engineering/career/ — 职业与团队
+| 文件 | 主题 |
+|------|------|
+| agent-engineers-survival-guide.md | Agent 工程师生存指南 |
+| ai-agent-roadmap-2026-what-to-learn-build-skip.md | 2026 学习路线图 |
+| ai-first-engineering-team-guide.md | AI First 团队指南 |
+| dont-outsource-the-learning.md | 不要外包学习 |
+| forward-deployed-engineering-101.md | FDE 入门 |
+| founders-playbook-ai-native-startup.md | AI Native 创业手册 |
+| why-senior-developers-fail-to-communicate-their-expertise.md | 沟通困境 |
+| zero-to-ai-engineer-14-weeks.md | 14 周 AI 工程师 |
 
-### spring/ (`Spring 框架`)
-  - `spring/spring-boot-api-encryption.md`
-  - `spring/spring-boot-autoconfiguration.md`
-  - `spring/spring-microservice-registry-comparison.md`
-  - `spring/spring-transaction-management.md`
+### claude/ — Claude Code 指南
+| 文件 | 主题 |
+|------|------|
+| 12-claude-code-setup-tricks.md | 设置技巧 |
+| 20-claude-prompts-personal-assistant.md | 20 个个人助手 Prompt |
+| 20-claude-skills-templates.md | Skills 模板 |
+| 7-days-claude-ai-employee-guide.md | 7 天 AI 员工指南 |
+| anthropic-prompting-101-workshop.md | Anthropic Prompting 101 |
+| claude-code-101-academic-researchers.md | 研究人员入门 |
+| claude-code-102-academic-researchers.md | 研究人员进阶 |
+| claude-code-advanced-tips-guide.md | 高级技巧 |
+| claude-code-complete-setup-guide.md | 完整设置指南 |
+| claude-code-large-codebase-best-practices.md | 大代码库实践 |
+| claude-code-routines-full-course.md | Routines 完整教程 |
+| claude-five-levels-framework.md | 五级框架 |
+| claudemd-21-config-rules.md | CLAUDE.md 配置规则 |
+| how-to-actually-use-claude.md | 实际使用指南 |
+| most-people-use-10-percent-of-claude-25-steps.md | Claude 25 步 |
+| shopify-claude-code-setup.md | Shopify 设置案例 |
 
-### sre/ (`SRE & 运维`)
-  - `sre/redis-outage-sre-response.md`
+### frameworks/ — 框架比较
+| 文件 | 主题 |
+|------|------|
+| quarkus-langchain4j-mcp-hybrid-agents.md | Quarkus + LangChain4j + MCP |
+| spring-ai-bedrock-agentcore-mcp-conference-app.md | Spring AI + Bedrock |
+| springio-2026-comparing-agentic-ai-frameworks-for-java.md | Java 框架比较 2026 |
 
----
+### obsidian/ — Obsidian 工作流
+| 文件 | 主题 |
+|------|------|
+| obsidian-business-ops-vault-with-claude-n8n.md | Business Ops + Claude + n8n |
+| obsidian-dashboard-everything-that-matters-today.md | Dashboard |
+| obsidian-llm-wiki-complete-guide.md | LLM Wiki 完整指南 |
+| obsidian-personal-operating-system.md | 个人操作系统 |
 
-总计 **98** 篇知识文档
+### ml-research/ — 机器学习论文
+| 文件 | 主题 |
+|------|------|
+| sft-rl-onpolicy-distillation-distributional-lens.md | SFT/RL/Distillation |
+| why-we-need-continual-learning.md | 持续学习 |
 
-## 🤖 分类说明
-
-本文档库按**内容关键词分析**自动分类（非 Tags 依赖）：
-
-1. 读取每个文档的**完整内容**（含代码示例）
-2. 提取技术关键词，对各领域**打分**
-3. Tags 作为**加分项**（+3/标签），不是主要条件
-4. 标题关键词额外加分（+5）
-5. 得分最高者胜出
-
-_[自动生成于 2026-05-20 04:08 UTC]_
-
+## 统计
+- **总文章数**: 66 篇
+- **配图**: ~50 张

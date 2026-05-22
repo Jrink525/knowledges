@@ -24,7 +24,7 @@ authors: "KyrieCheungYep, 0xDepressionn, nainsidwiv50980 & Anatoli Kopadze"
 > - [Stop Obsessing Over Prompts. Your Real Problem Is Probably CLAUDE.md — nainsidwiv50980](https://x.com/nainsidwiv50980/status/2056406042653909056)
 > - [21 Things Most Claude Users Have Never Set Up — Anatoli Kopadze](https://x.com/AnatoliKopadze/status/2050225292585607440)
 
-![CLAUDE.md 架构](../image/claudemd-architecture-1.jpg)
+![CLAUDE.md 架构](../../image/claudemd-architecture-1.jpg)
 
 ---
 
@@ -492,7 +492,7 @@ CLAUDE.md 层次结构
 
 > 从工程师转做出海业务，把 AI 塞进团队日常工作中。团队里那些反复出问题的地方，十有八九不是谁能力不行，而是该说清楚的规矩，从来没人好好写下来。CLAUDE.md 就是这件事在 AI 编程工具上的具象化。
 
-![CLAUDE.md 团队指南](../image/claudemd-team-guide-1.jpg)
+![CLAUDE.md 团队指南](../../image/claudemd-team-guide-1.jpg)
 
 ### 场景：同一个项目，Claude 在不同人手上表现完全不同
 

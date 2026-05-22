@@ -226,8 +226,8 @@ Karpathy 的 auto-research 项目和 Cursor 构建浏览器的例子都是早期
 
 ## 知识库关联
 
-- **[Agent Complexity Ratchet](../agent-engineering/agent-complexity-ratchet.md)** — Garry Tan 的"复利"论点是本文"从 Memento 到记忆"这一论点的工程实践版：个人 Agent 系统的复利根植于上下文编排，而本文论证这还不够，需要参数级学习。
-- **[Agent Harness Engineering](../agent-engineering/agent-harness-engineering.md)** — Addy Osmani 的 Harness 正是本文"非参数端"的实践详解。本文说"Harness 工作得很好，但天花板存在"，OS 文是"Harness 如何工作到最好"。
+- **[Agent Complexity Ratchet](../agent-engineering/patterns/agent-complexity-ratchet.md)** — Garry Tan 的"复利"论点是本文"从 Memento 到记忆"这一论点的工程实践版：个人 Agent 系统的复利根植于上下文编排，而本文论证这还不够，需要参数级学习。
+- **[Agent Harness Engineering](../agent-engineering/harness/agent-harness-engineering.md)** — Addy Osmani 的 Harness 正是本文"非参数端"的实践详解。本文说"Harness 工作得很好，但天花板存在"，OS 文是"Harness 如何工作到最好"。
 - **[4-Agent Content Production System](../agent-engineering/4-agent-content-production-system.md)** — 本文提到"多 Agent 架构作为上下文缩放策略"——4-Agent 系统正是放大上下文容量而不触及权重的具体实现。
 - **[10 Claude Code Agents Pipeline](../agent-engineering/10-claude-code-agents-pipeline.md)** — @zodchiii 的 10 Agent 管线是本文"协调的 Agent 群体"概念的实战验证。
 - **[Claude 五个能力等级框架](../claude/claude-five-levels-framework.md)** — Nate Herk 的 L5 "Cloud Routines"本质上需要一个持续学习能力——Agent 今天能做 L1-L4 的事，L5 要求模型从部署经验中学习。

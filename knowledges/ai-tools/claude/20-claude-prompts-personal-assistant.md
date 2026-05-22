@@ -407,4 +407,4 @@ C: [粘贴 JD C]
 
 ---
 
-**关联阅读：** [Agent Skill Engineering](./agent-engineering/skillify-skill-engineering-guide.md) · [AI Agent 学习路线图 2026](./agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md) · [Claude Code 101 学术研究者版](./claude/claude-code-101-academic-researchers.md)
+**关联阅读：** [Agent Skill Engineering](../agent-engineering/harness/skillify-skill-engineering-guide.md) · [AI Agent 学习路线图 2026](../agent-engineering/career/ai-agent-roadmap-2026-what-to-learn-build-skip.md) · [Claude Code 101 学术研究者版](./claude-code-101-academic-researchers.md)
