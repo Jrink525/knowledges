@@ -487,6 +487,118 @@ public AgentRunner(@Nullable @Qualifier("localFsBasePath") String localFsBasePat
 
 ---
 
+### 案例三：LangSmith Sandbox Auth Proxy — 生产级 Agent 网络安全
+
+> **来源：** [Harrison Chase (LangChain)](https://x.com/hwchase17/status/2057506580447510889)
+> **核心观点：** Agent 沙箱的网络安全是 Harness 的一等公民，凭证应留在运行时之外。
+
+#### 问题：一个 Agent = 一个不受信任的开发者
+
+企业给开发者配的笔记本电脑上有一整套安全工具：端点保护、浏览器过滤、设备管理、网络控制、密钥扫描……所有这些是为了让一个**受信的**员工不会意外泄漏凭证。
+
+Agent 把问题放大了几个数量级。你可能正在生成**成千上万甚至上百万个"不受信任的开发者"**——它们能写代码、跑命令、装包、发网络请求，而且完全由 AI 驱动。
+
+对于人类开发者，环境通常需要默认开放（需要探索、调试、装工具）。但对于 Agent，默认可以不同：
+
+> 如果任务已知，网络可以更窄。如果 Agent 只需要 GitHub 和一个 LLM provider，它就不应该能访问互联网上的任意主机。
+
+这就是沙箱网络成为 Harness 一等公民的原因。
+
+#### Auth Proxy 架构
+
+LangSmith Sandboxes 给 Agent 提供隔离环境来运行代码和操作文件，但隔离只是一部分——Agent 还需要调用外部 API（模型 provider、GitHub、包注册表、内部服务等）。
+
+Auth Proxy 是控制**沙箱出口边界**的中间层：
+
+```
+沙箱内代码 → Auth Proxy → 外部服务（OpenAI/GitHub/内部API等）
+                    ↓
+              策略引擎（拦截/放行/注入Header）
+```
+
+**三个核心改进：**
+
+1. **凭证不出运行时。** Agent 可以用 API 但读不到 API key，减少 prompt injection、恶意依赖、意外日志等泄露途径。
+2. **网络访问显式化。** 如果 Agent 只应该和 OpenAI、Anthropic、GitHub 通信，这应该是基础设施策略，而非交给 Agent 判断。
+3. **职责分离。** Agent 管任务，沙箱管隔离，Proxy 管网络授权和凭证注入，Auth Service 管用户级权限和 token 刷新。
+
+#### 凭证注入 vs 凭证暴露
+
+传统做法：将 API key 作为环境变量放进沙箱。Agent 的每个工具调用、包安装、日志行、文件写入都可能暴露凭证。
+
+Auth Proxy 的做法：拦截匹配规则的出站请求并自动注入 header。
+
+```
+规则示例：
+  sandbox 调用 api.openai.com     → 注入 Authorization: Bearer <workspace_secret>
+  sandbox 调用 api.github.com/*   → 注入 GitHub Token
+```
+
+| Header 类型 | 说明 |
+|-------------|------|
+| `workspace_secret` | 引用 LangSmith workspace 中存储的密钥 |
+| `plaintext` | 明文存储，非敏感 header |
+| `opaque` | 只写、加密存储，API 永不返回 |
+
+> Agent 需要的是凭证的效果——调用特定 API 的能力——而不是拥有凭证本身。
+
+#### 网络出口策略（Egress Policy）
+
+凭证只是网络问题的一半。Agent 还可能安装依赖、fetch 脚本、调用 API、跟踪不受信内容中的指令。
+
+Auth Proxy 可以在同一层定义出口策略：
+
+| 策略 | 说明 |
+|------|------|
+| 放行 LLM provider API，**阻止其他一切** | 最小网络权限 |
+| 仅放行 GitHub API 路径，阻止关联域名 | 精确范围控制 |
+| 只允许内部包镜像，拒绝外网注册表 | 依赖供应链安全 |
+| 阻止已知恶意包注册表 | 防御性策略 |
+| 阻止未授权的第三方服务调用 | 数据防泄漏 |
+
+> 如果 Agent 能 `pip install`、`npm install` 或 `curl | bash`，安全问题不只是沙箱能否隔离执行，还包括你是否能控制**代码的来源和数据的去向**。
+
+#### 动态凭证：生产级 OAuth
+
+对于更复杂的场景——短期 OAuth 访问 token、每用户范围 token、需要刷新的凭证——Auth Proxy 支持**动态凭证回调**：
+
+```
+沙箱请求匹配 host
+  → Proxy 无缓存凭证 → 调用你的回调端点 (host, port)
+  → 端点返回 {"headers": {"Authorization": "Bearer xxx"}}
+  → Proxy 注入并缓存（TTL 内复用）
+  → 回调失败时 fail closed
+```
+
+这意味着沙箱网络层可以参与 auth 流程，而无需向沙箱暴露 refresh token 或长期凭证。
+
+#### 未来扩展
+
+一旦控制了沙箱网络路径，Proxy 可以做得更多：
+
+| 能力 | 说明 |
+|------|------|
+| **DNS 重映射** | 将 `pypi.org` 解析到内部 Artifactory，LLM API 指向内部网关 |
+| **网络日志** | 记录 Agent 调用了哪些服务、获取了哪些包、尝试了哪些域名 → 审计追踪 |
+| **请求转换** | 脱敏 PII、添加组织元数据、阻止违规负载 |
+
+> **更广泛的洞见：** Agent 基础设施需要**位于运行时之外的、不受 Agent 指令/决策影响**的控制平面。凭证管理、网络策略这些事，不应该交给 Agent 自己做决定。
+
+#### 与国内实践的结合
+
+| Auth Proxy 能力 | QQ音乐 映射 | Java 微服务映射 |
+|----------------|-----------|----------------|
+| **凭证注入** | 服务矩阵中的契约校验 | H2/本地替代不依赖云端凭证 |
+| **Egress Policy** | 五阶段门禁控制 AI 接触的代码范围 | Profile 隔离控制本地 vs 线上路径 |
+| **网络日志/审计** | 追溯链（TAPD ID → 分支名 → 门禁记录） | verify-local.sh 脚本日志 |
+| **DNS 重映射** | 三仓分支解耦 | 本地 H2 → 在线 TDDL MySQL |
+| **Fail Closed 原则** | 门禁阻塞而非放行 | @Profile 不匹配时注入 null |
+| **职责分离** | Harness 层 vs 执行层分离 | 接口抽象（线上/本地实现分离） |
+
+> **核心启示：** 安全策略应该放在基础设施层，而不是留给 Agent 自我约束。对于国内企业，这意味着 Harness 不仅要管流程和知识，还要管网络边界和凭证注入。
+
+---
+
 ## 第四篇：落地指南 — Harness 架构师的 7 个核心选择 🔧
 
 ### 选择 1：Single-Agent vs Multi-Agent
