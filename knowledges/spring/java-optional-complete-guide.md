@@ -1,5 +1,5 @@
 ---
-title: "Java Optional 完全指南：11 种实战模式与最佳实践"
+title: "Java Optional 完全指南：11 种实战模式 + 完整 API 速查"
 tags:
   - java
   - optional
@@ -7,23 +7,24 @@ tags:
   - best-practices
   - clean-code
   - spring-boot
-date: 2026-05-23
-source: "merged from WeChat + Dev Genius (Medium)"
-authors: "Spring Boot 实战案例锦集 + Ani Talakhadze"
+date: 2026-05-24
+source: "merged from WeChat + Dev Genius (Medium) + wangjstu Notion"
+authors: "Spring Boot 实战案例锦集 + Ani Talakhadze + wangjstu"
 ---
 
-# Java Optional 完全指南：11 种实战模式与最佳实践
+# Java Optional 完全指南：11 种实战模式 + 完整 API 速查
 
 > **合稿来源：**
 > - 微信公众号「Spring Boot 实战案例锦集」— 《方法别再返回 null 了！Optional 的 4 种高级模式》
-> - [Cleaner Code with Java Optional: Examples, Best Practices and Exercises](https://blog.devgenius.io/cleaner-code-with-java-optional-examples-best-practices-and-exercises-005f2a9a6a7d) by Ani Talakhadze / Dev Genius
+> - [Cleaner Code with Java Optional](https://blog.devgenius.io/cleaner-code-with-java-optional-examples-best-practices-and-exercises-005f2a9a6a7d) by Ani Talakhadze / Dev Genius
+> - wangjstu 的 Notion 笔记
 > **环境参考：** Spring Boot 3.5.0
 
 ---
 
 ## 概述
 
-在 Java 业务开发中，查询方法直接返回 `null` 是引发 NPE 的核心隐患；嵌套对象空判断形成「防御式判断金字塔」，降低可读性；错误使用 `Optional`（如作参数、类字段）破坏框架兼容性。本文整合两篇优质资源，覆盖从入门到进阶的全部模式与陷阱。
+在 Java 业务开发中，查询方法直接返回 `null` 是引发 NPE 的核心隐患；嵌套对象空判断形成「防御式判断金字塔」，降低可读性；错误使用 `Optional`（如作参数、类字段）破坏框架兼容性。本文整合多篇资源，覆盖从入门到进阶的全部模式与陷阱。
 
 ---
 
@@ -156,14 +157,23 @@ public Optional<String> getPrimaryCity(Long userId) {
         .map(Address::getCity);               // Optional<String>
 }
 
-// ✅ 真实业务：订单折扣链
-public Optional<BigDecimal> resolveDiscount(Long orderId) {
-    return orderRepository.findById(orderId)   // Optional<Order>
-        .flatMap(Order::getPromoCode)          // Optional<PromoCode>
-        .flatMap(promoCodeService::findDiscount); // Optional<BigDecimal>
-}
+// ✅ map vs flatMap 对比
+class Test {
+    public static void main(String[] args) {
+        Optional<String> s = Optional.of("input");
+        System.out.println(s.map(Test::getOutput));         // Optional[output for map input]
+        System.out.println(s.flatMap(Test::getOutputOpt));   // Optional[output for flatMap input]
+    }
 
-BigDecimal discount = resolveDiscount(orderId).orElse(BigDecimal.ZERO);
+    static String getOutput(String input) {
+        return input == null ? null : "output for map " + input;
+    }
+
+    static Optional<String> getOutputOpt(String input) {
+        return input == null ? Optional.empty()
+            : Optional.of("output for flatMap " + input);
+    }
+}
 ```
 
 **经验法则：** 处理普通值 → `map()`；处理返回 `Optional` 的方法 → `flatMap()`。
@@ -189,6 +199,8 @@ public Optional<Product> findProductByName(String name) {
 }
 ```
 
+**注意：** `Optional.empty()` 是非单例的，不可以用 `==` 与其他对象对比判定空值，建议用 `isPresent()`。
+
 ---
 
 ### 🟢 模式 6：用 filter() 做条件筛选
@@ -207,6 +219,12 @@ public Optional<User> getActiveUser(User user) {
     return Optional.ofNullable(user)
         .filter(User::isActive);
 }
+
+// ✅ filter 结合 map 的链式调用
+Optional.of("Hello World")
+    .filter(s -> s.length() > 10)
+    .map(String::length)
+    .ifPresent(System.out::println);
 ```
 
 ---
@@ -248,23 +266,35 @@ public void processOrder(Long orderId) {
 ### 🟢 模式 8：orElse vs orElseGet —— 明智选择
 
 ```java
-private String generateDefaultUsername() {
-    TimeUnit.SECONDS.sleep(1); // 耗时操作
-    return "GuestUser";
-}
-
-// ❌ orElse —— 无论 Optional 是否有值都计算
-public String getUsername(String userId) {
-    return findUsername(userId).orElse(generateDefaultUsername());
-}
-
-// ✅ orElseGet —— 仅在 Optional 为空时惰性求值
-public String getUsername(String userId) {
-    return findUsername(userId).orElseGet(this::generateDefaultUsername);
+private User createNewUser() {
+    logger.debug("Creating New User");
+    return new User("extra@gmail.com", "1234");
 }
 ```
 
-**规则：** 简单常量 → `orElse()`；昂贵计算 → `orElseGet()`。
+**场景一：Optional 为空时** — 两者行为一样，都会调用方法。
+
+```java
+User user = null;
+User result  = Optional.ofNullable(user).orElse(createNewUser());
+User result2 = Optional.ofNullable(user).orElseGet(() -> createNewUser());
+// out:
+// Creating New User    ← orElse 执行
+// Creating New User    ← orElseGet 执行
+```
+
+**场景二：Optional 非空时** — `orElse` 仍然调用，`orElseGet` 不调用。
+
+```java
+User user = new User("john@gmail.com", "1234");
+User result  = Optional.ofNullable(user).orElse(createNewUser());
+User result2 = Optional.ofNullable(user).orElseGet(() -> createNewUser());
+// out:
+// Creating New User    ← orElse 仍执行！浪费！
+//                      ← orElseGet 跳过
+```
+
+**结论：** 如果默认值的生成涉及**数据库查询、API 调用、耗时计算**，必须用 `orElseGet()`，避免不必要的性能开销。
 
 ---
 
@@ -352,19 +382,43 @@ public class User {
 
 ---
 
-## 第二部分：方法速查表
+## 第二部分：完整 API 方法速查
 
-| 方法 | 用途 | 何时用 |
-|------|------|--------|
-| `Optional.ofNullable(v)` | 安全包装可能为 null 的值 | 链式调用的起点 |
-| `.map(fn)` | 转换值（值存在时） | 用 `if (x != null) return x.y()` 的地方 |
-| `.flatMap(fn)` | 转换返回 Optional 的值 | 被调用方法也返回 Optional 时 |
-| `.filter(pred)` | 按条件筛选 Optional | 需要附加条件时，如 `.filter(User::isActive)` |
-| `.orElse(default)` | 空时返回默认值 | 默认值简单、计算便宜时 |
-| `.orElseGet(supplier)` | 空时惰性计算默认值 | 默认值昂贵、应延迟计算时 |
-| `.orElseThrow(ex)` | 空时抛异常 | 数据不应缺失时 |
-| `.ifPresent(consumer)` | 值存在时执行操作 | 取代 `if (x != null) { ... }` |
-| `.ifPresentOrElse(a, b)` | 值存在/缺失分别执行 | 取代 `if (x.isPresent()) ... else ...` (Java 9+) |
+| 修饰符 & 返回类型 | 方法 | 说明 |
+|---|---|---|
+| `static <T> Optional<T>` | `empty()` | 返回空 Optional 实例。非单例，不应用 `==` 判空，建议用 `isPresent()` |
+| `boolean` | `equals(Object obj)` | 检测对象是否「等于」此 Optional（同为 Optional、同时有值/无值、值相同） |
+| `Optional<T>` | `filter(Predicate<? super T> pred)` | 值存在且与 Predicate 匹配则返回该 Optional，否则返回空。predicate 为 null 抛 NPE |
+| `<U> Optional<U>` | `flatMap(Function<? super T, Optional<U>> mapper)` | 值存在则应用 mapping 函数并**展平**结果（不嵌套包装）。mapper 返回 null 抛 NPE |
+| `T` | `get()` | 值存在返回值，否则抛 `NoSuchElementException` |
+| `int` | `hashCode()` | 返回当前值的哈希码；无值返回 0 |
+| `void` | `ifPresent(Consumer<? super T> consumer)` | 值存在则用该值调用 consumer。consumer 为 null 抛 NPE |
+| `boolean` | `isPresent()` | 值存在返回 `true`，否则 `false` |
+| `<U> Optional<U>` | `map(Function<? super T, ? extends U> mapper)` | 值存在则应用 mapping 函数，结果非空则包装为 Optional，否则空。mapper 为 null 抛 NPE |
+| `static <T> Optional<T>` | `of(T value)` | 返回包含**非空值**的 Optional。value 为 null 抛 NPE |
+| `static <T> Optional<T>` | `ofNullable(T value)` | value 非空则返回描述该值的 Optional，否则返回空 |
+| `T` | `orElse(T other)` | 值存在返回值，否则返回 other |
+| `T` | `orElseGet(Supplier<? extends T> other)` | 值存在返回值，否则调用 other。other 为 null 抛 NPE |
+| `<X extends Throwable> T` | `orElseThrow(Supplier<? extends X> excSupplier)` | 值存在返回值，否则抛 excSupplier 创建的异常 |
+| `String` | `toString()` | 返回值的非空字符串表示。有值 → `Optional[值]`，空 → `Optional.empty` |
+
+### 快速选型指南
+
+| 场景 | 该用哪个 |
+|------|---------|
+| 包装一个可能为 null 的值 | `Optional.ofNullable(v)` |
+| 包装一个肯定非 null 的值 | `Optional.of(v)` |
+| 创建一个空 Optional | `Optional.empty()` |
+| 转换值（普通字段访问） | `.map(Function)` |
+| 转换值（嵌套返回 Optional） | `.flatMap(Function)` |
+| 条件筛选 | `.filter(Predicate)` |
+| 有值时做操作 | `.ifPresent(Consumer)` |
+| 有值/无值分别做操作 | `.ifPresentOrElse(Consumer, Runnable)` |
+| 提供默认值（便宜） | `.orElse(default)` |
+| 提供默认值（昂贵） | `.orElseGet(Supplier)` |
+| 无值时抛异常 | `.orElseThrow(Supplier)` |
+| 判空 | `.isPresent()`（或 `.ifPresent`） |
+| 获取值（不推荐直接调用） | `.get()` |
 
 ---
 
@@ -382,11 +436,18 @@ public class User {
 
 ---
 
-## 练习
+## 参考文章
 
-Ani Talakhadze 提供了包含练习题的 GitHub 仓库：
-[https://github.com/anitalakhadze/refactor-using-optional](https://github.com/anitalakhadze/refactor-using-optional)
+1. [Java 8 Optional 官方文档](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html)
+2. [Baeldung: Guide to Optional](https://www.baeldung.com/java-optional)
+3. [Baeldung: Uses for Optional](https://www.baeldung.com/java-optional-uses)
+4. [Oracle 官方文章: Tired of Null Pointer Exceptions?](https://www.oracle.com/technical-resources/articles/java/java8-optional.html)
+5. [StackOverflow: Uses for Optional](https://stackoverflow.com/questions/23454952/uses-for-optional)
+6. [StackOverflow: Why should Optional not be used in arguments](https://stackoverflow.com/questions/31922866/why-should-java-8s-optional-not-be-used-in-arguments)
+7. [StackOverflow: Optional flatMap vs map](https://stackoverflow.com/questions/30864583/what-is-the-difference-between-optional-flatmap-and-optional-map)
+8. [Dev Genius: Cleaner Code with Java Optional](https://blog.devgenius.io/cleaner-code-with-java-optional-examples-best-practices-and-exercises-005f2a9a6a7d)
+9. [GitHub: refactor-using-optional (练习题)](https://github.com/anitalakhadze/refactor-using-optional)
 
 ---
 
-*Merged on 2026-05-23 from 微信公众号「Spring Boot 实战案例锦集」 + Dev Genius (Medium)*
+*Merged on 2026-05-24 from 微信公众号「Spring Boot 实战案例锦集」 + Dev Genius (Medium) + wangjstu Notion*
