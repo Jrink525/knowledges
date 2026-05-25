@@ -3,7 +3,7 @@
 > **一站式指南：从入门到生产级 GOAP 智能体开发**
 >
 > 作者：Rod Johnson（Spring 创始人）| 框架定位：JVM 上的下一代 Agent 框架
-> 关键词：GOAP、OODA 循环、强类型 Agent、Spring 集成、LLM 混用、多 Action 编排、Persona
+> 关键词：GOAP、OODA 循环、强类型 Agent、Spring 集成、LLM 混用
 
 ---
 
@@ -19,7 +19,7 @@
 8. [生产级配置：LLM 混用与平台适配](#8-生产级配置)
 9. [测试策略](#9-测试策略)
 10. [常见陷阱与解决方案](#10-常见陷阱与解决方案)
-11. [完整示例](#11-完整示例)
+11. [完整示例：StarNewsFinder Agent](#11-完整示例)
 12. [生态与资源](#12-生态与资源)
 
 ---
@@ -31,8 +31,6 @@
 Embabel（发音 /ɛmˈbeɪbəl/）是由 **Spring 框架创始人 Rod Johnson** 打造的新一代 JVM Agent 框架。它不是一个简单的 LLM 封装库，而是一个 **目标导向的智能体（Goal-Oriented Agent）编排平台**。
 
 > **一句话定位：** Embabel 之于 Spring AI，就像 Spring MVC 之于 Servlet API。
-
-Rod Johnson 形容 Embabel 是他自 Spring 以来最重要的项目。框架用 Kotlin 编写，但对 Java 开发者非常友好。
 
 ### 1.2 与同类框架的对比
 
@@ -47,23 +45,7 @@ Rod Johnson 形容 Embabel 是他自 Spring 以来最重要的项目。框架用
 
 > **Rod Johnson 的原话：** "Embabel 提供的是比 LangChain4j 和 Spring AI 高得多的抽象层。它建立在 Spring AI 之上，但引入了全新的原创思想。"
 
-### 1.3 Embabel vs Spring AI（一文讲清）
-
-这是一个常见疑问。关键在于：**Embabel 和 Spring AI 是不同抽象层**：
-
-| 维度 | Spring AI | Embabel |
-|------|-----------|---------|
-| 定位 | AI 集成框架 | Agent 编排框架 |
-| 职责 | 模型抽象（Chat/Embedding/Image）、向量存储、工具调用 | 目标驱动的 Action 编排、GOAP 规划、条件评估 |
-| 关系 | Spring AI 是 LLM 调用层 | Embabel 可以**运行在 Spring AI 之上**，用其模型抽象 |
-| 编排 | 开发者硬编码 chain / flow | 系统用 GOAP 算法**动态规划** Action 序列 |
-| 典型使用 | 聊天、RAG、简单工具链 | 多步推理、条件分支、自适应重规划 |
-
-**实践中**：
-- Spring AI 帮你"和模型说话、连接 AI 组件"
-- Embabel 帮你"构建 Agent —— Agent 自主决定执行哪些 Action 来达成 Goal，并动态重规划"
-
-### 1.4 为什么需要 Agent 框架？
+### 1.3 为什么需要 Agent 框架？
 
 直接调用 LLM API 也能写代码，但 Agent 框架提供了：
 
@@ -74,11 +56,11 @@ Rod Johnson 形容 Embabel 是他自 Spring 以来最重要的项目。框架用
 - **安全护栏**：在多个环节施加保护
 - **规划能力**：系统自动发现路径，而非程序员硬编码
 
-### 1.5 JVM 还是 Python？
+### 1.4 JVM 还是 Python？
 
 > "Agent 框架最初确实以 Python 为主，但现在还很早期，还有大量创新空间。关键的不在于与 LLM 的邻接关系（LLM 只是一个 HTTP 调用），而在于**现有的代码和基础设施资产——这些在 JVM 上远比 Python 有价值**。"
 
-**Embabel 的核心信念：** Java 团队不需要切到 Python 来开发 AI 应用。现有的业务逻辑、基础设施、工具链可以直接复用。通过强类型和在确定性代码中使用 LLM，你得到的 Agent "既智能，又不失控"。
+**Embabel 的核心信念：** Java 团队不需要切到 Python 来开发 AI 应用。现有的业务逻辑、基础设施、工具链可以直接复用。
 
 ---
 
@@ -88,10 +70,10 @@ Embabel 用五个核心抽象来描述 Agentic Flow：
 
 ### 2.1 Action（动作）
 
-Agent 执行的最小工作单元。可以是一个 LLM 调用、一段业务代码、一个外部 API 请求。每个 Action 有类型化的输入和输出。
+Agent 执行的最小工作单元。可以是一个 LLM 调用、一段业务代码、一个外部 API 请求。
 
 ```java
-@Action(description = "Retrieve daily horoscope for a person")
+@Action
 public Horoscope retrieveHoroscope(StarPerson starPerson) {
     return new Horoscope(horoscopeService.dailyHoroscope(starPerson.sign()));
 }
@@ -99,51 +81,28 @@ public Horoscope retrieveHoroscope(StarPerson starPerson) {
 
 ### 2.2 Goal（目标）
 
-Agent 试图达成的状态。Goal 由 `@AchievesGoal` 注解标记在某个 Action 方法上——意味着一旦这个 Action 成功执行，Goal 就算达成。
+Agent 试图达成的状态。目标由 Conditions 来评估是否已达成。
 
 ```java
 @AchievesGoal(
     description = "Write an amusing writeup for the target person based on their horoscope and current news stories",
-    export = @Export(remote = true, name = "starNewsWriteupJava",
-        startingInputTypes = {StarPerson.class, UserInput.class})
+    export = @Export(
+        remote = true,
+        name = "starNewsWriteupJava",
+        startingInputTypes = {StarPerson.class, UserInput.class}
+    )
 )
 @Action
 public Writeup writeup(/* ... */) { /* ... */ }
 ```
 
-Goal 可以使用 `examples` 属性提供自然语言示例，帮助系统理解该 Goal 的适用范围：
-
-```java
-@AchievesGoal(
-    description = "Investigate an incident signal and produce a complete incident case",
-    examples = {
-        "Investigate telemetry anomalies near (lon,lat) in a time window and propose containment",
-        "Assess implant incident risk and recommend actions"
-    })
-```
-
 ### 2.3 Condition（条件）
 
-执行 Action 前的前置条件（Precondition），或判断 Goal 是否达成的后置条件。每次 Action 执行后都会重新评估（形成 OODA 循环）。
-
-大部分 Conditions 由**数据流自动推断**：当一个 Action 的输入类型是另一个 Action 的输出类型时，框架自动推导出依赖关系。GOAP 规划器利用这些依赖关系决定 Action 的执行顺序和并行性。
+执行 Action 前的前置条件，或判断 Goal 是否达成的后置条件。每次 Action 执行后都会重新评估。
 
 ### 2.4 Domain Model（领域模型）
 
 支撑 Flow 的对象模型，可以包含行为。**这是强类型的核心优势**——所有 Action、Goal、Condition 都由领域模型驱动。
-
-```java
-// ✅ 好的设计：明确的类型
-public record IncidentSignal(
-    @NotNull double longitude,
-    @NotNull double latitude,
-    @Positive double radiusMeters,
-    @NotNull @Past LocalDateTime from,
-    @NotNull @Past LocalDateTime to,
-    @NotNull @NotEmpty String metric,
-    @Positive double threshold
-) { }
-```
 
 ### 2.5 Plan（计划）
 
@@ -162,7 +121,6 @@ Observe → Orient → Decide → Act → (loop)
 | **强类型安全** | `Map<String, Object>` 的噩梦结束了——编译期检查、重构支持 |
 | **平台无关** | 编程模型与运行平台分离：本地开发 → 生产高 QoS，代码不变 |
 | **LLM 混用** | 轻松混合不同模型，关键任务用强模型，简单任务用便宜/本地模型 |
-| **确定性 + 非确定性混合** | LLM 用于"模糊"部分（解析、假设生成），Java 用于"硬"部分（查询、评分、规则） |
 
 ---
 
@@ -179,88 +137,36 @@ Observe → Orient → Decide → Act → (loop)
 
 **5 分钟不到就能跑起来一个 Agent！**
 
-或者从 Spring Initializr 手动创建：选择 Spring Boot **3.5.x**（Embabel 暂不支持 Boot 4.x），语言 Java 17+。
-
 ### 3.2 Maven 依赖
 
 ```xml
-<!-- 版本属性 -->
-<properties>
-    <java.version>25</java.version>
-    <embabel.version>0.4.0-SNAPSHOT</embabel.version>
-    <spring-ai.version>1.1.4</spring-ai.version>
-</properties>
-
-<!-- Spring AI BOM -->
+<!-- BOM -->
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-bom</artifactId>
-            <version>${spring-ai.version}</version>
+            <groupId>com.embabel.agent</groupId>
+            <artifactId>embabel-agent-bom</artifactId>
+            <version>${embabel.version}</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
     </dependencies>
 </dependencyManagement>
 
-<!-- Embabel Starter + LLM Provider -->
-<dependencies>
-    <dependency>
-        <groupId>com.embabel.agent</groupId>
-        <artifactId>embabel-agent-starter-shell</artifactId>
-        <version>${embabel.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.ai</groupId>
-        <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-    </dependency>
-</dependencies>
+<!-- Core -->
+<dependency>
+    <groupId>com.embabel.agent</groupId>
+    <artifactId>embabel-agent-starter</artifactId>
+</dependency>
+
+<!-- LLM Provider -->
+<dependency>
+    <groupId>com.embabel.agent</groupId>
+    <artifactId>embabel-agent-openai-autoconfigure</artifactId>
+</dependency>
 ```
 
-**LLM Provider 选项**：
-
-| Starter | 用途 |
-|---------|------|
-| `embabel-agent-starter-shell` | Spring Shell 交互式应用（开发/学习最佳） |
-| `embabel-agent-starter` | 核心 Starter（无 Shell，用于 Web App） |
-| `spring-ai-openai-spring-boot-starter` | OpenAI 模型 |
-| `embabel-agent-starter-ollama` | Ollama 本地模型 |
-
-**注意**：需要添加 Embabel Snapshot 仓库到 `pom.xml` 才能解析依赖。
-
-### 3.3 配置
-
-**application.properties 或 application.yaml**：
-
-```yaml
-# 禁用 Web 应用，启用 Spring Shell 交互模式
-spring:
-  main:
-    web-application-type: none
-  shell:
-    interactive:
-      enabled: true
-
-embabel:
-  models:
-    default-llm: gpt-4.1-mini    # 默认模型（便宜快速）
-    llm:
-      reviewer: gpt-4.1           # 按角色指定不同模型
-
-spring:
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-```
-
-**Ollama 配置**：
-
-```properties
-embabel.models.default-llm=llama3.1:8b
-```
-
-### 3.4 第一个 Agent（Hello World）
+### 3.3 第一个 Agent（Java 版）
 
 ```java
 @Agent(description = "A simple greeting agent")
@@ -280,42 +186,22 @@ public class HelloAgent {
 
 Spring Boot 启动后自动扫描 `@Agent` 类，像 Spring Bean 一样管理。
 
-### 3.5 运行 Agent
-
-启动应用后，Embabel 控制台显示 ASCII Art 和命令提示符。内置命令：
-
-| 命令 | 功能 |
-|------|------|
-| `agents` | 列出所有注册的 Agent、Goal、Action |
-| `models` | 列出可用 LLM 和角色映射 |
-| `x <message>` / `execute <message>` | 执行 Agent |
-
-```bash
-x How to get started with Spring Boot
-```
-
-加 `-p` 参数可查看详细调试输出（包含发送给 LLM 的完整消息和 JSON Schema）：
-
-```bash
-x -p How to get started with Spring Boot
-```
-
 ---
 
 ## 4. 深入理解：GOAP 规划引擎
 
 ### 4.1 什么是 GOAP？
 
-**Goal-Oriented Action Planning（目标导向行动规划）** 最初来自游戏 AI（如《F.E.A.R.》），是一种 **非 LLM 的 AI 规划算法**。Embabel 使用 A* 搜索算法实现 GOAP。
+**Goal-Oriented Action Planning（目标导向行动规划）** 最初来自游戏 AI（如《F.E.A.R.》），是一种 **非 LLM 的 AI 规划算法**。
 
 ### 4.2 GOAP 的工作原理
 
 1. **系统状态**：当前的世界状态（由 Domain Model 描述）
-2. **Goal**：期望的目标状态（由 `@AchievesGoal` 定义）
+2. **Goal**：期望的目标状态（由 Conditions 定义）
 3. **Action 的 Preconditions / Effects**：
-   - 某个 Action 执行前需要什么条件（输入类型）
-   - 执行后会产出什么（输出类型，改变世界状态）
-4. **规划器**：从当前状态出发，通过 A* 搜索一条 Action 序列，使目标状态达成
+   - 某个 Action 执行前需要什么条件
+   - 执行后会改变什么状态
+4. **规划器**：从当前状态出发，搜索一条 Action 序列，使目标状态达成
 
 ### 4.3 与 LLM 规划的区别
 
@@ -325,7 +211,7 @@ x -p How to get started with Spring Boot
 | 可解释性 | **强**（可追踪规划树） | 弱（黑盒） |
 | 效率 | **优**（最小化 LLM 调用） | 差（每次都要 LLM 决策） |
 | 组合性 | **强**（新 Action 自动可用） | 一般 |
-| 并行决策 | **原生支持**（无依赖 Action 可并行） | 需手动编排 |
+| 并行决策 | **原生支持** | 需手动编排 |
 
 > GOAP 作为默认规划器，但也支持 **Utility AI**（基于效用分数的行动选择），适用于探索性、开放性任务。
 
@@ -416,6 +302,7 @@ var result = agentPlatform.runClosed(new UserInput("Book a flight to London"));
 - 可通过 `GoalChoiceApprover` 接口限制 Goal 选择
 
 ```java
+// Open 模式：系统会自动寻找最佳路径
 var result = agentPlatform.runOpen(new UserInput("Plan a weekend trip to Paris with flight under $500"));
 ```
 
@@ -442,7 +329,7 @@ public class TravelAgent {
         this.hotelService = hotelService;
     }
 
-    @Action(description = "Parse user input into structured trip data")
+    @Action
     public TripInput parseInput(UserInput input, Ai ai) {
         return ai.createObject(
             "Extract destination, dates, and budget from: " + input.getContent(),
@@ -450,15 +337,17 @@ public class TravelAgent {
         );
     }
 
-    @Action(description = "Search for available flights")
+    @Action(toolGroups = {CoreToolGroups.WEB})
     public FlightOptions searchFlights(TripInput trip, Ai ai) {
+        // 混合 LLM 用于搜索
         return ai.withLlm(OpenAiModels.GPT_41_MINI)
                  .createObject("Find flights: " + trip, FlightOptions.class);
     }
 
     @AchievesGoal(description = "Complete travel plan")
-    @Action(description = "Assemble a complete travel itinerary")
+    @Action
     public Itinerary buildPlan(TripInput trip, FlightOptions flights, Ai ai) {
+        // 用更强的模型做最终计划
         return ai.withLlm(OpenAiModels.GPT_41)
                  .createObject("Create travel plan: " + trip, Itinerary.class);
     }
@@ -469,9 +358,9 @@ public class TravelAgent {
 
 | 注解 | 用途 |
 |------|------|
-| `@Agent` | 标记一个类为 Agent（类似 `@Controller`，也是 `@Component`） |
-| `@Action` | 标记一个方法为 Action，`description` 用于规划器理解 |
-| `@AchievesGoal` | 声明完成该 Action 即达成某个 Goal，`examples` 提供自然语言匹配 |
+| `@Agent` | 标记一个类为 Agent（类似 `@Controller`） |
+| `@Action` | 标记一个方法为 Action |
+| `@AchievesGoal` | 声明完成该 Action 即达成某个 Goal |
 | `@Condition` | 标记条件评估方法 |
 
 ### 6.2 Kotlin DSL 风格
@@ -488,6 +377,7 @@ agent {
     }
     
     action("searchFlights") {
+        toolGroups = [CoreToolGroups.WEB]
         execute { trip ->
             ai.withLlm(OpenAiModels.GPT_41_MINI)
               .createObject("Find flights: $trip", FlightOptions::class)
@@ -516,7 +406,7 @@ agent {
 - 「我们在需要的地方加了 Java 代码确保 Java 体验」
 - **Embabel 是 JVM 框架，不是 Kotlin 框架**
 
-> 💡 **建议**：现有 Spring 项目用 Java 注解风格，新项目可考虑 Kotlin DSL。
+> 💡 **建议**：现有 Spring 项目用 Java 注解风格，新项目可以考虑 Kotlin DSL。
 
 ---
 
@@ -534,7 +424,7 @@ agent {
 - Action 太粗导致无法复用
 
 ```
-✅ parseInput → queryDatabase → scoreResults → assembleReport
+✅ parseInput → searchFlights → searchHotels → buildItinerary
 ❌ doEverything → generateFullReport  (一个 Action 包揽所有)
 ```
 
@@ -544,23 +434,13 @@ Domain Model 是 Embabel 的心脏。**强类型**的好处：
 
 ```java
 // ✅ 好的设计：明确的类型
-public record IncidentSignal(
-    @NotNull double longitude,
-    @NotNull double latitude,
-    @Positive double radiusMeters,
-    @NotNull @Past LocalDateTime from,
-    @NotNull @Past LocalDateTime to,
-    @NotNull @NotEmpty String metric,
-    @Positive double threshold
-) { }
-
-public enum RiskLevel { LOW, MEDIUM, HIGH, CRITICAL }
-
-public record IncidentAssessment(
-    IncidentSignal signal,
-    int numberOfLogs,
-    RiskLevel riskLevel
-) { }
+public class TripInput {
+    private String destination;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal budget;
+    // getters...
+}
 
 // ❌ 糟糕的设计：Map 地狱
 public class TripInput {
@@ -573,28 +453,21 @@ public class TripInput {
 - 避免 `Map<String, Object>` 传递数据
 - 利用 Java 的重构支持（重命名、提取等）
 
-### 7.3 LLM 使用策略：只在需要的地方用 LLM
+### 7.3 LLM 分层策略
 
-Embabel 的核心模式：**LLM 用于模糊部分，Java 处理硬逻辑**。
+Embabel 原生支持混合 LLM：
 
 ```java
 @Action
-public IncidentAssessment triageIncidentSignal(UserInput input, OperationContext context) {
-    // ⚡ LLM 部分：将用户自然语言解析为结构化对象
-    IncidentSignal signal = context.ai().withDefaultLlm().createObject(
-        """
-        Extract an IncidentSignal from the user's message.
-        - lon is a number in [-180, 180]
-        - lat is a number in [-90, 90]
-        ...
-        """, IncidentSignal.class);
+public ExpensiveAnalysis deepAnalysis(Data data, Ai ai) {
+    // 复杂任务用 GPT-4.1 / Claude Sonnet
+    return ai.withLlm(OpenAiModels.GPT_41).createObject(prompt, ExpensiveAnalysis.class);
+}
 
-    // 🔧 确定性部分：业务规则，不需要 LLM
-    Map<String, List<ImplantMonitoringLog>> logs = logService.findLogsByAreaAndTime(...);
-    RiskLevel risk = classifyRisk(logs, signal);
-
-    // ✅ 返回强类型结果
-    return new IncidentAssessment(signal, logs.size(), risk);
+@Action
+public CheapExtraction quickExtract(Data data, Ai ai) {
+    // 简单任务用 GPT-4.1-Mini 或本地模型
+    return ai.withLlm(OpenAiModels.GPT_41_MINI).createObject(prompt, CheapExtraction.class);
 }
 ```
 
@@ -607,74 +480,7 @@ public IncidentAssessment triageIncidentSignal(UserInput input, OperationContext
 | 敏感数据 / 离线场景 | 本地模型（Ollama） | 隐私和成本 |
 | 总结、摘要 | 便宜模型 | 质量够用 |
 
-### 7.4 Persona（角色）可复用设计
-
-Embabel 支持提取角色描述为可复用的 Persona 对象，减少 Prompt 重复：
-
-```java
-public abstract class Personas {
-    public static final RoleGoalBackstory WRITER = new RoleGoalBackstory(
-        "Software developer and educator",
-        "Write practical, beginner-friendly blog posts",
-        "Experienced developer who loves teaching through clear, simple writing"
-    );
-
-    public static final RoleGoalBackstory REVIEWER = new RoleGoalBackstory(
-        "Technical editor",
-        "Review and improve blog posts for clarity and accuracy",
-        "Meticulous editor with deep technical knowledge"
-    );
-}
-
-// 在 Action 中使用
-@Action(description = "Write a first draft of the blog post")
-public BlogDraft writeDraft(UserInput userInput, Ai ai) {
-    return ai.withDefaultLlm()
-        .withId("blog-post-draft-writer")
-        .withPromptContributor(Personas.WRITER)     // 👈 注入角色
-        .creating(BlogDraft.class)
-        .fromPrompt("""Write a blog post about %s. ...""".formatted(userInput.getContent()));
-}
-```
-
-好处：角色定义与任务指令分离，多个 Action 可共享同一角色，角色可组合。
-
-### 7.5 按角色分配 LLM
-
-通过 `withLlmByRole("roleName")`，可以将不同 Action 路由到不同模型，在配置文件中定义：
-
-```yaml
-embabel:
-  models:
-    default-llm: gpt-4.1-mini    # 写作用便宜模型
-    llm:
-      reviewer: gpt-4.1           # 审阅用强模型
-```
-
-```java
-@Action(description = "Review and improve the draft")
-@AchievesGoal(description = "A reviewed and polished blog post")
-public ReviewedPost reviewDraft(BlogDraft draft, Ai ai) {
-    return ai.withLlmByRole("reviewer")    // 👈 使用 reviewer 角色对应的模型
-        .creating(ReviewedPost.class)
-        .fromPrompt("Review and improve this blog post...");
-}
-```
-
-### 7.6 AI API 使用模式
-
-| API | 用途 | 示例 |
-|-----|------|------|
-| `ai.withDefaultLlm()` | 使用配置的默认模型 | `ai.withDefaultLlm().createObject(prompt, TargetType.class)` |
-| `ai.withLlm("model-name")` | 使用指定模型 | `ai.withLlm(OpenAiModels.GPT_41).createObject(...)` |
-| `ai.withLlmByRole("roleName")` | 使用配置中按角色映射的模型 | `ai.withLlmByRole("reviewer").createObject(...)` |
-| `withId("unique-id")` | 为本次 LLM 调用设置 ID（便于调试/追踪） | `.withId("blog-post-draft-writer")` |
-| `withPromptContributor(persona)` | 注入 Persona 角色描述 | `.withPromptContributor(Personas.WRITER)` |
-| `creating(Class)` | 指定结构化输出类型 | `.creating(BlogDraft.class)` |
-| `createObject(prompt, Class)` | 创建结构化对象 | `ai.createObject(prompt, MyType.class)` |
-| `createObject(formattedPrompt, Class)` | 同上，使用格式化字符串 | `context.ai().withDefaultLlm().createObject(msg, IncidentSignal.class)` |
-
-### 7.7 数据流驱动 Conditions
+### 7.4 数据流驱动 Conditions
 
 大多数情况下不需要显式定义 Conditions —— 框架会根据 Action 间的数据依赖自动推断前置和后置条件：
 
@@ -689,9 +495,9 @@ public Itinerary buildPlan(FlightOptions flights, HotelOptions hotels) { ... }
 // ↑ 这自动要求 searchFlights 和 searchHotels 先执行
 ```
 
-在 GOAP 中，Action 依赖有向无环图（DAG）自然支持并行化：**没有依赖关系的 Action 可以并行执行**。
+这天然让 GOAP 实现 Action 并行化（如果两个 Action 没有依赖关系）。
 
-### 7.8 安全性：Guardrails
+### 7.5 安全性：Guardrails
 
 ```java
 @Action
@@ -710,13 +516,16 @@ public SafeOutput processSensitiveData(UserInput input, Ai ai) {
 4. **Action 层**：前置条件检查
 5. **Goal 层**：`GoalChoiceApprover` 限制 Goal 选择
 
-### 7.9 @Export 与远程 API
+### 7.6 @Export 与远程 API
 
 ```java
 @AchievesGoal(
     description = "Provide weather info for a city",
-    export = @Export(remote = true, name = "weatherJava",
-        startingInputTypes = {CityQuery.class})
+    export = @Export(
+        remote = true,
+        name = "weatherJava",
+        startingInputTypes = {CityQuery.class}
+    )
 )
 @Action
 public WeatherReport getWeather(CityQuery query, Ai ai) {
@@ -740,20 +549,17 @@ embabel.platform=production
 
 ### 8.2 多 LLM Provider 配置
 
-```yaml
-embabel:
-  models:
-    default-llm: gpt-4.1
-    llm:
-      reviewer: gpt-4.1
-      writer: gpt-4.1-mini
+```properties
+# 主模型
+embabel.llm.openai.api-key=${OPENAI_API_KEY}
+embabel.llm.openai.default-model=gpt-4.1
 
-spring:
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-    ollama:
-      base-url: http://localhost:11434
+# 备用/降级模型
+embabel.llm.openai.fallback-model=gpt-4.1-mini
+
+# 本地模型（隐私/成本优化）
+embabel.llm.ollama.base-url=http://localhost:11434
+embabel.llm.ollama.default-model=llama3
 ```
 
 ### 8.3 重试与持久化
@@ -910,31 +716,11 @@ Agent 系统引入 LLM 后，不确定性增加，测试比传统应用更重要
 - 集成测试验证 Flow 编排
 - Prompt 测试验证提示安全性
 
-### ❌ 陷阱 6：让 LLM 做所有事（包括业务逻辑）
-
-```java
-// 错误：让 LLM 做风险评分（应该用确定性代码）
-@Action
-public RiskLevel assessRisk(IncidentSignal signal, Ai ai) {
-    return ai.createObject("What is the risk level?", RiskLevel.class);
-}
-
-// 正确：LLM 只做解析，评分用代码规则
-@Action
-public IncidentAssessment assessIncident(UserInput input, Ai ai) {
-    IncidentSignal signal = /* LLM 解析输入 */;
-    RiskLevel risk = classifyRisk(logs, signal);  // 确定性规则
-    return new IncidentAssessment(signal, risk);
-}
-```
-
 ---
 
-## 11. 完整示例
+## 11. 完整示例：StarNewsFinder Agent
 
-### 11.1 StarNewsFinder Agent（星座新闻搜索）
-
-来自 Embabel 官方示例库：
+参考 GitHub 仓库中的完整 Java 示例：
 
 ```java
 @Agent(description = "基于用户星座查找相关新闻")
@@ -956,8 +742,9 @@ public class StarNewsFinder {
         return ai
             .withLlm(OpenAiModels.GPT_41)
             .createObjectIfPossible(
-                "Create a person from this user input, extracting their name and star sign: %s"
-                    .formatted(userInput.getContent()),
+                """
+                Create a person from this user input, extracting their name and star sign:
+                %s""".formatted(userInput.getContent()),
                 StarPerson.class
             );
     }
@@ -978,9 +765,14 @@ public class StarNewsFinder {
             %s is an astrology believer with the sign %s.
             Their horoscope for today is:
             <horoscope>%s</horoscope>
+
             Use web tools to find %d relevant news stories.
+            For example:
+            - If horoscope suggests relationship focus → find news about novel gifts
+            - If horoscope suggests career focus → find news about training courses
             """.formatted(person.getName(), person.getSign(),
                           horoscope.summary(), storyCount);
+
         return ai.withDefaultLlm()
                  .createObject(prompt, RelevantNewsStories.class);
     }
@@ -988,8 +780,11 @@ public class StarNewsFinder {
     // Action 4（最终 Goal）：生成趣味文章
     @AchievesGoal(
         description = "Write an amusing writeup for the target person",
-        export = @Export(remote = true, name = "starNewsWriteupJava",
-            startingInputTypes = {StarPerson.class, UserInput.class})
+        export = @Export(
+            remote = true,
+            name = "starNewsWriteupJava",
+            startingInputTypes = {StarPerson.class, UserInput.class}
+        )
     )
     @Action
     public Writeup writeup(
@@ -997,176 +792,29 @@ public class StarNewsFinder {
             RelevantNewsStories relevantNewsStories,
             Horoscope horoscope,
             Ai ai) {
-        return ai.withLlm(
-            LlmOptions.withModel(OpenAiModels.GPT_41_MINI)
-                      .withTemperature(0.9) // 更高温度增加创意
-        ).createObject(prompt, Writeup.class);
+        var llm = LlmOptions
+            .withModel(OpenAiModels.GPT_41_MINI)
+            .withTemperature(0.9); // 更高温度增加创意
+
+        var newsItems = relevantNewsStories.getItems().stream()
+            .map(item -> "- " + item.getUrl() + ": " + item.getSummary())
+            .collect(Collectors.joining("\n"));
+
+        var prompt = """
+            Write something amusing for %s (%s sign).
+            Their horoscope: %s
+            Relevant news:
+            %s
+            Format as Markdown with links.
+            """.formatted(person.getName(), person.getSign(),
+                          horoscope.summary(), newsItems);
+
+        return ai.withLlm(llm).createObject(prompt, Writeup.class);
     }
 }
 ```
 
 > 📁 完整代码见：https://github.com/embabel/embabel-agent/tree/main/embabel-agent-examples
-
-### 11.2 Incident Triage Agent（赛博朋克事件响应）
-
-来自 BellSoft 博客的完整示例，展示多 Action 工作流：
-
-**领域模型**：
-
-```java
-public record IncidentSignal(
-    @NotNull double longitude, @NotNull double latitude,
-    @Positive double radiusMeters,
-    @NotNull @Past LocalDateTime from, @NotNull @Past LocalDateTime to,
-    @NotNull @NotEmpty String metric, @Positive double threshold
-) { }
-
-public enum RiskLevel { LOW, MEDIUM, HIGH, CRITICAL }
-
-public record IncidentAssessment(IncidentSignal signal, int numberOfLogs, RiskLevel riskLevel) { }
-
-public record AffectedImplant(String lotNumber, String model, /* ... */) { }
-
-public record RootCauseHypothesis(String summary, String mechanism, double confidence) { }
-
-public record EstimatedBlastRadius(
-    int affectedEstimate, List<String> affectedLots,
-    List<String> affectedModels, String geoSummary, String timeSummary
-) { }
-
-public record ContainmentPlan(String summary, List<ContainmentStep> steps) { }
-
-public record ContainmentStep(String text) { }
-
-public record IncidentCase(
-    String id, Instant timestamp, IncidentSignal signal,
-    IncidentAssessment assessment, List<AffectedImplant> affected,
-    RootCauseHypothesis hypothesis, ContainmentPlan plan
-) { }
-```
-
-**Agent 实现（6 个 Action，GOAP 自动规划）**：
-
-```java
-@Agent(description = "Investigates and assesses implant telemetry anomalies")
-public class IncidentTriageAgent {
-
-    private final ImplantMonitoringLogService logService;
-
-    public IncidentTriageAgent(ImplantMonitoringLogService logService) {
-        this.logService = logService;
-    }
-
-    // Action 1: LLM 解析 → 结构化
-    @Action(description = "Parse user's message into an IncidentSignal")
-    public IncidentSignal parseIncidentSignal(UserInput input, OperationContext context) {
-        return context.ai().withDefaultLlm().createObject(/* parsing prompt */, IncidentSignal.class);
-    }
-
-    // Action 2: 确定性数据库查询
-    @Action(description = "Query monitoring logs from MongoDB")
-    public AllAffectedImplants queryImplants(IncidentSignal signal, OperationContext context) {
-        var logs = logService.findLogsByAreaAndTime(/* ... */);
-        /* 确定性地提取受影响的植入物清单 */
-        return new AllAffectedImplants(affected);
-    }
-
-    // Action 3: 确定性风险评估
-    @Action(description = "Create risk assessment based on collected logs")
-    public IncidentAssessment assessRisk(
-            IncidentSignal signal, AllAffectedImplants affected, OperationContext context) {
-        var risk = classifyRisk(affected, signal);  // 纯代码逻辑
-        return new IncidentAssessment(signal, affected.implants().size(), risk);
-    }
-
-    // Action 4: LLM 假设生成（受约束的结构化输出）
-    @Action(description = "Form a hypothesis about root cause")
-    public RootCauseHypothesis hypothesize(
-            AllAffectedImplants affected, IncidentAssessment assessment, OperationContext context) {
-        return context.ai().withDefaultLlm().createObject(
-            """
-            Based on the implant assessment, suggest a root cause.
-            - summary: one sentence cause
-            - mechanism: detailed explanation
-            - confidence: 0.0 to 1.0
-            """, RootCauseHypothesis.class);
-    }
-
-    // Action 5: LLM + 确定性混合（爆炸半径估算用代码，应急计划用 LLM）
-    @Action(description = "Estimate blast radius and build containment plan")
-    public ContainmentPlan planContainment(
-            IncidentSignal signal, AllAffectedImplants affected,
-            RootCauseHypothesis hypothesis, OperationContext context) {
-        var blastRadius = estimateRadius(signal, affected.implants());  // 确定性
-        return context.ai().withDefaultLlm().createObject(
-            "Generate a containment plan with 4-8 steps", ContainmentPlan.class);
-    }
-
-    // Action 6（最终 Goal）：组装最终用例
-    @AchievesGoal(
-        description = "Investigate an incident signal and produce a complete incident case",
-        examples = {
-            "Investigate telemetry anomalies near (lon,lat) in a time window and propose containment",
-            "Assess implant incident risk and recommend actions"
-        })
-    @Action(description = "Assemble a complete IncidentCase")
-    public IncidentCase buildIncidentCase(
-            IncidentSignal signal, IncidentAssessment assessment,
-            AllAffectedImplants affected, RootCauseHypothesis hypothesis,
-            ContainmentPlan plan) {
-        return new IncidentCase(UUID.randomUUID().toString(), Instant.now(),
-            signal, assessment, affected.implants(), hypothesis, plan);
-    }
-
-    private static RiskLevel classifyRisk(...) { /* 纯代码逻辑 */ }
-    private static EstimatedBlastRadius estimateRadius(...) { /* 纯代码逻辑 */ }
-}
-```
-
-**运行结果**：输入一句自然语言 → 6 步多 Action 编排 → 输出完整的有结构的事故报告（JSON）。
-
-### 11.3 Blog Writer Agent（博客写作 + 审阅）
-
-来自 Dan Vega 教程，展示 **Persona + 角色化 LLM** 模式：
-
-```java
-@Agent(description = "Write and review a blog post about a given topic")
-public class BlogWriterAgent {
-
-    private final BlogAgentProperties properties;
-
-    public BlogWriterAgent(BlogAgentProperties properties) {
-        this.properties = properties;
-    }
-
-    @Action(description = "Write a first draft of the blog post")
-    public BlogDraft writeDraft(UserInput userInput, Ai ai) {
-        return ai.withDefaultLlm()
-            .withId("blog-post-draft-writer")
-            .withPromptContributor(Personas.WRITER)
-            .creating(BlogDraft.class)
-            .fromPrompt("""Write a blog post about %s.
-                Keep it practical and beginner-friendly.
-                Use short sentences and plain language.
-                """.formatted(userInput.getContent()));
-    }
-
-    @Action(description = "Review and improve the draft")
-    @AchievesGoal(description = "A reviewed and polished blog post")
-    public ReviewedPost reviewDraft(BlogDraft draft, Ai ai) {
-        return ai.withLlmByRole("reviewer")    // 使用更强模型
-            .withId("blog-post-reviewer")
-            .creating(ReviewedPost.class)
-            .fromPrompt("""
-                Review and improve this blog post:
-                Title: %s
-                Content: %s
-                Fix any technical errors. Tighten the writing.
-                Provide a revised title, content, and feedback summary.
-                """.formatted(draft.title(), draft.content()));
-    }
-}
-```
 
 ---
 
@@ -1183,17 +831,7 @@ public class BlogWriterAgent {
 | 示例代码 | https://github.com/embabel/embabel-agent-examples |
 | Travel Planner 示例 | https://github.com/embabel/tripper |
 | Coding Agent 示例 | https://github.com/embabel/embabel-coding-agent |
-| DeepWiki 源码解析 | https://deepwiki.com/embabel/embabel-agent |
 | Discord 社区 | https://discord.gg/t6bjkyj93q |
-
-### 教程与文章
-
-| 资源 | 链接 | 作者 |
-|------|------|------|
-| Build AI Agents in Java with Embabel | https://bell-sw.com/blog/build-ai-agents-in-java-with-embabel-step-by-step-guide/ | BellSoft |
-| Creating an AI Agent in Java Using Embabel | https://www.baeldung.com/java-embabel-agent-framework | Baeldung |
-| Embabel First Look | https://www.danvega.dev/blog/2026/04/02/embabel-first-look | Dan Vega |
-| Introducing Embabel (InfoQ) | https://www.infoq.com/news/2025/06/introducing-embabel-ai-agent/ | InfoQ |
 
 ### Maven 依赖坐标
 
@@ -1202,7 +840,6 @@ Group: com.embabel.agent
 Artifacts:
   - embabel-agent-bom (BOM)
   - embabel-agent-starter
-  - embabel-agent-starter-shell
   - embabel-agent-starter-ollama
   - embabel-agent-openai-autoconfigure
   - embabel-agent-deepseek-autoconfigure
@@ -1211,12 +848,10 @@ Artifacts:
 
 ### 版本
 
-| 组件 | 当前版本 | 说明 |
-|------|---------|------|
-| Embabel Agent | 0.3.4 - 0.4.0-SNAPSHOT | 积极迭代中，API 可能变化 |
-| Spring AI | 1.1.4 | Embabel 依赖版本 |
-| Spring Boot | 3.5.x | Embabel 暂不支持 Boot 4.x |
-| License | Apache 2.0 | |
+| 组件 | 当前版本 |
+|------|---------|
+| Embabel Agent | 0.1.2-SNAPSHOT（积极迭代中） |
+| License | Apache 2.0 |
 
 ---
 
@@ -1227,16 +862,16 @@ Artifacts:
 | 简单 LLM 调用 | ❌ 直接用 Spring AI / OpenAI SDK | 不需要编排 |
 | 复杂多步骤流程 | ✅ Embabel | GOAP 自动规划 |
 | 现有 Spring 项目要加 AI 能力 | ✅ Embabel | 无缝集成 |
-| 需要强类型 + 可测试性 | ✅ Embabel | 核心优势 |
-| 企业级 Agent + 事务 + 持久化 | ✅ Embabel | Spring 生态加成 |
 | Python AI 团队 | ⚠️ 考虑 LangChain Python | 生态不同 |
+| 需要强类型 + 可测试性 | ✅ Embabel | 核心优势 |
+| 探索性/问答式应用 | ⚠️ 可考虑更简单的方案 | Open 模式的代价 |
+| 企业级 Agent + 事务 + 持久化 | ✅ Embabel | Spring 生态加成 |
 
 ---
 
 > **文章信息**  
-> - 原文：[Build AI Agents in Java with Embabel: Step-by-Step Guide](https://bell-sw.com/blog/build-ai-agents-in-java-with-embabel-step-by-step-guide/) — BellSoft, 2026  
-> - 补充：[Embabel First Look: Building Agentic Flows on the JVM](https://www.danvega.dev/blog/2026/04/02/embabel-first-look) — Dan Vega, Apr 2026  
-> - 补充：[Introducing Embabel: Advanced AI Agent Development for Java Applications](https://www.infoq.com/news/2025/06/introducing-embabel-ai-agent/) — InfoQ, Jun 2025  
+> - 原文 1：[Introducing Embabel: Advanced AI Agent Development for Java Applications](https://www.infoq.com/news/2025/06/introducing-embabel-ai-agent/) — InfoQ, Jun 2025  
+> - 原文 2：[Build AI Agents in Java with Embabel: Step-by-Step Guide](https://bell-sw.com/blog/build-ai-agents-in-java-with-embabel-step-by-step-guide/) — BellSoft, Feb 2026  
 > - 主仓库：[embabel/embabel-agent](https://github.com/embabel/embabel-agent)  
 > - 作者：Rod Johnson（Spring 创始人）  
 > - 分类：`knowledges/ai-tools/agents/`
