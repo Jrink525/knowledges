@@ -180,3 +180,7 @@ authors: "Ahmad (@TheAhmadOsman) — Part 2 of Self-hosted LLMs / Local AI serie
 - [GPU Memory Math for LLMs（2026）](../agent-engineering/gpu-memory-math-llms-2026-ahmad.md) — Part 1，理解容量公式的前置知识
 - [Inference Engines 决策指南（2026）](../agent-engineering/inference-engines-decision-guide-2026-ahmad.md) — Part 3，理解容量+带宽之后的引擎选择
 - [LLMs 101 实践指南（2026）](../agent-engineering/llms101-practical-guide-2026-ahmad.md) — 三部曲总览
+
+---
+
+**🔗 关联项目路线图：** [Step-By-Step LLM Engineering Projects (2026 Edition)](../../../../ai-engineering/llm-engineering-projects-roadmap-2026.md) — 本文是该系列的后续实践路线图，包含 34 个动手项目。

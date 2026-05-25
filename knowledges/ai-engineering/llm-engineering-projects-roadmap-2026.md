@@ -19,6 +19,21 @@ authors: "Ahmad (@TheAhmadOsman)"
 
 ---
 
+## 🔗 关联阅读（作者同系列）
+
+本文提到的四篇前置基础文章，已整理收录：
+
+| 篇目 | 内容 | 路径 |
+|------|------|------|
+| **Part 1:** GPU Memory Math for LLMs (2026) | 显存计算、batch size、精度影响 | [`ai-tools/agent-engineering/inference/gpu-memory-math-llms-2026-ahmad.md`](../ai-tools/agent-engineering/inference/gpu-memory-math-llms-2026-ahmad.md) |
+| **Part 2:** Memory Bandwidth for Local AI Hardware (2026) | 带宽瓶颈、CPU/GPU/NPU 对比 | [`ai-tools/agent-engineering/inference/memory-bandwidth-local-ai-2026-ahmad.md`](../ai-tools/agent-engineering/inference/memory-bandwidth-local-ai-2026-ahmad.md) |
+| **Part 3:** Inference Engines for LLMs & Local AI Hardware (2026) | 推理引擎决策（llama.cpp / vLLM / MLX / TensorRT-LLM） | [`ai-tools/agent-engineering/inference/inference-engines-decision-guide-2026-ahmad.md`](../ai-tools/agent-engineering/inference/inference-engines-decision-guide-2026-ahmad.md) |
+| **Part 4:** LLMs 101 (2026): How Models Think One Token At A Time | 模型内功：token、attention、KV cache 详解 | [`ai-tools/agent-engineering/inference/llms101-practical-guide-2026-ahmad.md`](../ai-tools/agent-engineering/inference/llms101-practical-guide-2026-ahmad.md) |
+
+建议按 **Part 1 → 2 → 3 → 4** 顺序先读完基础系列，再回到本文做 34 个项目实践。
+
+---
+
 ## 核心哲学
 
 阅读 LLM 的理论描述到了一定阶段就不够了。你需要亲手搭建整个技术栈：

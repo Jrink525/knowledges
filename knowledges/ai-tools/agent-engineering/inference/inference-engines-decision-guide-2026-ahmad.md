@@ -259,3 +259,7 @@ authors: "Ahmad (@TheAhmadOsman) — Part 3 of Self-hosted LLMs / Local AI serie
 - [LLMs 101 实践指南（2026）](../agent-engineering/llms101-practical-guide-2026-ahmad.md) — 同一作者的 Part 1，理解 Transformer、KV Cache、VRAM 数学等前置知识
 - [The Software Factory Trap](../agent-engineering/software-factory-trap-dhasandev.md) — 本地模型部署后，Agent 工厂的工程陷阱
 - [Codex 用到极致指南](../agent-engineering/codex-max-usage-guide-dotey.md) — 云端 vs 本地推理引擎对比
+
+---
+
+**🔗 关联项目路线图：** [Step-By-Step LLM Engineering Projects (2026 Edition)](../../../../ai-engineering/llm-engineering-projects-roadmap-2026.md) — 本文是该系列的后续实践路线图，包含 34 个动手项目。

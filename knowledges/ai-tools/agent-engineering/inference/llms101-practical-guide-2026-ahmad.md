@@ -372,3 +372,7 @@ Qwen 27B Dense 是目前本地用户最实用的公开权重模型之一。2×RT
 - [The Software Factory Trap](../agent-engineering/software-factory-trap-dhasandev.md) — 理解本地模型 Agent 化之后的"更大的物体"
 - [Agent Harness 从理论到实践](../agent-engineering/harness-from-theory-to-practice.md) — 本地模型集成到工程体系
 - [Codex 用到极致指南](../agent-engineering/codex-max-usage-guide-dotey.md) — 对比：Codex 云端 vs 本地部署
+
+---
+
+**🔗 关联项目路线图：** [Step-By-Step LLM Engineering Projects (2026 Edition)](../../../../ai-engineering/llm-engineering-projects-roadmap-2026.md) — 本文是该系列的后续实践路线图，包含 34 个动手项目。
