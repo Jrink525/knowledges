@@ -1142,11 +1142,162 @@ management.endpoints.web.exposure.include=env
 
 ---
 
-# 第十七章：综合实战 —— 一个生产级配置模板
+# 第十七章：更多实战场景 —— Spring MVC / Feign / 事务日志
+
+> **来源**：公众号「Springboot实战案例锦集」《现代 Spring Boot 日志全攻略：8大场景一网打尽》
+
+前面的章节已经覆盖了 SQL、MDC、JSON、异步等核心主题，本节从实战案例角度补充几个**社区高频需求**场景。
+
+## 17.1 事务执行日志
+
+开启 Hibernate 事务日志，可以看到 begin / commit / rollback 全过程：
+
+```yaml
+logging:
+  level:
+    '[org.hibernate.engine.transaction]': DEBUG
+```
+
+输出示例：
+```
+DEBUG [main] o.h.e.t.i.TransactionImpl - begin
+DEBUG [main] o.h.e.t.i.TransactionImpl - committing
+```
+
+结合 SQL 日志一起看，事务边界与 SQL 执行一目了然：
+
+```yaml
+logging:
+  level:
+    '[org.hibernate.SQL]': DEBUG
+    '[org.hibernate.orm.jdbc.bind]': TRACE
+    '[org.hibernate.engine.transaction]': DEBUG
+```
+
+## 17.2 Spring MVC 请求详细日志
+
+### 方式一：WEB 级别 TRACE
+
+```yaml
+logging:
+  level:
+    web: TRACE
+```
+
+这会让 Spring MVC **把每个请求的完整处理过程**全部输出——路径匹配、参数解析、视图解析等等。调试时非常强大，但生产环境慎用（日志量极大）。
+
+输出示例：
+```
+TRACE o.s.web.servlet.FrameworkServlet - GET /users/666, parameters={}
+TRACE o.s.w.s.m.m.a.RequestMappingHandlerMapping - Mapped to com.example.UserController#query(Long)
+TRACE o.s.w.s.m.m.a.RequestResponseBodyMethodProcessor - Read "application/json" to [...]
+```
+
+如果只想看 **Controller 方法参数绑定**的信息：
+
+```yaml
+logging:
+  level:
+    '[org.springframework.web.method]': TRACE
+```
+
+### 方式二：ServletRequestHandledEvent 监听器
+
+```java
+@Component
+public class RequestLogListener implements ApplicationListener<ServletRequestHandledEvent> {
+
+    private static final Logger log = LoggerFactory.getLogger("RequestLog");
+
+    @Override
+    public void onApplicationEvent(ServletRequestHandledEvent event) {
+        log.info(event.toString());
+    }
+}
+```
+
+每次请求结束后会自动触发，输出客户端地址、请求路径、耗时等信息。
+
+## 17.3 Controller 接口映射信息
+
+**启动时**打印所有已注册的 Controller 接口映射：
+
+```yaml
+logging:
+  level:
+    '[_org.springframework.web.servlet.HandlerMapping.Mappings]': DEBUG
+```
+
+> 注意：这个 logger 名称以下划线 `_` 开头，不要漏掉。
+
+输出示例：
+```
+DEBUG o.s.w.s.h.AbstractHandlerMethodMapping -
+  {GET [/users/{id}]} → com.example.UserController#query(Long)
+```
+
+## 17.4 每个请求匹配了哪些 Controller
+
+如果想在**运行时**看到每个请求最终匹配到哪个 Controller 方法：
+
+```yaml
+logging:
+  level:
+    '[org.springframework.web.servlet.mvc.method]': TRACE
+```
+
+这是排查路由问题（如 404、匹配到错误方法）的神器。
+
+## 17.5 Feign 客户端调用日志
+
+微服务架构中，Feign 调用日志需要**两步**配置。
+
+**第一步**：配置 Feign 日志级别为 FULL
+
+```java
+@Bean
+Logger.Level feignLoggerLevel() {
+    return Logger.Level.FULL;
+}
+```
+
+可以在全局 `@EnableFeignClients(defaultConfiguration = ...)` 配置，也可以在单个 `@FeignClient` 上指定。
+
+`Logger.Level` 有四个级别：
+
+| 级别 | 输出内容 |
+|------|--------|
+| NONE | 不记录（默认） |
+| BASIC | 请求方法 + URL + 响应状态码 + 耗时 |
+| HEADERS | BASIC + 请求/响应头 |
+| FULL | HEADERS + 请求/响应体 |
+
+**第二步**：开启对应 Feign 接口的日志
+
+```yaml
+logging:
+  level:
+    '[com.example.client.UserFeign]': DEBUG
+```
+
+> 注意：Feign 的日志 logger 名称就是 **Feign 接口的全限定类名**。配置 `logging.level.com.example.client.UserFeign=DEBUG` 后才能生效。
+
+输出示例：
+```
+DEBUG com.example.client.UserFeign - [UserFeign#getUser] ---> GET http://user-service/users/666 HTTP/1.1
+DEBUG com.example.client.UserFeign - [UserFeign#getUser] ---> END HTTP (0-byte body)
+DEBUG com.example.client.UserFeign - [UserFeign#getUser] <--- 200 OK (12ms)
+```
+
+> **生产建议**：Feign 日志默认走 Logback，量较大。线上建议用 `BASIC` 级别，调试时用 `FULL`。
+
+---
+
+# 第十八章：综合实战 —— 一个生产级配置模板
 
 下面是一个可以直接用于 Spring Boot 3.4+ 项目的完整配置。
 
-## 17.1 application.yml
+## 18.1 application.yml
 
 ```yaml
 spring:
@@ -1180,7 +1331,7 @@ logging:
     com.yourcompany: INFO
 ```
 
-## 17.2 logback-spring.xml（如需更细控制）
+## 18.2 logback-spring.xml（如需更细控制）
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1331,7 +1482,11 @@ class OrderServiceTest {
 | 敏感信息脱敏 | 1 个 Filter | 自定义 Pattern 或 Filter |
 | Console/File 不同级别 | 5 行 XML | `ThresholdFilter` 分别设 INFO(console) 和 DEBUG(file) |
 | 打印应用配置属性 | 0-1 行 config | `Actuator /actuator/env` 或 `@EventListener` |
+| Spring MVC 完整请求调试 | 1 行 | `logging.level.web=TRACE` |
+| Spring MVC 路由映射查看 | 1 行 | `logging.level._org.springframework.web.servlet.HandlerMapping.Mappings=DEBUG` |
+| 事务日志 | 1 行 | `logging.level.org.hibernate.engine.transaction=DEBUG` |
+| Feign 调用日志 | 2 步配置 | `Logger.Level.FULL` + `logging.level.com.xxx.feign=DEBUG` |
 
 ---
 
-*✏️ 来源：Vlad Mihalcea《Log SQL with Spring Boot》| Spring Boot Official Docs | katyella.com | last9.io | Baeldung《Log Properties》《Different Log Level for File and Console Appender》| 各项网络资料补充整理*
+*✏️ 来源：Vlad Mihalcea《Log SQL with Spring Boot》| Spring Boot Official Docs | katyella.com | last9.io | Baeldung《Log Properties》《Different Log Level for File and Console Appender》| 公众号「Springboot实战案例锦集」《现代 Spring Boot 日志全攻略：8大场景一网打尽》| 各项网络资料补充整理*
