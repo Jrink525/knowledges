@@ -952,11 +952,201 @@ logging.pattern.console=%replace(%msg){'password=\w+', 'password=***'}
 
 ---
 
-# 第十五章：综合实战 —— 一个生产级配置模板
+# 第十五章：Per-Appender 日志级别分离
+
+> **来源**：[Baeldung《Different Log Level for File and Console Appender》](https://www.baeldung.com/spring-boot-different-log-level-file-console-appender)
+
+## 15.1 场景
+
+很多团队希望：
+- **Console**（开发看）只显示 INFO 及以上（清爽）
+- **File**（留存排查）记录 DEBUG 及以上（详细）
+
+Spring Boot 的 `logging.level.*` 控制的是**全局日志级别**，无法按 appender 分别设置。解决方案是 Logback 的 **ThresholdFilter**。
+
+## 15.2 ThresholdFilter 工作原理
+
+`ThresholdFilter` 是一个简单过滤器——它允许**等于或高于**设定级别的日志通过，低于的丢弃。
+
+```xml
+<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+    <level>INFO</level>  <!-- 低于 INFO 的 TRACE/DEBUG 被丢弃 -->
+</filter>
+```
+
+> 关键理解：Root logger 的 `level="DEBUG"` 决定了**所有级别**的日志都到达 appender，但每个 appender 的 ThresholdFilter 独立决定哪些级别的日志被**输出**。
+
+## 15.3 完整配置示例
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="LOGS" value="./logs"/>
+    <property name="CONSOLE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <property name="FILE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- Console：只显示 INFO 及以上 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- File：记录 DEBUG 及以上 -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>${LOGS}/my-app.log</file>
+        <encoder>
+            <pattern>${FILE_PATTERN}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+    <!-- Root 设为 DEBUG，让所有级别都能到达 appender -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
+```
+
+**运行效果**：
+
+Controller 日志：
+```
+  TRACE This is a TRACE message    → console ❌   file ❌
+  DEBUG This is a DEBUG message    → console ❌   file ✅
+  INFO  This is an INFO message    → console ✅   file ✅
+  WARN  This is a WARN message     → console ✅   file ✅
+  ERROR This is an ERROR message   → console ✅   file ✅
+```
+
+## 15.4 结合 RollingFileAppender
+
+```xml
+<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOGS}/my-app.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${LOGS}/my-app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <maxFileSize>100MB</maxFileSize>
+        <maxHistory>30</maxHistory>
+        <totalSizeCap>3GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder>
+        <pattern>${FILE_PATTERN}</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        <level>DEBUG</level>
+    </filter>
+</appender>
+```
+
+> **生产建议**：Console 用 `ThresholdFilter` 设到 INFO/WARN，减少噪音；File 设到 DEBUG 保留完整诊断信息。
+
+---
+
+# 第十六章：调试技巧——打印配置属性
+
+> **来源**：[Baeldung《Log Properties in a Spring Boot Application》](https://www.baeldung.com/spring-boot-log-properties)
+
+有时候你想确认应用程序启动时到底加载了哪些配置——`@Value` 是否生效、`application.properties` 是否被正确读取。
+
+## 16.1 方式一：@PostConstruct + Environment（最简单）
+
+```java
+@Component
+public class ConfigLogger {
+
+    private static final Logger log = LoggerFactory.getLogger(ConfigLogger.class);
+
+    @Autowired
+    private Environment env;
+
+    @PostConstruct
+    public void logKeyProperties() {
+        log.info("app.name = {}", env.getProperty("app.name"));
+        log.info("app.description = {}", env.getProperty("app.description"));
+        log.info("{}", env.getProperty("bael.property"));
+    }
+}
+```
+
+**局限**：必须知道属性名，无法列出所有属性。
+
+## 16.2 方式二：ContextRefreshedEvent + 列出所有属性
+
+```java
+@Component
+public class AllPropertiesLogger {
+
+    private static final Logger log = LoggerFactory.getLogger(AllPropertiesLogger.class);
+
+    @EventListener
+    public void handleContextRefreshed(ContextRefreshedEvent event) {
+        ConfigurableEnvironment env = (ConfigurableEnvironment)
+            event.getApplicationContext().getEnvironment();
+
+        env.getPropertySources().stream()
+            .filter(ps -> ps instanceof MapPropertySource)
+            .map(ps -> ((MapPropertySource) ps).getSource().keySet())
+            .flatMap(Collection::stream)
+            .distinct()
+            .sorted()
+            .forEach(key -> log.info("{} = {}", key, env.getProperty(key)));
+    }
+}
+```
+
+启动时会打印出**所有**配置来源的属性（环境变量、JVM 参数、application.properties 等），按字母排序。
+
+**过滤到只显示 application.properties 中的配置**：
+
+```java
+.filter(ps -> ps instanceof MapPropertySource
+    && ps.getName().contains("application.properties"))
+```
+
+## 16.3 方式三：Spring Boot Actuator /actuator/env
+
+```properties
+management.endpoints.web.exposure.include=env
+```
+
+打开 `http://localhost:8080/actuator/env`，返回包含所有配置属性的 JSON，带 origin（来源文件和行号）：
+
+```json
+{
+  "propertySources": [
+    {
+      "name": "Config resource 'class path resource [application.properties]'",
+      "properties": {
+        "app.name": {
+          "value": "MyApp",
+          "origin": "class path resource [application.properties] - 10:10"
+        },
+        "bael.property": {
+          "value": "defaultValue",
+          "origin": "class path resource [application.properties] - 13:15"
+        }
+      }
+    }
+  ]
+}
+```
+
+> **最推荐方式**：Actuator。零代码，带原点信息，环境变量和配置文件的属性一目了然。
+
+---
+
+# 第十七章：综合实战 —— 一个生产级配置模板
 
 下面是一个可以直接用于 Spring Boot 3.4+ 项目的完整配置。
 
-## 15.1 application.yml
+## 17.1 application.yml
 
 ```yaml
 spring:
@@ -990,7 +1180,7 @@ logging:
     com.yourcompany: INFO
 ```
 
-## 15.2 logback-spring.xml（如需更细控制）
+## 17.2 logback-spring.xml（如需更细控制）
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1139,7 +1329,9 @@ class OrderServiceTest {
 | 运行时动态调级别 | 1 个依赖 | `spring-boot-starter-actuator` |
 | 异步日志保性能 | 3-5 行 XML | `AsyncAppender` |
 | 敏感信息脱敏 | 1 个 Filter | 自定义 Pattern 或 Filter |
+| Console/File 不同级别 | 5 行 XML | `ThresholdFilter` 分别设 INFO(console) 和 DEBUG(file) |
+| 打印应用配置属性 | 0-1 行 config | `Actuator /actuator/env` 或 `@EventListener` |
 
 ---
 
-*✏️ 来源：Vlad Mihalcea《Log SQL with Spring Boot》| Spring Boot Official Docs | katyella.com | last9.io | Blackslate.io  | 各项网络资料补充整理*
+*✏️ 来源：Vlad Mihalcea《Log SQL with Spring Boot》| Spring Boot Official Docs | katyella.com | last9.io | Baeldung《Log Properties》《Different Log Level for File and Console Appender》| 各项网络资料补充整理*
