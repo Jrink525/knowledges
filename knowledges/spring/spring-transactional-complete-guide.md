@@ -8,7 +8,7 @@ tags:
   - hibernate
   - aop
 date: 2026-05-28
-source: "综合整理自 vladmihalcea.com, marcobehler.com, javarevisited.blogspot.com, medium.com, docs.spring.io"
+source: "综合整理自 vladmihalcea.com, marcobehler.com, baeldung.com, javarevisited.blogspot.com, medium.com, docs.spring.io"
 ---
 
 # Spring @Transactional 完全指南：从 JDBC 到源码
@@ -30,7 +30,7 @@ source: "综合整理自 vladmihalcea.com, marcobehler.com, javarevisited.blogsp
 - [第三章：@Transactional 详解](#第三章transactional-详解)
   - [3.1 声明式事务的三种配置方式](#31-声明式事务的三种配置方式)
   - [3.2 @Transactional 所有属性全解](#32-transactional-所有属性全解)
-  - [3.3 类级别 vs 方法级别](#33-类级别-vs-方法级别)
+  - [3.3 注解优先级与类级别 vs 方法级别](#33-注解优先级与类级别-vs-方法级别)
   - [3.4 在 Spring Boot 中的自动配置](#34-在-spring-boot-中的自动配置)
 - [第四章：代理机制（底层实现）](#第四章代理机制底层实现)
   - [4.1 Spring 如何用 AOP 实现事务](#41-spring-如何用-aop-实现事务)
@@ -43,9 +43,10 @@ source: "综合整理自 vladmihalcea.com, marcobehler.com, javarevisited.blogsp
   - [5.4 SUPPORTS / MANDATORY / NOT_SUPPORTED / NEVER](#54-supports--mandatory--not_supported--never)
   - [5.5 传播行为决策树](#55-传播行为决策树)
 - [第六章：隔离级别详解](#第六章隔离级别详解)
-  - [6.1 四种隔离级别](#61-四种隔离级别)
+  - [6.1 隔离级别详解](#61-隔离级别详解)
   - [6.2 脏读 / 不可重复读 / 幻读](#62-脏读--不可重复读--幻读)
-  - [6.3 实战：生成报表时选什么隔离级别](#63-实战生成报表时选什么隔离级别)
+  - [6.3 隔离级别验证陷阱](#63-隔离级别验证陷阱)
+  - [6.4 实战：生成报表时选什么隔离级别](#64-实战生成报表时选什么隔离级别)
 - [第七章：readOnly 优化深度解析](#第七章readonly-优化深度解析)
   - [7.1 Spring 5.1 之前：只改 FlushMode](#71-spring-51-之前只改-flushmode)
   - [7.2 Spring 5.1 之后：Hibernate Session 级别的优化](#72-spring-51-之后hibernate-session-级别的优化)
@@ -510,7 +511,36 @@ public @interface Transactional {
 | `rollbackFor` | `{}` | 指定回滚异常 | 将 checked exception 加入回滚 |
 | `noRollbackFor` | `{}` | 指定不回滚异常 | 某些业务异常不想回滚 |
 
-## 3.3 类级别 vs 方法级别
+## 3.3 注解优先级与类级别 vs 方法级别
+
+### 注解优先级顺序（从低到高）
+
+```
+接口 → 父类 → 类 → 接口方法 → 父类方法 → 类方法
+（低优先级）                                    （高优先级）
+```
+
+即：**同一个元素上最具体的注解会覆盖上一层**。方法级注解永远覆盖类级注解，类级覆盖接口级。
+
+```java
+@Transactional(readOnly = true)           // 接口级别：最低优先级
+public interface UserService {
+    void createUser(User user);
+}
+
+@Transactional(timeout = 30)               // 类级别：覆盖接口的 readOnly
+public class UserServiceImpl implements UserService {
+
+    @Transactional(readOnly = false)       // 方法级别：覆盖类级 timeout
+    public void createUser(User user) {      // 最终：readOnly=false, timeout=30
+        // ...
+    }
+}
+```
+
+**Spring 应用类级注解到所有未标注 @Transactional 的 public 方法**。private/protected 方法上的 @Transactional 会被静默忽略（不对应报错）。
+
+### 类级别 vs 方法级别
 
 ```java
 // 类级别：默认事务设置
@@ -747,7 +777,24 @@ createUser() 开启事务 T1 ──────► auditorService.log() 加入 T
 getConnection()                                                   setAutoCommit(false) 一次
 ```
 
+### REQUIRED 的事务创建逻辑
+
+```java
+// REQUIRED 传播在 AbstractPlatformTransactionManager.getTransaction() 中的行为
+if (isExistingTransaction()) {
+    // 已有事务 → 校验（如果启用）→ 直接加入
+    if (isValidateExistingTransaction()) {
+        validateExisitingAndThrowExceptionIfNotValid();
+        // 校验隔离级别、readOnly 等是否兼容
+    }
+    return existing;
+}
+return createNewTransaction();  // 没有事务 → 新建
+```
+
 ## 5.2 REQUIRES_NEW — 独立事务
+
+> **底层实现**：Spring 的 `JTATransactionManager` 支持**真正**的事务挂起（suspend + resume）。`DataSourceTransactionManager` 和 `HibernateTransactionManager` 模拟挂起——通过保留当前事务的引用，从线程上下文中清除，执行新事务，然后再恢复。
 
 ```java
 // REQUIRES_NEW：无论是否存在事务，都新建一个独立事务
@@ -941,14 +988,31 @@ public void neverInTransaction() {
 
 # 第六章：隔离级别详解
 
-## 6.1 四种隔离级别
+## 6.1 隔离级别详解
 
-| 隔离级别 | 脏读 | 不可重复读 | 幻读 | 默认场景 |
-|---------|:----:|:---------:|:----:|---------|
-| `READ_UNCOMMITTED` | ✅ 可能 | ✅ 可能 | ✅ 可能 | 极少使用 |
-| `READ_COMMITTED` | ❌ 避免 | ✅ 可能 | ✅ 可能 | PostgreSQL / SQL Server 默认 |
-| `REPEATABLE_READ` | ❌ 避免 | ❌ 避免 | ✅ 可能 | MySQL/InnoDB 默认 |
-| `SERIALIZABLE` | ❌ 避免 | ❌ 避免 | ❌ 避免 | 极端一致性场景 |
+> **关键理解**：隔离级别只在创建新事务时生效。如果方法 A（REPEATABLE_READ）调用方法 B（SERIALIZABLE），且 B 使用 REQUIRED 传播行为（加入 A 的事务），则 B 的隔离级别**实际上不会生效**！如果需要严格检查，设置 `PlatformTransactionManager.setValidateExistingTransaction(true)`。
+
+### 数据库对隔离级别的支持
+
+不同数据库对隔离级别的支持不同，换数据库时需要注意：
+
+| 隔离级别 | PostgreSQL | MySQL/InnoDB | Oracle |
+|---------|:----------:|:----------:|:-----:|
+| `READ_UNCOMMITTED` | ❌ 不支持 → 降级为 READ_COMMITTED | ✅ 支持 | ❌ 不支持 |
+| `READ_COMMITTED` | ✅ **默认** | ✅ 支持 | ✅ **默认** |
+| `REPEATABLE_READ` | ✅ 支持 | ✅ **默认** | ❌ 不支持 |
+| `SERIALIZABLE` | ✅ 支持 | ✅ 支持 | ✅ 支持 |
+
+### 四种隔离级别
+
+| 隔离级别 | 脏读 | 不可重复读 | 幻读 | 丢失更新 | 默认场景 |
+|---------|:----:|:---------:|:----:|:-------:|---------|
+| `READ_UNCOMMITTED` | ✅ 可能 | ✅ 可能 | ✅ 可能 | ✅ 可能 | 极少使用 |
+| `READ_COMMITTED` | ❌ 避免 | ✅ 可能 | ✅ 可能 | ✅ 可能 | PostgreSQL / SQL Server / Oracle 默认 |
+| `REPEATABLE_READ` | ❌ 避免 | ❌ 避免 | ✅ 可能 | ❌ 最低预防级别 | MySQL/InnoDB 默认 |
+| `SERIALIZABLE` | ❌ 避免 | ❌ 避免 | ❌ 避免 | ❌ 避免 | 极端一致性场景 |
+
+> ⭐ **丢失更新**（Lost Update）：两个并发事务读取同一行数据，都做出修改，后提交的覆盖了先提交的。REPEATABLE_READ 通过行级锁防止同时访问同一行，是能预防丢失更新的最低级别。
 
 ## 6.2 脏读 / 不可重复读 / 幻读
 
@@ -972,7 +1036,45 @@ public void neverInTransaction() {
 // ❌ 同一次事务中，范围查询结果数量不同
 ```
 
-## 6.3 实战：生成报表时选什么隔离级别
+## 6.3 隔离级别验证陷阱
+
+> **关键问题**：@Transactional 的隔离级别**只在创建新事务时生效**。如果一个方法使用 REQUIRED 传播加入已有事务，其隔离级别会被忽略！
+
+```java
+@Service
+public class OrderService {
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void processOrder() {
+        // 开启事务 T1（REPEATABLE_READ）
+        auditService.logAudit();   // 加入 T1，不会新建事务！
+    }
+}
+
+@Service
+public class AuditService {
+
+    // ❌ 以下 SERIALIZABLE 不会生效！
+    // 因为 REQUIRED 加入已有事务 T1，没有创建新事务
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public void logAudit() { ... }
+
+    // ✅ 需要 REQUIRES_NEW 才会创建新事务，此时 SERIALIZABLE 才生效
+    @Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
+    public void logAuditIsolated() { ... }
+}
+
+// 严格校验：开启多隔离级别检测
+@Bean
+public PlatformTransactionManager txManager(DataSource dataSource) {
+    DataSourceTransactionManager tm = new DataSourceTransactionManager(dataSource);
+    // 如果方法在已有事务中尝试设置不同隔离级别 → 抛异常
+    tm.setValidateExistingTransaction(true);
+    return tm;
+}
+```
+
+## 6.4 实战：生成报表时选什么隔离级别
 
 ```java
 @Service
@@ -1961,6 +2063,7 @@ Client                  DispatcherServlet         TransactionInterceptor        
 > **扩展阅读**：
 > - [官方文档：Using @Transactional](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html)
 > - [官方文档：Transaction Management](https://docs.spring.io/spring-framework/reference/data-access/transaction.html)
+> - [Baeldung — Transaction Propagation and Isolation](https://www.baeldung.com/spring-transactional-propagation-isolation)
 > - [Vlad Mihalcea — Spring read-only transaction Hibernate optimization](https://vladmihalcea.com/spring-read-only-transaction-hibernate-optimization/)
 > - [Vlad Mihalcea — The best way to use @Transactional](https://vladmihalcea.com/spring-transactional-annotation/)
 > - [Marcobehler — Spring Transaction Management In-Depth](https://www.marcobehler.com/guides/spring-transaction-management-transactional-in-depth)
