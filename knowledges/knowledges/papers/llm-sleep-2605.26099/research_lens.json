@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.2.0",
+  "paper_id": "llm-sleep-2605.26099",
+  "lenses": [
+    {
+      "name": "Memory-Systems Integration Lens",
+      "perspective": "The paper can be read as a memory hierarchy design: attention = L1 cache (fast, small, evictable), SSM fast weights = L2 cache (slower, persistent, compressed). Sleep is a cache-line-writeback operation that flushes dirty entries from L1 to L2. This lens predicts that optimal sleep duration depends on the 'cache miss ratio' of the task.",
+      "testable_prediction": "Tasks where eviction causes high miss rates (many cross-window dependencies) should benefit most from sleep, regardless of reasoning depth."
+    },
+    {
+      "name": "Biological Analogy Lens",
+      "perspective": "The hippocampal-cortical consolidation analogy is imperfect but suggestive: attention ≈ hippocampus (pattern completion, non-local), SSM ≈ cortex (slow weights, compressed). Sleep = replay. The paper doesn't model sharp-wave ripples, reactivation order, or sleep-stage structure. These could inspire future variants.",
+      "testable_prediction": "Replaying tokens in reverse order (backward replay, like in rodent hippocampus) during sleep would improve consolidation differently than forward replay."
+    },
+    {
+      "name": "Depth vs Width Lens",
+      "perspective": "N-loop at constant D transforms a width problem (make the model deeper) into a depth problem (recurse existing layers). The paper's evidence suggests that depth-recurrence is more parameter-efficient than depth-addition for reasoning tasks — but this is never directly tested.",
+      "testable_prediction": "For a fixed parameter budget, N-loop with D layers outperforms no-loop with 2D layers on reasoning-heavy tasks."
+    },
+    {
+      "name": "Optimization Geometry Lens",
+      "perspective": "BPTT through N loops creates a loss landscape with more gradient paths through the SSM update. This may provide better gradient signal to the fast-weight parameters than single-pass training, even beyond the reasoning benefit.",
+      "testable_prediction": "Sleep-trained models would outperform no-loop models on held-out tasks even without sleep at test time (i.e., sleep is also a better training objective)."
+    }
+  ]
+}

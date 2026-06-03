@@ -43,7 +43,7 @@ GH_CONFIG_ENV = {
 # ── 超时（大幅提升，适应大规模推送） ─────────────────
 API_TIMEOUT = 30          # 单次 API 调用超时
 API_TIMEOUT_SHORT = 10    # 单次 API 存在性检查超时
-GLOBAL_TIMEOUT = 300      # 整个操作超时秒数
+GLOBAL_TIMEOUT = 600      # 整个操作超时秒数
 MAX_WORKERS = 5           # 并发 API 调用数
 
 KNOWN_IMG_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}

@@ -1,0 +1,61 @@
+{
+  "paper_id": "2605.30621",
+  "directions": [
+    {
+      "rank": 1,
+      "seed_type": "assumption_violation",
+      "paper_anchor": ["C5.1", "C5.2"],
+      "research_question": "Does harness-updating flatness generalize across different evolution algorithms, or is it an artifact of the simple adaptive_skill algorithm?",
+      "hypothesis": "Flatness breaks under RL-based or search-based evolution algorithms that amplify evolver capability differences.",
+      "minimum_viable_experiment": "Repeat evolver-side analysis (3 evolvers × 3 anchors) on SWE-bench using 3 different evolution algorithms: adaptive_skill (current), SkillRL-style (RL-based skill expansion), GEPA-style (prompt-level reflection). Measure Δ_update for each algorithm.",
+      "negative_result_interpretation": "If flatness persists across all 3 algorithms → harness-updating is genuinely a low-ceiling task where model capability doesn't matter. If flatness breaks under RL/search → current findings are algorithm-dependent.",
+      "killer_objection": "Algorithm-model interaction confounds: a different algorithm may favor different model families, producing sorting that reflects compatibility rather than capability.",
+      "killer_result": "One algorithm shows a 15+ pp spread across evolvers where another shows <3 pp — clear evidence of algorithm dependency.",
+      "first_week_plan": "1. Identify 2 compatible evolution algorithms from the literature. 2. Implement or adapt their prompt interfaces. 3. Run 3 × 3 × 3 = 27 experimental cells (3 evolvers × 3 anchors × 3 algorithms). 4. Analyze Δ_update variance components.",
+      "risk_level": "medium",
+      "expected_value": "high"
+    },
+    {
+      "rank": 2,
+      "seed_type": "proxy_mismatch",
+      "paper_anchor": ["C7.1", "C7.2"],
+      "research_question": "Are activation and adherence causally separable, or is one a proxy for the other?",
+      "hypothesis": "Activation and adherence are causally distinct skills that improve via different training interventions.",
+      "minimum_viable_experiment": "Construct adversarial harnesses: (a) activation test: harness that requires non-standard format loading; (b) adherence test: harness with contingent branching logic. Test 6 models on these adversarial harnesses, measure SLR and HFR. Check whether SLR and HFR correlate across models.",
+      "negative_result_interpretation": "If SLR and HFR perfectly correlate → they may be two expressions of a single underlying capability (general instruction following). If they dissociate → paper's claim of two distinct modes is confirmed.",
+      "killer_objection": "The adversarial harnesses themselves may confound task difficulty with skill measurement.",
+      "killer_result": "A model with high SLR but low HFR on the same adversarial harness → causal separation confirmed.",
+      "first_week_plan": "1. Design 5 activation-adversarial harnesses. 2. Design 5 adherence-adversarial harnesses. 3. Set up SkillsBench evaluation pipeline. 4. Run 6 models through both sets. 5. Compute SLR/HFR correlation matrix.",
+      "risk_level": "low",
+      "expected_value": "high"
+    },
+    {
+      "rank": 3,
+      "seed_type": "evidence_gap",
+      "paper_anchor": ["C7.3"],
+      "research_question": "Can targeted training on long-horizon instruction following close the weak-tier adherence gap?",
+      "hypothesis": "Weak-model adherence decay is trainable: a supervised approach that injects periodic 're-grounding' prompts into training trajectories can reduce drift by 50%.",
+      "minimum_viable_experiment": "Take Qwen3-32B. Construct a training dataset of SkillsBench-like tasks with explicit re-grounding signals at trajectory midpoints. Fine-tune with LoRA. Compare adherence drift (load → final) against base model. Control: fine-tune on same tasks without re-grounding signals.",
+      "negative_result_interpretation": "If adherence drift is unchanged after training → the bottleneck is in the model's architecture or pretraining, not in fine-tuning data. If drift decreases but Δ_benefit doesn't improve → adherence may not be the binding constraint.",
+      "killer_objection": "Fine-tuning for adherence on one benchmark may not transfer to other benchmarks — the training intervention may be task-specific rather than capability-general.",
+      "killer_result": "Adherence drift drops from -0.39 to -0.15 with Δ_benefit improving 2× on SWE → intervention is effective and general.",
+      "first_week_plan": "1. Construct re-grounding training data from 20 SkillsBench tasks. 2. Set up LoRA fine-tuning pipeline for Qwen3-32B. 3. Train with and without re-grounding. 4. Evaluate on held-out SkillsBench tasks. 5. Report adherence drift and Δ_benefit.",
+      "risk_level": "high",
+      "expected_value": "medium"
+    },
+    {
+      "rank": 4,
+      "seed_type": "reviewer_objection",
+      "paper_anchor": ["C8.1"],
+      "research_question": "How much of the harness-updating gain is attributable to content vs. mere presence of structured text?",
+      "hypothesis": "Random procedural text injected as 'skills' produces similar gains to genuine evolved skills, suggesting the content itself is not the active ingredient.",
+      "minimum_viable_experiment": "Create a 'sham evolver' condition: for each task, inject a procedurally-formatted but semantically empty skill (pseudorandom instructions with matched length/format). Compare Δ_update against real evolver conditions on SkillsBench.",
+      "negative_result_interpretation": "If sham skills produce 0-1pp gain vs 2-4pp for real evolvers → content matters. If sham skills produce 2-4pp gain → the act of injection (not the content) is the main driver, fundamentally weakening the flatness finding.",
+      "killer_objection": "The sham skill needs to be carefully controlled to avoid accidentally being useful or harmful — length, format, and action type must be matched.",
+      "killer_result": "Sham skills produce Δ_update ≥ 70% of real skill Δ_update → content contribution is secondary to structure.",
+      "first_week_plan": "1. Write a sham skill generator that produces format-matched but content-randomized procedural text. 2. Run 3 evolver conditions (none, sham, Qwen3.5-9B) × 3 anchors on SkillsBench. 3. Compare Δ_update. 4. Also test content-free vs content-full with a held-out judge.",
+      "risk_level": "low",
+      "expected_value": "high"
+    }
+  ]
+}

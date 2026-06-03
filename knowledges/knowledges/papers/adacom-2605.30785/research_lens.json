@@ -1,0 +1,251 @@
+{
+  "arxiv_id": "2605.30785",
+  "research_equation": {
+    "old_success": "ReAct-style LLM agents work well for short-horizon tasks with small context",
+    "broken_assumption": "Agents can process arbitrarily long accumulated context without degradation",
+    "hard_setting": "Long-horizon web search and deep research tasks with 35+ interaction steps",
+    "borrowed_tool": "External smaller LLM (Qwen3-4B-Instruct) as context manager + RL training (GRPO)",
+    "ideal_unavailable_mechanism": "Train the agent itself with adaptive context management capabilities",
+    "surrogate_mechanism": "External frozen-agent-compatible manager that learns to modify context via RL, discovering per-agent strategies"
+  },
+  "three_pass_direction_mining": {
+    "pass1_five_c_triage": {
+      "category": "Method — context management framework for LLM agents",
+      "context": "LLM agents for long-horizon tasks suffer from context degradation. Prior work (MEM1, IterResearch, ReSum, MemAct) requires agent-side training or fixed summarization.",
+      "correctness": "Plausible. Experiments on two benchmarks with 4-way comparisons. Controlled eval with ablated baselines.",
+      "contributions": [
+        "AdaCoM framework: external trained manager for frozen agents",
+        "Flexible JSON-based modification action space",
+        "Fidelity-Reliability Trade-off discovery",
+        "Cross-agent transfer analysis"
+      ],
+      "clarity": "Well-structured. Method, experiments, analysis, and transfer sections are logically connected.",
+      "direction_promise": "High. The hidden assumption that manager-agent style compatibility predicts transfer beyond capability is under-explored and attackable."
+    },
+    "pass2_evidence_chain": {
+      "key_finding": "External trained context manager consistently improves frozen agents. Two distinct strategies emerge (tiered vs eager distillation) depending on agent capability.",
+      "figures": [
+        "Figure 1: AdaCoM workflow diagram — external manager before each agent step",
+        "Figure 2: Failure mode shifts — AdaCoM reduces incorrect answers and early give-ups",
+        "Figure 3: Context length distribution shows tiered vs eager distillation strategies",
+        "Figure 4: Cross-agent transfer — 23/28 positive pairs, capability-proximity pattern"
+      ],
+      "tables": [
+        "Table 1: Main BCP results — AdaCoM +39% avg over ReAct",
+        "Table 2: MCP-Wiki results — AdaCoM +15.2% avg"
+      ],
+      "evidence_gaps": [
+        "MCP-Wiki only uses 2 agents (limited agent pool)",
+        "No evaluation on code agents or embodied agents",
+        "Only one manager size tested (4B)"
+      ]
+    },
+    "pass3_virtual_reimplementation": {
+      "implementation_details": {
+        "manager_model": "Qwen3-4B-Instruct, 32K context window, 4K max output",
+        "training": "SFT warmup (5 epochs on BCP, 2 on MCP) using GPT-5/Claude Opus trajectories, then GRPO with group size 8",
+        "action_space": "JSON list of modifications with fields: ids, role, justification, new_content",
+        "process_rewards": "Token penalty (-0.8), redundant-action penalty (-0.4), format penalty (-0.5), gold-doc-found (0.6), key-doc-found (0.3)",
+        "hyperparameters": "α=0.1, lr=5e-6, KL=0.006, clip=0.2, temp=1.0, max 40 epochs"
+      },
+      "hidden_assumptions": [
+        {"assumption": "4B manager has sufficient capacity for all target agents", "breaks_at": "Very strong agents (GPT-5 class) that need high-fidelity context preservation"},
+        {"assumption": "RL from frozen agent feedback provides sufficient training signal", "breaks_at": "When agent is too weak to produce meaningful outcome variation"},
+        {"assumption": "JSON action space captures all useful context modifications", "breaks_at": "Modifications requiring multi-turn coordination or planning"},
+        {"assumption": "Process rewards (token penalty, redundancy) generalize across tasks", "breaks_at": "Tasks where long tool results are inherently necessary, not just noisy"},
+        {"assumption": "Capability proximity measured by ReAct is a sufficient transfer predictor", "breaks_at": "When manager-agent style compatibility overrides capability signals"}
+      ]
+    }
+  },
+  "challenge_to_module_map": [
+    {
+      "challenge": "Accumulated context causes degradation",
+      "failure_mode": "Constraint forgetting, premature abandonment, redundant exploration",
+      "design_principle": "Architectural decoupling (external manager, frozen agent)",
+      "module": "AdaCoM workflow: manager modifies context before each agent step",
+      "evidence": ["C1.1", "C2.1", "C3.4"]
+    },
+    {
+      "challenge": "Different agents need different management strategies",
+      "failure_mode": "One-size-fits-all summarization harms some agents",
+      "design_principle": "Operation-level flexibility (learned, not predefined)",
+      "module": "Flexible JSON action space with 4 fields (ids, role, justification, new_content)",
+      "evidence": ["C1.3", "C2.2", "C3.3", "C4.1"]
+    },
+    {
+      "challenge": "Manager must learn agent-compatible strategies",
+      "failure_mode": "Untrained manager degrades performance (-8.9% avg)",
+      "design_principle": "RL training with outcome + process rewards",
+      "module": "GRPO + two-level advantage estimation + process rewards",
+      "evidence": ["C3.1", "C7.1"]
+    },
+    {
+      "challenge": "Training per-agent managers is costly",
+      "failure_mode": "N/A (proactive exploration)",
+      "design_principle": "Cross-agent transfer via capability proximity",
+      "module": "Transfer experiment: 4 trained managers → 8 target agents",
+      "evidence": ["C5.1", "C5.2", "C5.3"]
+    }
+  ],
+  "module_lens_table": [
+    {
+      "module": "External context manager (4B Qwen)",
+      "failure_fixed": "Cannot train closed-source agents; per-agent management costs",
+      "ideal_unavailable": "Context management capability built into the agent itself",
+      "available_proxy": "Smaller LLM that intercepts and modifies context before each agent step",
+      "hidden_assumption": "4B manager has enough capacity for all agents",
+      "risk": "Capacity bottleneck for very strong agents; inference overhead",
+      "future_point": "Hierarchical management: small manager for routine compression, large manager for complex restructuring"
+    },
+    {
+      "module": "Flexible JSON action space",
+      "failure_fixed": "Fixed summarization cannot adapt to per-agent needs",
+      "ideal_unavailable": "Optimal per-step context understood by design",
+      "available_proxy": "Learned per-step structured modification via RL exploration",
+      "hidden_assumption": "All useful modifications are local (per-step) and expressible as JSON",
+      "risk": "May miss modifications requiring global planning across many steps",
+      "future_point": "Plan-ahead context management: manager pre-commits to a modification strategy for the next K steps"
+    },
+    {
+      "module": "Two-level advantage estimation",
+      "failure_fixed": "Outcome-only RL is too sparse for long-horizon credit assignment",
+      "ideal_unavailable": "Dense per-step reward from human annotation",
+      "available_proxy": "Outcome reward + rule-based process rewards (token/redundancy/format penalties)",
+      "hidden_assumption": "Rule-based process rewards are good proxies for useful context management",
+      "risk": "Process rewards may learn to game the proxy instead of improving context quality",
+      "future_point": "Learned process reward model trained on human judgments of context quality"
+    },
+    {
+      "module": "Tiered vs eager distillation strategies",
+      "failure_fixed": "Single strategy fails across capability-diverse agents",
+      "ideal_unavailable": "Ground-truth optimal compression rate for each agent",
+      "available_proxy": "RL discovers capability-correlated strategies (tiered for strong, eager for weak)",
+      "hidden_assumption": "Agent capability (ReAct score) is the dominant predictor of optimal strategy",
+      "risk": "Style compatibility can override capability signal in transfer",
+      "future_point": "Adaptive strategy selection: detect target agent capability + style at inference time, select pre-trained manager"
+    }
+  ],
+  "citation_function_table": [
+    {
+      "cluster": "OpenClaw, Hermes Agent",
+      "function": "Field anchor — real-world LLM agent applications",
+      "inherited": "General-purpose agent setting",
+      "modification": "Uses these as motivation for long-horizon context problem"
+    },
+    {
+      "cluster": "Attention sink, Lost in the Middle, Distraction",
+      "function": "Limitation evidence — why context degrades",
+      "inherited": "Positional bias, retrieval interference",
+      "modification": "Frame as central bottleneck for long-horizon agents"
+    },
+    {
+      "cluster": "MEM1, IterResearch, ReSum, MemAct",
+      "function": "Method ancestor / baseline pressure",
+      "inherited": "Summarization or tool-based context management",
+      "modification": "Shows these require agent-side training; AdaCoM removes this requirement"
+    },
+    {
+      "cluster": "GRPO (DeepSeek-R1), Trinity-RFT",
+      "function": "Protocol justification — RL training framework",
+      "inherited": "Group-relative policy optimization",
+      "modification": "Adapted for manager training with two-level advantage"
+    },
+    {
+      "cluster": "BrowseComp-Plus, MCP-Bench",
+      "function": "Benchmark protocol — evaluation tasks",
+      "inherited": "Web search and deep research evaluation",
+      "modification": "Data splits (680/150 BCP; 1000 RL / 150 test MCP)"
+    },
+    {
+      "cluster": "FoldAgent (WebSailor-style agent)",
+      "function": "Baseline pressure — retriever choice",
+      "inherited": "Qwen3-Embed-8B retriever",
+      "modification": "Follows same retriever setup for comparability"
+    }
+  ],
+  "experiment_as_evidence_table": [
+    {
+      "experiment_or_table": "Table 1: BCP Main Results (4 agents × 6 settings)",
+      "claim_ids": ["C3.1", "C3.2", "C3.3"],
+      "supports": "AdaCoM consistently improves diverse frozen agents",
+      "counterfactual_ruled_out": "External manager without training fails; fixed summarization fails on some agents; self-management fails on most",
+      "metric": "Mean@3 (%)",
+      "stress_condition": "4 diverse agents (Qwen, Kimi, GLM, DeepSeek), multi-constraint web search",
+      "alignment": "Strong"
+    },
+    {
+      "experiment_or_table": "Figure 2: Failure mode shifts",
+      "claim_ids": ["C3.4"],
+      "supports": "AdaCoM reduces constraint forgetting, premature abandonment, redundant exploration",
+      "counterfactual_ruled_out": "Improvement is not just more correct answers but also better failure trajectories",
+      "metric": "Outcome distribution (%)",
+      "stress_condition": "Per-agent trajectory outcome comparison",
+      "alignment": "Strong"
+    },
+    {
+      "experiment_or_table": "Figure 3: Context length analysis",
+      "claim_ids": ["C4.1", "C4.2"],
+      "supports": "Learned strategies differ systematically by agent capability",
+      "counterfactual_ruled_out": "Strategies are emergent from RL, not hardcoded",
+      "metric": "Context length (K tokens), activity curves",
+      "stress_condition": "4 self-trained managers",
+      "alignment": "Strong"
+    },
+    {
+      "experiment_or_table": "Figure 4: Cross-agent transfer",
+      "claim_ids": ["C5.1", "C5.2", "C5.3"],
+      "supports": "Managers transfer broadly; capability proximity helps; style compatibility matters",
+      "counterfactual_ruled_out": "Managers are NOT narrowly tied to source agents",
+      "metric": "Mean@3 (%) × 32 pairs",
+      "stress_condition": "4 source × 8 target (including 4 held-out agents)",
+      "alignment": "Strong for capability proximity; moderate for style compatibility"
+    },
+    {
+      "experiment_or_table": "Table 2: MCP-Wiki results (2 agents × 3 settings)",
+      "claim_ids": ["C6.1"],
+      "supports": "AdaCoM extends to deep research tasks beyond web search",
+      "counterfactual_ruled_out": "Effect is not benchmark-specific",
+      "metric": "Mean@3 (%)",
+      "stress_condition": "Deep research with 9 MCP tools, long-form synthesis",
+      "alignment": "Moderate (only 2 agents tested)"
+    },
+    {
+      "experiment_or_table": "Appendix Table 5: Process reward ablation",
+      "claim_ids": ["C7.1"],
+      "supports": "Process rewards provide useful intermediate supervision",
+      "counterfactual_ruled_out": "Outcome-only RL (α=0) underperforms combined rewards",
+      "metric": "Mean@3 (%)",
+      "stress_condition": "2 agents (DS, Qwen), α=0 vs α=0.1",
+      "alignment": "Moderate (only 2 agents; α not swept)"
+    }
+  ],
+  "reviewer_lens_audit": {
+    "novelty": "Moderate-High. First systematic exploration of training an external context manager for frozen agents with flexible action space. Fidelity-Reliability Trade-off is a new empirical finding.",
+    "significance": "High for practical deployment. Directly addresses the real-world problem of applying context management to closed-source agents (OpenClaw, Hermes, Claude Code).",
+    "soundness": "Generally sound. Well-controlled experiments with multiple baselines. However, some concerns: (1) only 4 agents on BCP, 2 on MCP; (2) GPU hours and computational cost not reported; (3) no code agents tested.",
+    "methodology_rigor": "Good. Three runs reported (Mean@3 + Pass@3). Ablation on process rewards. Transfer analysis with 32 pairs. Exception analysis for failed transfers.",
+    "statistical_validity": "Adequate. Mean@3 over 3 runs gives some reliability. No confidence intervals or significance tests reported.",
+    "reproducibility": "Good. Code available (anonymous repo), detailed hyperparameters, dataset construction pipeline documented. SFT warmup data from GPT-5/Claude trajectories somewhat non-reproducible.",
+    "limitation_honesty": "Good. Explicit limitations section discussing evaluation scope, manager capacity, inference overhead, KV cache issues.",
+    "actionable_reviewer_objections": [
+      {
+        "objection": "Only one manager size (4B) tested — is scaling monotonic?",
+        "direction_seed": "Train managers at 7B, 14B, 70B scales and measure Fidelity-Reliability boundary shift. Is there a 'sweet spot' where manager barely outperforms agent's native context window?",
+        "minimum_experiment": "Compare 4B vs 14B manager on 2 strong agents (GLM, Qwen) on BCP with 3 seeds each"
+      },
+      {
+        "objection": "Inference overhead not quantitatively measured",
+        "direction_seed": "Frame-wise overhead analysis: measure and report latency, token cost, and cache invalidation overhead. Compare with sparser manager invocation (every N steps)."
+      },
+      {
+        "objection": "Process reward ablation is thin (only α=0 vs α=0.1)",
+        "direction_seed": "Sweep α systematically; also test alternative PR combinations (e.g. token-only, redundancy-only). Understand which process signals matter most."
+      }
+    ]
+  },
+  "story_pattern_to_reuse": {
+    "pattern_name": "Hidden-assumption break + surrogate replacement",
+    "compact_formula": "\"Agents can self-manage context\" → false for closed-source → external manager learns per-agent strategy via RL",
+    "lesson": "When the dominant approach requires access you don't have, find a surrogate that works from the outside — and use RL to discover task-specific patterns rather than hand-designing them."
+  }
+}
