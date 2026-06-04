@@ -283,6 +283,6 @@ Prompt：
 ---
 
 **关联阅读：**
-- [Claude Code 高级使用指南](./claude-code-advanced-tips-guide.md)
-- [AI Agent 学习路线图 2026：Harness 即产品](../agent-engineering/career/ai-agent-roadmap-2026-what-to-learn-build-skip.md)
-- [Thin Harness, Fat Skills：YC CEO 论 Agent 架构哲学](../agent-engineering/harness/thin-harness-fat-skills-garry-tan.md)
+- [Claude Code 高级使用指南](./agent-engineering/claude-code-advanced-tips-guide.md)
+- [AI Agent 学习路线图 2026：Harness 即产品](./agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md)
+- [Thin Harness, Fat Skills：YC CEO 论 Agent 架构哲学](./agent-engineering/thin-harness-fat-skills-garry-tan.md)

@@ -13,7 +13,7 @@ authors: "Anatoli Kopadze"
 
 > **来源：** [How to Actually Use Claude. 18 steps that unlock 100% of its potential](https://x.com/anatolikopadze/status/2054568935274549597) — Anatoli Kopadze
 
-![How to Actually Use Claude](../../image/how-to-actually-use-claude-1.jpg)
+![How to Actually Use Claude](../image/how-to-actually-use-claude-1.jpg)
 
 Claude 发布两年了。每天使用它的人，大多数只用了它 10% 的能力。
 
