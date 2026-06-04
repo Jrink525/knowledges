@@ -16,7 +16,7 @@ authors: "darkzodchi (@zodchiii)"
 
 > **来源：** [The Claude Code Setup Behind Shopify's 23,000 Engineers (Exact Config You Can Copy)](https://x.com/zodchiii/status/2056319284641460626) — 作者 darkzodchi (@zodchiii)
 
-![Shopify AI-first playbook cover](../../image/shopify-claude-code-setup-1.jpg)
+![Shopify AI-first playbook cover](../image/shopify-claude-code-setup-1.jpg)
 
 Shopify 的 23000 名工程师正在争分夺秒，目标是在今年 Q3 之前实现 96% 的编码自动化。
 
