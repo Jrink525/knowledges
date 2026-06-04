@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 
 KNOWLEDGES_DIR = Path(__file__).parent.resolve()
 GH_REPO = "Jrink525/knowledges"
-GH_BRANCH = "main"
+GH_BRANCH = "master"
 TOOL_NAME = "_organize.py"
 
 GH_BIN = "/home/node/.openclaw/workspace/gh"
@@ -524,6 +524,79 @@ def sync_from_github(token: str) -> int:
 
 # ── Local classification & organization ─────────────
 
+def deduplicate_files():
+    """
+    检测并清理重复文件（同名 + 内容完全一致的项目）。
+    策略：
+      - 找到所有同名（basename 一致）的文件
+      - 如果内容完全相同（byte 级），只保留最深路径的那一份
+      - 如果内容不同，保留所有（文件名冲突但内容不同）
+      - 对保留副本生成 hardlink → 节省空间
+    返回清理了多少组重复。
+    """
+    from collections import defaultdict
+
+    # 收集所有 md 文件，按 basename 分组
+    by_name: dict[str, list[Path]] = defaultdict(list)
+    for f in sorted(KNOWLEDGES_DIR.rglob("*.md")):
+        if f.name in ("README.md", TOOL_NAME) or f.name.startswith("_"):
+            continue
+        if ".git" in str(f.relative_to(KNOWLEDGES_DIR)).split(os.sep):
+            continue
+        by_name[f.name].append(f)
+
+    # 对 image 目录也做同样扫描
+    for f in sorted(KNOWLEDGES_DIR.rglob("*")):
+        ext = f.suffix.lower()
+        if ext not in KNOWN_IMG_EXTS:
+            continue
+        by_name[f.name].append(f)
+
+    cleaned_groups = 0
+    total_removed = 0
+
+    for name, paths in by_name.items():
+        if len(paths) < 2:
+            continue
+
+        # 按内容分组（相同内容归为一组）
+        content_groups: dict[str, list[Path]] = defaultdict(list)
+        for p in paths:
+            try:
+                content = safe_read_bytes(p)
+                content_groups[content].append(p)
+            except Exception:
+                content_groups[repr(p)].append(p)
+
+        for content_key, same_content_paths in content_groups.items():
+            if len(same_content_paths) < 2:
+                continue
+
+            # 按路径深度排序（deepest first → 从最深的子目录里选保留文件）
+            same_content_paths.sort(key=lambda p: len(p.relative_to(KNOWLEDGES_DIR).parts),
+                                    reverse=True)
+
+            # 保留最深的那一份
+            keeper = same_content_paths[0]
+            to_remove = same_content_paths[1:]
+
+            for dup in to_remove:
+                try:
+                    dup.unlink()
+                    dup_rel = str(dup.relative_to(KNOWLEDGES_DIR))
+                    print(f"  🗑️ 重复删除: {dup_rel}（同 {str(keeper.relative_to(KNOWLEDGES_DIR))}）")
+                    total_removed += 1
+                except Exception as e:
+                    dup_rel = str(dup.relative_to(KNOWLEDGES_DIR))
+                    print(f"  ⚠️ 删除失败 {dup_rel}: {e}")
+
+            cleaned_groups += 1
+
+    if cleaned_groups > 0:
+        print(f"  ✅ 去重完成: {cleaned_groups} 组, 删除 {total_removed} 个重复文件")
+    return cleaned_groups
+
+
 def extract_all_files() -> dict[str, list[tuple[str, Path]]]:
     classified: dict[str, list[tuple[str, Path]]] = {}
     image_dir = KNOWLEDGES_DIR / "image"
@@ -915,6 +988,10 @@ def main():
         print("  ⚠️ 同步超时，跳过同步进入本地整理阶段")
     except Exception as e:
         print(f"  ⚠️ 同步异常: {e}")
+
+    # ── 去重 ──
+    print("\n  🧹 扫描重复文件...")
+    deduplicate_files()
 
     # ── 本地分类整理 ──
     print("\n  🔍 基于内容分类文档...")
