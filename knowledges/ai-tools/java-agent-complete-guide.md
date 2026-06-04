@@ -53,7 +53,8 @@ source: "综合整理自微信公众号、Baeldung、InfoQ、Medium、Oracle 官
    - [8.6 跨 JVM 版本的字节码兼容性](#86-跨-jvm-版本的字节码兼容性)
 9. [工业级案例：OpenTelemetry Java Agent](#9-工业级案例opentelemetry-java-agent)
 10. [诊断与调试工具链](#10-诊断与调试工具链)
-11. [总结](#11-总结)
+11. [延伸案例：从 Java Instrumentation 到 Agent Harness 的测量哲学](#11-延伸案例从-java-instrumentation-到-agent-harness-的测量哲学)
+12. [总结](#12-总结)
 
 ---
 
@@ -1269,14 +1270,72 @@ jcmd <PID> GC.heap_dump /tmp/dump.hprof
 
 ---
 
-## 11. 总结
+## 11. 延伸案例：从 Java Instrumentation 到 Agent Harness 的测量哲学
+
+> **来源：** [Aparna Dhinakaran & Sufjan Fana 的实验](https://x.com/aparnadhinak/status/2062233330196926720) — 数据库文件系统抽象 vs Skill 对比
+
+### 背景
+
+Java Instrumentation 的核心思想是在 JVM 层面植入钩子以观测和修改程序行为。当我们将视野从 JVM 扩展到 AI Agent Harness，会发现同样的挑战：**如何给 Agent 的行为加上可观测层，让架构决策可以基于数据而非直觉？**
+
+Aparna Dhinakaran 和 Sufjan Fana 做了一个精巧的对照实验，直接验证 Agent 从数据库读取数据时的两种架构选择——这本质上是 **Instrumentation 哲学在 Agent 架构设计中的延伸应用**。
+
+### 问题
+
+Agent 需要从数据库读取文档来回答问题。两种主流方案：
+
+| 方案 | 做法 | 代表项目 |
+|------|------|---------|
+| **文件系统抽象** | 把数据库包装成文件系统，Agent 用 `ls`/`cat`/`grep`，底层翻译为数据库查询 | Mintlify ChromaFS |
+| **Skill SQL 方案** | 给 Agent 真实 Shell + SQL 脚本，一次性拉取数据到本地文件，再用本地 Bash 工具加工 | Skill 模式 |
+
+### 实验设计
+
+这是**将 Instrumentation 方法用于 Agent 架构评估**的典范：
+
+- **对照组 vs 实验组**：PostgresFS（文件系统抽象） vs Skill（SQL 工作流）
+- **受控变量**：同一模型（claude-sonnet-4-6 执行，claude-opus-4-7 裁判）、同一数据库快照、同 10 个问题×10 次
+- **精确计时切片**：只计 Agent 的「调查循环」（从 prompt 到最后一个 tool call），排除技能加载和答案合成等一次性开销
+- **评分分层**：精确答案程序化评分 + LLM Judge 按固定 rubric 评分
+
+> 正如 Java Instrumentation 通过 ClassFileTransformer 在类加载时插入监控逻辑，这个实验通过 **Arize AX** 在 Agent 执行链中插入测量点，实现了架构决策的量化评估。
+
+### 实验结果
+
+| 指标 | PostgresFS | Skill SQL |
+|------|-----------|----------|
+| **总准确率** | 93/100 | **99/100** |
+| **延迟差异** | 不到 2× | 几乎平手 |
+| **维护成本** | 大型定制层（adapter + cache + regex translator） | 一个 prompt + 小脚本 |
+
+### 失败根因分析（Instrumentation 视角）
+
+PostgresFS 的 7 个失败点恰好对应了 Java Agent 开发中熟悉的陷阱：
+
+| 失败点 | 类似 Java Instrumentation 的问题 |
+|--------|-------------------------------|
+| **Locality Collapse** — 每次 `cat`/`grep` 都是数据库往返 | 类似 transform 方法中每次调用都做 IO 操作导致性能爆炸 |
+| **Composability Capped** — 只读无 `/tmp`，`comm`/`join`/`diff` 全挂 | 类似 Agent 在 bootstrap classpath 下写入文件受限 |
+| **Abstraction 陷阱** — 越把 fake filesystem 往真实方向推，你越是在重建真实文件系统，只是更慢 | 类似 Agent 中自己实现 ClassFileTransformer 链，越做越复杂，不如直接用成熟框架 |
+
+### 延伸思考
+
+这个案例对 Java Instrumentation 开发者最重要的启示：
+
+1. **Instrumentation 的适用边界**：Instrumentation 的强项是 **透明注入观测层**，而非替换运行时环境。PostgresFS 试图在数据库前加一层文件系统抽象，本质上是在「instrument」数据库访问——但抽象层越重，维护和性能成本越高。
+2. **Eval-driven 架构决策**：正如 Java Agent 开发中用 JMH 基准测试做性能决策，Agent 架构设计中需要用 Eval（如 Arize AX）做精确对比。
+3. **不要依赖仪器层的工作习惯**：Java Agent 的「不修改 JDK 核心类」原则对应到 Agent 架构就是「不要把数据库包装成不自然的接口」——假抽象最终比真实现更贵。
+
+---
+
+## 12. 总结
 
 ### 关键知识点回顾
 
 1. **Java Agent ≠ 字节码操作框架**：Agent 是 JVM 的钩子机制，字节码操作是它的典型但不唯一的用途（也可以改环境变量、配置等）
 2. **Premain vs Agentmain**：启动时挂载 vs 运行时 Attach，后者依赖 Attach API（`com.sun.tools.attach`）
 3. **三大字节码框架**：ASM（高性能底层）、Javassist（源码字符串）、Byte Buddy（声明式现代 API）
-4. **Shade 重定位是必选项**：否则 AGent 的依赖与目标应用冲突，`NoSuchMethodError` 接踵而至
+4. **Shade 重定位是必选项**：否则 Agent 的依赖与目标应用冲突，`NoSuchMethodError` 接踵而至
 5. **ClassLoader 是最深的水**：Agent 代码在目标类的 ClassLoader 下执行，bootstrap classpath 是最安全的位置
 6. **永远不要修改 JDK 核心类**：String、Object、ClassLoader 等修改可能直接 JVM crash
 
