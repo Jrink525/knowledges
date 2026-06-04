@@ -130,23 +130,9 @@
     - `ai-tools/harness/spring-ai-subagent-orchestration.md`
     - `ai-tools/harness/thin-harness-fat-skills-garry-tan.md`
   📁 **inference/**
-    - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
-    - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
-    - `ai-tools/inference/embabel-agent-framework-best-practices.md`
-    - `ai-tools/inference/from-prompt-engineer-to-fullstack-ai-engineer.md`
-    - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
-    - `ai-tools/inference/hermes-agent-60-days-6-lessons-0xjeff.md`
-    - `ai-tools/inference/how-to-actually-use-claude.md`
-    - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
-    - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
-    - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
-    - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
-    - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
-    - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
-    - `ai-tools/inference/spring-ai-agent-resources-top30.md`
-    - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
-    - `ai-tools/inference/voice-agent-full-guide.md`
-    - `ai-tools/inference/why-we-need-continual-learning.md`
+    - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
+    - `ai-tools/inference/how-llms-actually-work.md`
+    - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
   📁 **ml-research/**
     - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
     - `ai-tools/ml-research/dair-ai-top-papers-2025-05-18-24.md`
@@ -171,14 +157,31 @@
     - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
+### ai-tools/harness/ (`ai-tools/harness`)
+  - `ai-tools/harness/claude-code-dynamic-workflows-6-patterns-14-steps.md`
+
 ### ai-tools/inference/ (`ai-tools/inference`)
-  - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
-  - `ai-tools/inference/how-llms-actually-work.md`
-  - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
+  - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
+  - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
+  - `ai-tools/inference/embabel-agent-framework-best-practices.md`
+  - `ai-tools/inference/from-prompt-engineer-to-fullstack-ai-engineer.md`
+  - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
+  - `ai-tools/inference/hermes-agent-60-days-6-lessons-0xjeff.md`
+  - `ai-tools/inference/how-to-actually-use-claude.md`
+  - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
+  - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
+  - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
+  - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
+  - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
+  - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
+  - `ai-tools/inference/spring-ai-agent-resources-top30.md`
+  - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
+  - `ai-tools/inference/voice-agent-full-guide.md`
+  - `ai-tools/inference/why-we-need-continual-learning.md`
 
 ### database/ (`数据库 & 缓存`)
-  - `skills/paper-deep-reading/SKILL.md`
-  - `skills/paper-deep-reading/references/artifact_contract.md`
+  - `database/SKILL.md`
+  - `database/artifact_contract.md`
   - `database/binary-quantization-rag-32x.md`
   - `database/fastjson-deserialization-workbook.md`
   - `database/java-optional-complete-guide.md`
@@ -186,9 +189,9 @@
   - `database/notebooklm-maxxing-complete-guide.md`
   - `database/redis-single-threaded-high-qps.md`
   - `database/report.md`
-  - `skills/paper-deep-reading/templates/report_template.md`
-  - `skills/paper-deep-reading/references/research-direction-mining-best-practices.md`
-  - `skills/paper-deep-reading/references/research-generative-methodology.md`
+  - `database/report_template.md`
+  - `database/research-direction-mining-best-practices.md`
+  - `database/research-generative-methodology.md`
   - `database/spring-boot-10-utility-classes.md`
   - `database/spring-boot-3-generic-base-controller-service-repository.md`
   - `database/spring-boot-8-code-snippets.md`
@@ -236,7 +239,7 @@
 
 ---
 
-总计 **195** 篇知识文档
+总计 **196** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -248,5 +251,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-04 10:15 UTC]_
+_[自动生成于 2026-06-04 10:19 UTC]_
 
