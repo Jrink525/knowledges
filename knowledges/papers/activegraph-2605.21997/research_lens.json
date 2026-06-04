@@ -1,0 +1,218 @@
+{
+  "schema_version": "1.2",
+  "paper_id": "2605.21997",
+  "research_equation": {
+    "old_success_or_paradigm": "A(P): Agent 框架围绕模型构建——chat loop 在先，tools/rules/logging/memory 依次累加。log 是执行过程的副产品。",
+    "broken_assumption": "C and not-C: log 是副产品，所以 provenance 不完整、replay 不可能、fork 不存在。但一切 Agent 行为（目标、规则、工具调用、输出）实际上都可以表示为 event。",
+    "hard_setting_or_constraint": "T: 长时间运行的 Agentic 系统，需要可解释、可复现、可修订。需要处理 LLM 调用本身的非确定性。",
+    "borrowed_tool_or_method_family": "M: Event Sourcing + CQRS（来自数据库领域）+ 增量/响应式数据流 + Blackboard 架构（1970s AI 领域）",
+    "ideal_unavailable_mechanism": "Y: 完美的记忆层——provenance 完整、replay 精确、可安全检查 fork 的任何历史分支。但实际上 LLM 调用天然不满足确定性。",
+    "surrogate_mechanism": "Z: 将非确定性的 LLM 调用在运行时记录，在 replay 时通过内容寻址 cache 提供确定性。log 是 primary，graph 是投影，behavior 是反应。",
+    "compact_formula": "A(P) ∩ ¬C ∩ T ∩ M => Z≈Y",
+    "claim_ids": ["C1.1", "C1.2", "C1.3", "C2.1", "C2.2"]
+  },
+  "tri_pass_notes": {
+    "pass_1_five_c": {
+      "category": "Agent 系统架构/系统论文",
+      "context": "现有框架（LangChain, CrewAI 等）以及记忆系统（MemGPT/Letta, Zep, Mem0, Hindsight）均以 model 为第一性原理构建，log 为副产品。BabyAGI 的 while-loop 范式是其直系前身。",
+      "correctness": "推理严密：动机（为什么 log 不够）→ 架构假设 ↔ 机制（event/graph/behavior）→ replay → fork → 工作示例。每步的 rationale 明确。非经验性 claim 不夸大。",
+      "contributions": "① event-sourced agent model（graph = deterministic fold over log）② determinism contract + content-addressed cache replay ③ forking + structural diff ④ 完整可复现的 diligence pack",
+      "clarity": "极其清晰。每段都明确说了"我们不 claim X"。作者明确区分了"证实"和"推测"。论文是对 ML 论文社区浮夸风气的清醒对抗。",
+      "direction_promise": "§7 的 self-improving agent 讨论是纯 speculate，但方法论扎实——if fork-and-diff 能作为 eval primitive，self-improvement 可能自然演进。最有价值的方向是 D1 (fork-based improvement loop) 和 D3 (checkpoint/compaction)"
+    },
+    "pass_2_chain": "问题（现有架构 log 是副产品）→ 假设（如果 log 是 primary 则 replay/fork/lineage 自然成立）→ 模块（event → graph → behavior → replay → fork）→ 公式（log → replay → graph → behavior match → emit new events）→ 实验/演示（diligence pack: 671 events, 93 objects, 76 relations, 103 model calls, 0 orchestration code）→ 重建 claim（replay 是确定性的、fork 共享前缀不重算、lineage 可完全重建）",
+    "pass_3_virtual_reimplementation": "关键隐藏假设：① behavior 主体必须是确定性函数(不读 random/time/UUID) ② LLM 调用通过内容寻址 cache 在 replay 时确定 ③ graph 投影完全确定 ④ 外部工具 side effect 仅通过记录 replay-safe。特殊 case：百万 event 无 checkpoint(全量 replay)、schema 迁移(旧格式 event)、分布式多 writer(ordering 未解决)、statcic determinism 检查(无)、修改 prompt 的 fork(需重跑 affected calls)"
+  },
+  "direction_reconstruction": {
+    "likely_starting_dissatisfaction": "BabyAGI 的 while-loop 状态在内存中，无法持久化；记忆系统在模型外挂层始终无法解决 provenance 完整性问题；Agent 的调试体验糟糕——无法回答"为什么这个事实在上下文中？"",
+    "tempting_transfer": "在现有 memory-layer 系统上增加更细粒度的 provenance tracking（如 Hindsight 的做法）",
+    "blocking_constraint": "如果 log 是副产品、graph state 在不同地方分布，provenance 无论如何不可能是 total——因为丢失的信息已经被压缩/聚合了",
+    "conceptual_replacement": "不做"更好的 memory layer"，而是反转整个架构：log 是 primary，graph 是投影，所有 state 都可从 log 重建",
+    "interpretation_type": "evidence-backed interpretation",
+    "claim_ids": ["C1.1", "C4.1"]
+  },
+  "challenge_to_module_map": [
+    {
+      "challenge": "LLM 调用天然非确定，如何做确定性 replay？",
+      "failure_mode": "如果要求 LLM 在运行时确定，架构不成立",
+      "design_principle": "把非确定性和确定性分离：运行时自由调用，replay 时从 cache 读取。只在 replay 时保证确定。",
+      "module": "Replay Cache (content-addressed over event log)",
+      "evidence": "§3 determinism contract + §4 replay mechanism",
+      "claim_ids": ["C2.1"]
+    },
+    {
+      "challenge": "如何在无编排代码的情况下协调多步骤任务？",
+      "failure_mode": "如果 coordination 需要显式 orchestrator，replay/fork 会因为"程序计数器位置"不在 log 中而被破坏",
+      "design_principle": "Implicit coordination through shared graph: behavior emit events → events match other behaviors' subscriptions → chain reaction",
+      "module": "Graph substrate + subscription pattern matching",
+      "evidence": "§3 architecture + §6 worked example (0 orchestration lines)",
+      "claim_ids": ["C1.2", "C3.1"]
+    },
+    {
+      "challenge": "Fork 共享前缀需要可配置的不同 prompt，但 cache key 只匹配完全相同的 prompt",
+      "failure_mode": "改 prompt 的 fork 无法命中 cache，需要重跑部分 model calls",
+      "design_principle": "Fork 不承诺"所有前缀 step 免费"，只承诺"相同 prompt 的 step 免费"。这是一种 honest 的设计。",
+      "module": "Content-addressed cache (hash-based matching)",
+      "evidence": "§4 first paragraph + §5 first paragraph",
+      "claim_ids": ["C2.2"]
+    },
+    {
+      "challenge": "Event sourcing 的确定性 replay 在 Agentic 系统中如何保证 behavior 不产生 side effect？",
+      "failure_mode": "Behavior 可能通过外部工具种副作用（写 DB、发邮件）",
+      "design_principle": "不阻止 first execution 的 side effect；只保证 record 可 replay。Replay 时不执行工具，只 return cache。",
+      "module": "Tool response cache",
+      "evidence": "§3 determinism contract + §4 fourth paragraph",
+      "claim_ids": ["C2.3"]
+    }
+  ],
+  "module_hidden_assumptions": [
+    {
+      "module": "Content-addressed replay cache",
+      "failure_fixed": "LLM 非确定性 → replay 确定性",
+      "ideal_unavailable_solution": "LLM 天然确定（不存在）",
+      "available_proxy": "记录 response + 按 hash 匹配",
+      "design_choice": "Hash key = 完整请求（system + user messages + model id + tool definitions + output schema）",
+      "hidden_assumption": "相同 prompt hash 意味着语义等价",
+      "risk_if_assumption_fails": "同一 prompt 在不同 model version 下不同行为的 scenario（version 不在 hash key 中？论文未明确提及）",
+      "future_research_point": "Semantic-aware 而非 exact hash 的 replay cache",
+      "claim_ids": ["C2.1", "C2.2"]
+    },
+    {
+      "module": "Implicit coordination (no orchestrator)",
+      "failure_fixed": "显式编排器使 state 分散在 log 之外",
+      "ideal_unavailable_solution": "完全无协调也能完成任务",
+      "available_proxy": "共享 graph + 订阅-反应模式",
+      "design_choice": "Behavior 声明 graph shape 模式的订阅",
+      "hidden_assumption": "Event-behavior 链的时序不会导致竞争条件",
+      "risk_if_assumption_fails": "Complex cascade 中两个 behavior 同时对同一 graph change 反应，输出不一致",
+      "future_research_point": "Cascade 时序保证 + 优先级调度",
+      "claim_ids": ["C1.2", "C3.1"]
+    },
+    {
+      "module": "Permissive vs strict replay",
+      "failure_fixed": "需要两种 replay 语义：加载 run（快速）和验证可复现性（严格）",
+      "ideal_unavailable_solution": "静态证明 behavior 是确定性的",
+      "available_proxy": "Strict replay = 逐 event 比对（动态验证）",
+      "design_choice": "不 static enforce；violation 在 strict replay 时检出不匹配 event",
+      "hidden_assumption": "Strict replay 的成本可以被接受",
+      "risk_if_assumption_fails": "百万 event 的 strict replay 耗时过久",
+      "future_research_point": "Incremental strict replay：只比对 diff 的部分而非全量",
+      "claim_ids": ["C2.3"]
+    }
+  ],
+  "citation_logic": [
+    {
+      "citation_cluster": "ActiveGraph 直系前身",
+      "narrative_function": "method ancestor",
+      "assumption_inherited": "Task-generating, self-extending 范式",
+      "how_paper_modifies_it": "从 while-loop 改为 event-sourced reactive graph",
+      "claim_ids": ["C1.1"]
+    },
+    {
+      "citation_cluster": "记忆系统（MemGPT, Zep, Mem0, Hindsight）",
+      "narrative_function": "limitation evidence + baseline pressure",
+      "assumption_inherited": "记忆应作为一等概念",
+      "how_paper_modifies_it": "但是记忆不是 layer，log 才是 primary，记忆只是投影",
+      "claim_ids": ["C1.2"]
+    },
+    {
+      "citation_cluster": "Event sourcing / CQRS 和 reactive dataflow",
+      "narrative_function": "neighboring inspiration",
+      "assumption_inherited": "State = fold over log",
+      "how_paper_modifies_it": "应用到包含非确定性 LLM calls 的 Agent 系统",
+      "claim_ids": ["C1.3"]
+    },
+    {
+      "citation_cluster": "Blackboard 系统",
+      "narrative_function": "neighboring inspiration + "vindication" framing",
+      "assumption_inherited": "Shared knowledge structure + independent knowledge sources",
+      "how_paper_modifies_it": "LLM 溶解了历史约束（hand-built rules → general LLM-backed routines；hand-coded control → natural language/generated）",
+      "claim_ids": ["C1.1", "C4.1"]
+    }
+  ],
+  "experiments_as_story_evidence": [
+    {
+      "experiment_block": "Diligence pack quickstart",
+      "claim": "ActiveGraph 可以在无编排代码（0 行 orchestrator）的情况下完成多步骤 Agent 任务",
+      "counterfactual": "这些步骤需要显式 workflow 编排",
+      "metric": "Event counts, object/relation counts, model/tool call counts, orchestration lines",
+      "stress_condition": "三个公司同时跑，有 contradiction detection",
+      "alignment_judgment": "strong",
+      "claim_ids": ["C3.1"]
+    },
+    {
+      "experiment_block": "Replay 确定性测试",
+      "claim": "Same log → byte-identical logs",
+      "counterfactual": "Replay 因 LLM 非确定性产生不同结果",
+      "metric": "Byte-identical log comparison",
+      "stress_condition": "Fixtures 代替 live API",
+      "alignment_judgment": "strong",
+      "claim_ids": ["C2.1"]
+    }
+  ],
+  "reviewer_lens_summary": {
+    "novelty": "高。Event sourcing 本身不新，但把它作为 Agent 系统的主干（不仅仅是日志层），加上 LLM 相关的 replay cache 设计，是新颖的跨域重组。",
+    "significance": "高。如果这个架构模式被广泛采用，Agent 系统的 provenance、debug、experimentation 能力会有质的飞跃。",
+    "soundness": "高。推理严谨，不说大话，明确区分"已经实现的"和"推测的"。Diligence pack 可复现。",
+    "methodology_rigor": "中。系统论文的标准——没有 benchmark，但工程实现的 rigor 很高（byte-identical replay）。",
+    "reproducibility": "高。pip install + quickstart 就能复现，不需要 API key。",
+    "limitations_honesty": "极高。论文专设 §8 Limitations，明确列出了 loop/cascade、replay 成本、schema 迁移、分布式等 7+ 个限制。这在 ML/AI 论文中罕见。",
+    "actionable_objections": [
+      "没有量化 replay/fork 的性能数据（"million-event run replayed in full today" 但没说需要多长时间）",
+      "没有实证说明 implicit coordination 比 explicit workflow 在复杂场景下更易 debug",
+      "LLM cache hash 不包含 model version——同一 prompt 在不同 version 下行为不同时 hash match 但 response 不同？",
+      "Determinism contract 没有静态检查机制，behavior 污染在千万 event 后才在 strict replay 中发现，损失很大",
+      "§7 self-improving 讨论有意义但太轻，可以去掉或展开"
+    ]
+  },
+  "story_pattern": {
+    "pattern_name": "closed loop",
+    "compact_formula": "Old paradigm（log as byproduct）→ 识别关键缺陷（provenance incomplete, replay impossible）→ 反转假设（log as agent）→ 新架构（event sourcing + reactive graph）→ 三个给力的机制（replay/fork/lineage）→ 可复现案例",
+    "reusable_lesson": "当 Agent 系统遇到"不可追溯/不可重放/不可分叉"的根本限制时，不一定要增加更多层——可以反转基本假设，把曾经是副产品的做成主干。这是真正的系统架构级创新。",
+    "claim_ids": ["C1.1", "C4.1"]
+  },
+  "future_directions": [
+    {
+      "direction": "Fork-based self-improvement loop",
+      "seed_type": "assumption_violation",
+      "trigger": "§7 明确说这是 affordance 而非 result。Now build it.",
+      "minimum_viable_experiment": "Single behavior prompt 改进：fork → 改 prompt → 跑 → structural diff → merge if better",
+      "killer_objection": "Self-improvement 需要好的 eval 信号，而 eval 本身可能是 non-deterministic 的",
+      "killer_result": "在 100 个 prompt 改进任务上，fork-based 比 manual iteration 减少 80% 的人工审核",
+      "direction_seed_id": "D1",
+      "claim_ids": ["C4.1"]
+    },
+    {
+      "direction": "Checkpoint/compaction 策略",
+      "seed_type": "missing_subsystem",
+      "trigger": "§8 承认 'million-event run is replayed in full today'",
+      "minimum_viable_experiment": "At N events → create snapshot (graph + cache checkpoint)。replay 从最后 checkpoint 开始",
+      "killer_objection": "Snapshot 的创建在一致性上需要 stop-the-world，会影响长时间运行的 Agent",
+      "killer_result": "10x 加速百万 event replay，snapshot 创建成本 < 5% live execution overhead",
+      "direction_seed_id": "D2",
+      "claim_ids": ["C5.1"]
+    },
+    {
+      "direction": "Distributed/multi-writer ordering",
+      "seed_type": "evidence_gap",
+      "trigger": "§8 明确承认 'concurrent or distributed writers, and multi-agent contention over a shared graph, raise ordering questions this paper does not resolve'",
+      "minimum_viable_experiment": "Two concurrent behavior emit events → use Hybrid Logical Clock + CRDT merge strategy",
+      "killer_objection": "Event ordering 是不可协商的（graph projection 需要全序），分布式下全序成本很高",
+      "killer_result": "5-node ActiveGraph cluster works for collaborative research tasks with < 100ms latency penalty",
+      "direction_seed_id": "D3",
+      "claim_ids": ["C5.2"]
+    },
+    {
+      "direction": "Static determinism contract validation",
+      "seed_type": "reviewer_objection",
+      "trigger": "动态 enforcement（strict replay 时才检出不匹配）对长时间运行的 Agent 来说发现问题太晚",
+      "minimum_viable_experiment": "AST-level Python behavior analysis: reject behaviors calling `random`, `time()`, custom UUID without wrapping",
+      "killer_objection": "动态语言中静态分析总是不完备的（import time vs import os 伪装访问）",
+      "killer_result": "Pre-commit hook 捕获 95%+ 的 determinism violations，把发现问题的延迟从"strict replay 时"提前到"编写 behavior 时"",
+      "direction_seed_id": "D4",
+      "claim_ids": ["C2.3"]
+    }
+  ],
+  "top_direction_seed_ids": ["D1", "D2", "D3"],
+  "direction_board_path": "direction_board.json"
+}

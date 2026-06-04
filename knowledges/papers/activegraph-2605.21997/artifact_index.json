@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.2",
+  "paper_id": "2605.21997",
+  "report": "report.md",
+  "traceability_manifest": null,
+  "latex_paragraphs": null,
+  "research_lens": "research_lens.json",
+  "direction_board": "direction_board.json",
+  "source_package": null,
+  "pdfs": {
+    "main": null,
+    "supplementary": null
+  },
+  "notes": "LaTeX-primary reading. Source extracted from arXiv e-print (55KB tar.gz). LaTeX complete and well-structured. Report + research_lens (tri-pass reading) + direction_board (3 direction seeds)."
+}

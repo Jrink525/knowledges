@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.2",
+  "paper_id": "2605.21997",
+  "purpose": "Ranked research-direction seeds derived from deep reading of ActiveGraph paper (LaTeX-primary reading).",
+  "source_confidence": {
+    "reading_mode": "LaTeX-primary",
+    "latex_available": true,
+    "pdf_available": false,
+    "supplementary_available": false,
+    "openreview_available": false,
+    "successor_search_performed": false,
+    "confidence_notes": "LaTeX source complete and well-structured. No supplementary materials. OpenReview discussion may exist but not checked."
+  },
+  "direction_seeds": [
+    {
+      "seed_id": "D1",
+      "title": "Fork-based Self-Improvement Loop for Agent Behaviors",
+      "seed_type": "assumption_violation",
+      "trigger_interpretation_type": "plausible inference",
+      "paper_anchor_claim_ids": ["C4.1"],
+      "trigger_evidence_summary": "§7 sketches fork-and-diff as an evaluation primitive for self-improving agents but does not build or measure one. The affordance is explicit; the implementation is missing.",
+      "hidden_assumption_or_gap": "Paper claims fork-based comparison is sufficient for self-improvement eval, but requires a reliable eval signal that is itself deterministic.",
+      "research_question": "Can a fork-based self-improvement loop (propose → fork → apply → run → diff → decide) produce measurably better behavior prompts than manual iteration?",
+      "hypothesis": "Fork-based prompt improvement converges faster than manual iteration because each candidate is evaluated against the same shared prefix, eliminating variance from nondeterministic model calls.",
+      "proposed_mechanism": "1. Given a baseline run, identify a behavior prompt to improve. 2. Fork at the event just before the behavior first fires. 3. Apply a candidate prompt variant in the fork. 4. Run the fork forward. 5. Structural-diff parent vs fork. 6. Keep the variant if the diff is positive. 7. Recurse.",
+      "minimum_viable_experiment": {
+        "setup": "Use the bundled diligence pack. Pick the `document_researcher` behavior prompt. Define quality metrics: claim count, contradiction count, evidence specificity.",
+        "intervention": "Generate 3 prompt variants (more specific instructions, better structured output schema). Fork-and-run each.",
+        "comparison": "Variant results vs parent results on the same 3 companies.",
+        "metric_or_decision_rule": "Fork with highest claim count + lowest contradiction count = winner. Keep if strictly better on both.",
+        "expected_supporting_result": "All 3 variants produce different structural diffs. At least 1 produces measurably better claims."
+      },
+      "negative_result_interpretation": "If all variants produce identical diffs (because the behavior is too constrained by the event structure), then fork-based improvement requires changes to the event schema, not just the prompt.",
+      "killer_objection": "Self-improvement needs an eval signal, and that signal might itself be non-deterministic (LLM-as-judge). The eval loop undermines the determinism guarantee.",
+      "killer_result": "A fork-based improvement loop that consistently yields better behavior prompts across 5+ diverse behavior types and 100+ improvement attempts.",
+      "first_week_plan": [
+        "Install activegraph and run quickstart",
+        "Identify document_researcher behavior prompt location",
+        "Write a script that forks at C-behavior-activation and applies a prompt variant",
+        "Run fork, capture structural diff, compare claim quality",
+        "Repeat for 3 prompt variants"
+      ],
+      "score": {
+        "novelty": 4,
+        "significance": 5,
+        "testability": 5,
+        "feasibility": 4,
+        "evidence_anchor": 4,
+        "risk_adjusted_value": 4,
+        "overall": 4,
+        "rationale": "Directly builds on paper's own §7. High significance if successful. Low risk: all building blocks exist."
+      },
+      "risk_level": "low",
+      "expected_value": "high",
+      "confidence": "high"
+    },
+    {
+      "seed_id": "D2",
+      "title": "Checkpoint/Compaction for Long-Running ActiveGraph Runs",
+      "seed_type": "evidence_gap",
+      "trigger_interpretation_type": "evidence-backed interpretation",
+      "paper_anchor_claim_ids": ["C5.1"],
+      "trigger_evidence_summary": "§8 explicitly states 'a million-event run is replayed in full today' and 'checkpointing or compaction, which we do not yet provide'.",
+      "hidden_assumption_or_gap": "Current implementation assumes replay is fast enough for all practical log sizes. This breaks at million-event scale.",
+      "research_question": "What is the most efficient checkpointing strategy for event-sourced agent runs that preserves the ability to fork at any event in the checkpointed prefix?",
+      "hypothesis": "Snapshot-based checkpointing (periodically persist the graph + cache state) can reduce replay time by 10x while preserving full forkability at any event, because forks only need to replay post-checkpoint events.",
+      "proposed_mechanism": "1. After every N events, emit a snapshot: serialized graph state + content-addressed cache up to that event. 2. On replay, load most recent snapshot, replay remaining events. 3. On fork at event k, if k is before the snapshot boundary, load the pre-k snapshot and replay. 4. The snapshot itself is an event, so the log remains the authoritative source.",
+      "minimum_viable_experiment": {
+        "setup": "Generate a synthetic 1M event log. Measure full replay time.",
+        "intervention": "Add snapshot every 10K events. Replay from snapshot and measure time.",
+        "comparison": "Full replay time vs snapshot-based replay time.",
+        "metric_or_decision_rule": "If snapshot-based replay is >=10x faster and snapshot creation overhead < 5% of live run time, the strategy is viable.",
+        "expected_supporting_result": "Snapshot replay is ~100x faster for an idle run (no new events to replay)."
+      },
+      "negative_result_interpretation": "If snapshot creation overhead is high (stop-the-world cost), a log-structured merge approach (incremental snapshotting) may be needed.",
+      "killer_objection": "The fork-at-any-event property requires that snapshots do not discard granularity. Maintaining this while compacting may be complex.",
+      "killer_result": "Snapshot-based replay for a 1M event run completes in <1 second vs >100 seconds for full replay.",
+      "first_week_plan": [
+        "Read ActiveGraph source to understand graph serialization format",
+        "Implement a basic snapshot: persist graph state + cache at event N",
+        "Modify replay to load snapshot + replay tail",
+        "Benchmark: 10K, 100K, 1M event replay times",
+        "Design fork-at-k with snapshots"
+      ],
+      "score": {
+        "novelty": 3,
+        "significance": 4,
+        "testability": 5,
+        "feasibility": 5,
+        "evidence_anchor": 4,
+        "risk_adjusted_value": 4,
+        "overall": 4,
+        "rationale": "Not novel (standard database practice) but high practical significance for making ActiveGraph viable at scale. Easy to implement."
+      },
+      "risk_level": "low",
+      "expected_value": "high",
+      "confidence": "high"
+    },
+    {
+      "seed_id": "D3",
+      "title": "Static Determinism Contract Validation for ActiveGraph Behaviors",
+      "seed_type": "reviewer_objection",
+      "trigger_interpretation_type": "evidence-backed interpretation",
+      "paper_anchor_claim_ids": ["C2.3"],
+      "trigger_evidence_summary": "§3 determinism contract is 'not statically enforced' and violations 'surface at replay rather than at write time'. §8 lists this as a named limitation.",
+      "hidden_assumption_or_gap": "The system assumes dynamic enforcement via strict replay is sufficient, but for long-running agents, the cost of discovering a determinism violation late is high.",
+      "research_question": "Can static analysis reliably detect determinism contract violations in Python behavior code before execution?",
+      "hypothesis": "A pre-commit/hook-level AST checker can catch >90% of common determinism violations (direct calls to random, time, UUID) with minimal false positives.",
+      "proposed_mechanism": "1. Parse behavior source to AST. 2. Walk AST for calls to non-deterministic functions. 3. Whitelist allowed sources (event-provided values, framework-provided UUID generator). 4. Reject or warn on violations. 5. Optionally instrument to redirect non-det calls to deterministic wrappers.",
+      "minimum_viable_experiment": {
+        "setup": "Collect all behaviors from the ActiveGraph repo. Manually audit for determinism violations.",
+        "intervention": "Run AST checker against all behaviors. Count true positives, false positives, false negatives.",
+        "comparison": "AST checker detection rate vs manual audit.",
+        "metric_or_decision_rule": "If detection rate >= 90% with false positive rate < 10%, static validation is practical.",
+        "expected_supporting_result": "Most behaviors are clean. AST checker catches the few violations (e.g., a <time.time()> call for logging)."
+      },
+      "negative_result_interpretation": "If Python's dynamic features (eval, import, reflection) are commonly used in behavior code, static analysis may be too weak and a dynamic monitoring approach is needed instead.",
+      "killer_objection": "Python is too dynamic for reliable static analysis. A behavior could call eval() or import a module that calls random internally.",
+      "killer_result": "Pre-commit hook catches a determinism violation in a behavior that would have cost a 3-hour replay to discover.",
+      "first_week_plan": [
+        "Write AST checker for common non-det function calls",
+        "Run against ActiveGraph's existing behaviors",
+        "Measure detection rate and false positives",
+        "Add whitelist mechanism for framework-provided alternatives",
+        "Package as pre-commit hook and open PR"
+      ],
+      "score": {
+        "novelty": 3,
+        "significance": 4,
+        "testability": 5,
+        "feasibility": 5,
+        "evidence_anchor": 3,
+        "risk_adjusted_value": 4,
+        "overall": 4,
+        "rationale": "Low novelty but practical value. Python AST tools are mature. Would meaningfully improve the developer experience for ActiveGraph authors."
+      },
+      "risk_level": "low",
+      "expected_value": "medium",
+      "confidence": "high"
+    }
+  ],
+  "ranking_notes": "D1 ranked highest because it directly extends the paper's own direction (§7) and uses all existing ActiveGraph machinery. D2 is tied for practical significance (without checkpointing, the system can't scale). D3 is lower because it's more a quality-of-life improvement than a research direction.",
+  "search_limitations": "No successor paper search performed. ActiveGraph is a newly published paper (2605.21997) with no known follow-ups yet."
+}
