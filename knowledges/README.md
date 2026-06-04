@@ -21,6 +21,7 @@
   - `ai-tools/AI-Coding-Infrastructure-Comparison-Chromium-Warp.md`
   - `ai-tools/agent-complexity-ratchet.md`
   - `ai-tools/agent-engineers-survival-guide.md`
+  - `ai-tools/agent-harness-deep-dive-akshay.md`
   - `ai-tools/agent-harness-engineering.md`
   - `ai-tools/agent-hooks-deterministic-control.md`
   - `ai-tools/agent-memory-framework-remember-cite-forget.md`
@@ -35,6 +36,7 @@
   - `ai-tools/ai-evals-explained.md`
   - `ai-tools/ai-first-engineering-team-guide.md`
   - `ai-tools/anthropic-prompting-101-workshop.md`
+  - `ai-tools/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
   - `ai-tools/bootiful-spring-ai-josh-long-springio-2026.md`
   - `ai-tools/build-your-own-agent-harness-iii.md`
   - `ai-tools/build-your-own-mcp-server.md`
@@ -43,6 +45,7 @@
   - `ai-tools/claude-all-features-guide-2026.md`
   - `ai-tools/claude-code-101-academic-researchers.md`
   - `ai-tools/claude-code-102-academic-researchers.md`
+  - `ai-tools/claude-code-22-hacks-mvanhorn.md`
   - `ai-tools/claude-code-advanced-tips-guide.md`
   - `ai-tools/claude-code-cloud-deployment-sandbox-isolation.md`
   - `ai-tools/claude-code-complete-setup-guide.md`
@@ -63,7 +66,9 @@
   - `ai-tools/dont-outsource-the-learning.md`
   - `ai-tools/dynamic-workflows-claude-code-thariq.md`
   - `ai-tools/embabel-agent-framework-best-practices.md`
+  - `ai-tools/enterprise-context-layer-prukalpa.md`
   - `ai-tools/evo-self-improving-agent-harness-autoresearch.md`
+  - `ai-tools/evopaw-personal-agent-vibe-coding-xudong.md`
   - `ai-tools/forward-deployed-engineering-101.md`
   - `ai-tools/founders-playbook-ai-native-startup.md`
   - `ai-tools/from-assistants-to-agents-self-improving-agentic-systems.md`
@@ -297,7 +302,7 @@
 
 ---
 
-总计 **266** 篇知识文档
+总计 **271** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -309,5 +314,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-03 03:59 UTC]_
+_[自动生成于 2026-06-04 00:26 UTC]_
 
