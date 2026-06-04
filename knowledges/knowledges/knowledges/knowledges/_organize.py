@@ -654,7 +654,7 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
                 known.add(str(rel.relative_to(directory)))
             else:
                 known.add(source_path.name)
-        for f in list(target_dir.glob("*.md")):
+        for f in list(target_dir.rglob("*.md")):
             if f.name.startswith("_"):
                 continue
             rel_f = str(f.relative_to(target_dir))
@@ -960,178 +960,6 @@ def push_to_github_fallback(token: str, rel_file_map: dict[str, Path], sha_map: 
     return failed == 0
 
 
-# ── 子域细分类配置（SUBDOMAIN_PROFILES）────────────────────
-# 用于 auto_split_oversized_dirs 的第二阶段分类
-SUBDOMAIN_PROFILES: dict[str, dict[str, list[str]]] = {
-    "harness": {
-        "label": "Agent Harness / 代理框架",
-        "keywords": [
-            "harness", "agent-harness", "owon", "thinharness", "skillopt",
-            "skills add", "langsmith", "skillify", "skill-engineering",
-            "npx skills", "agent builder", "agent engineering",
-            "mcp server", "build your own agent", "oz multi",
-            "orchestration", "agent sandbox", "jini", "agent middleware",
-            "agent runtime", "agent hooks", "deterministic control",
-        ],
-    },
-    "patterns": {
-        "label": "Agent Patterns / 代理模式",
-        "keywords": [
-            "agent pattern", "workflow pattern", "multi-agent",
-            "agent pipeline", "agent complexity", "ratchet",
-            "content production system", "vibe coding",
-            "agentic workflow", "agent collaboration",
-            "agent communication", "agent coordination",
-        ],
-    },
-    "career": {
-        "label": "Career & Skills / 职业发展",
-        "keywords": [
-            "agent engineer", "survival guide", "roadmap",
-            "ai-first team", "don't outsource", "forward deployed",
-            "engineering 101", "founders playbook", "startup",
-            "senior developers", "zero to ai engineer",
-            "career", "job", "hire", "talent", "team building",
-            "software engineer", "leading", "engineering culture",
-        ],
-    },
-    "tooling": {
-        "label": "Tooling / 开发工具",
-        "keywords": [
-            "claude code", "cursor", "windsurfer", "copilot",
-            "dev tools", "application", "claude desktop",
-            "coding tools", "cowork", "work mode",
-            "max usage", "claude-switch",
-            "code review", "code generation", "debugging",
-        ],
-    },
-    "autoresearch": {
-        "label": "Auto Research / 自动研究",
-        "keywords": [
-            "autoresearch", "autonomous research", "self-improving",
-            "agentic research", "research agent", "evo",
-            "self-improving agent", "morning brief",
-            "agent discovery", "automated research",
-            "research automation", "paper reading agent",
-        ],
-    },
-    "inference": {
-        "label": "Inference / 推理与部署",
-        "keywords": [
-            "inference", "llm inference", "gpu memory", "memory bandwidth",
-            "rag pipeline", "local ai", "ollama", "vllm",
-            "model serving", "quantization", "prompt engineering",
-            "decoding", "token", "attention", "transformer",
-            "distillation", "sft", "rl", "continual learning",
-        ],
-    },
-    "enterprise": {
-        "label": "Enterprise / 企业级实践",
-        "keywords": [
-            "enterprise", "context layer", "infrastructure",
-            "databases vs skills", "evopaw",
-            "production", "scaling", "enterprise-grade",
-            "enterprise guide", "cloud deployment",
-            "security", "compliance", "governance",
-        ],
-    },
-    "codex": {
-        "label": "Codex / 代理编码",
-        "keywords": [
-            "codex", "max", "claude code memory", "agent harness",
-            "multi-agent workflows", "builder course",
-            "agentic coding", "code generation agent",
-            "autonomous coding", "software development agent",
-        ],
-    },
-    "database-experiments": {
-        "label": "Database Experiments / 数据库实验",
-        "keywords": [
-            "database filesystem", "skill", "aparna",
-            "experiment", "benchmark", "comparison",
-            "database vs", "storage", "filesystem",
-        ],
-    },
-    "ml-research": {
-        "label": "ML Research / 机器学习研究",
-        "keywords": [
-            "papers", "research paper", "arxiv",
-            "deepxiv", "huggingface papers",
-            "deep learning", "machine learning paper",
-            "top papers", "conference paper",
-            "model architecture", "training",
-            "representation learning", "embedding",
-        ],
-    },
-}
-
-def auto_split_oversized_dirs(classified: dict[str, list]) -> None:
-    """Second-pass classification for directories > 20 files.
-    Moves files to appropriate subdomain directories based on keyword scoring.
-    """
-    oversize_threshold = 20
-    import shutil
-
-    for directory, entries in list(classified.items()):
-        if len(entries) <= oversize_threshold:
-            continue
-
-        print(f"  📂 {directory}/ ({len(entries)} 篇，超过阈值，开始细分类...)")
-        root_dir = KNOWLEDGES_DIR / directory
-        root_dir.mkdir(parents=True, exist_ok=True)
-
-        root_level = []
-        nested = []
-        for rel, f in entries:
-            # A file is "root-level" if its rel path has at most 2 parts: domain/file.md
-            rel_parts = Path(rel).parts
-            if len(rel_parts) <= 2:
-                root_level.append((rel, f))
-            else:
-                nested.append((rel, f))
-
-        # Score each root-level file against subdomain profiles
-        root_rels = {rel for rel, _ in root_level}
-        remaining = []
-        moved = 0
-
-        for rel, f in root_level:
-            content = safe_read_bytes(f).decode("utf-8", errors="replace")
-            content_lower = content.lower()
-            filename_lower = f.stem.lower()
-
-            best_subdir = None
-            best_score = 0
-            for subdir, profile in SUBDOMAIN_PROFILES.items():
-                score = 0
-                for kw in profile["keywords"]:
-                    # Filename matches count double
-                    if kw in filename_lower:
-                        score += 2
-                    if kw in content_lower:
-                        score += 1
-                if score > best_score:
-                    best_score = score
-                    best_subdir = subdir
-
-            if best_subdir and best_score >= 1:
-                best_full = f"{directory}/{best_subdir}"
-                target_path = KNOWLEDGES_DIR / best_full / f.name
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                if target_path.exists():
-                    target_path.unlink()
-                shutil.move(str(f), str(target_path))
-                print(f"    📦 {best_full}/{f.name} (score={best_score})")
-                moved += 1
-                new_rel = f"{best_full}/{f.name}"
-                classified.setdefault(best_full, []).append((new_rel, target_path))
-            else:
-                remaining.append((rel, f))
-
-        # Update classified for this directory — keep nested entries + remaining root-level
-        in_sub = [e for e in entries if e[0] not in root_rels]
-        classified[directory] = in_sub + remaining
-        print(f"  ✅ 细分类完成: {moved} 个文件移动到子域, {len(remaining)} 个保留在原目录")
 # ── Main ────────────────────────────────────────────
 
 def main():
@@ -1184,22 +1012,17 @@ def main():
                 rel_parts = Path(rel).parts
                 sub = f"{rel_parts[0]}/{rel_parts[1]}" if len(rel_parts) > 2 else directory
                 subdir_counts[sub] += 1
-        oversized = []
+        threshold_alerted = False
         for sub, count in sorted(subdir_counts.items()):
             if count > 20:
-                oversized.append(sub)
-                print(f"  🚀 {sub}/ ({count} 篇) 超过 20 篇限制，自动细分类中...")
-        if not oversized:
+                print(f"  ⚠️ {sub}/ 达 {count} 篇，超出 20 篇阈值，建议进一步拆分！")
+                threshold_alerted = True
+        if not threshold_alerted:
             print(f"  ✅ 所有子目录文件数未超过 20 篇阈值")
-
-        if oversized:
-            auto_split_oversized_dirs(classified)
 
         print("\n  🔄 整理移动文件...")
         sync_classified_to_local(classified)
-        # 如果 auto_split 已执行，files 已在正确位置，不需要重新分类
-        if not oversized:
-            classified = extract_all_files()
+        classified = extract_all_files()
         generate_readme(classified)
 
     # ── 收集待上传文件 ──

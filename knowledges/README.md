@@ -7,60 +7,6 @@
 ## 📂 目录结构
 
 ### ai-tools/ (`AI 工具 & 编程助手`)
-  - `ai-tools/20-claude-prompts-personal-assistant.md`
-  - `ai-tools/21-mistakes-building-ai-agents-gkisokay.md`
-  - `ai-tools/AI-Coding-Infrastructure-Comparison-Chromium-Warp.md`
-  - `ai-tools/agent-harness-deep-dive-akshay.md`
-  - `ai-tools/agent-sandbox-infrastructure.md`
-  - `ai-tools/ai-evals-explained.md`
-  - `ai-tools/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
-  - `ai-tools/bootiful-spring-ai-josh-long-springio-2026.md`
-  - `ai-tools/build-your-own-mcp-server.md`
-  - `ai-tools/chinese-enterprise-harness-engineering-practices.md`
-  - `ai-tools/claude-code-22-hacks-mvanhorn.md`
-  - `ai-tools/claude-code-advanced-tips-guide.md`
-  - `ai-tools/claude-code-large-codebase-best-practices.md`
-  - `ai-tools/claude-code-routines-full-course.md`
-  - `ai-tools/claude-five-levels-framework.md`
-  - `ai-tools/claudemd-21-config-rules.md`
-  - `ai-tools/compiling-agentic-workflows-story.md`
-  - `ai-tools/dair-ai-top-papers-2025-05-18-24.md`
-  - `ai-tools/dan-vega-spring-ai-full-course-notes.md`
-  - `ai-tools/database-filesystem-vs-skill-aparna.md`
-  - `ai-tools/embabel-agent-framework-best-practices.md`
-  - `ai-tools/enterprise-context-layer-prukalpa.md`
-  - `ai-tools/evopaw-personal-agent-vibe-coding-xudong.md`
-  - `ai-tools/from-prompt-engineer-to-fullstack-ai-engineer.md`
-  - `ai-tools/gpu-memory-math-llms-2026-ahmad.md`
-  - `ai-tools/harness-from-theory-to-practice.md`
-  - `ai-tools/hermes-agent-60-days-6-lessons-0xjeff.md`
-  - `ai-tools/how-to-actually-use-claude.md`
-  - `ai-tools/inference-engines-decision-guide-2026-ahmad.md`
-  - `ai-tools/java-agent-complete-guide.md`
-  - `ai-tools/josh-long-spring-ai-workshop-notes.md`
-  - `ai-tools/karpathy-llm-wiki-layer-token-saving.md`
-  - `ai-tools/langsmith-engine-building-agent-for-improving-agents.md`
-  - `ai-tools/langsmith-sandbox-auth-proxy.md`
-  - `ai-tools/llm-engineering-projects-roadmap-2026.md`
-  - `ai-tools/llms101-practical-guide-2026-ahmad.md`
-  - `ai-tools/memory-bandwidth-local-ai-2026-ahmad.md`
-  - `ai-tools/most-people-use-10-percent-of-claude-25-steps.md`
-  - `ai-tools/obsidian-dashboard-everything-that-matters-today.md`
-  - `ai-tools/obsidian-personal-operating-system.md`
-  - `ai-tools/obsidian-vault-organization-full-course.md`
-  - `ai-tools/oz-multi-harness-agent-orchestration.md`
-  - `ai-tools/report.md`
-  - `ai-tools/shopify-claude-code-setup.md`
-  - `ai-tools/skillopt-paper-story.md`
-  - `ai-tools/spring-ai-agent-resources-top30.md`
-  - `ai-tools/spring-ai-bedrock-agentcore-mcp-conference-app.md`
-  - `ai-tools/spring-ai-subagent-orchestration.md`
-  - `ai-tools/spring-ai-todowritetool-agent-planning.md`
-  - `ai-tools/stanford-building-llm-lecture-notes.md`
-  - `ai-tools/thin-harness-fat-skills-garry-tan.md`
-  - `ai-tools/top-ai-papers-may-2026-wk1.md`
-  - `ai-tools/voice-agent-full-guide.md`
-  - `ai-tools/why-we-need-continual-learning.md`
   📁 **agent-engineering/**
     - `ai-tools/agent-engineering/patterns/10-claude-code-agents-pipeline.md`
     - `ai-tools/agent-engineering/32-claude-code-hacks.md`
@@ -167,6 +113,78 @@
   📁 **spring-ai/**
     - `ai-tools/spring-ai/from-assistants-to-agents-self-improving-agentic-systems.md`
 
+### ai-tools/autoresearch/ (`ai-tools/autoresearch`)
+  - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
+  - `ai-tools/autoresearch/evopaw-personal-agent-vibe-coding-xudong.md`
+
+### ai-tools/career/ (`ai-tools/career`)
+  - `ai-tools/career/claude-code-22-hacks-mvanhorn.md`
+
+### ai-tools/database-experiments/ (`ai-tools/database-experiments`)
+  - `ai-tools/database-experiments/database-filesystem-vs-skill-aparna.md`
+  - `ai-tools/database-experiments/java-agent-complete-guide.md`
+  - `ai-tools/database-experiments/report.md`
+
+### ai-tools/enterprise/ (`ai-tools/enterprise`)
+  - `ai-tools/enterprise/agent-sandbox-infrastructure.md`
+  - `ai-tools/enterprise/enterprise-context-layer-prukalpa.md`
+
+### ai-tools/harness/ (`ai-tools/harness`)
+  - `ai-tools/harness/20-claude-prompts-personal-assistant.md`
+  - `ai-tools/harness/agent-harness-deep-dive-akshay.md`
+  - `ai-tools/harness/ai-evals-explained.md`
+  - `ai-tools/harness/chinese-enterprise-harness-engineering-practices.md`
+  - `ai-tools/harness/claude-code-advanced-tips-guide.md`
+  - `ai-tools/harness/claude-code-large-codebase-best-practices.md`
+  - `ai-tools/harness/claude-code-routines-full-course.md`
+  - `ai-tools/harness/compiling-agentic-workflows-story.md`
+  - `ai-tools/harness/harness-from-theory-to-practice.md`
+  - `ai-tools/harness/langsmith-engine-building-agent-for-improving-agents.md`
+  - `ai-tools/harness/langsmith-sandbox-auth-proxy.md`
+  - `ai-tools/harness/oz-multi-harness-agent-orchestration.md`
+  - `ai-tools/harness/skillopt-paper-story.md`
+  - `ai-tools/harness/spring-ai-bedrock-agentcore-mcp-conference-app.md`
+  - `ai-tools/harness/spring-ai-subagent-orchestration.md`
+  - `ai-tools/harness/thin-harness-fat-skills-garry-tan.md`
+
+### ai-tools/inference/ (`ai-tools/inference`)
+  - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
+  - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
+  - `ai-tools/inference/embabel-agent-framework-best-practices.md`
+  - `ai-tools/inference/from-prompt-engineer-to-fullstack-ai-engineer.md`
+  - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
+  - `ai-tools/inference/hermes-agent-60-days-6-lessons-0xjeff.md`
+  - `ai-tools/inference/how-to-actually-use-claude.md`
+  - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
+  - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
+  - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
+  - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
+  - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
+  - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
+  - `ai-tools/inference/spring-ai-agent-resources-top30.md`
+  - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
+  - `ai-tools/inference/voice-agent-full-guide.md`
+  - `ai-tools/inference/why-we-need-continual-learning.md`
+
+### ai-tools/ml-research/ (`ai-tools/ml-research`)
+  - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
+  - `ai-tools/ml-research/dair-ai-top-papers-2025-05-18-24.md`
+  - `ai-tools/ml-research/top-ai-papers-may-2026-wk1.md`
+
+### ai-tools/patterns/ (`ai-tools/patterns`)
+  - `ai-tools/patterns/spring-ai-todowritetool-agent-planning.md`
+
+### ai-tools/tooling/ (`ai-tools/tooling`)
+  - `ai-tools/tooling/AI-Coding-Infrastructure-Comparison-Chromium-Warp.md`
+  - `ai-tools/tooling/build-your-own-mcp-server.md`
+  - `ai-tools/tooling/claude-five-levels-framework.md`
+  - `ai-tools/tooling/claudemd-21-config-rules.md`
+  - `ai-tools/tooling/most-people-use-10-percent-of-claude-25-steps.md`
+  - `ai-tools/tooling/obsidian-dashboard-everything-that-matters-today.md`
+  - `ai-tools/tooling/obsidian-personal-operating-system.md`
+  - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
+  - `ai-tools/tooling/shopify-claude-code-setup.md`
+
 ### database/ (`数据库 & 缓存`)
   - `database/SKILL.md`
   - `database/artifact_contract.md`
@@ -239,5 +257,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-04 03:42 UTC]_
+_[自动生成于 2026-06-04 04:01 UTC]_
 

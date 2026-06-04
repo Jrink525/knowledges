@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.2.0",
+  "direction_seeds": [
+    {"id": "S01", "seed": "Adaptive N — learn to predict optimal sleep duration from context"},
+    {"id": "S02", "seed": "Persistent S — carry fast weights across sequences instead of zero-initializing"},
+    {"id": "S03", "seed": "Multi-scale sleep — hierarchical consolidation at token and chunk levels"},
+    {"id": "S04", "seed": "Sleep vs depth — compare N-loop shallow vs non-looped deep under equal compute"}
+  ],
+  "purpose": "Identify concrete follow-up research directions from the LLM Sleep paper",
+  "ranking_notes": "Priority based on feasibility × impact. Low risk = easy to try.",
+  "search_limitations": "Only directions directly inspired by the paper; no external successor search.",
+  "source_confidence": "high (full LaTeX source available)",
+  "paper_id": "llm-sleep-2605.26099",
+  "directions": [
+    {
+      "id": "D01",
+      "title": "Adaptive Sleep Duration (Learned N)",
+      "trigger": "Paper uses fixed N per run, but different contexts need different consolidation budgets",
+      "why_promising": "Adaptive N could reduce training overhead (short sleep for easy contexts) while maximizing benefit for hard contexts",
+      "first_step": "Train a lightweight auxiliary head that predicts optimal N from context complexity (entropy, novelty, cross-window dependency)",
+      "priority": "high",
+      "risk": "low",
+      "type": "incremental_method"
+    },
+    {
+      "id": "D02",
+      "title": "Persistent Fast Weights Across Sequences",
+      "trigger": "SSM fast weights are zero-initialized at sequence start",
+      "why_promising": "Cross-sequence memory could enable lifelong learning and task adaptation without finetuning",
+      "first_step": "Initialize S from a learned prior (e.g., PCA of typical fast weights) instead of zero; test on continual reasoning tasks",
+      "priority": "high",
+      "risk": "medium",
+      "type": "capability_extension"
+    },
+    {
+      "id": "D03",
+      "title": "Multi-Scale Sleep (Hierarchical Consolidation)",
+      "trigger": "Only window-level N-loop is tested",
+      "why_promising": "Real data has hierarchical structure (tokens → phrases → episodes); multi-scale consolidation could capture this more naturally",
+      "first_step": "Design 2-level sleep: fast N within-window + slow M across-window consolidation with different SSM state update frequencies",
+      "priority": "high",
+      "risk": "medium",
+      "type": "architecture_innovation"
+    },
+    {
+      "id": "D04",
+      "title": "Attention-Informed Weight Consolidation",
+      "trigger": "Only SSM weights are updated during sleep",
+      "why_promising": "Attention patterns reveal which token relationships matter; this signal could guide weight updates in SSM blocks",
+      "first_step": "Use attention weights as gating coefficients in SSM update (e.g., S += β·attention_weight · v·k^T)",
+      "priority": "medium",
+      "risk": "high",
+      "type": "mechanism_innovation"
+    },
+    {
+      "id": "D05",
+      "title": "Theoretical Characterization of Sleep Benefit",
+      "trigger": "Paper has no theoretical results linking N to reasoning capability",
+      "why_promising": "Formal bounds would guide architecture design and N selection without expensive search",
+      "first_step": "Prove that N-loop SSMs can simulate N additional steps of a Turing machine, while 1-loop cannot exceed a fixed depth cutoff (circuit complexity approach)",
+      "priority": "medium",
+      "risk": "high",
+      "type": "theory"
+    },
+    {
+      "id": "D06",
+      "title": "Sleep vs Depth Head-to-Head",
+      "trigger": "Missing baseline: deeper non-looped model vs N-loop shallow model",
+      "why_promising": "Would disentangle whether the benefit is from recurrence or simply from more total compute at consolidation time",
+      "first_step": "Compare N=4 with D layers vs N=1 with 4D layers under same training token budget",
+      "priority": "high",
+      "risk": "low",
+      "type": "empirical_control"
+    },
+    {
+      "id": "D07",
+      "title": "Inference-Time Sleep Adaptation",
+      "trigger": "Sleep is currently training-only",
+      "why_promising": "Test-time adaptation to new context distributions without gradient-based finetuning",
+      "first_step": "During inference, on detected distribution shift, run N sleep passes on recent context to adapt S before resuming prediction",
+      "priority": "low",
+      "risk": "high",
+      "type": "capability_extension"
+    }
+  ]
+}

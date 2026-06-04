@@ -1,0 +1,1203 @@
+{
+  "traceability_manifest_version": "2.0",
+  "arxiv_id": "2605.30785",
+  "source_package": {
+    "type": "LaTeX",
+    "files_used": [
+      "main.tex",
+      "appendix.tex",
+      "symbol.tex"
+    ],
+    "notes": "Full LaTeX source available including appendix; no figures extracted"
+  },
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "section_id": "1",
+      "statement": "Long-context degradation is a central bottleneck for LLMs in long-horizon agentic tasks",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC1_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "A central bottleneck for LLMs in such long-horizon tasks is long-context degradation.",
+          "line_start": 70,
+          "line_end": 73
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "section_id": "1",
+      "statement": "Prior context management approaches couple management with agent training, making them impractical for closed-source agents",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC1_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Because these mechanisms require the agent to follow the new context patterns... prior work often couples them with agent training to realize performance gains.",
+          "line_start": 75,
+          "line_end": 83
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.3",
+      "section_id": "1",
+      "statement": "Predefined operations (e.g. summarization) impose a one-size-fits-all strategy despite variation in agents",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC1_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Moreover, predefined operations such as summarization impose a one-size-fits-all strategy despite substantial variation in agents' architectures, training data, and reasoning styles.",
+          "line_start": 83,
+          "line_end": 85
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.1",
+      "section_id": "2",
+      "statement": "AdaCoM achieves architectural decoupling by using an external manager (smaller LLM) to manage context while keeping the agent frozen",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC2_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "architectural decoupling: context management is handled by an external manager, typically a smaller LLM, while the agent itself remains unchanged.",
+          "line_start": 89,
+          "line_end": 92
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.2",
+      "section_id": "2",
+      "statement": "AdaCoM achieves operation-level flexibility by allowing the manager to freely modify any part of the context via a structured JSON action space",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC2_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "operation-level flexibility: instead of committing to predefined operations such as summarization, the manager can freely modify any part of the context",
+          "line_start": 92,
+          "line_end": 94
+        },
+        {
+          "evidence_id": "EC2_2.b",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "The manager action m_t is a structured list of modification operations, expressed in JSON as m_t = [δ_t^(1), δ_t^(2), ..., δ_t^(n_t)]",
+          "line_start": 150,
+          "line_end": 178
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "section_id": "3",
+      "statement": "AdaCoM improves diverse agents on web search (BrowseComp-Plus) with an average 39.0% relative gain in Mean@3 over ReAct",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC3_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Avg: ReAct 24.17 -> AdaCoM 33.60, +39.0%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "section_id": "3",
+      "statement": "AdaCoM achieves a 95.0% relative gain on Kimi-K2-Instruct on BrowseComp-Plus",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC3_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Kimi: 18.56 -> 36.20, +95.0%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.3",
+      "section_id": "3",
+      "statement": "Fixed summarization (SumCoM) improves some agents but degrades GLM-4.5-Air, suggesting summarization is not compatible with all agents",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC3_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "GLM under SumCoM: 32.56 -> 26.44, -18.8%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.4",
+      "section_id": "3",
+      "statement": "AdaCoM reduces constraint forgetting, premature abandonment, and redundant exploration across agents",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC3_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "AdaCoM increases the proportion of correct answers across all backbones... reduces Incorrect answer and Early give-up"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "section_id": "4",
+      "statement": "AdaCoM learns two distinct strategies: tiered management (for stronger agents) and eager distillation (for weaker agents)",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC4_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "For GLM and Qwen, AdaCoM follows a tiered management strategy... For DeepSeek and Kimi, AdaCoM follows an eager distillation strategy"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.2",
+      "section_id": "4",
+      "statement": "Post-management context length correlates with vanilla ReAct performance: ~1.9K (DS) -> 3.4K (Kimi) -> 5.2K (Qwen) -> 7.0K (GLM)",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC4_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "mean post-management context length: about 1.9K tokens for DS, 3.4K for Kimi, 5.2K for Qwen, and 7.0K for GLM"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "section_id": "5",
+      "statement": "Trained AdaCoM managers transfer to unseen agents: 23 of 28 cross-agent pairs show positive gains",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC5_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "23 of 28 cross-agent pairs, plus all 4 self-trained pairs, achieve positive gains"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "section_id": "5",
+      "statement": "Capability proximity (measured by vanilla ReAct performance) is the strongest predictor of successful transfer",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC5_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "a clear pattern: effective transfer is closely related to source-target capability proximity, measured by ReAct baseline performance"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.3",
+      "section_id": "5",
+      "statement": "Manager-agent style compatibility (e.g. working memory format) further affects transfer quality beyond capability",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC5_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-appendix-tex-0042",
+          "locator_method": "guesstimate",
+          "quote_text": "DS prefers concise working memories... whereas AdaCoM(Kimi) tends to record detailed search histories"
+        },
+        {
+          "evidence_id": "EC5_3.b",
+          "source_kind": "latex_paragraph",
+          "source_file": "appendix.tex",
+          "paragraph_id": "P-appendix-tex-0042",
+          "locator_method": "guesstimate",
+          "quote_text": "DS is more compatible with compact and exact clues, whereas Kimi benefits more from detailed attempt histories"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.1",
+      "section_id": "6",
+      "statement": "AdaCoM also improves agents on deep research (MCP-Wiki) tasks, with average 15.2% relative gain",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC6_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Avg: ReAct 51.28 -> AdaCoM 59.05, +15.2%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.1",
+      "section_id": "7",
+      "statement": "Process rewards provide useful intermediate supervision beyond sparse final-answer reward",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "story arc",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC7_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "appendix.tex",
+          "paragraph_id": "P-appendix-tex-0035",
+          "locator_method": "guesstimate",
+          "quote_text": "DS: from 26.19% to 24.38% without PR; Qwen: from 36.67% to 33.33% without PR"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8.1",
+      "section_id": "8",
+      "statement": "AdaCoM introduces inference overhead (extra manager call per agent step) and KV cache inefficiency",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "related work",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC8_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "AdaCoM introduces an additional manager inference at every agent step, increasing per-rollout token cost and wall-clock latency"
+        },
+        {
+          "evidence_id": "EC8_1.b",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "AdaCoM modifies the agent's running context between steps, which can reduce the effectiveness of KV cache reuse"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8.2",
+      "section_id": "8",
+      "statement": "AdaCoM's 4B manager may be capacity-limited for strong agents that rely on high-fidelity context",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "related work",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC8_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "a 4B manager may have limited capacity to losslessly preserve or compress evidence for very strong agents whose reasoning relies on high-fidelity context"
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.0",
+      "section_id": "1",
+      "statement": "See report section for C1.0",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC1_0.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C1.0"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10.1",
+      "section_id": "10",
+      "statement": "See report section for C10.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method detail",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC10_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C10.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10.2",
+      "section_id": "10",
+      "statement": "See report section for C10.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method detail",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC10_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C10.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C11.1",
+      "section_id": "11",
+      "statement": "See report section for C11.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method detail",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC11_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C11.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C11.2",
+      "section_id": "11",
+      "statement": "See report section for C11.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method detail",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC11_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C11.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C11.3",
+      "section_id": "11",
+      "statement": "See report section for C11.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method detail",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC11_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C11.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C12.1",
+      "section_id": "12",
+      "statement": "See report section for C12.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "epistemic status",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC12_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C12.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C12.2",
+      "section_id": "12",
+      "statement": "See report section for C12.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "epistemic status",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC12_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C12.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C13.1",
+      "section_id": "13",
+      "statement": "See report section for C13.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "algorithm walkthrough",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC13_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C13.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C13.2",
+      "section_id": "13",
+      "statement": "See report section for C13.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "algorithm walkthrough",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC13_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C13.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C14.1",
+      "section_id": "14",
+      "statement": "See report section for C14.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "module decomposition",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC14_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C14.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15.1",
+      "section_id": "15",
+      "statement": "See report section for C15.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "data presentation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC15_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C15.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15.2",
+      "section_id": "15",
+      "statement": "See report section for C15.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "data presentation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC15_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C15.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15.3",
+      "section_id": "15",
+      "statement": "See report section for C15.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "data presentation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC15_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C15.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15.4",
+      "section_id": "15",
+      "statement": "See report section for C15.4",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "data presentation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC15_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C15.4"
+        }
+      ]
+    },
+    {
+      "claim_id": "C16.1",
+      "section_id": "16",
+      "statement": "See report section for C16.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC16_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C16.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C16.2",
+      "section_id": "16",
+      "statement": "See report section for C16.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC16_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C16.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C16.3",
+      "section_id": "16",
+      "statement": "See report section for C16.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC16_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C16.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C16.4",
+      "section_id": "16",
+      "statement": "See report section for C16.4",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC16_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C16.4"
+        }
+      ]
+    },
+    {
+      "claim_id": "C17.1",
+      "section_id": "17",
+      "statement": "See report section for C17.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "evidence mapping",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC17_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C17.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C17.2",
+      "section_id": "17",
+      "statement": "See report section for C17.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "evidence mapping",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC17_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C17.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.1",
+      "section_id": "18",
+      "statement": "See report section for C18.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.2",
+      "section_id": "18",
+      "statement": "See report section for C18.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.3",
+      "section_id": "18",
+      "statement": "See report section for C18.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.4",
+      "section_id": "18",
+      "statement": "See report section for C18.4",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.4"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.5",
+      "section_id": "18",
+      "statement": "See report section for C18.5",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_5.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.5"
+        }
+      ]
+    },
+    {
+      "claim_id": "C18.6",
+      "section_id": "18",
+      "statement": "See report section for C18.6",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "reviewer lens",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC18_6.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C18.6"
+        }
+      ]
+    },
+    {
+      "claim_id": "C19.1",
+      "section_id": "19",
+      "statement": "See report section for C19.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "contribution audit",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC19_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C19.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C19.2",
+      "section_id": "19",
+      "statement": "See report section for C19.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "contribution audit",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC19_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C19.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C19.3",
+      "section_id": "19",
+      "statement": "See report section for C19.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "contribution audit",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC19_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C19.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C20.1",
+      "section_id": "20",
+      "statement": "See report section for C20.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC20_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C20.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C21.1",
+      "section_id": "21",
+      "statement": "See report section for C21.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC21_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C21.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C21.2",
+      "section_id": "21",
+      "statement": "See report section for C21.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC21_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C21.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C22.1",
+      "section_id": "22",
+      "statement": "See report section for C22.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC22_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C22.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C22.2",
+      "section_id": "22",
+      "statement": "See report section for C22.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC22_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C22.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C23.1",
+      "section_id": "23",
+      "statement": "See report section for C23.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC23_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C23.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C23.2",
+      "section_id": "23",
+      "statement": "See report section for C23.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "method design",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC23_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C23.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.3",
+      "section_id": "4",
+      "statement": "See report section for C4.3",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC4_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C4.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.4",
+      "section_id": "4",
+      "statement": "See report section for C4.4",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC4_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C4.4"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.4",
+      "section_id": "5",
+      "statement": "See report section for C5.4",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC5_4.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C5.4"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.2",
+      "section_id": "6",
+      "statement": "See report section for C6.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "problem framing",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC6_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C6.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.2",
+      "section_id": "7",
+      "statement": "See report section for C7.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "story arc",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC7_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C7.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.1",
+      "section_id": "9",
+      "statement": "See report section for C9.1",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "concept reformulation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC9_1.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C9.1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.2",
+      "section_id": "9",
+      "statement": "See report section for C9.2",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "concept reformulation",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "EC9_2.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "Refer to report for claim C9.2"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.3",
+      "section_id": "2",
+      "statement": "The Fidelity-Reliability Trade-off: managers for stronger agents preserve more raw context; managers for weaker agents compress more aggressively",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "E2_3.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "managers for stronger agents preserve more raw trajectory context to maintain fidelity, whereas managers for weaker agents compress more aggressively to keep reasoning reliable."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.5",
+      "section_id": "3",
+      "statement": "Kimi-K2 exhibits ~42.6% repetitive tool calls on average; AdaCoM's compression reduces these loops",
+      "interpretation_type": "evidence-backed interpretation",
+      "research_role": "experimental result",
+      "confidence": "high",
+      "evidences": [
+        {
+          "evidence_id": "E3_5.a",
+          "source_kind": "latex_paragraph",
+          "source_file": "main.tex",
+          "paragraph_id": "P-main-tex-0012",
+          "locator_method": "guesstimate",
+          "quote_text": "on the BCP test set, an average of 42.6% of Kimi's tool-use steps per task are repetitive"
+        }
+      ]
+    }
+  ]
+}
