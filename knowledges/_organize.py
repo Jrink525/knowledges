@@ -440,6 +440,27 @@ def classify_by_content(filepath: Path) -> tuple[str, str] | None:
 
 def sync_from_github(token: str) -> int:
     print("\n  🔽 从 GitHub 拉取远程文件...")
+
+    # ── 快速跳过：local git 与 remote 已是同一 commit ──
+    try:
+        res = subprocess.run(
+            ["git", "fetch", "origin", GH_BRANCH],
+            capture_output=True, text=True, timeout=15,
+            cwd=KNOWLEDGES_DIR)
+        local_head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+            cwd=KNOWLEDGES_DIR).stdout.strip()
+        remote_head = subprocess.run(
+            ["git", "rev-parse", f"origin/{GH_BRANCH}"],
+            capture_output=True, text=True, timeout=5,
+            cwd=KNOWLEDGES_DIR).stdout.strip()
+        if local_head == remote_head:
+            print("  ✅ Git 已是最新（local == origin），跳过文件级同步")
+            return 0
+    except Exception as e:
+        print(f"  ⚠️ Git 同步检查失败 ({e})，继续文件级同步...")
+
     downloaded = 0
 
     sha_map = build_sha_map()
