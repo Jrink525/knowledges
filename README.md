@@ -25,13 +25,16 @@
     - `ai-tools/agent-engineering/patterns/ai-automation-service-guide.md`
     - `ai-tools/agent-engineering/patterns/ai-evals-explained.md`
     - `ai-tools/agent-engineering/career/ai-first-engineering-team-guide.md`
+    - `ai-tools/agent-engineering/become-ai-engineer-2026-roadmap-rahul.md`
     - `ai-tools/agent-engineering/build-your-own-agent-harness-iii.md`
     - `ai-tools/agent-engineering/harness/build-your-own-mcp-server.md`
     - `ai-tools/agent-engineering/building-multi-agent-workflows-guide.md`
+    - `ai-tools/agent-engineering/claude-code-10-plugins-vince.md`
     - `ai-tools/agent-engineering/tooling/claude-code-cloud-deployment-sandbox-isolation.md`
     - `ai-tools/agent-engineering/codex/claude-code-memory-system-deep-dive.md`
     - `ai-tools/agent-engineering/tooling/claude-cowork-9-templates-mnilax.md`
     - `ai-tools/agent-engineering/claude-research-agent-morning-brief.md`
+    - `ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md`
     - `ai-tools/agent-engineering/tooling/codex-max-usage-guide-dotey.md`
     - `ai-tools/agent-engineering/career/dont-outsource-the-learning.md`
     - `ai-tools/agent-engineering/dynamic-workflows-claude-code-thariq.md`
@@ -56,6 +59,7 @@
     - `ai-tools/agent-engineering/tooling/prompt-master-workbook.md`
     - `ai-tools/agent-engineering/inference/rag-pipeline-10m-docs-google-l5.md`
     - `ai-tools/agent-engineering/rethinking-search-as-code-generation-perplexity.md`
+    - `ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md`
     - `ai-tools/agent-engineering/harness/skillify-skill-engineering-guide.md`
     - `ai-tools/agent-engineering/skillopt-self-evolving-agent-skills-hooeem.md`
     - `ai-tools/agent-engineering/software-factory-non-technical-guide.md`
@@ -64,6 +68,7 @@
     - `ai-tools/agent-engineering/stop-building-foxconn-factories-garrytan.md`
     - `ai-tools/agent-engineering/the-orchestration-tax.md`
     - `ai-tools/agent-engineering/harness/thin-harness-fat-skills-garry-tan.md`
+    - `ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md`
     - `ai-tools/agent-engineering/patterns/voice-agent-full-guide.md`
     - `ai-tools/agent-engineering/patterns/voice-agent-memory-harder-than-you-think.md`
     - `ai-tools/agent-engineering/career/why-senior-developers-fail-to-communicate-their-expertise.md`
@@ -245,7 +250,7 @@
 
 ---
 
-总计 **199** 篇知识文档
+总计 **204** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -257,5 +262,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-05 10:47 UTC]_
+_[自动生成于 2026-06-05 20:08 UTC]_
 
