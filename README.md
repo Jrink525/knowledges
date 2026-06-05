@@ -76,6 +76,7 @@
   📁 **autoresearch/**
     - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
     - `ai-tools/autoresearch/evopaw-personal-agent-vibe-coding-xudong.md`
+    - `ai-tools/autoresearch/report.md`
   📁 **career/**
     - `ai-tools/career/claude-code-22-hacks-mvanhorn.md`
   📁 **claude/**
@@ -113,8 +114,25 @@
     - `ai-tools/frameworks/spring-ai-bedrock-agentcore-mcp-conference-app.md`
     - `ai-tools/frameworks/springio-2026-comparing-agentic-ai-frameworks-for-java.md`
   📁 **harness/**
+    - `ai-tools/harness/20-claude-prompts-personal-assistant.md`
+    - `ai-tools/harness/agent-harness-deep-dive-akshay.md`
+    - `ai-tools/harness/ai-evals-explained.md`
+    - `ai-tools/harness/chinese-enterprise-harness-engineering-practices.md`
+    - `ai-tools/harness/claude-code-advanced-tips-guide.md`
     - `ai-tools/harness/claude-code-dynamic-workflows-6-patterns-14-steps.md`
+    - `ai-tools/harness/claude-code-large-codebase-best-practices.md`
+    - `ai-tools/harness/claude-code-routines-full-course.md`
+    - `ai-tools/harness/compiling-agentic-workflows-story.md`
+    - `ai-tools/harness/harness-from-theory-to-practice.md`
+    - `ai-tools/harness/langsmith-engine-building-agent-for-improving-agents.md`
+    - `ai-tools/harness/langsmith-sandbox-auth-proxy.md`
+    - `ai-tools/harness/oz-multi-harness-agent-orchestration.md`
+    - `ai-tools/harness/skillopt-paper-story.md`
+    - `ai-tools/harness/spring-ai-bedrock-agentcore-mcp-conference-app.md`
+    - `ai-tools/harness/spring-ai-subagent-orchestration.md`
+    - `ai-tools/harness/thin-harness-fat-skills-garry-tan.md`
   📁 **inference/**
+    - `ai-tools/inference/ai-agent-swarms-complete-guide-kimi-k2-6.md`
     - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
     - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
     - `ai-tools/inference/embabel-agent-framework-best-practices.md`
@@ -158,13 +176,9 @@
     - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
-### ai-tools/autoresearch/ (`ai-tools/autoresearch`)
-  - `ai-tools/autoresearch/report.md`
-
-### ai-tools/inference/ (`ai-tools/inference`)
-  - `ai-tools/inference/ai-agent-swarms-complete-guide-kimi-k2-6.md`
-
 ### database/ (`数据库 & 缓存`)
+  📁 **career/**
+    - `database/career/benedict-evans-ai-rational-take-2026.md`
   📁 **codex/**
     - `database/codex/notebooklm-maxxing-complete-guide.md`
     - `database/codex/redis-single-threaded-high-qps.md`
@@ -191,9 +205,6 @@
     - `database/tooling/spring-controller-return-types-complete-guide.md`
     - `database/tooling/top-10-eda-pitfalls-victor-rentea.md`
 
-### database/career/ (`database/career`)
-  - `database/career/benedict-evans-ai-rational-take-2026.md`
-
 ### infrastructure/ (`基础设施 & 网络`)
   - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
   - `infrastructure/http-server-from-scratch-c.md`
@@ -205,6 +216,7 @@
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
   - `programming/java/java-comparator-deep-dive.md`
+  - `programming/java/java-concurrency-5-tips-enhanced.md`
   - `programming/java/java-concurrency-complete-graph.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
@@ -233,7 +245,7 @@
 
 ---
 
-总计 **182** 篇知识文档
+总计 **199** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -245,5 +257,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-05 07:25 UTC]_
+_[自动生成于 2026-06-05 10:47 UTC]_
 
