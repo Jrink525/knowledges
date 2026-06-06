@@ -107,6 +107,8 @@
     - `ai-tools/claude/how-to-actually-use-claude.md`
     - `ai-tools/claude/most-people-use-10-percent-of-claude-25-steps.md`
     - `ai-tools/claude/shopify-claude-code-setup.md`
+  📁 **claude-code/**
+    - `ai-tools/claude-code/feedback-loops-claude-code.md`
   📁 **database-experiments/**
     - `ai-tools/database-experiments/database-filesystem-vs-skill-aparna.md`
     - `ai-tools/database-experiments/java-agent-complete-guide.md`
@@ -181,6 +183,10 @@
     - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
+### ai-tools/inference/ (`ai-tools/inference`)
+  - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
+  - `ai-tools/inference/rl-agents-2026-rlhf-to-ruler.md`
+
 ### database/ (`数据库 & 缓存`)
   📁 **career/**
     - `database/career/benedict-evans-ai-rational-take-2026.md`
@@ -250,7 +256,7 @@
 
 ---
 
-总计 **204** 篇知识文档
+总计 **207** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -262,5 +268,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-05 20:08 UTC]_
+_[自动生成于 2026-06-06 20:00 UTC]_
 
