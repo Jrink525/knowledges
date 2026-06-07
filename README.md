@@ -17,6 +17,7 @@
     - `ai-tools/agent-engineering/harness/agent-hooks-deterministic-control.md`
     - `ai-tools/agent-engineering/patterns/agent-memory-system-from-basics-to-production.md`
     - `ai-tools/agent-engineering/harness/agent-sandbox-infrastructure.md`
+    - `ai-tools/agent-engineering/agentforge-harness-built-from-scratch.md`
     - `ai-tools/agent-engineering/harness/agentic-harness-engineering-ahe.md`
     - `ai-tools/agent-engineering/patterns/agentic-memory-detailed-breakdown.md`
     - `ai-tools/agent-engineering/agentic-search-context-engineering.md`
@@ -39,6 +40,7 @@
     - `ai-tools/agent-engineering/tooling/codex-max-usage-guide-dotey.md`
     - `ai-tools/agent-engineering/career/dont-outsource-the-learning.md`
     - `ai-tools/agent-engineering/dynamic-workflows-claude-code-thariq.md`
+    - `ai-tools/agent-engineering/every-agentic-engineering-hack-mvanhorn.md`
     - `ai-tools/agent-engineering/autoresearch/evo-self-improving-agent-harness-autoresearch.md`
     - `ai-tools/agent-engineering/career/forward-deployed-engineering-101.md`
     - `ai-tools/agent-engineering/career/founders-playbook-ai-native-startup.md`
@@ -48,10 +50,12 @@
     - `ai-tools/agent-engineering/harness-is-everything-rohit.md`
     - `ai-tools/agent-engineering/patterns/how-to-build-ai-agents-2026-full-guide.md`
     - `ai-tools/agent-engineering/inference/inference-engines-decision-guide-2026-ahmad.md`
+    - `ai-tools/agent-engineering/karpathy-how-i-use-ai-2025.md`
     - `ai-tools/agent-engineering/harness/langsmith-engine-building-agent-for-improving-agents.md`
     - `ai-tools/agent-engineering/inference/llms101-practical-guide-2026-ahmad.md`
     - `ai-tools/agent-engineering/codex/master-multi-agent-workflows-2026-builder-course.md`
     - `ai-tools/agent-engineering/tooling/mattpocock-skills-workbook.md`
+    - `ai-tools/agent-engineering/mcp-core-architecture-explained.md`
     - `ai-tools/agent-engineering/inference/memory-bandwidth-local-ai-2026-ahmad.md`
     - `ai-tools/agent-engineering/harness/npx-skills-add-flow.md`
     - `ai-tools/agent-engineering/obsidian-claude-note-system.md`
@@ -60,6 +64,7 @@
     - `ai-tools/agent-engineering/tooling/prompt-master-workbook.md`
     - `ai-tools/agent-engineering/inference/rag-pipeline-10m-docs-google-l5.md`
     - `ai-tools/agent-engineering/rethinking-search-as-code-generation-perplexity.md`
+    - `ai-tools/agent-engineering/rl-interview-questions-2026.md`
     - `ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md`
     - `ai-tools/agent-engineering/harness/skillify-skill-engineering-guide.md`
     - `ai-tools/agent-engineering/skillopt-self-evolving-agent-skills-hooeem.md`
@@ -169,6 +174,9 @@
     - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
+### ai-tools/inference/ (`ai-tools/inference`)
+  - `ai-tools/inference/how-llms-actually-work.md`
+
 ### database/ (`数据库 & 缓存`)
   📁 **career/**
     - `database/career/benedict-evans-ai-rational-take-2026.md`
@@ -238,7 +246,7 @@
 
 ---
 
-总计 **191** 篇知识文档
+总计 **197** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -250,5 +258,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-07 12:11 UTC]_
+_[自动生成于 2026-06-07 20:05 UTC]_
 
