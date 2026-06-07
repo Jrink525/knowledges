@@ -25,13 +25,17 @@
     - `ai-tools/agent-engineering/patterns/ai-automation-service-guide.md`
     - `ai-tools/agent-engineering/patterns/ai-evals-explained.md`
     - `ai-tools/agent-engineering/career/ai-first-engineering-team-guide.md`
+    - `ai-tools/agent-engineering/anatomy-of-an-agent-harness.md`
+    - `ai-tools/agent-engineering/become-ai-engineer-2026-roadmap-rahul.md`
     - `ai-tools/agent-engineering/build-your-own-agent-harness-iii.md`
     - `ai-tools/agent-engineering/harness/build-your-own-mcp-server.md`
     - `ai-tools/agent-engineering/building-multi-agent-workflows-guide.md`
+    - `ai-tools/agent-engineering/claude-code-10-plugins-vince.md`
     - `ai-tools/agent-engineering/tooling/claude-code-cloud-deployment-sandbox-isolation.md`
     - `ai-tools/agent-engineering/codex/claude-code-memory-system-deep-dive.md`
     - `ai-tools/agent-engineering/tooling/claude-cowork-9-templates-mnilax.md`
     - `ai-tools/agent-engineering/claude-research-agent-morning-brief.md`
+    - `ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md`
     - `ai-tools/agent-engineering/tooling/codex-max-usage-guide-dotey.md`
     - `ai-tools/agent-engineering/career/dont-outsource-the-learning.md`
     - `ai-tools/agent-engineering/dynamic-workflows-claude-code-thariq.md`
@@ -56,6 +60,7 @@
     - `ai-tools/agent-engineering/tooling/prompt-master-workbook.md`
     - `ai-tools/agent-engineering/inference/rag-pipeline-10m-docs-google-l5.md`
     - `ai-tools/agent-engineering/rethinking-search-as-code-generation-perplexity.md`
+    - `ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md`
     - `ai-tools/agent-engineering/harness/skillify-skill-engineering-guide.md`
     - `ai-tools/agent-engineering/skillopt-self-evolving-agent-skills-hooeem.md`
     - `ai-tools/agent-engineering/software-factory-non-technical-guide.md`
@@ -64,6 +69,7 @@
     - `ai-tools/agent-engineering/stop-building-foxconn-factories-garrytan.md`
     - `ai-tools/agent-engineering/the-orchestration-tax.md`
     - `ai-tools/agent-engineering/harness/thin-harness-fat-skills-garry-tan.md`
+    - `ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md`
     - `ai-tools/agent-engineering/patterns/voice-agent-full-guide.md`
     - `ai-tools/agent-engineering/patterns/voice-agent-memory-harder-than-you-think.md`
     - `ai-tools/agent-engineering/career/why-senior-developers-fail-to-communicate-their-expertise.md`
@@ -102,6 +108,9 @@
     - `ai-tools/claude/how-to-actually-use-claude.md`
     - `ai-tools/claude/most-people-use-10-percent-of-claude-25-steps.md`
     - `ai-tools/claude/shopify-claude-code-setup.md`
+  📁 **claude-code/**
+    - `ai-tools/claude-code/claude-code-settings-json-guide.md`
+    - `ai-tools/claude-code/feedback-loops-claude-code.md`
   📁 **database-experiments/**
     - `ai-tools/database-experiments/database-filesystem-vs-skill-aparna.md`
     - `ai-tools/database-experiments/java-agent-complete-guide.md`
@@ -132,24 +141,8 @@
     - `ai-tools/harness/spring-ai-subagent-orchestration.md`
     - `ai-tools/harness/thin-harness-fat-skills-garry-tan.md`
   📁 **inference/**
-    - `ai-tools/inference/ai-agent-swarms-complete-guide-kimi-k2-6.md`
-    - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
-    - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
-    - `ai-tools/inference/embabel-agent-framework-best-practices.md`
-    - `ai-tools/inference/from-prompt-engineer-to-fullstack-ai-engineer.md`
-    - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
-    - `ai-tools/inference/hermes-agent-60-days-6-lessons-0xjeff.md`
-    - `ai-tools/inference/how-to-actually-use-claude.md`
-    - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
-    - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
-    - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
-    - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
-    - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
-    - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
-    - `ai-tools/inference/spring-ai-agent-resources-top30.md`
-    - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
-    - `ai-tools/inference/voice-agent-full-guide.md`
-    - `ai-tools/inference/why-we-need-continual-learning.md`
+    - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
+    - `ai-tools/inference/rl-agents-2026-rlhf-to-ruler.md`
   📁 **ml-research/**
     - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
     - `ai-tools/ml-research/dair-ai-top-papers-2025-05-18-24.md`
@@ -245,7 +238,7 @@
 
 ---
 
-总计 **199** 篇知识文档
+总计 **191** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -257,5 +250,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-05 10:47 UTC]_
+_[自动生成于 2026-06-07 12:11 UTC]_
 
