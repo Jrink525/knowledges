@@ -48,10 +48,12 @@
     - `ai-tools/agent-engineering/harness-is-everything-rohit.md`
     - `ai-tools/agent-engineering/patterns/how-to-build-ai-agents-2026-full-guide.md`
     - `ai-tools/agent-engineering/inference/inference-engines-decision-guide-2026-ahmad.md`
+    - `ai-tools/agent-engineering/karpathy-how-i-use-ai-2025.md`
     - `ai-tools/agent-engineering/harness/langsmith-engine-building-agent-for-improving-agents.md`
     - `ai-tools/agent-engineering/inference/llms101-practical-guide-2026-ahmad.md`
     - `ai-tools/agent-engineering/codex/master-multi-agent-workflows-2026-builder-course.md`
     - `ai-tools/agent-engineering/tooling/mattpocock-skills-workbook.md`
+    - `ai-tools/agent-engineering/mcp-core-architecture-explained.md`
     - `ai-tools/agent-engineering/inference/memory-bandwidth-local-ai-2026-ahmad.md`
     - `ai-tools/agent-engineering/harness/npx-skills-add-flow.md`
     - `ai-tools/agent-engineering/obsidian-claude-note-system.md`
@@ -238,7 +240,7 @@
 
 ---
 
-总计 **191** 篇知识文档
+总计 **193** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -250,5 +252,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-07 12:11 UTC]_
+_[自动生成于 2026-06-07 14:25 UTC]_
 
