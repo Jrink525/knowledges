@@ -39,6 +39,7 @@
     - `ai-tools/agent-engineering/tooling/codex-max-usage-guide-dotey.md`
     - `ai-tools/agent-engineering/career/dont-outsource-the-learning.md`
     - `ai-tools/agent-engineering/dynamic-workflows-claude-code-thariq.md`
+    - `ai-tools/agent-engineering/every-agentic-engineering-hack-mvanhorn.md`
     - `ai-tools/agent-engineering/autoresearch/evo-self-improving-agent-harness-autoresearch.md`
     - `ai-tools/agent-engineering/career/forward-deployed-engineering-101.md`
     - `ai-tools/agent-engineering/career/founders-playbook-ai-native-startup.md`
@@ -62,6 +63,7 @@
     - `ai-tools/agent-engineering/tooling/prompt-master-workbook.md`
     - `ai-tools/agent-engineering/inference/rag-pipeline-10m-docs-google-l5.md`
     - `ai-tools/agent-engineering/rethinking-search-as-code-generation-perplexity.md`
+    - `ai-tools/agent-engineering/rl-interview-questions-2026.md`
     - `ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md`
     - `ai-tools/agent-engineering/harness/skillify-skill-engineering-guide.md`
     - `ai-tools/agent-engineering/skillopt-self-evolving-agent-skills-hooeem.md`
@@ -240,7 +242,7 @@
 
 ---
 
-总计 **193** 篇知识文档
+总计 **195** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -252,5 +254,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-07 14:25 UTC]_
+_[自动生成于 2026-06-07 15:54 UTC]_
 
