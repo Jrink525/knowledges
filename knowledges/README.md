@@ -17,6 +17,7 @@
     - `ai-tools/agent-engineering/harness/agent-hooks-deterministic-control.md`
     - `ai-tools/agent-engineering/patterns/agent-memory-system-from-basics-to-production.md`
     - `ai-tools/agent-engineering/harness/agent-sandbox-infrastructure.md`
+    - `ai-tools/agent-engineering/agentforge-harness-built-from-scratch.md`
     - `ai-tools/agent-engineering/harness/agentic-harness-engineering-ahe.md`
     - `ai-tools/agent-engineering/patterns/agentic-memory-detailed-breakdown.md`
     - `ai-tools/agent-engineering/agentic-search-context-engineering.md`
@@ -173,6 +174,9 @@
     - `ai-tools/tooling/obsidian-vault-organization-full-course.md`
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
+### ai-tools/inference/ (`ai-tools/inference`)
+  - `ai-tools/inference/how-llms-actually-work.md`
+
 ### database/ (`数据库 & 缓存`)
   📁 **career/**
     - `database/career/benedict-evans-ai-rational-take-2026.md`
@@ -242,7 +246,7 @@
 
 ---
 
-总计 **195** 篇知识文档
+总计 **197** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -254,5 +258,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-07 15:54 UTC]_
+_[自动生成于 2026-06-07 20:05 UTC]_
 
