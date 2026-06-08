@@ -703,6 +703,9 @@ def extract_all_files() -> dict[str, list[tuple[str, Path]]]:
     classified: dict[str, list[tuple[str, Path]]] = {}
     image_dir = KNOWLEDGES_DIR / "image"
 
+    # 已知的顶层领域目录 —— 文件已在正确目录中的不重新分类
+    known_domain_dirs = set(DOMAIN_PROFILES.keys())
+
     for f in sorted(KNOWLEDGES_DIR.rglob("*.md")):
         if f.name in ("README.md", TOOL_NAME) or f.name.startswith("_"):
             continue
@@ -713,10 +716,19 @@ def extract_all_files() -> dict[str, list[tuple[str, Path]]]:
         if _is_skip_path(f):
             continue
 
+        rel = str(f.relative_to(KNOWLEDGES_DIR))
+        rel_parts = Path(rel).parts
+
+        # 如果文件已在已知的领域目录下，跳过内容分类（防止误移）
+        # 例如 spring/01-spring-boot-overview.md → parent=spring, 存在于 known_domain_dirs
+        if len(rel_parts) >= 2 and rel_parts[0] in known_domain_dirs:
+            directory = rel_parts[0]
+            classified.setdefault(directory, []).append((rel, f))
+            continue
+
         result = classify_by_content(f)
         if result:
             label, directory = result
-            rel = str(f.relative_to(KNOWLEDGES_DIR))
             classified.setdefault(directory, []).append((rel, f))
         elif f.parent == KNOWLEDGES_DIR:
             classified.setdefault("uncategorized", []).append(("uncategorized", f))
@@ -1169,7 +1181,12 @@ def auto_split_oversized_dirs(classified: dict[str, list]) -> None:
     oversize_threshold = 20
     import shutil
 
+    # 以下目录已按领域划分，不需要二次子域分类
+    SKIP_SUBDOMAIN_CLASSIFY = {"spring", "programming"}
+
     for directory, entries in list(classified.items()):
+        if directory in SKIP_SUBDOMAIN_CLASSIFY:
+            continue
         if len(entries) <= oversize_threshold:
             continue
 
