@@ -385,14 +385,14 @@ DOMAIN_PROFILES = {
             "gap lock", "next-key lock",
             "explain", "慢查询", "分库分表", "sharding", "读写分离",
             "postgresql", "postgres", "pg_hba",
-            "nosql", "mongodb", "elasticsearch", "es",
+            "nosql", "mongodb", "elasticsearch",
             "vector database", "vector db", "faiss", "chroma",
             "zset", "sorted set", "ttl", "内存淘汰", "lru",
-            "数据分片", "shard", "replica set", "读写分离",
+            "数据分片", "shard", "replica set",
             "连接池", "hikari", "druid",
             "缓存策略", "cache aside", "read through",
         },
-    },
+    }
     "sre": {
         "label": "SRE & 运维",
         "keywords": {
@@ -470,6 +470,16 @@ def extract_content_text(filepath: Path) -> str:
     return content.lower()
 
 
+def _kw_count(text: str, keyword: str) -> int:
+    """使用 \b 词边界匹配关键词计数，避免子串误中。"""
+    try:
+        pattern = re.compile(rf"\b{re.escape(keyword)}\b", re.IGNORECASE)
+        return len(pattern.findall(text))
+    except re.error:
+        # 某些关键词含特殊字符回退到原逻辑
+        return text.lower().count(keyword.lower())
+
+
 def classify_by_content(filepath: Path) -> tuple[str, str] | None:
     override = get_category_override(filepath)
     if override:
@@ -482,7 +492,7 @@ def classify_by_content(filepath: Path) -> tuple[str, str] | None:
     for domain, profile in DOMAIN_PROFILES.items():
         score = 0.0
         for keyword in profile["keywords"]:
-            count = content_text.count(keyword.lower())
+            count = _kw_count(content_text, keyword)
             if count > 0:
                 score += count
 
@@ -490,7 +500,7 @@ def classify_by_content(filepath: Path) -> tuple[str, str] | None:
             for tag in tags:
                 tl = tag.lower()
                 for kw in profile["keywords"]:
-                    if tl == kw or tl.startswith(kw) or (len(tl) > 3 and kw in tl):
+                    if tl == kw or tl.startswith(kw) or (len(tl) > 3 and _kw_count(tl, kw)):
                         score += 3.0
                         break
 
@@ -498,7 +508,7 @@ def classify_by_content(filepath: Path) -> tuple[str, str] | None:
         if title_match:
             title = title_match.group(1).lower()
             for kw in profile["keywords"]:
-                if kw in title:
+                if _kw_count(title, kw) > 0:
                     score += 5.0
 
         if score > 0:
@@ -1187,11 +1197,15 @@ def auto_split_oversized_dirs(classified: dict[str, list]) -> None:
             for subdir, profile in SUBDOMAIN_PROFILES.items():
                 score = 0
                 for kw in profile["keywords"]:
-                    # Filename matches count double
-                    if kw in filename_lower:
-                        score += 2
-                    if kw in content_lower:
-                        score += 1
+                    # 词边界匹配，避免 "es" 误中 "these/claudesetup" 等
+                    try:
+                        kw_pat = re.compile(rf"\b{re.escape(kw)}\b", re.IGNORECASE)
+                        fn_hits = len(kw_pat.findall(filename_lower))
+                        content_hits = len(kw_pat.findall(content_lower))
+                    except re.error:
+                        fn_hits = 1 if kw in filename_lower else 0
+                        content_hits = content_lower.count(kw)
+                    score += fn_hits * 2 + content_hits
                 if score > best_score:
                     best_score = score
                     best_subdir = subdir
