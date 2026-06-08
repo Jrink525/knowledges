@@ -519,7 +519,7 @@ Let's walk through one training sequence with hard eviction:
 
 ## Appendix B: Supplementary File Manifest
 
-Files generated in `knowledges/papers/llm-sleep-2605.26099/`:
+Files generated in `papers/llm-sleep-2605.26099/`:
 - `report.md` — This report
 - `traceability_manifest.json` — JSON claim-evidence traceability matrix
 - `research_lens.json` — Research lens / analytical perspective

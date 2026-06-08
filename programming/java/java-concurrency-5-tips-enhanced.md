@@ -328,7 +328,7 @@ CompletableFuture.supplyAsync(() -> database.query(), virtualExecutor);
 
 - [Java 并发基础知识](/database/java-concurrency-fundamentals.md)
 - [Java 并发完整导图](/database/java-concurrency-complete-graph.md)
-- [JDK21 虚拟线程详解](/knowledges/ai-tools/)（需自行搜索更新）
+- [JDK21 虚拟线程详解](/ai-tools/)（需自行搜索更新）
 
 ---
 

@@ -198,17 +198,17 @@ authors: "Peter Pang (@intuitiveml / CREAO)"
 本篇文章的核心主题 **Cloud Agent Infrastructure** 与已有知识高度相关：
 
 - **Agent Sandbox 基础设施对比：**
-  - [Agent Sandbox Infrastructure](/knowledges/ai-tools/agent-sandbox-infrastructure.md) — 沙箱隔离与安全模式
-  - [Harness 企业 AI 基础设施](/knowledges/ai-tools/harness-enterprise-ai-infrastructure-2026.md) — 企业级 agent 运行平台
+  - [Agent Sandbox Infrastructure](/ai-tools/agent-sandbox-infrastructure.md) — 沙箱隔离与安全模式
+  - [Harness 企业 AI 基础设施](/ai-tools/harness-enterprise-ai-infrastructure-2026.md) — 企业级 agent 运行平台
 
 - **Harness 相关：**
-  - [Agent Harness Engineering](/knowledges/ai-tools/agent-harness-engineering.md) — Harness 架构模式
-  - [Thin Harness, Fat Skills](/knowledges/ai-tools/thin-harness-fat-skills-garry-tan.md) — Garry Tan 的 harness 理念
-  - [Harness From Theory to Practice](/knowledges/ai-tools/harness-from-theory-to-practice.md)
+  - [Agent Harness Engineering](/ai-tools/agent-harness-engineering.md) — Harness 架构模式
+  - [Thin Harness, Fat Skills](/ai-tools/thin-harness-fat-skills-garry-tan.md) — Garry Tan 的 harness 理念
+  - [Harness From Theory to Practice](/ai-tools/harness-from-theory-to-practice.md)
 
 - **安全性方面：**
-  - [Agent Hooks 确定性控制](/knowledges/ai-tools/agent-hooks-deterministic-control.md) — Agent 行为的确定性约束
-  - [Claude Code 云部署沙箱隔离](/knowledges/ai-tools/claude-code-cloud-deployment-sandbox-isolation.md)
+  - [Agent Hooks 确定性控制](/ai-tools/agent-hooks-deterministic-control.md) — Agent 行为的确定性约束
+  - [Claude Code 云部署沙箱隔离](/ai-tools/claude-code-cloud-deployment-sandbox-isolation.md)
 
 **与 Harness 模式的关系：**
 

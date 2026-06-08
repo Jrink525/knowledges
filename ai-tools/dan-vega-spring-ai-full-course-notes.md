@@ -406,6 +406,6 @@ void testStructuredOutput() {
 
 ---
 
-> **关联阅读**：Christian Tzolov 在 Spring I/O 的演讲「[从助手到智能体](/knowledges/ai-tools/spring-ai/from-assistants-to-agents-self-improving-agentic-systems.md)」深入讲解了 Advisor 模式和 Agent 演进框架，与本文实操内容互补——建议先实操再读理论框架。
+> **关联阅读**：Christian Tzolov 在 Spring I/O 的演讲「[从助手到智能体](/ai-tools/spring-ai/from-assistants-to-agents-self-improving-agentic-systems.md)」深入讲解了 Advisor 模式和 Agent 演进框架，与本文实操内容互补——建议先实操再读理论框架。
 >
 > **整理说明**：本文基于 5.5h Workshop 字幕提炼，原课程包含大量实时编码演示，此处仅保留结构化技术内容。完整课程可在 [Dan Vega 的 YouTube](https://youtu.be/FzLABAppJfM) 观看。

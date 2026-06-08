@@ -1239,4 +1239,4 @@ Artifacts:
 > - 补充：[Introducing Embabel: Advanced AI Agent Development for Java Applications](https://www.infoq.com/news/2025/06/introducing-embabel-ai-agent/) — InfoQ, Jun 2025  
 > - 主仓库：[embabel/embabel-agent](https://github.com/embabel/embabel-agent)  
 > - 作者：Rod Johnson（Spring 创始人）  
-> - 分类：`knowledges/ai-tools/agents/`
+> - 分类：`ai-tools/agents/`

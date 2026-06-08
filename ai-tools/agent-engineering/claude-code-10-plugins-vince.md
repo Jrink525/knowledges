@@ -344,10 +344,10 @@ Output: [示例输出]
 
 ## 七、与已有知识库的关联
 
-- [Agent Memory System](/knowledges/ai-tools/agent-memory-system-from-basics-to-production.md) — MemClaw / memory MCP 的底层原理
-- [Skillify: Skill Engineering Guide](/knowledges/ai-tools/skillify-skill-engineering-guide.md) — 自建 skill 的方法论
-- [CREAO Cloud Agent Infrastructure](/knowledges/ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md) — Agent 运行时与工具层的分离设计
-- [Trading Agent Skills with Claude SDK](/knowledges/ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md) — Tool/Skill/Hook/Subagent 四种机制的深入
+- [Agent Memory System](/ai-tools/agent-memory-system-from-basics-to-production.md) — MemClaw / memory MCP 的底层原理
+- [Skillify: Skill Engineering Guide](/ai-tools/skillify-skill-engineering-guide.md) — 自建 skill 的方法论
+- [CREAO Cloud Agent Infrastructure](/ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md) — Agent 运行时与工具层的分离设计
+- [Trading Agent Skills with Claude SDK](/ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md) — Tool/Skill/Hook/Subagent 四种机制的深入
 
 ---
 

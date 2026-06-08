@@ -874,4 +874,4 @@ Artifacts:
 > - 原文 2：[Build AI Agents in Java with Embabel: Step-by-Step Guide](https://bell-sw.com/blog/build-ai-agents-in-java-with-embabel-step-by-step-guide/) — BellSoft, Feb 2026  
 > - 主仓库：[embabel/embabel-agent](https://github.com/embabel/embabel-agent)  
 > - 作者：Rod Johnson（Spring 创始人）  
-> - 分类：`knowledges/ai-tools/agents/`
+> - 分类：`ai-tools/agents/`

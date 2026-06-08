@@ -321,11 +321,11 @@ after_tools   — 任何工具执行后
 
 ## 九、与已有知识库的关联
 
-- [Claude Agent SDK 构建指南](/knowledges/ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md) — Tool/Skill/Hook/Subagent 四种机制的实践
-- [Agent Memory System](/knowledges/ai-tools/agent-memory-system-from-basics-to-production.md) — Context engineering 的支撑
-- [CREAO Cloud Agent Infrastructure](/knowledges/ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md) — Harness 设计中的凭证代理和沙箱原理
-- [Second Brain with gbrain](/knowledges/ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md) — 知识层与记忆的分离思路
-- [10 Claude Code Plugins](/knowledges/ai-tools/agent-engineering/claude-code-10-plugins-vince.md) — 开发提效工具补充
+- [Claude Agent SDK 构建指南](/ai-tools/agent-engineering/trading-agent-skills-claude-sdk-zostaff.md) — Tool/Skill/Hook/Subagent 四种机制的实践
+- [Agent Memory System](/ai-tools/agent-memory-system-from-basics-to-production.md) — Context engineering 的支撑
+- [CREAO Cloud Agent Infrastructure](/ai-tools/agent-engineering/cloud-agent-infrastructure-creao-peter-pang.md) — Harness 设计中的凭证代理和沙箱原理
+- [Second Brain with gbrain](/ai-tools/agent-engineering/second-brain-gbrain-openclaw-hermes-vox.md) — 知识层与记忆的分离思路
+- [10 Claude Code Plugins](/ai-tools/agent-engineering/claude-code-10-plugins-vince.md) — 开发提效工具补充
 
 ---
 

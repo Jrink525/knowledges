@@ -208,17 +208,17 @@ action_boundary: agent 可以做什么/不可以做什么
 本篇文章与知识库中多个主题高度呼应：
 
 **Agent Memory 系列：**
-- [Agent Memory System: From Basics to Production](/knowledges/ai-tools/agent-memory-system-from-basics-to-production.md)
-- [Agent Memory Framework: Remember, Cite, Forget](/knowledges/ai-tools/agent-memory-framework-remember-cite-forget.md)
-- [OpenClaw vs Hermes Agent Memory Architecture](/knowledges/ai-tools/openclaw-vs-hermes-agent-memory-architecture.md)
-- [State of Memory in Agent Harness: Mem0](/knowledges/ai-tools/state-of-memory-in-agent-harness-mem0.md)
+- [Agent Memory System: From Basics to Production](/ai-tools/agent-memory-system-from-basics-to-production.md)
+- [Agent Memory Framework: Remember, Cite, Forget](/ai-tools/agent-memory-framework-remember-cite-forget.md)
+- [OpenClaw vs Hermes Agent Memory Architecture](/ai-tools/openclaw-vs-hermes-agent-memory-architecture.md)
+- [State of Memory in Agent Harness: Mem0](/ai-tools/state-of-memory-in-agent-harness-mem0.md)
 
 **Skill 相关：**
-- [Skillify: Skill Engineering Guide](/knowledges/ai-tools/skillify-skill-engineering-guide.md)
-- [Hiten Shah: Skill Library First AI Strategy](/knowledges/ai-tools/skills/hnshah-skill-library-first-ai-strategy.md)
+- [Skillify: Skill Engineering Guide](/ai-tools/skillify-skill-engineering-guide.md)
+- [Hiten Shah: Skill Library First AI Strategy](/ai-tools/skills/hnshah-skill-library-first-ai-strategy.md)
 
 **CF / DBFS 讨论：**
-- [Database vs Filesystem vs Skill: Aparna](/knowledges/ai-tools/database-filesystem-vs-skill-aparna.md)
+- [Database vs Filesystem vs Skill: Aparna](/ai-tools/database-filesystem-vs-skill-aparna.md)
 
 ---
 

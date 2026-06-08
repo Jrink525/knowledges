@@ -33,7 +33,7 @@ metadata:
 | 触发信号 | 模式 | 产出 |
 |---------|------|------|
 | 学术审稿、复现评估、找研究突破口 | **Deep-read** (默认) | `report.md` + JSON 工件 |
-| "讲论文" "读论文" "把这篇讲给我听" — 给外行讲故事 | **Story mode** | 中文故事文（markdown，推荐 `knowledges/papers/`） |
+| "讲论文" "读论文" "把这篇讲给我听" — 给外行讲故事 | **Story mode** | 中文故事文（markdown，推荐 `papers/`） |
 | "倒读" "论文溯源" "paper river" "这篇的来龙去脉" | **River mode** | 论文演化线 + 溯源图 |
 
 用户没有明确说 → 默认 Deep-read。
@@ -835,7 +835,7 @@ subtitle:   把"还要写多远"做成一个 value 函数 — Length Value Model
 
 ### 9. 写入
 
-使用 `knowledges/papers/` 作为输出目录（见末尾 Save location 说明）。参考 `references/story-template.org` 作为输出结构模板。
+使用 `papers/` 作为输出目录（见末尾 Save location 说明）。参考 `references/story-template.org` 作为输出结构模板。
 
 ---
 
@@ -930,7 +930,7 @@ arxiv URL / PDF / 论文名称 → 获取标题、作者、摘要、引言。
 
 ### 9. 写入
 
-使用 `knowledges/papers/` 作为输出目录（见末尾 Save location 说明）。参考 `references/river-template.org` 作为输出结构模板。
+使用 `papers/` 作为输出目录（见末尾 Save location 说明）。参考 `references/river-template.org` 作为输出结构模板。
 
 ---
 
@@ -938,15 +938,15 @@ arxiv URL / PDF / 论文名称 → 获取标题、作者、摘要、引言。
 
 ## Save location
 
-Paper digests, deep-reading reports, story-mode papers, and river-trace documents all go to **`knowledges/papers/`**.
+Paper digests, deep-reading reports, story-mode papers, and river-trace documents all go to **`papers/`**.
 
-This is the dedicated papers directory — do not put paper content under `knowledges/ai-tools/` or any other non-papers subdirectory.
+This is the dedicated papers directory — do not put paper content under `ai-tools/` or any other non-papers subdirectory.
 
-Cover images go to `knowledges/image/` as usual.
+Cover images go to `image/` as usual.
 
 ## Image path in markdown
 
-When referencing the cover image from a file under `knowledges/papers/`, use the path `../image/{filename}`.
+When referencing the cover image from a file under `papers/`, use the path `../image/{filename}`.
 
 ## Markdown 格式约束
 

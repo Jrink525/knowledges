@@ -28,9 +28,9 @@
     ]
   },
   "artifacts": {
-    "report_md": "/home/node/.openclaw/workspace/knowledges/papers/harness-evolution/report.md",
-    "traceability_manifest_json": "/home/node/.openclaw/workspace/knowledges/papers/harness-evolution/traceability_manifest.json",
-    "research_lens_json": "/home/node/.openclaw/workspace/knowledges/papers/harness-evolution/research_lens.json",
-    "direction_board_json": "/home/node/.openclaw/workspace/knowledges/papers/harness-evolution/direction_board.json"
+    "report_md": "/home/node/.openclaw/workspace/papers/harness-evolution/report.md",
+    "traceability_manifest_json": "/home/node/.openclaw/workspace/papers/harness-evolution/traceability_manifest.json",
+    "research_lens_json": "/home/node/.openclaw/workspace/papers/harness-evolution/research_lens.json",
+    "direction_board_json": "/home/node/.openclaw/workspace/papers/harness-evolution/direction_board.json"
   }
 }
