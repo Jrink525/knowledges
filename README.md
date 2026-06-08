@@ -1,5 +1,6 @@
 # 📚 知识库
 
+
 > 面试 & 技术知识库
 > 由 Jarvis II 按文件内容动态分类
 
@@ -39,6 +40,8 @@
     - `ai-tools/agent-engineering/tooling/codex-max-usage-guide-dotey.md`
     - `ai-tools/agent-engineering/career/dont-outsource-the-learning.md`
     - `ai-tools/agent-engineering/dynamic-workflows-claude-code-thariq.md`
+    - `ai-tools/agent-engineering/evaluating-agents-md-helpful-coding-agents-deep-reading.md`
+    - `ai-tools/agent-engineering/evaluating-agents-md-helpful-coding-agents.md`
     - `ai-tools/agent-engineering/every-agentic-engineering-hack-mvanhorn.md`
     - `ai-tools/agent-engineering/autoresearch/evo-self-improving-agent-harness-autoresearch.md`
     - `ai-tools/agent-engineering/career/forward-deployed-engineering-101.md`
@@ -145,8 +148,7 @@
     - `ai-tools/harness/spring-ai-subagent-orchestration.md`
     - `ai-tools/harness/thin-harness-fat-skills-garry-tan.md`
   📁 **inference/**
-    - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
-    - `ai-tools/inference/rl-agents-2026-rlhf-to-ruler.md`
+    - `ai-tools/inference/how-llms-actually-work.md`
   📁 **ml-research/**
     - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
     - `ai-tools/ml-research/dair-ai-top-papers-2025-05-18-24.md`
@@ -158,8 +160,6 @@
     - `ai-tools/obsidian/obsidian-personal-operating-system.md`
   📁 **patterns/**
     - `ai-tools/patterns/spring-ai-todowritetool-agent-planning.md`
-  📁 **skills/**
-    - `ai-tools/skills/hnshah-skill-library-first-ai-strategy.md`
   📁 **spring-ai/**
     - `ai-tools/spring-ai/from-assistants-to-agents-self-improving-agentic-systems.md`
   📁 **tooling/**
@@ -174,36 +174,60 @@
     - `ai-tools/tooling/shopify-claude-code-setup.md`
 
 ### ai-tools/inference/ (`ai-tools/inference`)
+  - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
+  - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
+  - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
+  - `ai-tools/inference/embabel-agent-framework-best-practices.md`
+  - `ai-tools/inference/from-prompt-engineer-to-fullstack-ai-engineer.md`
+  - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
+  - `ai-tools/inference/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/inference/how-llms-actually-work.md`
+  - `ai-tools/inference/how-to-actually-use-claude.md`
+  - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
+  - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
+  - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
+  - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
+  - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
+  - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
+  - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
+  - `ai-tools/inference/spring-ai-agent-resources-top30.md`
+  - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
+  - `ai-tools/inference/voice-agent-full-guide.md`
+  - `ai-tools/inference/why-we-need-continual-learning.md`
 
 ### database/ (`数据库 & 缓存`)
-  📁 **career/**
-    - `database/career/benedict-evans-ai-rational-take-2026.md`
-  📁 **codex/**
-    - `database/codex/notebooklm-maxxing-complete-guide.md`
-    - `database/codex/redis-single-threaded-high-qps.md`
+  - `ai-tools/career/benedict-evans-ai-rational-take-2026.md`
+  - `programming/java/java-optional-complete-guide.md`
+  - `programming/java/java21-top8-features-upgrade-guide.md`
+  - `spring/code-snippets/spring-boot-10-utility-classes.md`
+  - `spring/code-snippets/spring-boot-8-code-snippets.md`
   📁 **database-experiments/**
     - `database/database-experiments/SKILL.md`
     - `database/database-experiments/research-direction-mining-best-practices.md`
     - `database/database-experiments/research-generative-methodology.md`
-  📁 **harness/**
-    - `database/harness/spring-events-complete-guide.md`
   📁 **inference/**
     - `database/inference/artifact_contract.md`
     - `database/inference/binary-quantization-rag-32x.md`
-    - `database/inference/fastjson-deserialization-workbook.md`
-    - `database/inference/java-optional-complete-guide.md`
     - `database/inference/report.md`
     - `database/inference/report_template.md`
-    - `database/inference/spring-boot-8-code-snippets.md`
-  📁 **tooling/**
-    - `database/tooling/java21-top8-features-upgrade-guide.md`
-    - `database/tooling/spring-boot-10-utility-classes.md`
-    - `database/tooling/spring-boot-3-generic-base-controller-service-repository.md`
-    - `database/tooling/spring-boot-elasticsearch-complete-guide.md`
-    - `database/tooling/spring-boot-logging-from-zero-to-hero.md`
-    - `database/tooling/spring-controller-return-types-complete-guide.md`
-    - `database/tooling/top-10-eda-pitfalls-victor-rentea.md`
+
+### database/codex/ (`database/codex`)
+  - `database/codex/notebooklm-maxxing-complete-guide.md`
+  - `database/codex/redis-single-threaded-high-qps.md`
+
+### database/harness/ (`database/harness`)
+  - `database/harness/spring-events-complete-guide.md`
+
+### database/inference/ (`database/inference`)
+  - `database/inference/fastjson-deserialization-workbook.md`
+  - `database/inference/spring-boot-field-desensitization-data-permission-complete-guide.md`
+
+### database/tooling/ (`database/tooling`)
+  - `database/tooling/spring-boot-3-generic-base-controller-service-repository.md`
+  - `database/tooling/spring-boot-elasticsearch-complete-guide.md`
+  - `database/tooling/spring-boot-logging-from-zero-to-hero.md`
+  - `database/tooling/spring-controller-return-types-complete-guide.md`
+  - `database/tooling/top-10-eda-pitfalls-victor-rentea.md`
 
 ### infrastructure/ (`基础设施 & 网络`)
   - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
@@ -245,7 +269,7 @@
 
 ---
 
-总计 **197** 篇知识文档
+总计 **217** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -257,5 +281,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-07 20:05 UTC]_
+_[自动生成于 2026-06-08 05:51 UTC]_
 
