@@ -49,6 +49,7 @@ MAX_WORKERS = 5           # 并发 API 调用数
 KNOWN_IMG_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
 
 # ── 运行时文件/目录跳过列表（不归类、不操作） ─────
+# 🚫 这些是 OpenClaw 运行时文件，只存本地磁盘，绝不操作、绝不提交到 Git。
 SKIP_FILES = frozenset({
     "AGENTS.md", "SOUL.md", "TOOLS.md", "USER.md", "IDENTITY.md",
     "HEARTBEAT.md", "MEMORY.md", "_organize.py",
