@@ -405,7 +405,321 @@ public class PageResult<T> {
 
 ---
 
-## 第五部分：性能与安全注意事项
+## 第五部分：多项目复用 — 将字段权限控制封装为 Spring Boot Starter
+
+> 如果是单个项目，前面介绍的各种方案可以直接在项目里实现。但如果你有多个微服务项目（A 项目、B 项目、C 项目），每个都需要字段权限和脱敏能力，最优雅的做法是封装成一个**可复用的 Spring Boot Starter**。引入 + 加配置即可启用，每个项目可以有自己的差异化规则。
+
+### 5.1 Starter 整体架构
+
+```
+field-security-spring-boot-starter/
+├── field-security-annotation     ← 注解定义（不依赖 Spring，可被其他项目引用）
+│   └── src/main/java/
+│       └── com/example/fieldsecurity/
+│           ├── annotation/
+│           │   ├── @FieldPermission    — 字段级权限注解
+│           │   ├── @MaskResult         — Controller 方法级脱敏注解
+│           │   └── @EnableFieldSecurity — 模块总开关注解
+│           ├── enums/
+│           │   └── MaskStrategy        — 脱敏策略枚举
+│           └── model/
+│               └── FieldRule           — 脱敏/权限规则传输对象
+│
+├── field-security-autoconfigure  ← 自动装配（依赖 annotation 模块）
+│   └── src/main/java/
+│       └── com/example/fieldsecurity/autoconfigure/
+│           ├── FieldSecurityAutoConfiguration   — 自动装配入口
+│           ├── FieldSecurityProperties          — 配置属性绑定
+│           ├── advice/
+│           │   ├── FieldMaskingAdvice           — ResponseBodyAdvice 实现
+│           │   └── FieldPermissionAdvice        — 数据权限 AOP
+│           ├── resolver/
+│           │   └── PermissionResolver           — 权限决策接口（项目可自定义）
+│           └── support/
+│               ├── FieldSecurityContext         — 运行时上下文（当前用户、角色）
+│               └── MaskStrategyRegistry         — 脱敏策略注册器
+│   └── src/main/resources/
+│       └── META-INF/spring/
+│           └── org.springframework.boot.autoconfigure.AutoConfiguration.imports
+│
+└── pom.xml  (parent POM)
+```
+
+### 5.2 Annotation 模块 — 定义通用注解
+
+#### @FieldPermission — 字段级权限控制注解
+
+```java
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface FieldPermission {
+    String[] roles() default {};
+    String spel() default "";
+    MaskStrategy mask() default MaskStrategy.AUTO;
+    boolean hideCompletely() default false;
+}
+```
+
+#### @MaskResult — Controller 方法级配置
+
+```java
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface MaskResult {
+    String value() default "";
+    String[] extraMasks() default {};
+    String[] excludeMasks() default {};
+}
+```
+
+#### @EnableFieldSecurity — 模块总开关
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(FieldSecurityRegistrar.class)
+public @interface EnableFieldSecurity {
+    boolean permission() default true;
+    boolean masking() default true;
+}
+```
+
+### 5.3 Autoconfigure 模块 — 自动装配逻辑
+
+#### 配置属性绑定
+
+```yaml
+field-security:
+  enabled: true
+
+  # === 项目通用基配置（所有 Controller 默认生效） ===
+  default-rules:
+    - field: phone
+      mask: PHONE
+    - field: idNo
+      mask: ID_CARD
+      roles: [ADMIN]
+    - field: email
+      mask: EMAIL
+    - field: password
+      hide-completely: true
+
+  # === 接口级别覆盖（类名.方法名） ===
+  endpoint-rules:
+    '[UserController.getUserList]':
+      fields:
+        - field: salary
+          roles: [ADMIN, MANAGER]
+          hide-completely: true
+    '[OrderController.listOrders]':
+      inherit-default: false
+      fields:
+        - field: buyerPhone
+          mask: PHONE
+
+  # === 包级别配置 ===
+  package-rules:
+    'com.example.admin':
+      inherit-default: true
+      additional-masks:
+        - field: auditRemark
+          mask: NONE
+
+  # === 自定义脱敏策略 ===
+  custom-masks:
+    MOBILE:
+      prefix-keep: 3
+      suffix-keep: 4
+      mask-char: '*'
+```
+
+配置属性绑定类：
+
+```java
+@ConfigurationProperties(prefix = "field-security")
+public class FieldSecurityProperties {
+    private boolean enabled = true;
+    private List<FieldRule> defaultRules = new ArrayList<>();
+    private Map<String, EndpointRule> endpointRules = new LinkedHashMap<>();
+    private Map<String, PackageRule> packageRules = new LinkedHashMap<>();
+    private Map<String, CustomMaskDef> customMasks = new LinkedHashMap<>();
+
+    public static class FieldRule {
+        private String field;
+        private String mask;
+        private List<String> roles;
+        private boolean hideCompletely;
+        private String spel;
+    }
+    public static class EndpointRule {
+        private boolean inheritDefault = true;
+        private List<FieldRule> fields;
+        private List<FieldRule> additionalMasks;
+    }
+}
+```
+
+#### AutoConfiguration 入口
+
+```java
+@AutoConfiguration
+@ConditionalOnProperty(prefix = "field-security", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(FieldSecurityProperties.class)
+@ConditionalOnWebApplication
+public class FieldSecurityAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public PermissionResolver permissionResolver() {
+        return () -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null) return Set.of();
+            return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        };
+    }
+
+    @Bean
+    public FieldSecurityContext fieldSecurityContext(
+            PermissionResolver resolver, FieldSecurityProperties props) {
+        return new FieldSecurityContext(resolver, props);
+    }
+
+    @Bean
+    public MaskStrategyRegistry maskStrategyRegistry(FieldSecurityProperties props) {
+        MaskStrategyRegistry reg = new MaskStrategyRegistry();
+        reg.register("PHONE", MaskStrategy.PHONE);
+        reg.register("ID_CARD", MaskStrategy.ID_CARD);
+        reg.register("EMAIL", MaskStrategy.EMAIL);
+        reg.register("NAME", MaskStrategy.NAME);
+        props.getCustomMasks().forEach((name, def) -> reg.register(name, fromDef(def)));
+        return reg;
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "field-security", name = "masking", matchIfMissing = true)
+    public FieldMaskingAdvice fieldMaskingAdvice(
+            FieldSecurityContext ctx, MaskStrategyRegistry reg) {
+        return new FieldMaskingAdvice(ctx, reg);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "field-security", name = "permission", matchIfMissing = true)
+    public FieldPermissionAdvice fieldPermissionAdvice(FieldSecurityContext ctx) {
+        return new FieldPermissionAdvice(ctx);
+    }
+}
+```
+
+#### 自动装配注册文件
+
+`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`：
+
+```
+com.example.fieldsecurity.autoconfigure.FieldSecurityAutoConfiguration
+```
+
+### 5.4 运行时决策流程
+
+```
+HTTP 请求 → DispatcherServlet → UserController.getUserList()
+    ↓
+FieldMaskingAdvice.supports()
+  ├─ 获取 @MaskResult 注解
+  └─ 解析 endpoint-rules 匹配 'UserController.getUserList'
+    ↓
+FieldMaskingAdvice.beforeBodyWrite()
+  ├─ 从 FieldSecurityContext 获取当前用户角色
+  ├─ 合并：default-rules + endpoint-rules + package-rules
+  │   每个字段：有权限？→ 原值 | hide? → 移除 | 否则 → 脱敏
+  └─ 返回处理后结果
+```
+
+### 5.5 不同项目差异化配置
+
+**项目 A（后台管理）：**
+```yaml
+field-security:
+  default-rules:
+    - field: phone;  mask: PHONE;  roles: [ADMIN, SUPER_ADMIN]
+    - field: idNo;   mask: ID_CARD; roles: [SUPER_ADMIN]
+```
+
+**项目 B（C 端用户页）：**
+```yaml
+field-security:
+  default-rules:
+    - field: phone;  mask: PHONE           # 永不显示原始号
+    - field: idNo;   hide-completely: true # 直接不返回
+  endpoint-rules:
+    '[UserController.getSelfInfo]':
+      fields:
+        - field: phone; roles: [USER]      # 用户可以看自己的
+```
+
+**项目 C（API 网关）：**
+```yaml
+field-security:
+  default-rules:
+    - field: password; hide-completely: true
+    - field: token;    hide-completely: true
+```
+
+### 5.6 项目使用方式
+
+```xml
+<!-- 第一步：引入依赖 -->
+<dependency>
+    <groupId>com.example</groupId>
+    <artifactId>field-security-spring-boot-starter</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+```java
+// 第二步：启动类开启
+@SpringBootApplication
+@EnableFieldSecurity
+public class AppApplication { ... }
+
+// 第三步：POJO 无需任何注解
+public class User {
+    private String name;
+    private String phone;   // 默认规则自动脱敏
+    private String idNo;    // 默认规则自动脱敏
+    private BigDecimal salary;
+}
+
+// 第四步：Controller 正常写
+@RestController
+public class UserController {
+    @GetMapping("/list")
+    public List<User> getUserList() { ... }  // 自动匹配 endpoint-rules
+
+    @GetMapping("/export")
+    @MaskResult(excludeMasks = {"$..*"})   // 跳过脱敏
+    public List<User> export() { ... }
+}
+```
+
+可选：注入自定义 PermissionResolver 覆盖默认实现。
+
+### 5.7 Starter 优势总结
+
+| 维度 | 不使用 Starter | 使用 Starter |
+|------|--------------|-------------|
+| 复用性 | 每个项目重复实现 | 引入即用 |
+| 差异化 | 每项目一套代码 | 同一起始器 + 不同配置 |
+| 升级维护 | 各改各的 | 改版本号 → 全部同步 |
+| 安全审计 | 策略散布 | 集中配置一目了然 |
+
+---
+
+## 第六部分：性能与安全注意事项
 
 ### 性能
 | 方案 | 额外开销 | 适合场景 |
@@ -423,7 +737,7 @@ public class PageResult<T> {
 
 ---
 
-## 第六部分：总结
+## 第七部分：总结
 
 字段级响应处理在 Spring Boot 中有多种实现路径，选择取决于你的需求层次：
 
@@ -441,6 +755,12 @@ public class PageResult<T> {
 - ✅ 数据权限控制（角色动态字段过滤）
 - ✅ 脱敏策略枚举 + 通用注解
 - ✅ 嵌套对象 / 分页 / 集合处理
+- ✅ **Spring Boot Starter 封装**（多项目复用）
+  - annotation 模块 + autoconfigure 模块
+  - @FieldPermission / @MaskResult / @EnableFieldSecurity
+  - yml 配置驱动：default-rules / endpoint-rules / package-rules
+  - 不同项目差异化配置示例
+  - 自定义 PermissionResolver 扩展点
 - ✅ 性能与安全注意事项
 
 > **核心原则：脱敏和数据权限是系统安全的一部分，不是业务逻辑的一部分。** 它应该在基础设施层统一处理，而不是散落在每个 Service 或 Controller 中。
