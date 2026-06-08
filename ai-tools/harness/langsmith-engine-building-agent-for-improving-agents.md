@@ -16,7 +16,7 @@ authors: "Palash Shah (@palashshah)"
 
 > **来源：** [How We Built LangSmith Engine, Our Agent for Improving Agents](https://x.com/palashshah/status/2056786835322687640) — Palash Shah (@palashshah)
 
-![LangSmith Engine cover](../image/langsmith-engine-1.jpg)
+![LangSmith Engine cover](../../../image/langsmith-engine-1.jpg)
 
 上周 LangSmith 发布了 **Engine**——一个站在 Agent Trace 之上的 Agent，能自动发现重复性问题并建议改进方案。
 
@@ -290,4 +290,4 @@ Engine 是我们自动化 Agent 改进循环的尝试。Agent 可观测性的难
 
 ### 关联阅读
 
-- [AI Evaluation 完全入门](../ai-tools/ai-evals-explained.md) — Lotte Verheyden（Langfuse Academy），关于手动评估、代码评估和 LLM-as-a-Judge 的基础方法
+- [AI Evaluation 完全入门](../../ai-evals-explained.md) — Lotte Verheyden（Langfuse Academy），关于手动评估、代码评估和 LLM-as-a-Judge 的基础方法

@@ -17,7 +17,7 @@ authors: "CyrilXBT"
 
 > **来源：** [How to Build an Obsidian Dashboard That Shows You Everything That Matters Today](https://x.com/cyrilxbt/status/2056555832805089310) — CyrilXBT
 
-![Obsidian Dashboard封面](../image/obsidian-dashboard-1.jpg)
+![Obsidian Dashboard封面](../../image/obsidian-dashboard-1.jpg)
 
 ---
 

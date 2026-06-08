@@ -17,7 +17,7 @@ authors: "Lotte Verheyden"
 
 > **来源：** [Evals, explained](https://x.com/lotte_verheyden/status/2056754091817361670) — Lotte Verheyden（Langfuse Academy 系列）
 
-![AI Evals 封面](../image/ai-evals-explained-1.jpg)
+![AI Evals 封面](../../../image/ai-evals-explained-1.jpg)
 
 ---
 

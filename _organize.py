@@ -265,7 +265,6 @@ CATEGORY_ALIASES = {
     "ai-tools/career": "ai-tools",
     "ai-tools/claude": "ai-tools",
     "ai-tools/claude-code": "ai-tools",
-    "ai-tools/database-experiments": "ai-tools",
     "ai-tools/enterprise": "ai-tools",
     "ai-tools/frameworks": "ai-tools",
     "ai-tools/harness": "ai-tools",
@@ -276,6 +275,7 @@ CATEGORY_ALIASES = {
     "ai-tools/skills": "ai-tools",
     "ai-tools/spring-ai": "ai-tools",
     "ai-tools/tooling": "ai-tools",
+    "ai-tools/codex": "ai-tools",
     # database/ 子目录
     "database/codex": "database",
     "database/database-experiments": "database",
@@ -338,6 +338,10 @@ DOMAIN_PROFILES = {
             "semaphore", "concurrenthashmap", "copyonwritearraylist", "blockingqueue",
             "java memory model", "happens-before", "memory barrier", "cache coherence",
             "mesi", "lock prefix", "bus snooping",
+            "java agent", "javassist", "bytebuddy",
+            "instrumentation", "classfiletransformer",
+            "transform", "redefineclasses", "retransformclasses",
+            "agent premain", "agent agentmain",
         },
     },
     "spring": {
@@ -725,12 +729,8 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
         target_base = KNOWLEDGES_DIR / directory
         target_base.mkdir(parents=True, exist_ok=True)
         for rel_path, source_path in entries:
-            rel = Path(rel_path)
-            if str(rel).startswith(directory + "/"):
-                sub = str(rel.relative_to(directory))
-                target_path = target_base / sub
-            else:
-                target_path = target_base / source_path.name
+            # 始终放到目标目录的根目录（扁平化）
+            target_path = target_base / source_path.name
 
             if source_path.resolve() == target_path.resolve():
                 continue
@@ -747,23 +747,15 @@ def sync_classified_to_local(classified: dict[str, list[tuple[str, Path]]]):
     # 清空可能因移动而遗弃的文件（仅同一目录内的残留）
     for directory, entries in classified.items():
         target_dir = KNOWLEDGES_DIR / directory
-        known = set()
-        for rel_path, source_path in entries:
-            rel = Path(rel_path)
-            if str(rel).startswith(directory + "/"):
-                known.add(str(rel.relative_to(directory)))
-            else:
-                known.add(source_path.name)
+        known = {source_path.name for _, source_path in entries}
         for f in list(target_dir.glob("*.md")):
-            if f.name.startswith("_"):
+            if f.name in known or f.name.startswith("_"):
                 continue
-            rel_f = str(f.relative_to(target_dir))
-            if rel_f not in known:
-                try:
-                    f.unlink()
-                    print(f"  🗑️ {directory}/{rel_f} 删除（已移出本类）")
-                except Exception as e:
-                    print(f"  ⚠️ 删除失败 {directory}/{rel_f}: {e}")
+            try:
+                f.unlink()
+                print(f"  🗑️ {directory}/{f.name} 删除（已移出本类）")
+            except Exception as e:
+                print(f"  ⚠️ 删除失败 {directory}/{f.name}: {e}")
 
     # 清理空目录
     def clean_empty_dirs(path):
@@ -919,16 +911,29 @@ def push_via_tree_api(
         print("  ❌ 没有成功创建任何 blob，放弃推送")
         return False
 
-    # ── 保留远程已有但本地没有的文件 ──
+    # ── 保留远程已有但不在 classified keys 中的内容文件 ──
+    # 这些目录（papers/, skills/, scripts/ 等）不属于 classify/split 系统，
+    # 保留其旧树条目；残留的子域路径（如 ai-tools/database-experiments/）
+    # 被显式排除，从而在新树中被"删除"。
+    KEEP_ROOT_DIRS = {"papers", "skills", "scripts", ".github", "image"}
+    KEEP_ROOT_FILES = {".gitignore", "README.md", "_organize.py", "lint.yml", "pyproject.toml"}
+    kept_count = 0
     for path, sha in sha_map.items():
-        if path == ".gitignore" or path in local_paths:
+        if path in local_paths:
             continue
-        tree_entries.append({
-            "path": path,
-            "mode": "100644",
-            "type": "blob",
-            "sha": sha,
-        })
+        first_part = path.split("/", 1)[0]
+        if path in KEEP_ROOT_FILES or first_part in KEEP_ROOT_DIRS:
+            tree_entries.append({
+                "path": path,
+                "mode": "100644",
+                "type": "blob",
+                "sha": sha,
+            })
+            kept_count += 1
+        else:
+            # 不在 keep 列表中且不在 local_paths → 从新树中删除
+            print(f"  🗑️ 从新树排除（删除）: {path}")
+    print(f"  📂 保留 {kept_count} 个非 classified 远程文件")
 
     _check_timeout("create tree")
 
@@ -1144,14 +1149,6 @@ SUBDOMAIN_PROFILES: dict[str, dict[str, list[str]]] = {
             "autonomous coding", "software development agent",
         ],
     },
-    "database-experiments": {
-        "label": "Database Experiments / 数据库实验",
-        "keywords": [
-            "database filesystem", "skill", "aparna",
-            "experiment", "benchmark", "comparison",
-            "database vs", "storage", "filesystem",
-        ],
-    },
     "ml-research": {
         "label": "ML Research / 机器学习研究",
         "keywords": [
@@ -1306,11 +1303,38 @@ def main():
             classified = extract_all_files()
         generate_readme(classified)
 
-    # ── 收集待上传文件 ──
+    # ── 收集待上传文件（扫描实际文件系统，路径经过移动已过时） ──
+    # ── 清理同步残留的旧子目录 ──
+    # GitHub 历史遗留路径（如 ai-tools/database-experiments/）中的文件已被
+    # dedup + sync_classified_to_local 移动到正确位置，残留文件需清理。
+    # 这些路径不在 classified keys 中的子域被清理。
+    # 只清理已知有子域结构的目录（ai-tools 和 database）
+    known_classified_dirs = set(classified.keys())
+    dirs_with_subdomains = {"ai-tools", "database"}
+    for child in sorted(KNOWLEDGES_DIR.iterdir()):
+        if not child.is_dir() or child.name.startswith("."):
+            continue
+        if child.name not in dirs_with_subdomains:
+            continue
+        for sub in sorted(child.iterdir()):
+            if not sub.is_dir():
+                continue
+            rel = f"{child.name}/{sub.name}"
+            if rel not in known_classified_dirs:
+                shutil.rmtree(sub, ignore_errors=True)
+                print(f"  🗑️ 清理残留目录: {rel}/")
+
     files_to_upload: list[tuple[str, Path]] = []
-    for directory, entries in classified.items():
-        for rel, f in entries:
-            rel_path = rel if rel and rel != "uncategorized" else f"{directory}/{f.name}"
+    for directory in sorted(classified.keys()):
+        target_dir = KNOWLEDGES_DIR / directory
+        if not target_dir.exists():
+            continue
+        for f in sorted(target_dir.iterdir()):
+            if f.is_dir() or f.name.startswith(".") or f.name.startswith("_"):
+                continue
+            if f.suffix.lower() not in {'.md', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.json'}:
+                continue
+            rel_path = str(f.relative_to(KNOWLEDGES_DIR))
             files_to_upload.append((rel_path, f))
 
     readme_path = KNOWLEDGES_DIR / "README.md"

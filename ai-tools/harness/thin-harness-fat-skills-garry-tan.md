@@ -208,7 +208,7 @@ Garry 发了一条推文，共鸣远超预期：
 
 ### 这篇文章为何重要
 
-这篇文章可以与之前整理的 [AI Agent 学习路线图 2026](./agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md) 形成直接对照——Rohit 说"harness 比模型做的工作更多"，Garry 直接给了完整架构。两篇文章互相印证。
+这篇文章可以与之前整理的 [AI Agent 学习路线图 2026](../career/ai-agent-roadmap-2026-what-to-learn-build-skip.md) 形成直接对照——Rohit 说"harness 比模型做的工作更多"，Garry 直接给了完整架构。两篇文章互相印证。
 
 ### 与 OpenClaw 的关联
 
@@ -220,10 +220,10 @@ Garry 在文中提及他用 OpenClaw 来执行"技能文件 → 永久升级"的
 
 | 本文概念 | 关联知识 |
 |---|---|
-| "Thin Harness" | [Agent Harness 工程化](./agent-engineering/agent-harness-engineering.md) |
-| Skill Files | [Skill Engineering](./agent-engineering/skillify-skill-engineering-guide.md) |
-| 学习循环（self-rewriting skills） | [Agent 复杂性棘轮](./agent-engineering/agent-complexity-ratchet.md) |
-| Latent vs Deterministic | [AI-First 工程团队指南](./agent-engineering/ai-first-engineering-team-guide.md) Section 6 |
+| "Thin Harness" | [Agent Harness 工程化](./agent-harness-engineering.md) |
+| Skill Files | [Skill Engineering](./skillify-skill-engineering-guide.md) |
+| 学习循环（self-rewriting skills） | [Agent 复杂性棘轮](../patterns/agent-complexity-ratchet.md) |
+| Latent vs Deterministic | [AI-First 工程团队指南](../career/ai-first-engineering-team-guide.md) Section 6 |
 
 ### 关键 takeaways
 
@@ -238,6 +238,6 @@ Garry 在文中提及他用 OpenClaw 来执行"技能文件 → 永久升级"的
 ---
 
 **关联阅读：**
-- [AI Agent 学习路线图 2026：什么值得学、什么值得造、什么直接跳过](./agent-engineering/ai-agent-roadmap-2026-what-to-learn-build-skip.md)
-- [Agent Harness 工程化指南](./agent-engineering/agent-harness-engineering.md)
-- [Skill Engineering 指南](./agent-engineering/skillify-skill-engineering-guide.md)
+- [AI Agent 学习路线图 2026：什么值得学、什么值得造、什么直接跳过](../career/ai-agent-roadmap-2026-what-to-learn-build-skip.md)
+- [Agent Harness 工程化指南](./agent-harness-engineering.md)
+- [Skill Engineering 指南](./skillify-skill-engineering-guide.md)

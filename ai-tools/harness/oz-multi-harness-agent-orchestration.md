@@ -17,7 +17,7 @@ authors: "Zach Lloyd (@zachlloydtweets) / Warp"
 
 > **来源：** [Introducing multi-harness orchestration](https://x.com/zachlloydtweets/status/2056780898675167656) — Zach Lloyd (@zachlloydtweets) / Warp
 
-![Oz Multi-Harness](../image/oz-multi-harness-1.jpg)
+![Oz Multi-Harness](../../../image/oz-multi-harness-1.jpg)
 
 Warpspeed 发布了 **Oz** 的重大升级——使其成为市场上**首个真正多 Harness 的云 Agent 控制平面**。
 
