@@ -2,3 +2,17 @@
 # Do not re-create — all content belongs at root level
 knowledges/
 nowledges/
+
+# Runtime files (OpenClaw agent workspace)
+AGENTS.md
+SOUL.md
+TOOLS.md
+USER.md
+IDENTITY.md
+HEARTBEAT.md
+MEMORY.md
+memory/
+
+# Build tools
+gh
+gh-bin
