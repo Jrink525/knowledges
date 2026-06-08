@@ -1,0 +1,25 @@
+# Runtime files
+AGENTS.md
+SOUL.md
+TOOLS.md
+USER.md
+IDENTITY.md
+HEARTBEAT.md
+MEMORY.md
+GH_CONFIG_DIR
+gh
+gh-bin/gh
+gh-bin/
+.openclaw/
+memory/
+image/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Knowledge base paths (ensures no nested knowledges dir survives)
+knowledges/
+nowledges/
+
+# Skills
+skills/
