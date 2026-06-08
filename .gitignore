@@ -18,3 +18,4 @@ gh
 gh-bin
 __pycache__/
 skills/
+.openclaw/
