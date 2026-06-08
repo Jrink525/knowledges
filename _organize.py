@@ -287,6 +287,14 @@ CATEGORY_ALIASES = {
     "programming": "programming/java",
     # 其他
     "papers": "system-design",
+    # 运行时发现的未收录 category
+    "ai-engineering": "ai-tools",
+    "startup": "ai-tools",
+    "ai-agents": "ai-tools",
+    "prompt-engineering": "ai-tools",
+    "business": "ai-tools",
+    "vulnerability-research": "infrastructure",
+    "java": "programming/java",
 }
 
 
@@ -392,7 +400,7 @@ DOMAIN_PROFILES = {
             "连接池", "hikari", "druid",
             "缓存策略", "cache aside", "read through",
         },
-    }
+    },
     "sre": {
         "label": "SRE & 运维",
         "keywords": {
