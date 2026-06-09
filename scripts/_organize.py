@@ -30,7 +30,7 @@ from pathlib import Path
 
 WORKSPACE = Path("/home/node/.openclaw/workspace")
 GIT_REMOTE = "origin"
-GIT_BRANCH = "main"
+GIT_BRANCH = "master"
 
 # 顶级领域及其说明
 DOMAIN_PROFILES = {
