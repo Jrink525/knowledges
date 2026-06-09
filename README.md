@@ -162,36 +162,48 @@
   - `database/redis-single-threaded-high-qps.md`
   - `database/spring-boot-elasticsearch-complete-guide.md`
 
-### spring/ (`Spring 框架`)
-  - `spring/01-spring-boot-overview.md`
-  - `spring/02-ioc-dependency-injection.md`
-  - `spring/03-spring-aop.md`
-  - `spring/04-bean-lifecycle-scopes.md`
-  - `spring/05-annotations-complete-guide.md`
-  - `spring/06-spring-security-complete-guide.md`
-  - `spring/07-starters-autoconfiguration-deep-dive.md`
-  - `spring/08-actuator-embedded-server.md`
-  - `spring/09-spring-data-jpa-hibernate.md`
-  - `spring/10-spring-mvc-complete-guide.md`
-  - `spring/11-spring-testing-complete-guide.md`
-  - `spring/12-microservices-spring-cloud.md`
-  - `spring/13-architecture-layered-design.md`
-  - `spring/14-configuration-management-deep-dive.md`
-  - `spring/15-thymeleaf-view-template.md`
-  - `spring/bean-creation-time-statistics.md`
-  - `spring/controller-params-4-ways-springboot.md`
-  - `spring/dto-patterns-eliminate-boilerplate.md`
-  - `spring/research-direction-mining-best-practices.md`
-  - `spring/research-generative-methodology.md`
-  - `spring/spring-ai-agent-resources-top30.md`
-  - `spring/spring-boot-autoconfiguration.md`
-  - `spring/spring-boot-dynamic-json-5-solutions-security.md`
-  - `spring/spring-boot-roadmap-complete.md`
-  - `spring/spring-boot-top-10-features.md`
-  - `spring/spring-microservice-registry-comparison.md`
-  - `spring/spring-prototype-bean-runtime-params.md`
-  - `spring/spring-transaction-management.md`
-  - `spring/spring-transactional-complete-guide.md`
+### spring/boot-config/ (`spring/boot-config`)
+  - `spring/boot-config/01-spring-boot-overview.md`
+  - `spring/boot-config/05-annotations-complete-guide.md`
+  - `spring/boot-config/07-starters-autoconfiguration-deep-dive.md`
+  - `spring/boot-config/08-actuator-embedded-server.md`
+  - `spring/boot-config/14-configuration-management-deep-dive.md`
+  - `spring/boot-config/bean-creation-time-statistics.md`
+  - `spring/boot-config/spring-boot-autoconfiguration.md`
+  - `spring/boot-config/spring-boot-roadmap-complete.md`
+  - `spring/boot-config/spring-prototype-bean-runtime-params.md`
+
+### spring/cloud-microservice/ (`spring/cloud-microservice`)
+  - `spring/cloud-microservice/12-microservices-spring-cloud.md`
+  - `spring/cloud-microservice/spring-microservice-registry-comparison.md`
+
+### spring/data-jpa/ (`spring/data-jpa`)
+  - `spring/data-jpa/09-spring-data-jpa-hibernate.md`
+  - `spring/data-jpa/13-architecture-layered-design.md`
+  - `spring/data-jpa/spring-transaction-management.md`
+  - `spring/data-jpa/spring-transactional-complete-guide.md`
+
+### spring/ioc-aop/ (`spring/ioc-aop`)
+  - `spring/ioc-aop/02-ioc-dependency-injection.md`
+  - `spring/ioc-aop/03-spring-aop.md`
+  - `spring/ioc-aop/04-bean-lifecycle-scopes.md`
+  - `spring/ioc-aop/research-direction-mining-best-practices.md`
+  - `spring/ioc-aop/research-generative-methodology.md`
+
+### spring/mvc-web/ (`spring/mvc-web`)
+  - `spring/mvc-web/10-spring-mvc-complete-guide.md`
+  - `spring/mvc-web/15-thymeleaf-view-template.md`
+  - `spring/mvc-web/controller-params-4-ways-springboot.md`
+  - `spring/mvc-web/dto-patterns-eliminate-boilerplate.md`
+  - `spring/mvc-web/spring-ai-agent-resources-top30.md`
+  - `spring/mvc-web/spring-boot-dynamic-json-5-solutions-security.md`
+  - `spring/mvc-web/spring-boot-top-10-features.md`
+
+### spring/security/ (`spring/security`)
+  - `spring/security/06-spring-security-complete-guide.md`
+
+### spring/testing/ (`spring/testing`)
+  - `spring/testing/11-spring-testing-complete-guide.md`
 
 ### sre/ (`SRE & 运维`)
   - `sre/spring-boot-logging-from-zero-to-hero.md`
@@ -247,5 +259,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-09 08:19 UTC]_
+_[自动生成于 2026-06-09 08:53 UTC]_
 

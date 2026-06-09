@@ -6,16 +6,17 @@ _organize.py — 知识库自动分类 & README 更新 & Git Push
 
 职责：
   1. 将新文件自动分类到对应子目录（基于内容关键词打分）
-  2. 更新 README.md 目录树
-  3. Git add / commit / push（排除 OpenClaw 运行时文件）
+  2. 单目录超过 20 篇 .md 文件时自动拆分到子域
+  3. 更新 README.md 目录树
+  4. Git add / commit / push（排除 OpenClaw 运行时文件）
 
 安全规则：
-  - spring/ 和 programming/ 跳过子域分类（历史保护）
   - 已有子目录中的文件不重新分类
   - 绝不提交：AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md,
     HEARTBEAT.md, MEMORY.md, memory/, .openclaw/, .gitignore 等运行时文件
 """
 
+import fnmatch
 import json
 import os
 import re
@@ -31,6 +32,7 @@ from pathlib import Path
 WORKSPACE = Path("/home/node/.openclaw/workspace")
 GIT_REMOTE = "origin"
 GIT_BRANCH = "master"
+THRESHOLD_SPLIT = 20  # 单目录超过此数量的 .md 文件即拆分子域
 
 # 顶级领域及其说明
 DOMAIN_PROFILES = {
@@ -47,9 +49,12 @@ DOMAIN_PROFILES = {
     "image":          "文章图片",
 }
 
-# ai-tools 子域分类配置
+# 各领域的子域分类配置
+# 新增 spring/ 和 programming/ 子域分类
 SUBDOMAIN_PROFILES = {
+    # ── ai-tools ──
     "harness": {
+        "domain": "ai-tools",
         "label": "agent Harness & 架构模式",
         "keywords": [
             "harness", "orchestrat", "agent loop", "workflow", "pipeline",
@@ -61,6 +66,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "inference": {
+        "domain": "ai-tools",
         "label": "推理 & 模型原理",
         "keywords": [
             "llm", "inference", "model", "gpu", "memory bandwidth",
@@ -71,6 +77,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "tooling": {
+        "domain": "ai-tools",
         "label": "工具配置 & 工作流",
         "keywords": [
             "claude code", "setup", "config", "trick", "hack",
@@ -82,6 +89,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "autoresearch": {
+        "domain": "ai-tools",
         "label": "自动研究 & Agent",
         "keywords": [
             "autoresearch", "research agent", "morning brief",
@@ -91,6 +99,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "career": {
+        "domain": "ai-tools",
         "label": "职业 & 工程实践",
         "keywords": [
             "career", "engineer", "senior", "promotion", "skill",
@@ -100,6 +109,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "enterprise": {
+        "domain": "ai-tools",
         "label": "企业级方案",
         "keywords": [
             "enterprise", "production", "sandbox", "infrastructure",
@@ -109,6 +119,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "patterns": {
+        "domain": "ai-tools",
         "label": "设计模式 & 最佳实践",
         "keywords": [
             "pattern", "best practice", "design pattern",
@@ -117,6 +128,7 @@ SUBDOMAIN_PROFILES = {
         ],
     },
     "ml-research": {
+        "domain": "ai-tools",
         "label": "ML 研究 & 论文",
         "keywords": [
             "paper", "arxiv", "research", "experiment",
@@ -124,10 +136,141 @@ SUBDOMAIN_PROFILES = {
             "dataset", "evaluation metric", "ablation",
         ],
     },
+    # ── spring ──
+    "ioc-aop": {
+        "domain": "spring",
+        "label": "IoC & AOP",
+        "keywords": [
+            "ioc", "inversion of control", "dependency injection", "di",
+            "aop", "aspect", "pointcut", "advice", "join point",
+            "proxy", "cglib", "jdk proxy", "bean lifecycl",
+            "bean scope", "singleton", "prototype", "component scan",
+            "autowired", "qualifier", "bean factory",
+        ],
+    },
+    "mvc-web": {
+        "domain": "spring",
+        "label": "Spring MVC & Web",
+        "keywords": [
+            "mvc", "controller", "rest", "restful", "restcontroller",
+            "requestmapping", "getmapping", "postmapping",
+            "requestbody", "responsebody", "requestparam", "pathvariable",
+            "view", "thymeleaf", "template", "jsp", "freemarker",
+            "http", "servlet", "filter", "interceptor", "cors",
+            "exception handler", "valid", "validation",
+        ],
+    },
+    "data-jpa": {
+        "domain": "spring",
+        "label": "Data & JPA",
+        "keywords": [
+            "jpa", "hibernate", "spring data", "repository",
+            "entity", "table", "column", "crud", "jparepository",
+            "query", "jpql", "native query", "specification",
+            "transaction", "transactional", "propagation",
+            "isolation", "locking", "pessimistic", "optimistic",
+            "n+1", "fetch type", "lazy", "eager", "cascade",
+        ],
+    },
+    "security": {
+        "domain": "spring",
+        "label": "Security & 认证授权",
+        "keywords": [
+            "security", "authentication", "authorization", "oauth",
+            "jwt", "token", "login", "logout", "session",
+            "csrf", "cors", "filter chain", "security config",
+            "userdetails", "password encoder", "role", "permission",
+            "method security", "preauthorize",
+        ],
+    },
+    "boot-config": {
+        "domain": "spring",
+        "label": "Spring Boot & 配置",
+        "keywords": [
+            "spring boot", "autoconfiguration", "starter",
+            "actuator", "health", "metrics", "embedded server",
+            "tomcat", "jetty", "undertow", "application.yml",
+            "application.properties", "configuration", "config",
+            "profile", "devtools", "banner", "factory",
+            "external config", "property source",
+        ],
+    },
+    "cloud-microservice": {
+        "domain": "spring",
+        "label": "Cloud & 微服务",
+        "keywords": [
+            "microservice", "cloud", "eureka", "nacos", "consul",
+            "gateway", "zuul", "spring cloud gateway",
+            "load balance", "ribbon", "feign", "openfeign",
+            "circuit breaker", "resilience4j", "hystrix",
+            "config server", "bus", "stream", "sleuth",
+            "distributed", "service discovery", "api gateway",
+        ],
+    },
+    "testing": {
+        "domain": "spring",
+        "label": "测试",
+        "keywords": [
+            "test", "testing", "junit", "mockito", "mock",
+            "testcontainers", "integration test", "unit test",
+            "springboottest", "webmvctest", "datajpatest",
+            "test slice", "assert", "assertj", "hamcrest",
+            "tdd", "bdd", "given", "cucumber",
+        ],
+    },
+    # ── programming ──
+    "java": {
+        "domain": "programming",
+        "label": "Java",
+        "keywords": [
+            "java", "jvm", "jdk", "class", "interface",
+            "stream", "lambda", "optional", "functional",
+            "concurrency", "thread", "executor", "lock", "synchronized",
+            "memory model", "gc", "garbage", "jvm",
+            "collection", "list", "map", "set",
+            "generics", "annotation", "reflection",
+        ],
+    },
+    "python": {
+        "domain": "programming",
+        "label": "Python",
+        "keywords": [
+            "python", "pip", "venv", "virtualenv", "django",
+            "flask", "fastapi", "pandas", "numpy", "jupyter",
+            "async", "coroutine", "asyncio",
+        ],
+    },
+    "go": {
+        "domain": "programming",
+        "label": "Go",
+        "keywords": [
+            "golang", "go ", "goroutine", "channel", "interface{}",
+            "defer", "go mod",
+        ],
+    },
+    "database": {
+        "domain": "programming",
+        "label": "数据库 / SQL",
+        "keywords": [
+            "mysql", "postgresql", "sql", "database", "redis",
+            "mongodb", "elasticsearch", "nosql", "query",
+            "index", "transaction", "acid", "sharding",
+        ],
+    },
+    "devops": {
+        "domain": "programming",
+        "label": "DevOps / 运维",
+        "keywords": [
+            "docker", "kubernetes", "k8s", "jenkins", "ci/cd",
+            "github action", "gitlab ci", "ansible", "terraform",
+            "monitoring", "grafana", "prometheus", "linux",
+            "shell", "bash", "deploy",
+        ],
+    },
 }
 
 # 保护目录：这些目录下的文件不被重新分类到子域
-SKIP_SUBDOMAIN_CLASSIFY = {"spring", "programming", "papers", "skills", "scripts", "image"}
+SKIP_SUBDOMAIN_CLASSIFY = {"papers", "skills", "scripts", "image"}
 
 # 绝不提交的路径模式（glob 相对路径）
 EXCLUDE_PATTERNS = [
@@ -156,7 +299,6 @@ GIT_USER_EMAIL = "jarvis@openclaw.ai"
 def should_exclude(path: str) -> bool:
     """检查路径是否应被 git 排除"""
     for pat in EXCLUDE_PATTERNS:
-        import fnmatch
         if fnmatch.fnmatch(path, pat):
             return True
     return False
@@ -192,6 +334,15 @@ def classify_by_content(filepath: Path, profiles: dict) -> str | None:
     return max(scores, key=scores.get)
 
 
+def get_subdomain_profiles_for(domain: str) -> dict | None:
+    """返回指定 domain 的子域分类配置（过滤 SUBDOMAIN_PROFILES）"""
+    result = {}
+    for key, profile in SUBDOMAIN_PROFILES.items():
+        if profile.get("domain") == domain:
+            result[key] = profile
+    return result if result else None
+
+
 def get_all_markdown_files(base_dir: Path) -> list[Path]:
     """获取所有 .md 文件，排除 memory/ 和 workspace 根目录下运行时文件"""
     results = []
@@ -209,36 +360,79 @@ def get_all_markdown_files(base_dir: Path) -> list[Path]:
     return sorted(results)
 
 
-def classify_new_root_files():
-    """将 ai-tools/ 根部的 .md 文件移动到合适的子目录
-    
-    注意：只有 ai-tools/ 有子域分类配置，其他目录保持扁平。
+def classify_domain_root_files(domain: str) -> list:
+    """将指定 domain 根部的 .md 文件移动到合适的子目录"""
+    moves = []
+    domain_dir = WORKSPACE / domain
+    if not domain_dir.is_dir():
+        return moves
+    if domain in SKIP_SUBDOMAIN_CLASSIFY:
+        return moves
+
+    profiles = get_subdomain_profiles_for(domain)
+    if not profiles:
+        return moves
+
+    # 只处理 domain 直接子级的 .md 文件（不在子目录中的）
+    for f in sorted(domain_dir.glob("*.md")):
+        if f.name == "README.md":
+            continue
+        sub_key = classify_by_content(f, profiles)
+        if sub_key:
+            target_dir = domain_dir / sub_key
+            target_dir.mkdir(parents=True, exist_ok=True)
+            target = target_dir / f.name
+            if target.exists():
+                print(f"  ⚠️  目标已存在，跳过: {target}")
+                continue
+            f.rename(target)
+            moves.append((f.name, domain, sub_key))
+            print(f"  📦 {domain}/{f.name} → {domain}/{sub_key}/")
+
+    return moves
+
+
+def auto_split_oversized_dirs() -> list:
+    """
+    检查所有 domain 目录，如果根目录下有超过 THRESHOLD_SPLIT 个 .md 文件，
+    则自动按内容分类到子目录。
     """
     moves = []
     for domain in DOMAIN_PROFILES:
-        if domain != "ai-tools":
-            continue
-        domain_dir = WORKSPACE / domain
-        if not domain_dir.is_dir():
-            continue
         if domain in SKIP_SUBDOMAIN_CLASSIFY:
             continue
 
-        # 只处理 domain 直接子级的 .md 文件（不在子目录中的）
-        for f in sorted(domain_dir.glob("*.md")):
-            if f.name == "README.md":
-                continue
-            sub_key = classify_by_content(f, SUBDOMAIN_PROFILES)
+        domain_dir = WORKSPACE / domain
+        if not domain_dir.is_dir():
+            continue
+
+        root_md_files = list(domain_dir.glob("*.md"))
+        # 排除 README.md
+        root_md_files = [f for f in root_md_files if f.name != "README.md"]
+
+        if len(root_md_files) <= THRESHOLD_SPLIT:
+            continue
+
+        profiles = get_subdomain_profiles_for(domain)
+        if not profiles:
+            print(f"  ⚠️  {domain}/ 有 {len(root_md_files)} 个文件但未配置子域分类，跳过")
+            continue
+
+        print(f"  🔀 {domain}/ 超过 {THRESHOLD_SPLIT} 篇（{len(root_md_files)} 篇），开始自动拆分...")
+        for f in root_md_files:
+            sub_key = classify_by_content(f, profiles)
             if sub_key:
                 target_dir = domain_dir / sub_key
                 target_dir.mkdir(parents=True, exist_ok=True)
                 target = target_dir / f.name
                 if target.exists():
-                    print(f"  ⚠️  目标已存在，跳过: {target}")
+                    print(f"    ⚠️  目标已存在，跳过: {target}")
                     continue
                 f.rename(target)
                 moves.append((f.name, domain, sub_key))
-                print(f"  📦 {domain}/{f.name} → {domain}/{sub_key}/")
+                print(f"    📦 {domain}/{f.name} → {domain}/{sub_key}/")
+            else:
+                print(f"    ⚠️  {domain}/{f.name} 无法匹配子域，保留原位")
 
     return moves
 
@@ -337,7 +531,7 @@ def update_readme(files: list[Path]):
     print(f"  ✅ README.md 已更新（{len(files)} 篇）")
 
 
-def git_commit_and_push(moves: list, classify_count: int):
+def git_commit_and_push(moves: list, split_moves: list, classify_count: int):
     """Git add / commit / push，排除运行时文件"""
     os.chdir(str(WORKSPACE))
 
@@ -361,7 +555,7 @@ def git_commit_and_push(moves: list, classify_count: int):
             continue
         changes.append((status, path))
 
-    if not changes and not moves:
+    if not changes and not moves and not split_moves:
         print("  ℹ️  没有需要提交的变更")
         return
 
@@ -387,10 +581,20 @@ def git_commit_and_push(moves: list, classify_count: int):
     commit_lines = ["chore: auto-organize knowledge base"]
     if moves:
         commit_lines.append("")
+        commit_lines.append(f"📦 新文件分类 ({len(moves)}):")
         for name, domain, sub in moves:
-            commit_lines.append(f"- Move {domain}/{name} → {domain}/{sub}/")
+            commit_lines.append(f"  - {domain}/{name} → {domain}/{sub}/")
+    if split_moves:
+        commit_lines.append("")
+        commit_lines.append(f"🔀 超过 {THRESHOLD_SPLIT} 篇阈值自动拆分 ({len(split_moves)}):")
+        # 按 domain 分组展示
+        by_domain = {}
+        for name, domain, sub in split_moves:
+            by_domain.setdefault(domain, []).append((name, sub))
+        for domain, items in sorted(by_domain.items()):
+            commit_lines.append(f"  {domain}/: {len(items)} 个文件")
     if classify_count > 0:
-        commit_lines.append(f"- Auto-classified {classify_count} file(s)")
+        commit_lines.append(f"  Auto-classified {classify_count} file(s)")
 
     commit_msg = "\n".join(commit_lines)
 
@@ -423,13 +627,23 @@ def main():
     print("📚 _organize.py — 知识库自动整理")
     print(f"   工作目录: {WORKSPACE}")
     print(f"   git remote: {GIT_REMOTE}")
+    print(f"   拆分阈值: {THRESHOLD_SPLIT} 篇")
     print("=" * 50)
     print()
 
-    # Step 1: 分类新文件
+    # Step 1: 分类新文件（所有有子域配置的 domain）
     print("🔍 Step 1: 分类新文件...")
-    moves = classify_new_root_files()
-    print(f"   🔀 移动了 {len(moves)} 个文件\n")
+    all_moves = []
+    for domain in DOMAIN_PROFILES:
+        m = classify_domain_root_files(domain)
+        all_moves.extend(m)
+    print(f"   🔀 移动了 {len(all_moves)} 个文件\n")
+
+    # Step 1b: 自动拆分超过阈值的目录
+    print(f"📏 Step 1b: 检查超过 {THRESHOLD_SPLIT} 篇的目录...")
+    split_moves = auto_split_oversized_dirs()
+    print(f"   🔀 拆分移动了 {len(split_moves)} 个文件\n")
+    all_moves.extend(split_moves)
 
     # Step 2: 收集所有文件
     print("📂 Step 2: 扫描知识库...")
@@ -443,7 +657,7 @@ def main():
 
     # Step 4: Git commit & push
     print("🚀 Step 4: Git commit & push...")
-    git_commit_and_push(moves, len(moves))
+    git_commit_and_push(all_moves, split_moves, len(all_moves))
     print()
 
     print("✅ 完成！")
