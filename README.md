@@ -6,9 +6,6 @@
 
 ## 📂 目录结构
 
-### ai-tools/ (`AI 工具 & 编程助手`)
-  - `ai-tools/obsidian-claude-note-system.md`
-
 ### ai-tools/autoresearch/ (`ai-tools/autoresearch`)
   - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
   - `ai-tools/autoresearch/claude-research-agent-morning-brief.md`
@@ -61,6 +58,7 @@
   - `ai-tools/harness/how-teams-scale-claude-code-across-monorepos.md`
   - `ai-tools/harness/how-to-build-ai-agents-2026-full-guide.md`
   - `ai-tools/harness/langsmith-engine-building-agent-for-improving-agents.md`
+  - `ai-tools/harness/loop-engineering-addy-osmani.md`
   - `ai-tools/harness/mattpocock-skills-workbook.md`
   - `ai-tools/harness/mcp-core-architecture-explained.md`
   - `ai-tools/harness/oz-multi-harness-agent-orchestration.md`
@@ -95,6 +93,7 @@
   - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
   - `ai-tools/inference/how-llms-actually-work.md`
   - `ai-tools/inference/how-to-actually-use-claude.md`
+  - `ai-tools/inference/how-we-build-evals-for-deep-agents.md`
   - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
   - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
   - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
@@ -150,6 +149,7 @@
   - `ai-tools/tooling/most-people-use-10-percent-of-claude-25-steps.md`
   - `ai-tools/tooling/npx-skills-add-flow.md`
   - `ai-tools/tooling/obsidian-business-ops-vault-with-claude-n8n.md`
+  - `ai-tools/tooling/obsidian-claude-note-system.md`
   - `ai-tools/tooling/obsidian-dashboard-everything-that-matters-today.md`
   - `ai-tools/tooling/obsidian-personal-operating-system.md`
   - `ai-tools/tooling/prompt-master-workbook.md`
@@ -161,28 +161,6 @@
   - `database/redis-outage-sre-response.md`
   - `database/redis-single-threaded-high-qps.md`
   - `database/spring-boot-elasticsearch-complete-guide.md`
-
-### infrastructure/ (`基础设施 & 网络`)
-  - `infrastructure/fastjson-deserialization-workbook.md`
-  - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
-  - `infrastructure/http-server-from-scratch-c.md`
-  - `infrastructure/langsmith-sandbox-auth-proxy.md`
-  - `infrastructure/obsidian-beginner-complete-tutorial.md`
-  - `infrastructure/openclaw-weixin-network-requirements.md`
-  - `infrastructure/spring-boot-api-encryption.md`
-
-### programming/java/ (`Java`)
-  - `programming/java/SKILL.md`
-  - `programming/java/java-8-function-complete-guide.md`
-  - `programming/java/java-backend-security-concepts.md`
-  - `programming/java/java-comparator-deep-dive.md`
-  - `programming/java/java-concurrency-5-tips-enhanced.md`
-  - `programming/java/java-concurrency-complete-graph.md`
-  - `programming/java/java-concurrency-fundamentals.md`
-  - `programming/java/java-jvm-memory-model.md`
-  - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
-  - `programming/java/spring-controller-return-types-complete-guide.md`
-  - `programming/java/spring-event-comprehensive-guide.md`
 
 ### spring/ (`Spring 框架`)
   - `spring/01-spring-boot-overview.md`
@@ -224,9 +202,40 @@
   - `system-design/spring-events-complete-guide.md`
   - `system-design/top-10-eda-pitfalls-victor-rentea.md`
 
+### programming/java/ (`programming/java`)
+  - `programming/java/SKILL.md`
+  - `programming/java/java-8-function-complete-guide.md`
+  - `programming/java/java-backend-security-concepts.md`
+  - `programming/java/java-comparator-deep-dive.md`
+  - `programming/java/java-concurrency-5-tips-enhanced.md`
+  - `programming/java/java-concurrency-complete-graph.md`
+  - `programming/java/java-concurrency-fundamentals.md`
+  - `programming/java/java-jvm-memory-model.md`
+  - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
+  - `programming/java/spring-controller-return-types-complete-guide.md`
+  - `programming/java/spring-event-comprehensive-guide.md`
+
+### infrastructure/ (`基础设施 & 网络`)
+  - `infrastructure/fastjson-deserialization-workbook.md`
+  - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
+  - `infrastructure/http-server-from-scratch-c.md`
+  - `infrastructure/langsmith-sandbox-auth-proxy.md`
+  - `infrastructure/obsidian-beginner-complete-tutorial.md`
+  - `infrastructure/openclaw-weixin-network-requirements.md`
+  - `infrastructure/spring-boot-api-encryption.md`
+
+### papers/ (`论文笔记`)
+  - `papers/README.md`
+
+### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
+  - `skills/paper-deep-reading/SKILL.md`
+
+### skills/read-content-from-web/ (`skills/read-content-from-web`)
+  - `skills/read-content-from-web/SKILL.md`
+
 ---
 
-总计 **186** 篇知识文档
+总计 **192** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -238,5 +247,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-08 13:01 UTC]_
+_[自动生成于 2026-06-09 08:19 UTC]_
 
