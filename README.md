@@ -13,6 +13,7 @@
   - `ai-tools/autoresearch/report.md`
 
 ### ai-tools/career/ (`ai-tools/career`)
+  - `ai-tools/career/claude-code-learn-any-field.md`
   - `ai-tools/career/dont-outsource-the-learning.md`
   - `ai-tools/career/forward-deployed-engineering-101.md`
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
@@ -252,7 +253,7 @@
 
 ---
 
-总计 **197** 篇知识文档
+总计 **198** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -264,5 +265,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-11 07:09 UTC]_
+_[自动生成于 2026-06-11 07:27 UTC]_
 
