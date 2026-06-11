@@ -17,6 +17,7 @@
   - `ai-tools/career/forward-deployed-engineering-101.md`
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
+  - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
   - `ai-tools/career/why-senior-developers-fail-to-communicate-their-expertise.md`
 
@@ -50,6 +51,7 @@
   - `ai-tools/harness/build-your-own-agent-harness-iii.md`
   - `ai-tools/harness/build-your-own-mcp-server.md`
   - `ai-tools/harness/cloud-agent-infrastructure-creao-peter-pang.md`
+  - `ai-tools/harness/design-agent-loop-guide.md`
   - `ai-tools/harness/dynamic-workflows-claude-code-thariq.md`
   - `ai-tools/harness/evaluating-agents-md-helpful-coding-agents.md`
   - `ai-tools/harness/harness-enterprise-ai-infrastructure-2026.md`
@@ -88,8 +90,10 @@
   - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
   - `ai-tools/inference/embabel-agent-framework-best-practices.md`
   - `ai-tools/inference/evaluating-agents-md-helpful-coding-agents-deep-reading.md`
+  - `ai-tools/inference/fable5-loop-design.md`
   - `ai-tools/inference/freecodecamp-spring-ai-full-course-notes.md`
   - `ai-tools/inference/from-assistants-to-agents-self-improving-agentic-systems.md`
+  - `ai-tools/inference/github-copilot-memory-architecture.md`
   - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
   - `ai-tools/inference/how-llms-actually-work.md`
   - `ai-tools/inference/how-to-actually-use-claude.md`
@@ -105,6 +109,7 @@
   - `ai-tools/inference/rl-interview-questions-2026.md`
   - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
   - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
+  - `ai-tools/inference/structured-output-grpo.md`
   - `ai-tools/inference/voice-agent-full-guide.md`
   - `ai-tools/inference/voice-agent-memory-harder-than-you-think.md`
   - `ai-tools/inference/zero-to-ai-engineer-14-weeks.md`
@@ -137,6 +142,7 @@
   - `ai-tools/tooling/claude-code-large-codebase-best-practices.md`
   - `ai-tools/tooling/claude-code-memory-system-deep-dive.md`
   - `ai-tools/tooling/claude-code-routines-full-course.md`
+  - `ai-tools/tooling/claude-code-self-improving-loop.md`
   - `ai-tools/tooling/claude-code-settings-json-guide.md`
   - `ai-tools/tooling/claude-cowork-9-templates-mnilax.md`
   - `ai-tools/tooling/claude-five-levels-framework.md`
@@ -215,7 +221,6 @@
   - `system-design/top-10-eda-pitfalls-victor-rentea.md`
 
 ### programming/java/ (`programming/java`)
-  - `programming/java/SKILL.md`
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
   - `programming/java/java-comparator-deep-dive.md`
@@ -247,7 +252,7 @@
 
 ---
 
-总计 **192** 篇知识文档
+总计 **197** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -259,5 +264,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-09 08:53 UTC]_
+_[自动生成于 2026-06-11 06:58 UTC]_
 
