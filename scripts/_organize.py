@@ -535,37 +535,31 @@ def git_commit_and_push(moves: list, split_moves: list, classify_count: int):
     """Git add / commit / push，排除运行时文件"""
     os.chdir(str(WORKSPACE))
 
-    # git add — 只添加知识库文件 + skills + scripts
-    # 先列出变动
-    result = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True, text=True, timeout=15
+    # 没有任何变更，直接跳过
+    if not moves and not split_moves:
+        # 还是检查一下工作区是否有未跟踪的改动
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, timeout=15
+        )
+        has_meaningful_change = False
+        for line in result.stdout.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            path = line[3:].strip()
+            if not should_exclude(path) and path != "README.md":
+                has_meaningful_change = True
+                break
+        if not has_meaningful_change:
+            print("  ℹ️  没有需要提交的变更")
+            return
+
+    # git add -A: 自动处理新增/修改/删除/重命名，比手工拼路径更可靠
+    subprocess.run(
+        ["git", "add", "-A"],
+        capture_output=True, timeout=15
     )
-
-    changes = []
-    for line in result.stdout.strip().split("\n"):
-        if not line.strip():
-            continue
-        status = line[:2].strip()
-        path = line[3:].strip()
-        if should_exclude(path):
-            continue
-        if path.startswith(".git") or path == "README.md":
-            # README.md 会由我们手动 add
-            continue
-        changes.append((status, path))
-
-    if not changes and not moves and not split_moves:
-        print("  ℹ️  没有需要提交的变更")
-        return
-
-    # git add
-    add_paths = ["README.md"]
-    for _, path in changes:
-        add_paths.append(path)
-
-    if add_paths:
-        subprocess.run(["git", "add", "--"] + add_paths, capture_output=True, timeout=15)
 
     # 检查是否有 staged 变更
     result = subprocess.run(
