@@ -153,6 +153,7 @@
   - `ai-tools/tooling/feedback-loops-claude-code.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
+  - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
   - `ai-tools/tooling/most-people-use-10-percent-of-claude-25-steps.md`
   - `ai-tools/tooling/npx-skills-add-flow.md`
   - `ai-tools/tooling/obsidian-business-ops-vault-with-claude-n8n.md`
@@ -253,7 +254,7 @@
 
 ---
 
-总计 **198** 篇知识文档
+总计 **199** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -265,5 +266,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-11 07:27 UTC]_
+_[自动生成于 2026-06-11 15:15 UTC]_
 
