@@ -23,3 +23,13 @@ nowledges/
 
 # Skills (OpenClaw runtime, not part of knowledge base)
 skills/
+node_modules/
+tmp_*.mp4
+tmp_*.mp3
+tmp_*.wav
+*.wav
+chunk_*
+transcribe.mjs
+package.json
+package-lock.json
+claude-agent-sdk-transcript.txt
