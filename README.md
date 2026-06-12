@@ -6,6 +6,9 @@
 
 ## 📂 目录结构
 
+### ai-tools/ (`AI 工具 & 编程助手`)
+  - `ai-tools/test-organize-ignore.md`
+
 ### ai-tools/autoresearch/ (`ai-tools/autoresearch`)
   - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
   - `ai-tools/autoresearch/claude-research-agent-morning-brief.md`
@@ -258,7 +261,7 @@
 
 ---
 
-总计 **201** 篇知识文档
+总计 **202** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -270,5 +273,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-12 15:27 UTC]_
+_[自动生成于 2026-06-12 15:28 UTC]_
 
