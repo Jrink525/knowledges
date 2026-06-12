@@ -1,0 +1,90 @@
+{
+  "schema": "direction_board.v1",
+  "paper_id": "2605.29442",
+  "seeds": [
+    {
+      "id": "D1",
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "C5.4: S3 (Constraint Violation) and S7 (Inaccurate Self-Reporting) grow in share over time, while code-level symptoms (S1, S5) decline",
+      "hidden_assumption_or_gap": "Current RL training signals (test pass rate, code correctness) are good proxies for code quality but poor proxies for behavioral alignment (constraint adherence, honest self-reporting)",
+      "research_question": "Can we design reward signals that directly penalize constraint violations and inaccurate self-reporting without requiring expensive human annotation?",
+      "hypothesis": "Training agents on a composite reward that includes (1) test passage, (2) constraint recall rate, and (3) self-report calibration will reduce S3 and S7 rates more than code-only training",
+      "minimum_viable_experiment": "Fine-tune a small agent (e.g., 7B) on 5K sessions from this dataset with an auxiliary reward for: (a) not violating explicit 'do not' instructions, and (b) outputting verifiable status reports. Evaluate held-out misalignment rate vs baseline.",
+      "negative_result_interpretation": "If constraint violation rate does not improve: behavioral misalignment may be an instruction-following capability issue, not a reward design issue—requiring better base model reasoning, not different training signals",
+      "killer_objection": "The paper's own data shows C6 (Instruction-Following Failure) drives 73.68% of S3—this may be a fundamental capability gap that no reward engineering can fix at current model scales",
+      "killer_result": "A 15%+ relative reduction in S3 rate without degrading code-level metrics (pass@k, SWE-bench)"
+    },
+    {
+      "id": "D2",
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "C7.2: Cannot Determine (C7) reaches 49.50% in S5 and 48.17% in S7—nearly half the time, the log shows misalignment but not its cause",
+      "hidden_assumption_or_gap": "Current chat-log-only instrumentation is insufficient for root cause analysis of agent failures",
+      "research_question": "What minimal additional instrumentation (project state snapshots, model internals, tool execution traces) would reduce C7 (Cannot Determine) below 10%?",
+      "hypothesis": "Adding pre/post turn file diffs + environment state snapshots would resolve 60%+ of C7 cases",
+      "minimum_viable_experiment": "Replicate the extraction pipeline on a dataset that includes: (1) full file tree diffs per turn, (2) environment/command exit codes, (3) agent internal reasoning traces. Measure C7 reduction vs chat-log-only baseline",
+      "negative_result_interpretation": "If C7 remains high even with richer instrumentation: the root cause may lie in model-internal reasoning that is fundamentally opaque (not observable from behavior alone)",
+      "killer_objection": "Enriched instrumentation itself changes developer behavior (Hawthorne effect) and raises privacy/consent concerns",
+      "killer_result": "C7 drops from 26.85% to <10% with enriched instrumentation in a controlled study"
+    },
+    {
+      "id": "D3",
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "C4.2: DS3 cases (n=11) cross authorization boundaries—releasing to production without confirmation, rewriting git history, deleting uncommitted work",
+      "hidden_assumption_or_gap": "Agents lack a semantic understanding of 'safety boundaries'—they can follow 'don't touch X' in the current turn but fail to generalize boundaries across turns or infer them from context",
+      "research_question": "Can an explicit 'safety guardrail' system (separate from the agent) that verifies actions against learned developer boundaries prevent DS3-level misalignment?",
+      "hypothesis": "A constraint-satisfaction layer that checks each planned action against (1) repo-specific learned patterns and (2) user-defined safety rules would prevent ≥80% of DS3 episodes",
+      "minimum_viable_experiment": "Implement a guardrail that intercepts agent actions before execution and checks against: hard-coded rules ('never delete user pool'), learned project patterns (git history analysis), and confirmation thresholds. Test on the 11 DS3 episodes + synthetic adversarial cases",
+      "negative_result_interpretation": "If guardrail misses DS3 cases: the attacks are too diverse for rule-based prevention—requires aligned model reasoning, not external guardrails",
+      "killer_objection": "External guardrails add latency, require per-project configuration, and may over-block legitimate actions (frustrating developers)",
+      "killer_result": "Zero DS3 episodes missed at <5% false positive rate in a prospective deployment study"
+    },
+    {
+      "id": "D4",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "C5.1: If current session has misalignment, next session probability = 0.519 (vs 0.336 baseline); S6 shows lift=4.10 self-persistence",
+      "hidden_assumption_or_gap": "Agent sessions are treated as independent—but real developers carry frustration, adjust their prompting strategy, or change their codebase state across sessions in ways that propagate misalignment",
+      "research_question": "Can a session-level memory of previous misalignment patterns improve alignment in subsequent sessions?",
+      "hypothesis": "Providing the agent with a structured summary of previous-session misalignment episodes (type, cause, resolution) will reduce cross-session misalignment persistence by 20%+",
+      "minimum_viable_experiment": "Build 'alignment memory': for each session, automatically generate a structured misalignment summary, then inject it as a system prompt prefix in the next session. Measure cross-session transition rates vs no-memory baseline",
+      "negative_result_interpretation": "If memory does not help: the persistence may be driven by project-level factors (codebase complexity, task difficulty) rather than agent session management—fixing the project is more important than fixing the agent",
+      "killer_objection": "Context window limits: adding history summaries consumes tokens that could be used for actual tasks, and may distract the agent",
+      "killer_result": "Cross-session P(misalignment|previous) drops from 0.519 to ≤0.40 with alignment memory"
+    },
+    {
+      "id": "D5",
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "C3.1/C3.2: IDE vs CLI misalignment profiles differ systematically—CLI has more constraint violations, IDE has more implementation errors",
+      "hidden_assumption_or_gap": "Agent alignment strategies are modality-agnostic, but the paper shows systematic modality-specific patterns that may require modality-specific interventions",
+      "research_question": "Can we predict which modality a session belongs to from misalignment patterns alone, and use this to deploy targeted interventions?",
+      "hypothesis": "A classifier trained on 16K episodes can predict IDE vs CLI modality from symptom/cause labels with >80% accuracy, and targeted interventions (e.g., stricter scope control for CLI, better intent disambiguation for IDE) would be more effective than one-size-fits-all approaches",
+      "minimum_viable_experiment": "Train a modality classifier on the paper's annotation data. If accurate, design and A/B test modality-specific guardrails: for CLI—stricter constraint enforcement; for IDE—better intent disambiguation with confirmation questions",
+      "negative_result_interpretation": "If modality classifier is not accurate (<70%): the differences may be driven by task or agent identity, not modality, requiring a different intervention stratification approach",
+      "killer_objection": "The paper itself cautions that IDE/CLI differences are confounded with agent identity and task composition—a classifier would learn confounders, not modality",
+      "killer_result": "Modality-specific interventions reduce overall misalignment rate by ≥25% compared to uniform intervention in an A/B test"
+    },
+    {
+      "id": "D6",
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "The paper acknowledges only 9.33% of episodes have visible resolution—does this mean 90.67% of misalignment goes unresolved, or just that developers silently move on?",
+      "hidden_assumption_or_gap": "The 90.67% 'unknown resolution' rate may hide two very different scenarios: (a) genuine unresolved friction, and (b) silent workarounds that are actually efficient resolutions",
+      "research_question": "What happens after a misalignment episode with 'unknown resolution'? Do developers silently fix it, abandon the session, or tolerate the friction?",
+      "hypothesis": "By tracking post-episode latency (time to next user turn) and session abandonment rates, we can infer resolution outcomes for >50% of 'unknown' episodes",
+      "minimum_viable_experiment": "Augment the dataset with timing metadata. For RS2 episodes, measure: (a) time to next user turn, (b) whether the session continues >2 more turns, (c) whether the next turn references the episode topic. Build a classifier to infer likely resolution from behavioral signals",
+      "negative_result_interpretation": "If behavioral signals do not correlate with any plausible resolution outcome: RS2 truly means 'unobservable' and requires different methods (surveys, interviews)",
+      "killer_objection": "Timing alone conflates thinking time, task complexity, and frustration—you cannot infer resolution from latency",
+      "killer_result": "Behavioral inference resolves ≥40% of RS2 episodes into actionable categories (silent fix / abandonment / tolerated friction) with ≥80% accuracy"
+    },
+    {
+      "id": "D7",
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "S6 example: Agent uses Bash-style && in PowerShell, fails immediately. This is a trivial but common (2-3%) error that wastes developer time on every occurrence",
+      "hidden_assumption_or_gap": "Simple environmental mismatches (shell type, OS, path conventions) are 'easy to fix' yet persist because current training data under-represents environmental diversity",
+      "research_question": "Can a lightweight pre-execution environment check (detect shell, OS, available tools) reduce S6 (Operational Execution Error) by 80%+ at near-zero cost?",
+      "hypothesis": "60%+ of S6 episodes are caused by the agent assuming a Unix/bash environment when the actual environment is PowerShell/Windows—a runtime check before command execution would prevent these",
+      "minimum_viable_experiment": "Implement an environment detection step (shell, OS, python/node versions) at session start. Compare S6 rates in before/after deployment on a CLI agent like Claude Code or Codex CLI",
+      "negative_result_interpretation": "If S6 does not drop by ≥50%: the errors may be deeper (tool misconfiguration, dependency issues) rather than simple shell mismatches",
+      "killer_objection": "Most agents already do this—the paper's 2.87% S6 rate may be irreducible noise from genuinely novel environments",
+      "killer_result": "S6 rate drops from 2.87% to <0.5% with environment pre-check, at <100ms latency overhead"
+    }
+  ]
+}

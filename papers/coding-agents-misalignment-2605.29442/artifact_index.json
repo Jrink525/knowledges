@@ -1,0 +1,15 @@
+{
+  "schema": "paper-deep-reading.v1",
+  "paper_id": "2605.29442",
+  "paper_name": "coding-agents-misalignment",
+  "title": "How Coding Agents Fail Their Users: A Large-Scale Analysis of Developer-Agent Misalignment in 20,574 Real-World Sessions",
+  "source": "https://arxiv.org/html/2605.29442v1",
+  "read_at": "2026-06-12T15:37:00Z",
+  "artifacts": {
+    "report": "report.md",
+    "traceability_manifest": "traceability_manifest.json",
+    "latex_paragraphs": "latex_paragraphs.json",
+    "research_lens": "research_lens.json",
+    "direction_board": "direction_board.json"
+  }
+}

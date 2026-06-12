@@ -1,0 +1,17 @@
+{
+  "schema": "latex_paragraphs.v1",
+  "paper_id": "2605.29442",
+  "source": "arxiv_html (no LaTeX source available)",
+  "note": "Paragraphs extracted from arXiv HTML version (https://arxiv.org/html/2605.29442v1) rather than LaTeX source, as no .tex source was publicly available. Reference below is a structured summary of the paper's section organization from the HTML rendering.",
+  "sections": [
+    {"section": "1. Introduction", "paragraphs": 5, "content_brief": "Motivation, gap analysis, contribution statement, overview of 4 RQs, highlight of key findings"},
+    {"section": "2. Related Work", "paragraphs": 3, "content_brief": "2.1 Coding Agents in Developer Workflows, 2.2 Failure Analysis of Coding Agents, 2.3 Human-AI Alignment"},
+    {"section": "3. Methodology", "paragraphs": 8, "content_brief": "3.1 Datasets (SpecStory + SWE-chat), 3.2 Structured Misalignment Extraction, 3.3 Post-Extraction Validation, 3.4 Multi-Axial Annotation"},
+    {"section": "4. Results", "paragraphs": 22, "content_brief": "4.1 RQ1 (7 symptom + 7 cause categories with Table 2), 4.2 RQ2 (outcome/resolution with Table 3), 4.3 RQ3 (IDE vs CLI), 4.4 RQ4 (co-occurrence, cross-session persistence, temporal trends)"},
+    {"section": "5. Discussion", "paragraphs": 4, "content_brief": "Interaction symptoms as alignment gap, safety implications of dependence on developer review, log-based behavioral signals as path forward"},
+    {"section": "6. Limitations", "paragraphs": 4, "content_brief": "Selection bias, visibility restrictions, modality confounding, LLM-dependent annotation quality"},
+    {"section": "7. Ethics & Reproducibility", "paragraphs": 2, "content_brief": "Data ethics (public logs only, PII redaction), replication package at GitHub ND-SaNDwichLAB/coding-agent-misalignment"},
+    {"section": "A. Appendix", "paragraphs": 14, "content_brief": "A.1 Post-extraction validation details (Table 4), A.2 Per-axis annotation quality (Table 5), B Within-episode label structure (Table 6), C Outcome analysis (Table 7), D Structural/temporal effects (Figures 5-6, Table 8), E Representative episodes (S1-S7 examples)"}
+  ],
+  "total_paragraphs_approx": 62
+}

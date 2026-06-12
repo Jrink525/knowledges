@@ -1,0 +1,182 @@
+{
+  "schema": "traceability_manifest.v1",
+  "paper_id": "2605.29442",
+  "claims": [
+    {
+      "id": "C1.1",
+      "claim": "90.50% of misalignment episodes impose only effort and trust costs, not irreversible system damage.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.2 RQ2", "quote": "90.50% of episodes impose effort and trust costs rather than irreversible system damage", "context": "Table 3, DS1 row"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C1.2",
+      "claim": "91.49% of visible resolutions require explicit developer pushback (RV2).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.2 RQ2", "quote": "91.49% of these require explicit developer pushback", "context": "Table 3, Resolver RV2 row"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C1.3",
+      "claim": "Only 9.33% of episodes have visible resolution (RS1).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.2 RQ2", "quote": "visible resolution occurs in only 9.33% of episodes", "context": "Table 3, RS1 row"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C2.1",
+      "claim": "Seven recurring symptom categories characterize developer-agent misalignment.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.1 RQ1", "quote": "Across the 16,118 validated episodes, seven substantive symptom categories emerge", "context": "Table 2"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C2.2",
+      "claim": "Developer Constraint Violation (S3) is the most prevalent symptom at 38.33%.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.1 RQ1", "quote": "S3 is the most prevalent symptom", "context": "Table 2, 73.68% of S3 episodes attributed to C6"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C2.3",
+      "claim": "Instruction-Following Failure (C6) is the largest cause at 36.49%.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.1 RQ1", "quote": "Instruction-Following Failure (C6, 36.49%) is the largest cause, with 94.18% of attributions supported by direct log evidence", "context": "Table 2"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C2.4",
+      "claim": "73.68% of S3 episodes are attributed to C6 (Instruction-Following Failure).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.1 RQ1", "quote": "73.68% of S3 episodes are attributed to C6 (Instruction-Following Failure)", "context": "Detailed S3 analysis"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C3.1",
+      "claim": "CLI sessions are substantially more prone to constraint violations (S3: 49.49% vs 32.26%) and instruction-following failures (C6: 48.50% vs 29.96%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.3 RQ3", "quote": "S3 (Developer Constraint Violation) is substantially more prevalent in CLI sessions (49.49% vs. 32.26%)", "context": "Table 2 IDE/CLI breakdown"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C3.2",
+      "claim": "IDE sessions have nearly 3x more faulty implementations (S5: 22.89% vs 8.49%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.3 RQ3", "quote": "S5 (Faulty Implementation) is nearly three times more common in IDE sessions (22.89% vs. 8.49%)", "context": "Table 2"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C3.3",
+      "claim": "IDE sessions exhibit higher per-turn misalignment rate (0.132 vs 0.051).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.3 RQ3", "quote": "IDE sessions exhibit higher per-turn misalignment (0.132 vs. 0.051)", "context": "Modality comparison"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C4.1",
+      "claim": "CLI episodes more often affect project state (31.03% vs 12.70%) and external state (7.82% vs 1.60%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.3 RQ3", "quote": "CLI episodes more often affect project state (31.03% vs. 12.70%) and external state (7.82% vs. 1.60%)", "context": "Damage locus analysis"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C4.2",
+      "claim": "DS3 episodes (n=11) shift toward external state (45.45%) and project state (36.36%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.2 RQ2", "quote": "DS3 more often affects project state (36.36%) or external state (45.45%)", "context": "Table 7"}
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C5.1",
+      "claim": "Misalignment persists across adjacent sessions: P(misalignment|previous)=0.519 vs baseline 0.336 (+54.46%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "If the current session contains any misalignment, the probability of misalignment in the next session is 0.519, compared with 0.336 otherwise, a 54.46% increase", "context": "Cross-session persistence"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C5.2",
+      "claim": "All seven symptoms show above-chance self-persistence across sessions; strongest for S6 (lift=4.10) and S5 (lift=1.61).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "All seven symptoms show above-chance self-persistence along the diagonal, with the strongest effects for S6 (Operational Execution Error; 4.10) and S5 (Faulty Implementation; 1.61)", "context": "Transition matrix"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C5.3",
+      "claim": "Overall misalignment rate per user turn declines significantly over time (slope=-2.64x10^-4/day, p<10^-40).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "the overall misalignment rate per user turn declines significantly (slope -2.64x10^-4 per day, p<10^-40)", "context": "Temporal trends"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C5.4",
+      "claim": "S3 (Constraint Violation) and S7 (Inaccurate Self-Reporting) grow in share over time, while S1, S4, S5 decline.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "the daily shares of S3 (Developer Constraint Violation) and S7 (Inaccurate Self-Reporting) rise, whereas those of S1 (Wrong Project Diagnosis), S4 (Self-Initiated Overreach), and S5 (Faulty Implementation) fall", "context": "Table 8, Figure 6"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C6.1",
+      "claim": "S2 and S4 show the strongest within-session co-occurrence (lift=1.39).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "S2 (Misread Developer Intent) and S4 (Self-Initiated Overreach) show the strongest association (lift = 1.39)", "context": "Within-session co-occurrence"}
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C6.2",
+      "claim": "S3 co-occurs with S1 and S5 below chance (0.71 and 0.75), suggesting constraint adherence and technical correctness are distinct facets.",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.4 RQ4", "quote": "S3 (Developer Constraint Violation) co-occurs with S5 and S1 (Wrong Project Diagnosis) below chance (0.71 and 0.75)", "context": "Co-occurrence analysis"}
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C7.1",
+      "claim": "Only 2.99% of resolved episodes are agent self-corrected (RV1).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.2 RQ2", "quote": "2.99% are self-corrected (RV1)", "context": "Table 3"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C7.2",
+      "claim": "Cannot Determine (C7, 26.85%) is concentrated in symptoms dependent on hidden state (S5: 49.50%, S7: 48.17%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "4.1 RQ1", "quote": "C7 is concentrated in symptoms dependent on hidden project or execution state, reaching 49.50% in S5 (Faulty Implementation) and 48.17% in S7 (Inaccurate Self-Reporting)", "context": "Cause analysis"}
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C8.1",
+      "claim": "Post-extraction validation retained 16,118 of 29,896 episodes (53.9%), with comparable IDE/CLI rates (54.1% and 53.4%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "3.3", "quote": "validation retained 16,118 of 29,896 episodes (53.9%), with comparable rates across IDE and CLI sessions (54.1% and 53.4%)", "context": "Validation results"}
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C8.2",
+      "claim": "Observational blind spots account for 57.72% of invalid extractions, exceeding normative prior bias (42.28%).",
+      "evidence": [
+        {"source": "arxiv_html", "section": "A.1", "quote": "observational blind spots account for the majority of invalid extractions (57.72%), exceeding normative prior bias (42.28%)", "context": "Table 4"}
+      ],
+      "confidence": "medium"
+    }
+  ]
+}

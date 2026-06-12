@@ -250,6 +250,9 @@
 ### papers/ (`论文笔记`)
   - `papers/README.md`
 
+### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
+  - `papers/coding-agents-misalignment-2605.29442/report.md`
+
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
 
@@ -258,7 +261,7 @@
 
 ---
 
-总计 **201** 篇知识文档
+总计 **202** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -270,5 +273,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-12 15:30 UTC]_
+_[自动生成于 2026-06-12 16:13 UTC]_
 
