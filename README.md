@@ -10,6 +10,7 @@
   - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
   - `ai-tools/autoresearch/claude-research-agent-morning-brief.md`
   - `ai-tools/autoresearch/evo-self-improving-agent-harness-autoresearch.md`
+  - `ai-tools/autoresearch/how-to-be-good-at-research.md`
   - `ai-tools/autoresearch/report.md`
 
 ### ai-tools/career/ (`ai-tools/career`)
@@ -222,6 +223,9 @@
   - `system-design/spring-events-complete-guide.md`
   - `system-design/top-10-eda-pitfalls-victor-rentea.md`
 
+### programming/go/ (`programming/go`)
+  - `programming/go/netty-websocket-springboot-practical-guide.md`
+
 ### programming/java/ (`programming/java`)
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
@@ -254,7 +258,7 @@
 
 ---
 
-总计 **199** 篇知识文档
+总计 **201** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -266,5 +270,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-11 15:18 UTC]_
+_[自动生成于 2026-06-12 15:22 UTC]_
 
