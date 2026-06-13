@@ -34,6 +34,7 @@
   - `ai-tools/enterprise/4-agent-content-production-system.md`
   - `ai-tools/enterprise/agent-sandbox-infrastructure.md`
   - `ai-tools/enterprise/agentic-search-context-engineering.md`
+  - `ai-tools/enterprise/ai-trillion-dollar-opportunity-context-graphs.md`
   - `ai-tools/enterprise/enterprise-context-layer-prukalpa.md`
 
 ### ai-tools/harness/ (`ai-tools/harness`)
@@ -134,6 +135,9 @@
   - `ai-tools/tooling/7-days-claude-ai-employee-guide.md`
   - `ai-tools/tooling/agent-memory-framework-remember-cite-forget.md`
   - `ai-tools/tooling/ai-automation-service-guide.md`
+  - `ai-tools/tooling/build-ai-agents-2026.md`
+  - `ai-tools/tooling/build-claude-workflow-11-stages.md`
+  - `ai-tools/tooling/building-recursive-agent-systems-cursor.md`
   - `ai-tools/tooling/claude-all-features-guide-2026.md`
   - `ai-tools/tooling/claude-code-10-plugins-vince.md`
   - `ai-tools/tooling/claude-code-101-academic-researchers.md`
@@ -261,7 +265,7 @@
 
 ---
 
-总计 **202** 篇知识文档
+总计 **206** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -273,5 +277,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-12 16:13 UTC]_
+_[自动生成于 2026-06-13 23:55 UTC]_
 
