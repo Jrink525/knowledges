@@ -49,6 +49,7 @@
   - `ai-tools/harness/ai-agent-roadmap-2026-what-to-learn-build-skip.md`
   - `ai-tools/harness/ai-evals-explained.md`
   - `ai-tools/harness/ai-first-engineering-team-guide.md`
+  - `ai-tools/harness/anatomy-of-agent-harness.md`
   - `ai-tools/harness/anatomy-of-an-agent-harness.md`
   - `ai-tools/harness/become-ai-engineer-2026-roadmap-rahul.md`
   - `ai-tools/harness/build-your-own-agent-harness-iii.md`
@@ -98,6 +99,7 @@
   - `ai-tools/inference/from-assistants-to-agents-self-improving-agentic-systems.md`
   - `ai-tools/inference/github-copilot-memory-architecture.md`
   - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
+  - `ai-tools/inference/grit-rewriting-git-in-rust.md`
   - `ai-tools/inference/how-llms-actually-work.md`
   - `ai-tools/inference/how-to-actually-use-claude.md`
   - `ai-tools/inference/how-we-build-evals-for-deep-agents.md`
@@ -121,6 +123,7 @@
   - `ai-tools/ml-research/agent-memory-system-from-basics-to-production.md`
   - `ai-tools/ml-research/agentic-memory-detailed-breakdown.md`
   - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
+  - `ai-tools/ml-research/autonomous-long-running-coding-agents.md`
 
 ### ai-tools/patterns/ (`ai-tools/patterns`)
   - `ai-tools/patterns/building-multi-agent-workflows-guide.md`
@@ -133,6 +136,7 @@
   - `ai-tools/tooling/30-claude-workflows-skills-power-user.md`
   - `ai-tools/tooling/32-claude-code-hacks.md`
   - `ai-tools/tooling/7-days-claude-ai-employee-guide.md`
+  - `ai-tools/tooling/agent-harness-self-repair-opik.md`
   - `ai-tools/tooling/agent-memory-framework-remember-cite-forget.md`
   - `ai-tools/tooling/ai-automation-service-guide.md`
   - `ai-tools/tooling/build-ai-agents-2026.md`
@@ -147,6 +151,7 @@
   - `ai-tools/tooling/claude-code-hooks-automation-workflow.md`
   - `ai-tools/tooling/claude-code-large-codebase-best-practices.md`
   - `ai-tools/tooling/claude-code-memory-system-deep-dive.md`
+  - `ai-tools/tooling/claude-code-notebooklm-obsidian-research-workflow.md`
   - `ai-tools/tooling/claude-code-routines-full-course.md`
   - `ai-tools/tooling/claude-code-self-improving-loop.md`
   - `ai-tools/tooling/claude-code-settings-json-guide.md`
@@ -154,6 +159,7 @@
   - `ai-tools/tooling/claude-five-levels-framework.md`
   - `ai-tools/tooling/claudemd-21-config-rules.md`
   - `ai-tools/tooling/context-compression-strategies-guide.md`
+  - `ai-tools/tooling/dive-into-claude-code.md`
   - `ai-tools/tooling/every-agentic-engineering-hack-mvanhorn.md`
   - `ai-tools/tooling/feedback-loops-claude-code.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
@@ -168,6 +174,7 @@
   - `ai-tools/tooling/prompt-master-workbook.md`
   - `ai-tools/tooling/shopify-claude-code-setup.md`
   - `ai-tools/tooling/spring-boot-3-generic-base-controller-service-repository.md`
+  - `ai-tools/tooling/the-log-is-the-agent.md`
   - `ai-tools/tooling/trading-agent-skills-claude-sdk-zostaff.md`
 
 ### database/ (`数据库 & 缓存`)
@@ -238,6 +245,7 @@
   - `programming/java/java-concurrency-complete-graph.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
+  - `programming/java/leetcode-complete-dsa-pattern-sheet.md`
   - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
   - `programming/java/spring-controller-return-types-complete-guide.md`
   - `programming/java/spring-event-comprehensive-guide.md`
@@ -257,6 +265,9 @@
 ### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
   - `papers/coding-agents-misalignment-2605.29442/report.md`
 
+### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
+  - `papers/dive-into-claude-code-2604.14228/report.md`
+
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
 
@@ -265,7 +276,7 @@
 
 ---
 
-总计 **206** 篇知识文档
+总计 **215** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -277,5 +288,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-13 23:55 UTC]_
+_[自动生成于 2026-06-14 16:12 UTC]_
 
