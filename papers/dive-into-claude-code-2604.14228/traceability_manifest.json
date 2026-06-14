@@ -1,0 +1,327 @@
+{
+  "paper_id": "2604.14228",
+  "paper_title": "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems",
+  "schema_version": "1.0.0",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "statement": "Claude Code's codebase consists of approximately 1.6% decision logic and 98.4% operational harness.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C1-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:philosophy",
+          "source_file": "main.tex",
+          "description": "Discussion section's 1.6% ratio claim, derived from TypeScript source analysis (v2.1.88, ~1884 files, ~512K lines)"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C2",
+      "statement": "The core agent loop is a simple while-true async generator (queryLoop) rather than a state machine or graph-based orchestration.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C2-E1",
+          "locator_method": "section",
+          "section": "sec:turn",
+          "source_file": "main.tex",
+          "description": "Turn Execution section documents queryLoop async generator in query.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C3",
+      "statement": "Users approve approximately 93% of permission prompts, indicating approval fatigue.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C3-E1",
+          "locator_method": "section",
+          "section": "sec:values:five, sec:discuss:tradeoffs",
+          "source_file": "sections/1_introduction.tex",
+          "description": "Anthropic auto-mode analysis (anthropic2026automode)"
+        }
+      ],
+      "evidence_tier": "A (product-documented)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C4",
+      "statement": "Claude Code implements 7 independent safety layers forming defense in depth.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C4-E1",
+          "locator_method": "section",
+          "section": "sec:arch:safety-preview, sec:auth",
+          "source_file": "main.tex",
+          "description": "Files: tools.ts, permissions.ts, types/permissions.ts, yoloClassifier.ts, shouldUseSandbox.ts, conversationRecovery.ts, types/hooks.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C5",
+      "statement": "5-layer compaction pipeline with graduated compression: budget reduction, snip, microcompact, context collapse, auto-compact.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C5-E1",
+          "locator_method": "section",
+          "section": "sec:context:compaction",
+          "source_file": "main.tex",
+          "description": "Files: query.ts, compact.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C6",
+      "statement": "CLAUDE.md content is delivered as user context (user message) not system prompt, making compliance probabilistic rather than guaranteed.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C6-E1",
+          "locator_method": "section",
+          "section": "sec:context:claudemd",
+          "source_file": "main.tex",
+          "description": "context.ts: prependUserContext, setCachedClaudeMdContent"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C7",
+      "statement": "~27% of Claude Code-assisted tasks were work that would not have been attempted without the tool.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C7-E1",
+          "locator_method": "section",
+          "section": "sec:intro",
+          "source_file": "sections/1_introduction.tex",
+          "description": "Anthropic internal survey of 132 engineers and researchers (anthropic2025internal)"
+        }
+      ],
+      "evidence_tier": "A (product-documented)",
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C8",
+      "statement": "Auto-approve rates increase from ~20% (<50 sessions) to >40% (750+ sessions).",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C8-E1",
+          "locator_method": "section",
+          "section": "sec:values:five",
+          "source_file": "main.tex",
+          "description": "Anthropic longitudinal usage data (anthropic2026autonomy)"
+        }
+      ],
+      "evidence_tier": "A (product-documented)",
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C9",
+      "statement": "Sandboxing reduced permission prompt frequency by approximately 84%.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C9-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:tradeoffs",
+          "source_file": "main.tex",
+          "description": "Anthropic sandboxing analysis (anthropic2025sandboxing)"
+        }
+      ],
+      "evidence_tier": "A (product-documented)",
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C10",
+      "statement": "Two pre-trust initialization CVEs exploit code running before interactive trust dialog.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C10-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:tradeoffs",
+          "source_file": "main.tex",
+          "description": "CVE-2025-59536 (CVSS 8.7) and CVE-2026-21852 (CVSS 5.3), discovered by Check Point Research"
+        }
+      ],
+      "evidence_tier": "B (code-verified, externally validated)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C11",
+      "statement": "Commands with >50 subcommands fall back to single generic approval prompt due to parsing overhead.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C11-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:tradeoffs",
+          "source_file": "main.tex",
+          "description": "Adversa security research (adversa2026bypass), bashSecurity.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified, externally validated)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C12",
+      "statement": "Four extension mechanisms at graduated context costs: hooks (0 context), skills (low), plugins (medium), MCP (high).",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C12-E1",
+          "locator_method": "section",
+          "section": "sec:ext",
+          "source_file": "main.tex",
+          "description": "Extensibility section, files: types/hooks.ts, tool registration"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C13",
+      "statement": "Four-level CLAUDE.md hierarchy: managed, user, project, local — with lazy loading for nested directory rules.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C13-E1",
+          "locator_method": "section",
+          "section": "sec:context:claudemd",
+          "source_file": "main.tex",
+          "description": "claudemd.ts, context.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C14",
+      "statement": "Session transcripts are append-only JSONL with read-time chain patching; session-scoped permissions are not restored on resume.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C14-E1",
+          "locator_method": "section",
+          "section": "sec:persist",
+          "source_file": "main.tex",
+          "description": "Files: sessionStorage.ts, conversationRecovery.ts, transcript.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C15",
+      "statement": "Subagents return summary-only results to parent (not full conversation) and operate in isolated context windows.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C15-E1",
+          "locator_method": "section",
+          "section": "sec:subagent",
+          "source_file": "main.tex",
+          "description": "Subagent Delegation section"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C16",
+      "statement": "OpenClaw can host Claude Code as external coding harness via ACP — systems are composable, not exclusive.",
+      "interpretation_type": "plausible inference",
+      "evidences": [
+        {
+          "evidence_id": "C16-E1",
+          "locator_method": "section",
+          "section": "sec:compare",
+          "source_file": "sections/10_comparative_analysis.tex",
+          "description": "OpenClaw ACP integration documentation"
+        }
+      ],
+      "evidence_tier": "C (reconstructed)",
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C17",
+      "statement": "Six open directions for future agent systems identified: observability-evaluation gap, cross-session persistence, harness boundary evolution, horizon scaling, governance, evaluative lens.",
+      "interpretation_type": "speculation",
+      "evidences": [
+        {
+          "evidence_id": "C17-E1",
+          "locator_method": "section",
+          "section": "sec:future",
+          "source_file": "main.tex",
+          "description": "Emerging Directions section, grounded in empirical, architectural, and policy literature"
+        }
+      ],
+      "evidence_tier": "N/A (synthesis/roadmap)",
+      "confidence": "n/a"
+    },
+    {
+      "claim_id": "C18",
+      "statement": "External studies show AI tools slowed developers by 19% (RCT, 16 devs, 246 tasks) and increased code complexity by 40.7% (Cursor, 807 repos).",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C18-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:tensions, sec:values:lens",
+          "source_file": "main.tex",
+          "description": "Becker et al. 2025, He et al. 2026"
+        }
+      ],
+      "evidence_tier": "A (external peer-reviewed/empirical)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C19",
+      "statement": "Claude Code has 7 permission modes: plan, default, acceptEdits, auto, dontAsk, bypassPermissions, bubble.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C19-E1",
+          "locator_method": "section",
+          "section": "sec:auth",
+          "source_file": "main.tex",
+          "description": "types/permissions.ts"
+        }
+      ],
+      "evidence_tier": "B (code-verified)",
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C20",
+      "statement": "Safety layers share common performance and economic constraints — defense-in-depth independence assumption can be violated.",
+      "interpretation_type": "evidence-backed interpretation",
+      "evidences": [
+        {
+          "evidence_id": "C20-E1",
+          "locator_method": "section",
+          "section": "sec:discuss:tradeoffs",
+          "source_file": "main.tex",
+          "description": "bashSecurity.ts, yoloClassifier.ts performance analysis; Adversa 50-subcommand bypass"
+        }
+      ],
+      "evidence_tier": "B (code-verified, externally validated)",
+      "confidence": "high"
+    }
+  ]
+}

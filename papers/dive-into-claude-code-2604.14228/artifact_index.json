@@ -1,0 +1,45 @@
+{
+  "paper_id": "2604.14228",
+  "paper_title": "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems",
+  "artifacts": [
+    {
+      "type": "report",
+      "path": "report.md",
+      "format": "markdown",
+      "language": "zh-CN",
+      "description": "主报告 — 深度解读论文的 14 个章节，包括架构分析、设计哲学、与 OpenClaw 的对比、未来方向"
+    },
+    {
+      "type": "traceability_manifest",
+      "path": "traceability_manifest.json",
+      "format": "json",
+      "description": "声明→证据链清单，包含 20 个核心声明及其证据层级和来源"
+    },
+    {
+      "type": "research_lens",
+      "path": "research_lens.json",
+      "format": "json",
+      "description": "问题重构分析 — 论文的五个核心研究问题及重构"
+    },
+    {
+      "type": "direction_board",
+      "path": "direction_board.json",
+      "format": "json",
+      "description": "研究方向种子排名 — 六个未来方向的评估"
+    },
+    {
+      "type": "latex_paragraphs",
+      "path": "latex_paragraphs.json",
+      "format": "json",
+      "description": "LaTeX 段落提取 — 1230 个结构化段落锚点（来自 extraction 脚本）"
+    },
+    {
+      "type": "source",
+      "path": "main.tex",
+      "format": "latex",
+      "description": "原始 LaTeX 源代码（arXiv e-print 提取）"
+    }
+  ],
+  "generated_at": "2026-06-14T13:20:00Z",
+  "generator": "paper-deep-reading skill (OpenClaw)"
+}

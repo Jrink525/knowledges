@@ -1,0 +1,69 @@
+{
+  "paper_id": "2604.14228",
+  "paper_title": "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems",
+  "schema_version": "1.0.0",
+  "original_problem": "How does Claude Code answer recurring design questions about loop architecture, safety, extensibility, context management, delegation, and persistence — and what does this reveal about the design space of AI agent systems?",
+  "reconstructed_lens": {
+    "research_questions": [
+      {
+        "id": "rq-1",
+        "original": "What is Claude Code's architecture and how does it answer recurring agent design questions?",
+        "reconstructed": "当生产级 AI 智能体面临"推理在哪"、"迭代循环如何组织"、"默认安全姿态是什么"、"扩展表面如何划分"、"上下文如何管理"、"子智能体如何委派"、"会话如何持久化"这七个重复设计问题时，Claude Code 的架构选择是什么？",
+        "approach": "源码逆向工程 + 设计空间分析法",
+        "evidence_tier": "B (code-verified)"
+      },
+      {
+        "id": "rq-2",
+        "original": "What human values and design principles motivate Claude Code's architecture?",
+        "reconstructed": "Claude Code 的架构背后反映了哪些人类价值观和设计原则？这些价值观如何追踪到具体代码实现？",
+        "approach": "从官方文档 + 创建者声明提取 → 13 条设计原则 → 具体架构决策的完整追溯链",
+        "evidence_tier": "A → B 混合"
+      },
+      {
+        "id": "rq-3",
+        "original": "How does Claude Code compare to an independent open-source agent system (OpenClaw) that answers the same design questions from a different deployment context?",
+        "reconstructed": "当部署上下文从"编码工具"变为"多通道个人助手"时，相同的七个设计问题会产生哪些不同的架构回答？这些差异是任意的还是可预测的？",
+        "approach": "六维度架构对比 + 设计空间映射",
+        "evidence_tier": "C (reconstructed comparison)"
+      },
+      {
+        "id": "rq-4",
+        "original": "What are the open design directions for future AI agent systems?",
+        "reconstructed": "从 Claude Code 和 OpenClaw 的设计空间分析出发，未来智能体系统在可观测性、持久性、边界演化、扩展视野、治理和长期能力保持方面面临哪些开放挑战？",
+        "approach": "综合实证、架构和政策文献的合成分析",
+        "evidence_tier": "N/A (synthesis)"
+      },
+      {
+        "id": "rq-5",
+        "original": "Does short-term capability amplification come at the cost of long-term human skill development?",
+        "reconstructed": "以"长期能力保持"为评价性透镜，Claude Code 的架构是否充分考虑了人类技能的发展？短期生产力增益与长期理解的权衡是什么？",
+        "approach": "评价性透镜覆盖原有五个价值 + 外部实证证据分析",
+        "evidence_tier": "A (external empirical studies)"
+      }
+    ],
+    "methodological_choices": {
+      "evidence_hierarchy": "三级证据体系（产品文档/代码验证/重构推理），为 AI 系统逆向工程设立方法论标准",
+      "design_space_approach": "替代传统的系统"描述"方法——识别设计问题的选择空间 + 展示当前选择 + 指出替代方案",
+      "calibration_via_contrast": "用 OpenClaw（完全不同的部署上下文）作为校准，而非自身意识形态评估"
+    },
+    "gaps_identified": [
+      {
+        "gap": "静态版本分析",
+        "detail": "v2.1.88 仅为时间点快照，功能标志创建了构建时变异性，分析不能反映运行时行为或未发布功能"
+      },
+      {
+        "gap": "单系统外部效度",
+        "detail": "发现描述 Claude Code 的设计空间而非所有编码智能体的空间"
+      },
+      {
+        "gap": "设计意图不可及",
+        "detail": "源码揭示"做了什么"但不揭示"为什么"——设计意图只能通过文档间接推断"
+      },
+      {
+        "gap": "长期效果代理",
+        "detail": "外部实证证据（复杂度、开发者速度、认知卸载）并非特指 Claude Code 架构"
+      }
+    ],
+    "significance": "本文是首篇对 Claude Code 进行源码级架构分析的学术论文。其核心贡献不是揭示 Claude Code 的"秘密"，而是建立了 AI 智能体系统架构分析的方法论模板——通过设计空间分析法 + 三级证据体系 + 跨系统对比校准 + 评价性透镜，将零散的架构决策组织为可解释的设计理论。"
+  }
+}

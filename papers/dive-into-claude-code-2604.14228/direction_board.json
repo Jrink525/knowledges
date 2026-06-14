@@ -1,0 +1,134 @@
+{
+  "paper_id": "2604.14228",
+  "paper_title": "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems",
+  "schema_version": "1.0.0",
+  "directions": [
+    {
+      "id": "dir-1",
+      "rank": 1,
+      "name": "评价性透镜：长期能力保持",
+      "description": "短期开发者生产力增益与长期技能发展的平衡——智能体系统如何避免「认知卸载」导致的技能萎缩",
+      "urgency": "critical",
+      "impact": "transformative",
+      "feasibility": "complex（需多年纵向研究）",
+      "evidence_strength": "strong（多篇独立实证研究一致指向关注方向）",
+      "key_references": [
+        "becker2025measuring",
+        "he2026cursor",
+        "kosmyna2025brain",
+        "shen2026skill",
+        "rak2025aihiring"
+      ],
+      "note": "这是论文最有价值的贡献之一——它提出一个反直觉的问题：一个设计良好的系统可能在让用户「今天更快」的同时让用户「明年更慢」。这个方向适合跨社会技术研究而非纯算法研究。"
+    },
+    {
+      "id": "dir-2",
+      "rank": 2,
+      "name": "可观测性与评估差距",
+      "description": "缺乏框架性工具测量智能体行动的长期人类影响——需要超越循环内指标和用户调研的新评估框架",
+      "urgency": "high",
+      "impact": "high",
+      "feasibility": "moderate（现有可观测性基础设施可以扩展）",
+      "evidence_strength": "moderate（需求明确但方法学不成熟）",
+      "key_references": [
+        "anthropic2025internal",
+        "anthropic2026automode"
+      ],
+      "note": "当智能体自主执行任务时，传统的「用户行动→系统响应」日志不足以评估长期影响。需要构建跨会话的因果归因框架。"
+    },
+    {
+      "id": "dir-3",
+      "rank": 3,
+      "name": "跨会话持久性与信任演变",
+      "description": "智能体如何从单会话对话智能演进为跨会话拥有持续记忆和关系的实体——权限、信任和知识如何跨会话边界转移",
+      "urgency": "high",
+      "impact": "high",
+      "feasibility": "moderate（Claude Code 的仅追加 + 读时修补提供基础）",
+      "evidence_strength": "moderate（论文中 Claude Code vs OpenClaw 的对比提供了设计空间视角）",
+      "key_references": [
+        "anthropic2026autonomy",
+        "sec:persist"
+      ],
+      "note": "论文发现的「自动批准率从 20% 增长到 40%」表明信任轨迹是真实存在的——但系统设计尚不支持除简单统计外的信任演变建模。"
+    },
+    {
+      "id": "dir-4",
+      "rank": 4,
+      "name": "视野扩展",
+      "description": "将智能体的有效工作视野扩展到单个上下文窗口之外——当任务跨越数天或数周时，压缩和检索策略如何改变",
+      "urgency": "high",
+      "impact": "high",
+      "feasibility": "challenging（需突破上下文窗口理论限制）",
+      "evidence_strength": "strong（论文的 5 层压缩管线 + 仅追加设计为扩展视野提供架构基础）",
+      "key_references": [
+        "sec:context",
+        "sec:persist"
+      ],
+      "note": "论文的惰性降解原则（最小破坏优先）为长时间上下文管理提供了参考路线图——但上下文压缩本质上是「有损」的，长期任务中损失的信息如何恢复？"
+    },
+    {
+      "id": "dir-5",
+      "rank": 5,
+      "name": "智能体治理与安全模型演化",
+      "description": "从逐操作批准向持续信任管理的转变——自动化安全评估的责任和验证",
+      "urgency": "high",
+      "impact": "moderate",
+      "feasibility": "challenging（需要基础设施级别的重新设计）",
+      "evidence_strength": "moderate（论文的预信任初始化 CVE 表明治理缺口确实存在）",
+      "key_references": [
+        "sec:auth",
+        "sec:discuss:tradeoffs",
+        "checkpoint2026rce",
+        "adversa2026bypass"
+      ],
+      "note": "论文最重要的安全洞见是「深度防御的独立性假设可能被违反」——这需要未来系统设计层间的独立性保证。"
+    },
+    {
+      "id": "dir-6",
+      "rank": 6,
+      "name": "工具边界演化",
+      "description": "什么决定智能体的「世界边界」？工具表面应如何随时间演化？主动 vs 被动工具注册的设计权衡",
+      "urgency": "moderate",
+      "impact": "moderate",
+      "feasibility": "moderate-ish（MCP 已是行业方向）",
+      "evidence_strength": "weak（主要为论文的 Claude Code vs OpenClaw 对比提供启示）",
+      "key_references": [
+        "sec:ext",
+        "sec:compare"
+      ],
+      "note": "论文的「四层不同上下文成本」扩展模型提供了有价值的参考——但主动注册（Claude Code 的钩子/技能）与被动发现（通过 MCP）的区分需要更多理论化。"
+    }
+  ],
+  "meta_observation": "论文的六个未来方向存在一个有趣的元模式：前三个方向（评价性透镜、可观测性、跨会话持久性）关注的是「时间维度」——系统的长期影响、长期评估和长期记忆。这可能暗示 AI 智能体系统的下一个重要前沿不是让它在单次交互中更聪明，而是让它更好地融入人类的时间线。",
+  "direction_seeds": [
+    {
+      "id": "seed-1",
+      "name": "长期能力保持的评估框架",
+      "description": "开发超越循环内指标的多维度框架，评估 AI 智能体对开发者长期技能发展的影响"
+    },
+    {
+      "id": "seed-2",
+      "name": "跨会话信任演变建模",
+      "description": "基于信任轨迹（如自动批准率从 20%→40%）建模人-智能体信任的定量演化"
+    },
+    {
+      "id": "seed-3",
+      "name": "深度防御独立性验证",
+      "description": "验证安全层间的独立性假设是否被违反，开发层间耦合的定量度量"
+    },
+    {
+      "id": "seed-4",
+      "name": "多机制可扩展性比较研究",
+      "description": "比较不同上下文成本梯度下扩展机制的适用场景和效率"
+    },
+    {
+      "id": "seed-5",
+      "name": "智能体治理的自动化评估",
+      "description": "设计超越逐操作批准的持续信任管理框架"
+    }
+  ],
+  "purpose": "Identify and prioritize open research directions for AI agent system design, based on the design space analysis of Claude Code and comparison with OpenClaw.",
+  "ranking_notes": "Directions ranked by a composite of evidence strength, urgency, impact potential, and feasibility. The evaluative lens (dir-1) ranks highest because it challenges a core assumption (short-term gains = good) with multi-study empirical evidence.",
+  "search_limitations": "Analysis limited to the single paper (arXiv:2604.14228) and its 60+ references. Not a comprehensive literature survey of the full agent design space. External evidence for long-term capability preservation (C18) comes from non-Claude-Code-specific studies.",
+  "source_confidence": "High for claims backed by code-verified evidence (tier B). Medium-high for product-documented claims (tier A). Medium for reconstructed comparisons (tier C). Low-to-none for future direction synthesis."
+}
