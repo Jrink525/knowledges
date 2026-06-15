@@ -18,7 +18,22 @@ authors: "Rahul (@sairahul1)"
 
 ---
 
-所有人都讨论 LLM，但没人真正解释它们底层怎么工作。GPT、Claude、Gemini、Llama — 它们都来自同一个 **5 阶段流水线**。一旦理解了这个流水线，你也可以构建一个自己的语言模型。
+## 🔗 关联知识库文章
+
+| 文章 | 关联点 | 建议阅读顺序 |
+|------|--------|-------------|
+| **[Stanford Lecture: How to Build LLMs](../ai-tools/inference/stanford-building-llm-lecture-notes.md)** | 同一话题的完整学院派版本，104 分钟讲座逐字整理。预训练/后训练的理论推导更深入 | ① 本文入门 → ② Stanford 深化 |
+| **[LLM 工程师技能路线图 (2026)](../ai-tools/llm-engineering-roadmap-2026.md)** | 本文讲"从零造"，那篇讲"用起来"——覆盖 prompt、RAG、部署、优化 8 大支柱 | ② 理解原理后读，知道怎么用 |
+| **[LLM 究竟如何工作（入门）](../ai-tools/inference/how-llms-actually-work.md)** | Token、attention、predict-next-token 的入门解释，更娓娓道来 | 前置阅读：零基础先读这篇 |
+| **[SFT / RL / On-Policy Distillation](../ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md)** | 深入对齐阶段（SFT 和 RLHF），从概率分布视角拆解差异 | ③ 想深挖对齐时读 |
+| **[20 AI Core Concepts (2026)](../ai-tools/inference/20-ai-concepts-2026-rahul.md)** | 更广阔的 AI 概念图谱：Transformer / embedding / RAG / agents / diffusion | 全景参考，随时查阅 |
+| **[LLM 工程实战项目路线图](../ai-tools/inference/llm-engineering-projects-roadmap-2026.md)** | 34 个 LLM 实操项目，tokenizer→部署的 step-by-step 路径 | ④ 读完原理后用代码实践 |
+| **[GPU Memory Math for LLMs](../ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md)** | 训练推理的显存计算：数据集多大、需要多少 GPU、batch size 怎么调 | ⑤ 动手前算预算 |
+| **[Inference Engines 决策指南](../ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md)** | 训练完怎么部署？vLLM / llama.cpp / MLX / TensorRT-LLM 选型 | ⑥ 部署阶段参考 |
+
+---
+
+GPT、Claude、Gemini、Llama — 它们都来自同一个 **5 阶段流水线**。一旦理解了这个流水线，你也可以构建一个自己的语言模型。
 
 不是 GPT-4 的克隆，而是一个真正能学习的模型。
 
