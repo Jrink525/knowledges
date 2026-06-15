@@ -1,0 +1,200 @@
+{
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "Developers at large organisations spend between ten and fifteen percent of their working hours reading and commenting on others' code.",
+      "section": "I",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Sadowski et al., ICSE-SEIP, 2018",
+          "quote_text": "Developers at large organisations spend between ten and fifteen percent of their working hours reading and commenting on others' code."
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "claim_text": "The review latency between submitting a pull request and receiving actionable feedback routinely stretches over twenty-four hours and can extend to days.",
+      "section": "I",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Hilton et al., ASE, 2016",
+          "quote_text": "The review latency between submitting a pull request and receiving actionable feedback routinely stretches over twenty-four hours and can extend to days, imposing a structural drag on continuous-delivery."
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.1",
+      "claim_text": "Code review as a formal engineering discipline originates with Fagan's 1976 paper on code inspections at IBM.",
+      "section": "II-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Fagan, IBM Systems Journal, 1976",
+          "quote_text": "Code review as a formal engineering discipline originates with Fagan's 1976 paper on code inspections at IBM."
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.2",
+      "claim_text": "Defect detection, while a primary motivation, is not what reviewers most reliably deliver; style corrections, minor improvements, and questions about intent dominate the comment corpus.",
+      "section": "II-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Bacchelli & Bird, ICSE, 2013",
+          "quote_text": "Bacchelli and Bird found that defect detection, while a primary motivation, is not what reviewers most reliably deliver: style corrections, minor improvements, and questions about intent dominate the comment corpus."
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.3",
+      "claim_text": "Code reviews at Microsoft 'do not find bugs' in the sense of catching deep, logic-level defects; their primary value lies in knowledge transfer and maintainability improvement.",
+      "section": "II-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Czerwonka et al., 2015",
+          "quote_text": "Czerwonka et al. reached the pointed conclusion that code reviews at Microsoft 'do not find bugs' in the sense of catching deep, logic-level defects; their primary value lies in knowledge transfer and maintainability improvement."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "State-of-the-art agents on SWE-bench resolve more than seventy percent of tasks, and by late 2025, top agents resolved more than 80%.",
+      "section": "III-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "SWE-bench leaderboard, 2025",
+          "quote_text": "By late 2025, top agents on the public leaderboard resolved more than 70 % of tasks. [...] late 2024, best-performing systems on SWE-bench Verified exceeded 50%."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "claim_text": "The improvement trajectory, from under two percent to over seventy percent in roughly two years, is without precedent in the history of automated software engineering tools.",
+      "section": "III-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "observation",
+          "citation_key": "SWE-bench progression 2023–2025",
+          "quote_text": "The improvement trajectory, from under two percent to over seventy percent in roughly two years, is without precedent in the history of automated software engineering tools."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "Every stated goal of code review—defect detection, style enforcement, knowledge transfer, and team awareness—can be met by coding agents at lower cost and higher throughput than human reviewers.",
+      "section": "IV-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "argument",
+          "citation_key": "Monperrus §IV-A",
+          "quote_text": "We argue that contemporary coding agents satisfy each goal at least as well as human reviewers, and in several dimensions markedly better."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.2",
+      "claim_text": "The naive integration in which agents write code and humans remain mandatory reviewers is a dead end because it neither provides meaningful assurance nor scales with AI-assisted throughput.",
+      "section": "IV-B",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "argument",
+          "citation_key": "Monperrus §IV-B",
+          "quote_text": "We argue that it fails on two independent grounds."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.3",
+      "claim_text": "The cost-benefit calculation has flipped; agent reviews are instantaneous, consistent, and auditable, while the marginal defect-detection value of human review shrinks as agent capabilities grow.",
+      "section": "IV-C",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "argument",
+          "citation_key": "Monperrus §IV-C",
+          "quote_text": "The crossover point, at which the marginal benefit of human review no longer justifies its marginal cost, has already been reached."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "LLMs can miss defects that fall outside their training distribution; a human reviewer who is unsure will typically say so, an LLM may silently produce an approval.",
+      "section": "VI-A",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "counter_argument",
+          "citation_key": "Monperrus §VI-A",
+          "quote_text": "LLMs can miss defects that fall outside their training distribution. A human reviewer who is unsure about a change will typically say so; an LLM may silently produce an approval."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "claim_text": "GitHub Copilot introduces CWE violations at non-trivial rates [Pearce et al., 2022]; when the same model family generates and reviews code, blind spots may be correlated.",
+      "section": "VI-B",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "citation",
+          "citation_key": "Pearce et al., IEEE SP, 2022",
+          "quote_text": "Pearce et al. demonstrate that GitHub Copilot introduces CWE violations at non-trivial rates. When the same model family that generates code is also responsible for reviewing it, there is a risk that generative and review blind spots are correlated."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.3",
+      "claim_text": "Prompt injection represents a qualitatively new attack surface that does not exist for human reviewers.",
+      "section": "VI-C",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "counter_argument",
+          "citation_key": "Monperrus §VI-C",
+          "quote_text": "This is an active area of security research with no fully solved defences, and it represents a qualitatively new attack surface that does not exist for human reviewers."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.4",
+      "claim_text": "Architectural coherence is best enforced through design documents, ADRs, and dedicated architecture reviews, not through per-commit diff inspection.",
+      "section": "VI-D",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "counter_argument",
+          "citation_key": "Monperrus §VI-D",
+          "quote_text": "Architectural coherence is best enforced through design documents, architecture decision records, and dedicated architecture reviews, not through per-commit diff inspection."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.5",
+      "claim_text": "Mandatory PR review is not the appropriate locus for ethical scrutiny of software; this responsibility belongs in requirements engineering and post-deployment monitoring.",
+      "section": "VI-E",
+      "evidence": [
+        {
+          "source": "report.md",
+          "evidence_type": "counter_argument",
+          "citation_key": "Monperrus §VI-E",
+          "quote_text": "Mandatory PR review is not the appropriate locus for ethical scrutiny of software: this responsibility belongs in requirements engineering and post-deployment monitoring."
+        }
+      ]
+    }
+  ],
+  "schema_version": "1.0.0"
+}

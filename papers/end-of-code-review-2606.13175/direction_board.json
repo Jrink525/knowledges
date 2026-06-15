@@ -1,0 +1,67 @@
+{
+  "paper_id": "2606.13175",
+  "title": "The End of Code Review: Coding Agents Supersede Human Inspection",
+  "seeds": [
+    {
+      "id": "D1",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "Czerwonka et al. (2015) found code reviews at Microsoft 'do not find bugs' — the paper's core claim that review's defect-detection value is low depends heavily on this 2015 finding.",
+      "hidden_assumption_or_gap": "The assumption that Czerwonka's 2015 finding generalizes to 2026 developer practices. Review tools, culture, automation, and developer awareness have evolved substantially in 11 years.",
+      "research_question": "Has the defect-detection effectiveness of modern code review (2024-2026, with AI-assisted tooling) changed significantly compared to the 2015 baseline?",
+      "hypothesis": "Modern review with AI-assisted tools (Copilot inline suggestions, automated CI checks, better static analysis) has shifted the distribution of review comments toward deeper defects than the 2015 corpus showed.",
+      "minimum_viable_experiment": "Mine a large contemporary review corpus (e.g., open-source PRs from 2024-2026) and classify comments by category (defect vs style vs knowledge-transfer), replicating Bacchelli & Bird's methodology. Compare distributions.",
+      "negative_result_interpretation": "If comments are still dominated by style and surface issues, it strengthens Monperrus's case: human review inertia persists even with better tools.",
+      "killer_objection": "The labeling methodology (what counts as a 'defect') is inherently subjective and may differ between 2013 and 2026 annotators.",
+      "killer_result": "A 20+ percentage point increase in defect-related comments vs the 2013 baseline would challenge the paper's assumption about review's primary value."
+    },
+    {
+      "id": "D2",
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "Monperrus argues architectural coherence should be enforced through ADRs and design reviews, not PR-level diff inspection (§VI-D). This sidesteps the question of who reviews ADRs and design documents.",
+      "hidden_assumption_or_gap": "The paper assumes architectural review exists somewhere else as a well-functioning practice. For most teams, it barely exists or is done informally.",
+      "research_question": "Can LLM-based agents effectively review architecture decision records (ADRs) and high-level design documents for consistency and strategic soundness?",
+      "hypothesis": "An agent fine-tuned on architectural patterns, trade-off analyses, and historical ADRs can flag inconsistencies and strategic misalignments at the architecture level, not just the code level.",
+      "minimum_viable_experiment": "Collect a corpus of real ADRs + their outcomes (good/bad decisions). Train or prompt an agent to evaluate new ADRs. Compare agent evaluations to retrospective expert analysis.",
+      "negative_result_interpretation": "If agent ADR review fails, it confirms that architecture review genuinely requires human judgment — a key limitation of Monperrus's thesis.",
+      "killer_objection": "ADRs are far less structured and far more ambiguous than code. The evaluation criteria are inherently subjective.",
+      "killer_result": "Agent achieves >80% agreement with expert consensus on ADR quality assessment."
+    },
+    {
+      "id": "D3",
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "The paper claims 'cost-benefit calculation has flipped' (§IV-C) but provides no quantitative framework — no crossover point model, no team-size dependency function.",
+      "hidden_assumption_or_gap": "The claim is presented as universally true when in reality the crossover point depends on team size, codebase complexity, domain risk tolerance, and agent capability.",
+      "research_question": "What is the quantitative cost-benefit crossover model for replacing human review with agent review, parameterized by team size, commit velocity, and defect severity distribution?",
+      "hypothesis": "The crossover point is reached much earlier for large, high-velocity teams than for small, low-velocity teams. For teams of 1-3 developers, human review may remain cost-effective.",
+      "minimum_viable_experiment": "Build a simulation model: input (team size, commits/day, agent defect detection rate, human defect detection rate, time cost per review, defect cost when shipped). Compute total cost under human-only, agent-only, and hybrid regimes. Trace crossover boundaries.",
+      "negative_result_interpretation": "If hybrid (agent writes + human reviews) consistently beats agent-only in the simulation for most parameter settings, the paper's strongest claim fails.",
+      "killer_objection": "Defect cost is inherently hard to estimate and domain-dependent. The model will be sensitive to this single parameter.",
+      "killer_result": "Agent-only regime outperforms human-only or hybrid regimes for teams larger than 5 developers with commit velocity >10 PRs/week."
+    },
+    {
+      "id": "D4",
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "The paper's counter-argument §VI-C identifies prompt injection as a 'qualitatively new attack surface' for agent reviewers, with 'no fully solved defences'.",
+      "hidden_assumption_or_gap": "This is acknowledged as an open problem but not addressed. If prompt injection is unresolved, agent review cannot be trusted for security-critical code paths.",
+      "research_question": "What effective defenses exist against prompt injection attacks targeting code review agents, where adversarial code is the injection vector?",
+      "hypothesis": "A combination of (1) input sanitization to separate code from embedded instructions, (2) instruction-hierarchy enforcement, and (3) second-agent verification of first agent's decision rationale can reduce prompt injection success rate below 5%.",
+      "minimum_viable_experiment": "Create a benchmark of code snippets with embedded prompt injections (in comments, string literals, identifiers). Test multiple defense strategies. Measure attack success rate vs overhead.",
+      "negative_result_interpretation": "If all defenses fail against sophisticated injection (>20% success rate), it suggests agent review of untrusted PRs requires a fundamentally different approach.",
+      "killer_objection": "Adversarial code with malicious intent is rare in practice; real code reviews are cooperative. The threat model may be overblown.",
+      "killer_result": "Combined defense reduces injection success from >80% to <3% with <10% latency overhead."
+    },
+    {
+      "id": "D5",
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "The paper's argument structure (capability threshold → process obsolescence) could apply to other human review-heavy domains beyond code.",
+      "hidden_assumption_or_gap": "The paper frames the argument purely in software engineering terms, but the same logic applies to document review, legal contract review, academic peer review, and regulatory compliance review.",
+      "research_question": "Does the 'capability threshold' argument generalize to other human review domains (legal, academic peer review, compliance document review)?",
+      "hypothesis": "For structured, rule-bound review tasks (content moderation, contract clause checking, compliance checklist verification) agents have likely crossed the threshold. For open-ended, judgment-heavy review (academic peer review, creative work critique) the threshold is farther.",
+      "minimum_viable_experiment": "Benchmark a frontier model on a structured review task (e.g., GDPR compliance checklist review of a privacy policy) vs a judgment-heavy task (e.g., reviewing a research paper for novelty and methodological soundness). Compare to human expert performance.",
+      "negative_result_interpretation": "If the model fails at the structured task, it suggests the code review threshold was specific to well-defined, verifiable domains with existing test suites.",
+      "killer_objection": "Legal and academic domains have strong institutional resistance, ethical constraints, and accountability requirements that may be harder to overcome than software engineering culture.",
+      "killer_result": "Agent achieves >90% accuracy on structured compliance review and >70% agreement with human reviewers on novelty assessment."
+    }
+  ],
+  "schema_version": "1.0.0"
+}

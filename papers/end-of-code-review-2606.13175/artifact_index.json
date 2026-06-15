@@ -1,0 +1,17 @@
+{
+  "manifest_version": "1.0.0",
+  "paper_id": "2606.13175",
+  "paper_name": "end-of-code-review",
+  "title": "The End of Code Review: Coding Agents Supersede Human Inspection",
+  "authors": ["Martin Monperrus"],
+  "source_type": "pdf",
+  "processed_at": "2026-06-15T12:05:00Z",
+  "artifacts": {
+    "report": "report.md",
+    "traceability_manifest": "traceability_manifest.json",
+    "latex_paragraphs": null,
+    "research_lens": "research_lens.json",
+    "direction_board": "direction_board.json"
+  },
+  "schema_version": "1.0.0"
+}

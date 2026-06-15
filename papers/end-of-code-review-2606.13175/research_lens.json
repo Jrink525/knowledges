@@ -1,0 +1,55 @@
+{
+  "paper_id": "2606.13175",
+  "title": "The End of Code Review: Coding Agents Supersede Human Inspection",
+  "research_equation": {
+    "problem": "Mandatory human code review imposes 10-15% overhead, 24h+ latency, and social costs, yet its defect-detection value is questionable in the era of capable coding agents.",
+    "proposed_solution": "Replace mandatory human code review with agent-driven verification, reserving human oversight for high-risk changes only.",
+    "key_evidence": "SWE-bench trajectory (2% → 70%+), automated review comparisons, structural advantage analysis",
+    "assumptions": [
+      "Agent capability continues to improve at current trajectory",
+      "The stated goals of code review (Bacchelli & Bird) are the correct framing",
+      "Enterprise integration friction can be overcome",
+      "Ensemble review + calibrated uncertainty adequately mitigates hallucination risk"
+    ],
+    "lens": "position_paper"
+  },
+  "tri_pass_notes": {
+    "first_pass_summary": "A position paper arguing that coding agents have crossed a capability threshold making traditional human code review redundant. Three claims: (1) agents satisfy all review goals at lower cost; (2) agents-write-humans-review is a dead end; (3) cost-benefit has flipped. Addresses five counter-arguments including hallucination, security, prompt injection, architecture coherence, and ethical accountability.",
+    "second_pass_methodology": "Argument synthesis paper — no new empirical data. Cites established SE research (Bacchelli & Bird, Sadowski, Czerwonka) and recent AI capability evidence (SWE-bench, CodeReviewer, Copilot studies). Structured as formal argument with explicit counter-argument section.",
+    "third_pass_critique": [
+      "Knowledge transfer claim is weakest — Agent-generated 'explanations' are qualitatively different from human dialogue",
+      "Czerwonka's 'reviews don't find bugs' is from 2015 — may not generalize to current practices",
+      "No discussion of team size / project scale / domain differences",
+      "SWE-bench results may not generalize to enterprise codebases with legacy complexity",
+      "Legal/regulatory constraints in finance, healthcare, aviation are not addressed"
+    ]
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Agent hallucination and false negatives in review",
+      "proposed_module": "Ensemble review with calibrated uncertainty reporting",
+      "maturity": "conceptual"
+    },
+    {
+      "challenge": "Correlated blind spots in generation and review models",
+      "proposed_module": "Security-specialized frontier models for review",
+      "maturity": "emerging"
+    },
+    {
+      "challenge": "Prompt injection as new attack surface",
+      "proposed_module": "Adversarial input detection + input sanitization for agent reviewers",
+      "maturity": "research_problem"
+    },
+    {
+      "challenge": "Review capacity becoming bottleneck despite agent usage",
+      "proposed_module": "Autonomous agent review gates in CI/CD pipeline",
+      "maturity": "prototype"
+    },
+    {
+      "challenge": "Knowledge transfer loss through reduced human interaction",
+      "proposed_module": "Agent-generated on-demand architectural explanations + structured mentorship programs",
+      "maturity": "conceptual"
+    }
+  ],
+  "schema_version": "1.0.0"
+}
