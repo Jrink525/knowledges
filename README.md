@@ -88,6 +88,7 @@
   - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
   - `ai-tools/inference/anthropic-prompting-101-workshop.md`
   - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
+  - `ai-tools/inference/build-your-own-llm-from-scratch.md`
   - `ai-tools/inference/claude-code-complete-setup-guide.md`
   - `ai-tools/inference/claude-code-stop-installing-plugins-ultimate-guide.md`
   - `ai-tools/inference/claude-code-token-saving-5-layer-10x.md`
@@ -107,11 +108,14 @@
   - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
   - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
   - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
+  - `ai-tools/inference/llm-engineering-roadmap-2026.md`
   - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
   - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
   - `ai-tools/inference/obsidian-llm-wiki-complete-guide.md`
   - `ai-tools/inference/openclaw-vs-hermes-agent-memory-architecture.md`
+  - `ai-tools/inference/quant-llm-agent-research-workflow.md`
   - `ai-tools/inference/rl-interview-questions-2026.md`
+  - `ai-tools/inference/satya-nadella-frontier-ecosystem.md`
   - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
   - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
   - `ai-tools/inference/structured-output-grpo.md`
@@ -164,6 +168,7 @@
   - `ai-tools/tooling/feedback-loops-claude-code.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
+  - `ai-tools/tooling/loop-engineering-roadmap.md`
   - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
   - `ai-tools/tooling/most-people-use-10-percent-of-claude-25-steps.md`
   - `ai-tools/tooling/npx-skills-add-flow.md`
@@ -245,6 +250,7 @@
   - `programming/java/java-concurrency-complete-graph.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
+  - `programming/java/jvm-tuning-and-profiling-complete-guide.md`
   - `programming/java/leetcode-complete-dsa-pattern-sheet.md`
   - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
   - `programming/java/spring-controller-return-types-complete-guide.md`
@@ -268,6 +274,9 @@
 ### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
   - `papers/dive-into-claude-code-2604.14228/report.md`
 
+### papers/end-of-code-review-2606.13175/ (`papers/end-of-code-review-2606.13175`)
+  - `papers/end-of-code-review-2606.13175/report.md`
+
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
 
@@ -276,7 +285,7 @@
 
 ---
 
-总计 **215** 篇知识文档
+总计 **222** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -288,5 +297,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-14 16:12 UTC]_
+_[自动生成于 2026-06-15 16:15 UTC]_
 
