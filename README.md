@@ -14,6 +14,7 @@
   - `ai-tools/autoresearch/report.md`
 
 ### ai-tools/career/ (`ai-tools/career`)
+  - `ai-tools/career/agentic-code-review-addy-osmani.md`
   - `ai-tools/career/claude-code-learn-any-field.md`
   - `ai-tools/career/dont-outsource-the-learning.md`
   - `ai-tools/career/forward-deployed-engineering-101.md`
@@ -21,6 +22,7 @@
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
+  - `ai-tools/career/top-10-agent-skills-bibryam.md`
   - `ai-tools/career/why-senior-developers-fail-to-communicate-their-expertise.md`
 
 ### ai-tools/codex/ (`ai-tools/codex`)
@@ -153,6 +155,7 @@
   - `ai-tools/tooling/claude-code-advanced-tips-guide.md`
   - `ai-tools/tooling/claude-code-cloud-deployment-sandbox-isolation.md`
   - `ai-tools/tooling/claude-code-hooks-automation-workflow.md`
+  - `ai-tools/tooling/claude-code-how-it-actually-works.md`
   - `ai-tools/tooling/claude-code-large-codebase-best-practices.md`
   - `ai-tools/tooling/claude-code-memory-system-deep-dive.md`
   - `ai-tools/tooling/claude-code-notebooklm-obsidian-research-workflow.md`
@@ -285,7 +288,7 @@
 
 ---
 
-总计 **222** 篇知识文档
+总计 **225** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -297,5 +300,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-15 16:15 UTC]_
+_[自动生成于 2026-06-16 16:15 UTC]_
 
