@@ -22,6 +22,7 @@
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
+  - `ai-tools/career/the-art-of-loop-engineering.md`
   - `ai-tools/career/top-10-agent-skills-bibryam.md`
   - `ai-tools/career/why-senior-developers-fail-to-communicate-their-expertise.md`
 
@@ -95,6 +96,7 @@
   - `ai-tools/inference/claude-code-stop-installing-plugins-ultimate-guide.md`
   - `ai-tools/inference/claude-code-token-saving-5-layer-10x.md`
   - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
+  - `ai-tools/inference/dumb-sandbox-smart-host.md`
   - `ai-tools/inference/embabel-agent-framework-best-practices.md`
   - `ai-tools/inference/evaluating-agents-md-helpful-coding-agents-deep-reading.md`
   - `ai-tools/inference/fable5-loop-design.md`
@@ -164,12 +166,14 @@
   - `ai-tools/tooling/claude-code-settings-json-guide.md`
   - `ai-tools/tooling/claude-cowork-9-templates-mnilax.md`
   - `ai-tools/tooling/claude-five-levels-framework.md`
+  - `ai-tools/tooling/claude-md-8-tips.md`
   - `ai-tools/tooling/claudemd-21-config-rules.md`
   - `ai-tools/tooling/context-compression-strategies-guide.md`
   - `ai-tools/tooling/dive-into-claude-code.md`
   - `ai-tools/tooling/every-agentic-engineering-hack-mvanhorn.md`
   - `ai-tools/tooling/feedback-loops-claude-code.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
+  - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
   - `ai-tools/tooling/loop-engineering-roadmap.md`
   - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
@@ -288,7 +292,7 @@
 
 ---
 
-总计 **225** 篇知识文档
+总计 **229** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -300,5 +304,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-16 16:15 UTC]_
+_[自动生成于 2026-06-17 16:15 UTC]_
 
