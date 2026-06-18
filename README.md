@@ -21,6 +21,8 @@
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/loop-engineering-2026.md`
+  - `ai-tools/career/loop-engineering-memory.md`
+  - `ai-tools/career/my-thoughts-on-loop-engineering.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
   - `ai-tools/career/the-art-of-loop-engineering.md`
   - `ai-tools/career/top-10-agent-skills-bibryam.md`
@@ -57,6 +59,7 @@
   - `ai-tools/harness/become-ai-engineer-2026-roadmap-rahul.md`
   - `ai-tools/harness/build-your-own-agent-harness-iii.md`
   - `ai-tools/harness/build-your-own-mcp-server.md`
+  - `ai-tools/harness/claude-code-tool-architecture.md`
   - `ai-tools/harness/cloud-agent-infrastructure-creao-peter-pang.md`
   - `ai-tools/harness/design-agent-loop-guide.md`
   - `ai-tools/harness/dynamic-workflows-claude-code-thariq.md`
@@ -95,6 +98,7 @@
   - `ai-tools/inference/claude-code-complete-setup-guide.md`
   - `ai-tools/inference/claude-code-stop-installing-plugins-ultimate-guide.md`
   - `ai-tools/inference/claude-code-token-saving-5-layer-10x.md`
+  - `ai-tools/inference/context-engineering-for-ai-agents.md`
   - `ai-tools/inference/dan-vega-spring-ai-full-course-notes.md`
   - `ai-tools/inference/dumb-sandbox-smart-host.md`
   - `ai-tools/inference/embabel-agent-framework-best-practices.md`
@@ -122,6 +126,7 @@
   - `ai-tools/inference/satya-nadella-frontier-ecosystem.md`
   - `ai-tools/inference/sft-rl-onpolicy-distillation-distributional-lens.md`
   - `ai-tools/inference/stanford-building-llm-lecture-notes.md`
+  - `ai-tools/inference/stanford-storm-method.md`
   - `ai-tools/inference/structured-output-grpo.md`
   - `ai-tools/inference/voice-agent-full-guide.md`
   - `ai-tools/inference/voice-agent-memory-harder-than-you-think.md`
@@ -184,6 +189,7 @@
   - `ai-tools/tooling/obsidian-dashboard-everything-that-matters-today.md`
   - `ai-tools/tooling/obsidian-personal-operating-system.md`
   - `ai-tools/tooling/prompt-master-workbook.md`
+  - `ai-tools/tooling/self-improving-loop-kimi-swarm.md`
   - `ai-tools/tooling/shopify-claude-code-setup.md`
   - `ai-tools/tooling/spring-boot-3-generic-base-controller-service-repository.md`
   - `ai-tools/tooling/the-log-is-the-agent.md`
@@ -292,7 +298,7 @@
 
 ---
 
-总计 **229** 篇知识文档
+总计 **235** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -304,5 +310,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-17 16:15 UTC]_
+_[自动生成于 2026-06-18 16:15 UTC]_
 
