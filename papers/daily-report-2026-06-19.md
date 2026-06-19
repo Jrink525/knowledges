@@ -10,7 +10,7 @@
 
 ### 🇨🇳 中文摘要
 
-本文发现Transformer隐藏状态的标准基可以直接作为无需训练的特征表示，每个维度通过符号编码语义、通过幅度编码置信度，形成独立的二进制寄存器。该框架在语言、视觉和音频等多个模型上验证了有效性，仅靠符号模式就能保留60-93%的预测准确率。
+本文提出了一种无需训练的机制可解释性框架，通过分析Transformer隐藏状态中每个维度的符号（+/-1）和幅度来编码语义内容和置信度，验证了该框架在语言、视觉和音频模型上的有效性。
 
 ### 🤖 AI 摘要
 
@@ -18,14 +18,18 @@ The standard basis of transformer hidden states serves as a training-free, archi
 
 ### 💡 推荐理由
 
-> 作为Agent开发者，理解Transformer内部表示机制有助于调试和优化Agent的推理过程。本文提出的无需训练的解释方法可以直接应用于你开发的Agent模型，帮助分析模型在决策时依赖哪些特征维度，提升Agent行为的可解释性。
+> 作为Agent开发者，理解模型内部表示如何工作有助于调试和优化Agent行为。这篇论文提供了一种轻量级的方法来窥探模型决策过程，无需额外训练即可获得可解释性洞察。
 
 ### 📋 原始摘要（节选）
 
 We show the standard basis of transformer hidden states already provides a training-free, architecture-general feature basis. Individual dimensions encode semantic content via their signs (+/-1) and confidence via their magnitudes, acting as independent binary registers; a feature is a subset of dimensions with a consistent sign pattern, read by counting sign agreements with no learned rotation. W...
 
+### 🔍 深度解读
 
-> ⏳ 深度解读尚未完成
+- 📖 [解读报告](https://github.com/Jrink525/knowledges/tree/master/papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md)
+- 📂 [完整目录](https://github.com/Jrink525/knowledges/tree/master/papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629)
+- 🧭 [研究方向](https://github.com/Jrink525/knowledges/tree/master/papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/direction_board.json)
+- 🔬 [问题重构](https://github.com/Jrink525/knowledges/tree/master/papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/research_lens.json)
 
 ---
 
@@ -35,7 +39,7 @@ We show the standard basis of transformer hidden states already provides a train
 
 ### 🇨🇳 中文摘要
 
-针对GRPO算法在训练中策略熵崩溃的问题，本文提出STARE方法，通过基于惊异度的token级优势重加权和目标熵调节来稳定强化学习训练。该方法识别熵关键token子集，有效维持策略多样性。
+针对GRPO算法在训练中策略熵崩溃的问题，提出STARE方法，通过基于惊讶度的token级优势重加权和目标熵调节来稳定强化学习训练过程。
 
 ### 🤖 AI 摘要
 
@@ -43,14 +47,18 @@ GRPO algorithms face policy entropy collapse during training, which STARE addres
 
 ### 💡 推荐理由
 
-> 如果你正在用强化学习训练Agent的推理能力，STARE能直接解决训练中策略熵崩溃的痛点。它通过精细的token级调节保持探索多样性，避免Agent过早收敛到次优策略，提升复杂任务上的最终性能。
+> 如果你在用强化学习训练Agent的推理能力，熵崩溃是常见痛点。STARE提供了一种实用的token级优化策略，能直接提升训练稳定性和最终性能。
 
 ### 📋 原始摘要（节选）
 
 Reinforcement Learning with Verifiable Rewards algorithms like GRPO have emerged as the dominant post-training paradigm for complex reasoning in LLMs, yet commonly suffer from policy entropy collapse during training. We conduct a first-order gradient analysis of token-level entropy dynamics under GRPO and identify a token-level credit assignment mismatch: the per-token entropy variation decomposes...
 
+### 🔍 深度解读
 
-> ⏳ 深度解读尚未完成
+- 📖 [解读报告](https://github.com/Jrink525/knowledges/tree/master/papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md)
+- 📂 [完整目录](https://github.com/Jrink525/knowledges/tree/master/papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236)
+- 🧭 [研究方向](https://github.com/Jrink525/knowledges/tree/master/papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/direction_board.json)
+- 🔬 [问题重构](https://github.com/Jrink525/knowledges/tree/master/papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/research_lens.json)
 
 ---
 
@@ -60,7 +68,7 @@ Reinforcement Learning with Verifiable Rewards algorithms like GRPO have emerged
 
 ### 🇨🇳 中文摘要
 
-本文通过收集真实人类对话和判断数据，揭示了LLM个性化系统在合成数据与真实数据之间的显著差距。模型在从人类对话中提取用户属性、判断相关属性以及生成个性化回复方面都存在明显不足。
+通过收集真实人类对话和判断数据，揭示了LLM在个性化任务中合成数据与真实数据之间的显著差距，模型在提取用户属性、生成个性化回复方面存在明显不足。
 
 ### 🤖 AI 摘要
 
@@ -68,14 +76,18 @@ Human-centered evaluation reveals significant gaps between synthetic and real-wo
 
 ### 💡 推荐理由
 
-> Agent开发中个性化是核心能力，本文提醒你依赖合成数据评估个性化效果可能过于乐观。通过了解真实场景下的瓶颈（如属性提取困难），你可以针对性地优化Agent的用户建模模块，提升实际部署中的个性化表现。
+> 构建个性化Agent时，依赖合成数据可能高估模型能力。这篇论文提醒你关注真实用户交互中的挑战，并提供了评估和改进个性化效果的实用框架。
 
 ### 📋 原始摘要（节选）
 
 Despite growing interest, most evaluations of large language models' (LLMs') personalization abilities have relied on synthetic data. It remains unclear how well current personalization systems work for real users. In this paper, we study the gap in LLM personalization performance when using synthetic versus human data. We collect human conversations (550 conversations) and judgments across three ...
 
+### 🔍 深度解读
 
-> ⏳ 深度解读尚未完成
+- 📖 [解读报告](https://github.com/Jrink525/knowledges/tree/master/papers/re-centering-humans-in-llm-personalization-2606.06614/report.md)
+- 📂 [完整目录](https://github.com/Jrink525/knowledges/tree/master/papers/re-centering-humans-in-llm-personalization-2606.06614)
+- 🧭 [研究方向](https://github.com/Jrink525/knowledges/tree/master/papers/re-centering-humans-in-llm-personalization-2606.06614/direction_board.json)
+- 🔬 [问题重构](https://github.com/Jrink525/knowledges/tree/master/papers/re-centering-humans-in-llm-personalization-2606.06614/research_lens.json)
 
 ---
 
@@ -85,7 +97,7 @@ Despite growing interest, most evaluations of large language models' (LLMs') per
 
 ### 🇨🇳 中文摘要
 
-本文提出REVES两阶段迭代框架，通过将中间步骤的“接近正确”答案转化为独立的修正任务来增强LLM推理能力。该方法在编程基准测试和约束满足问题上取得了优于传统多步强化学习的效果。
+提出REVES两阶段迭代框架，通过将中间步骤的“接近正确”答案转化为独立的修正任务来增强LLM推理能力，在编程基准测试上表现优异。
 
 ### 🤖 AI 摘要
 
@@ -93,7 +105,7 @@ A two-stage iterative framework alternates between data augmentation and policy 
 
 ### 💡 推荐理由
 
-> Agent在复杂任务中常需要多步推理和修正，REVES提供了一种高效利用中间错误来提升推理能力的方法。你可以将其集成到Agent的训练流程中，让Agent学会从自己的错误中学习，提升在编程和逻辑推理任务上的表现。
+> 如果你的Agent需要多步推理或代码生成，REVES的修正训练策略能显著提升模型从错误中学习的能力，尤其适合需要高准确率的Agent场景。
 
 ### 📋 原始摘要（节选）
 
@@ -110,7 +122,7 @@ Test-time scaling via sequential revision has emerged as a powerful paradigm for
 
 ### 🇨🇳 中文摘要
 
-本文研究了LLM在无资源编程语言（训练数据几乎为零的语言）上的代码生成问题，开发了基准测试并提出结合进一步预训练和权重差异迁移的方法，以较低计算成本创建专用指令微调模型。
+研究LLM在无资源编程语言（如领域特定语言）上的代码生成问题，提出结合预训练和权重差异迁移的方法，以较低计算成本创建专用指令微调模型。
 
 ### 🤖 AI 摘要
 
@@ -118,7 +130,7 @@ Research addresses code generation challenges for no-resource programming langua
 
 ### 💡 推荐理由
 
-> 作为Java工程师，你可能需要为内部DSL或专有语言生成代码。本文的方法可以帮你快速为这些无资源语言构建代码生成能力，无需大量训练数据，直接提升Agent在特定领域代码生成任务上的实用性。
+> 作为Java工程师，你可能遇到内部DSL或专有语言。这篇论文的方法能帮你快速为这些语言构建代码生成能力，无需大量标注数据。
 
 ### 📋 原始摘要（节选）
 
@@ -135,7 +147,7 @@ Large Language Models (LLMs) have significantly advanced the automation of softw
 
 ### 🇨🇳 中文摘要
 
-本文提出选择性协同学习（SSync）方法，通过伪标签和传递合并策略选择性蒸馏可靠线索，解决了视频对象中心学习中注意力图与对象图不一致的问题，提升了对象分解质量和鲁棒性。
+提出选择性协同学习方法SSync，通过伪标签和传递合并策略选择性蒸馏可靠线索，改进视频对象中心学习的分解质量和鲁棒性。
 
 ### 🤖 AI 摘要
 
@@ -143,7 +155,7 @@ Selective Synergistic Learning (SSync) addresses limitations in video object-cen
 
 ### 💡 推荐理由
 
-> 如果你的Agent需要处理视频或图像数据（如视觉Agent），SSync提供了一种更鲁棒的对象分解方法。它通过选择性学习避免噪声传播，有助于Agent更准确地理解视觉场景中的物体，提升多模态任务的性能。
+> 如果你的Agent需要处理视频或视觉场景理解，SSync提供了一种更鲁棒的对象分解方法，有助于提升Agent在动态环境中的感知能力。
 
 ### 📋 原始摘要（节选）
 
@@ -160,7 +172,7 @@ Typical video object-centric learning (VOCL) approaches employ slot-based framew
 
 ### 🇨🇳 中文摘要
 
-本文提出选择性验证方法SEVRA，作为服务层控制器动态决定是否对初始答案进行验证，在保持或提升准确率的同时减少计算开销。在数学推理任务上，该方法比始终验证节省26.8%的token。
+提出选择性验证框架SEVRA，通过动态决定何时验证推理结果，在保持或提升准确率的同时显著减少计算开销，优于始终验证或自一致性方法。
 
 ### 🤖 AI 摘要
 
@@ -168,7 +180,7 @@ Selective verification approaches optimize test-time reasoning by dynamically de
 
 ### 💡 推荐理由
 
-> Agent在推理时经常面临计算资源与准确率的权衡。SEVRA提供了一种智能的预算感知策略，让你可以根据任务难度动态分配推理资源，在保证Agent回答质量的同时降低延迟和成本，特别适合生产环境部署。
+> Agent的推理效率至关重要。这篇论文教你如何智能分配计算资源，在保证质量的前提下减少延迟，非常适合部署成本敏感的Agent系统。
 
 ### 📋 原始摘要（节选）
 
@@ -185,7 +197,7 @@ Test-time reasoning is increasingly used as a serving-time control knob, but ext
 
 ### 🇨🇳 中文摘要
 
-本文研究了仅提供轨迹级结果标签的离线强化学习场景，提出OPAC悲观演员-评论家算法来学习潜在奖励模型并优化策略。理论分析给出了统计代价的精确刻画，并证明了在某些广义问题上的根本性障碍。
+针对离线强化学习中仅提供轨迹级结果监督的场景，提出OPAC悲观演员-评论家算法，并证明了其统计最优性，揭示了结果监督与过程监督之间的根本性差异。
 
 ### 🤖 AI 摘要
 
@@ -193,7 +205,7 @@ Offline reinforcement learning with trajectory-level outcome supervision present
 
 ### 💡 推荐理由
 
-> Agent训练中常遇到只有最终结果反馈（如任务成功/失败）而缺乏过程奖励的情况。本文的理论和方法可以帮助你从这类稀疏反馈中有效学习，设计更高效的离线训练策略，减少对密集奖励信号的依赖。
+> 如果你在Agent训练中只能获得最终结果（如任务成功/失败）而非每一步奖励，这篇论文的理论和算法能帮你有效利用这种弱监督信号进行策略优化。
 
 ### 📋 原始摘要（节选）
 
@@ -213,7 +225,7 @@ Offline reinforcement learning is typically analyzed under process-level reward 
 
 ### 🇨🇳 中文摘要
 
-本文提出MyPCBench基准，在模拟Linux桌面环境中测试计算机使用Agent作为个人助手的能力，包含17个真实Web应用和184个任务。结果显示Claude Opus 4.6完成率最高仅55.4%，多应用和长轨迹任务仍是挑战。
+提出MyPCBench基准，在模拟Linux桌面环境中评估计算机使用Agent作为个人助手的能力，包含17个真实Web应用和184个任务，发现当前最佳模型完成率仅55.4%。
 
 ### 🤖 AI 摘要
 
@@ -221,7 +233,7 @@ MyPCBench evaluates computer-use agents as personal assistants in a simulated Li
 
 ### 💡 推荐理由
 
-> 如果你正在开发能操作计算机的Agent，MyPCBench提供了贴近真实场景的评估环境。它揭示了当前Agent在跨应用协作和长任务执行上的瓶颈，你可以据此定位自己Agent的薄弱环节，并参考其任务设计来改进。
+> 构建桌面操作Agent时，MyPCBench提供了贴近真实场景的评估环境。你可以用它测试Agent在登录、多应用协作等复杂任务上的表现，发现瓶颈。
 
 ### 📋 原始摘要（节选）
 
@@ -238,7 +250,7 @@ Current benchmarks for computer-use agents evaluate models in impersonal environ
 
 ### 🇨🇳 中文摘要
 
-本文提出EfficientRollout，一种系统感知的自推测解码框架，通过自适应调整草稿模型以匹配不断演化的策略，并优化推测解码策略，显著加速强化学习中的rollout生成。
+提出EfficientRollout框架，通过系统感知的自推测解码加速强化学习中的rollout生成，自适应地处理策略变化并优化推测解码策略。
 
 ### 🤖 AI 摘要
 
@@ -246,7 +258,7 @@ EfficientRollout is a system-aware self-speculative decoding framework that acce
 
 ### 💡 推荐理由
 
-> Agent的强化学习训练中，rollout生成往往是延迟瓶颈。EfficientRollout能直接加速这一过程，让你在训练Agent时更快地收集经验数据，缩短迭代周期。对于需要大量在线交互的Agent训练场景，这是非常实用的优化工具。
+> RL训练中rollout生成是主要瓶颈。这篇论文的方法能直接加速你的Agent训练流程，尤其适合需要大量交互采样的场景，显著减少等待时间。
 
 ### 📋 原始摘要（节选）
 

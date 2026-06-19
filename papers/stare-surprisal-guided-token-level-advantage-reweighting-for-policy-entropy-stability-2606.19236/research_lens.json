@@ -1,0 +1,68 @@
+{
+  "paper_id": "2606.19236",
+  "paper_title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+  "original_problem": "GRPO-style RLVR algorithms suffer from policy entropy collapse during LLM post-training — entropy decays rapidly, output diversity vanishes, policy converges prematurely, limiting long-horizon RL potential.",
+  "reconstructed_problem": {
+    "root_cause": "Token-level credit assignment mismatch in GRPO: trajectory-level advantages are shared across all tokens in a rollout, but per-token entropy contributions vary dramatically based on next-token surprisal. Low-surprisal tokens (high-probability, frequent) dominate updates and drive entropy down, while rare high-surprisal tokens that could maintain entropy are diluted.",
+    "mechanism": "GRPO's gradient update at a position where token a is sampled: Δz_v = η Â (δ_va - π_v). This pushes logits toward the sampled token a. Low-surprisal tokens are sampled more often → more frequent updates pushing toward them → distribution concentrates → entropy drops → self-reinforcing collapse loop.",
+    "why_existing_solutions_fail": "Existing methods operate at trajectory or sample granularity, ignoring that the collapse is fundamentally token-level. Clipping adjustments (DAPO) are inactive in on-policy regime. Trajectory-level weighting is too coarse. Entropy regularization over-amplifies and oscillates."
+  },
+  "key_insights": [
+    {
+      "insight": "Per-token entropy variation = Â × Φ(p) — decomposes into advantage (shared across trajectory) × entropy sensitivity (token-local)",
+      "implication": "Reveals that entropy collapse is driven by token-level imbalance, not trajectory-level factors. Opens door for token-level intervention."
+    },
+    {
+      "insight": "Four-quadrant structure: advantage × surprisal produces quadrants with unambiguous entropy direction",
+      "implication": "Identifies exactly which tokens to target: the 'diluted minority' of high-surprisal tokens in positive-advantage trajectories (L⁺) that could raise entropy but are overwhelmed by low-surprisal tokens."
+    },
+    {
+      "insight": "Near-criticality: a tiny weight perturbation (W* ≈ 1 + O(1/T)) flips entropy direction",
+      "implication": "Intervention can be minimal — don't need strong regularization, just slight rebalancing of the credit assignment. Explains why STARE works with small W values (1.01-1.5)."
+    },
+    {
+      "insight": "Closed-loop target-entropy gating disengages when entropy is healthy",
+      "implication": "Minimally invasive: only intervenes when needed, reverts to standard GRPO otherwise. Makes the method robust to hyperparameter choice."
+    }
+  ],
+  "solution_architecture": {
+    "name": "STARE",
+    "components": [
+      {
+        "component": "High-Surprisal Quantile Selection",
+        "input": "Per-token surprisal values across batch",
+        "operation": "Select top-P% tokens by surprisal as entropy-critical subset",
+        "output": "Token subsets L_q⁺, L_q⁻, U_q⁺, U_q⁻"
+      },
+      {
+        "component": "Advantage Reweighting",
+        "input": "Token subsets + trajectory advantages Â",
+        "operation": "Scale effective advantage by W (>1) for selected subset (default: amplify L_q⁺)",
+        "output": "Reweighted advantages inside GRPO clipped surrogate"
+      },
+      {
+        "component": "Target-Entropy Closed-Loop Gate",
+        "input": "Batch-averaged entropy H̄_k, target H_tgt",
+        "operation": "If H̄_k < H_tgt: activate reweighting; else: use standard GRPO",
+        "output": "Gate signal controlling intervention activation"
+      }
+    ],
+    "interface": "Drop-in modification to GRPO's advantage term inside the clipped surrogate objective"
+  },
+  "what_problem_remains": [
+    "Theoretical analysis assumes unclipped regime (ρ ≈ 1); clipped dynamics not formally covered",
+    "Only applies to GRPO with shared group-normalized advantages — not PPO or REINFORCE",
+    "H_tgt (target entropy) is a manually set hyperparameter with no principled selection method",
+    "Computational overhead of per-token surprisal computation and quantile sorting not characterized",
+    "Limited to RLVR (math/code reasoning); general NL tasks unexplored",
+    "Token selection via quantile proxy may fail on edge-case surprisal distributions",
+    "No formal stability guarantees for the closed-loop target-entropy gating"
+  ],
+  "meta_analysis": {
+    "methodological_approach": "Theory-first: derive token-level entropy dynamics → identify mismatch → design minimal intervention → validate across scales",
+    "theoretical_depth": "High — rigorous first-order gradient analysis with complete proofs in appendices (D-H). Novel application of information-theoretic concepts (surprisal) to RL optimization dynamics.",
+    "empirical_rigor": "Strong — multiple model scales (1.5B-32B), three task families, multiple baselines per setting, thorough ablations (8 STARE variants, hyperparameter sensitivity, cognitive analysis).",
+    "reproducibility": "Good — open-source code on GitHub. However, training compute requirements not stated explicitly.",
+    "significance": "High — addresses a critical bottleneck in RLVR post-training that limits long-horizon RL. The theoretical framework (four-quadrant, near-criticality) provides a principled foundation for future work."
+  }
+}

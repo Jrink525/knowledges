@@ -1,0 +1,179 @@
+{
+  "paper": {
+    "title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+    "arxiv_id": "2606.19236",
+    "published": "2026-06-17",
+    "authors": ["Haipeng Luo", "Qingfeng Sun", "Songli Wu", "Can Xu", "Wenfeng Deng", "Han Hu", "Yansong Tang"],
+    "affiliations": ["Tsinghua University (Shenzhen International Graduate School)", "Tencent Hunyuan"],
+    "categories": ["cs.LG", "cs.AI", "cs.CL"]
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "claim": "Per-token entropy variation under GRPO decomposes into the product of trajectory-level advantage Â and a local entropy sensitivity function Φ determined by the next-token distribution.",
+      "evidence": [
+        "Theorem 3.1: dH/dt ∝ Â · Φ(p) in the unclipped GRPO regime",
+        "Derivation uses softmax Jacobian, chain rule from logits to entropy via Lemma 2.1",
+        "Full proof in Appendix D.4"
+      ],
+      "strength": "theoretical_proof",
+      "section": "3.1"
+    },
+    {
+      "id": "C2",
+      "claim": "There exists a unique critical surprisal threshold 𝔰* that separates entropy-increasing and entropy-decreasing tokens under GRPO.",
+      "evidence": [
+        "Proposition 3.2: Φ(p) > 0 when 𝔰 > 𝔰*, Φ(p) < 0 when 𝔰 < 𝔰*",
+        "Proof of uniqueness via monotonicity of Φ(p) in surprisal",
+        "Full proof in Appendix E.3"
+      ],
+      "strength": "theoretical_proof",
+      "section": "3.2"
+    },
+    {
+      "id": "C3",
+      "claim": "The advantage-surprisal space partitions into a four-quadrant structure determining per-token entropy contribution direction.",
+      "evidence": [
+        "Corollary 3.3: 2×2 matrix of advantage × surprisal → 4 quadrants (U⁺, L⁺, U⁻, L⁻)",
+        "Each quadrant has unambiguous entropy effect: L⁺ (+), U⁺ (-), L⁻ (-), U⁻ (+)",
+        "Proof in Appendix E.4"
+      ],
+      "strength": "theoretical_proof",
+      "section": "3.2"
+    },
+    {
+      "id": "C4",
+      "claim": "In positive-advantage trajectories, low-surprisal (high-probability) tokens dominate sampling frequency and drive most entropy-decreasing updates, while rare high-surprisal tokens that could raise entropy are diluted.",
+      "evidence": [
+        "Appendix E.5: Asymmetric Entropy Contributions under Shared Trajectory-Level Advantages",
+        "The sampling probability p = π(a|c) implies low-surprisal tokens are sampled far more often",
+        "Empirical validation: entropy collapse observed in GRPO-ds training runs"
+      ],
+      "strength": "theoretical_with_empirical",
+      "section": "3.2"
+    },
+    {
+      "id": "C5",
+      "claim": "The entropy neutrality identity holds: E_a~π[Φ(a)] = 0.",
+      "evidence": [
+        "Theorem 3.4: Σ_v π_v Φ(π_v) = 0",
+        "Proof via algebraic manipulation of entropy sensitivity function definition",
+        "Full proof in Appendix E.6"
+      ],
+      "strength": "theoretical_proof",
+      "section": "3.3"
+    },
+    {
+      "id": "C6",
+      "claim": "A near-criticality property: a mild token-level weight perturbation (W slightly > 1) suffices to flip the sign of entropy evolution, and the critical threshold W* ≈ 1 + O(T⁻¹).",
+      "evidence": [
+        "Proposition 3.5: dH̄/dη|_W = -(1/N)[Λ - (W-1)Γ]",
+        "Corollary 3.6: W* - 1 = Λ/Γ = O(T⁻¹) for large T and batch size",
+        "Empirical validation: W=1.01 already mitigates entropy decay; W≥1.05 yields steady growth (Figure 4a)",
+        "Full proof in Appendices E.7-E.11"
+      ],
+      "strength": "theoretical_with_empirical",
+      "section": "3.3"
+    },
+    {
+      "id": "C7",
+      "claim": "Without intervention, entropy collapse is self-reinforcing: entropy reduction → distribution concentrates → high-surprisal tokens diluted → further entropy reduction.",
+      "evidence": [
+        "Section 3.4: Cross-step dynamics analysis",
+        "Formalized in Appendix F (mean-field approximation, open-loop collapse)",
+        "Empirical: GRPO-ds entropy collapses to near-zero by step 1000 (Figures 3, 5-8)"
+      ],
+      "strength": "theoretical_with_empirical",
+      "section": "3.4"
+    },
+    {
+      "id": "C8",
+      "claim": "Batch-internal top-P% surprisal quantile reliably approximates the theoretical critical surprisal threshold 𝔰* for identifying entropy-critical tokens.",
+      "evidence": [
+        "Validation experiment (Figure 11a): ~60% → ~95% agreement with 𝔰* during training",
+        "Figure 11b: cumulative net entropy contribution of L_q⁺ remains positive and monotonic",
+        "Appendix B.2: detailed validation"
+      ],
+      "strength": "empirical",
+      "section": "4.1"
+    },
+    {
+      "id": "C9",
+      "claim": "STARE sustains policy entropy within a target band during RL training over thousands of steps.",
+      "evidence": [
+        "Figure 3a: entropy held near H_tgt=0.3 for 5000 steps (7B Short CoT)",
+        "Figures 5-8: consistent across 1.5B-32B, Short/Long CoT, Tool-Use",
+        "Figure 4b: closed-loop gate holds entropy in target band for W ∈ [1.05, 1.5]"
+      ],
+      "strength": "empirical",
+      "section": "5.2"
+    },
+    {
+      "id": "C10",
+      "claim": "STARE outperforms DAPO and other competitive baselines by 4-8% on AIME24 and AIME25.",
+      "evidence": [
+        "Short CoT 7B: STARE-O1 44.2% (AIME24), 23.8% (AIME25) vs DAPO ~34%/~17%",
+        "Improvements of ~10% and ~7% respectively over DAPO",
+        "Table 2: all 8 STARE variants outperform GRPO-ds",
+        "Long CoT 1.5B: +10.8% over DAPO",
+        "Tool-Use 7B: +5.5% over GRPO-ds"
+      ],
+      "strength": "empirical",
+      "section": "5.2"
+    },
+    {
+      "id": "C11",
+      "claim": "STARE-C2 (dual-sided: amplify L⁺ + attenuate L⁻) provides further gains over STARE-O1 in some settings.",
+      "evidence": [
+        "Long CoT 8B: STARE-C2 62.2% vs STARE-O1 62.0%",
+        "Tool-Use 7B: STARE-C2 60.4% vs STARE-O1 59.4%",
+        "Table 2: C2 achieves 42.5%/24.2% vs O1 44.2%/23.8% on AIME24/25"
+      ],
+      "strength": "empirical",
+      "section": "5.2"
+    },
+    {
+      "id": "C12",
+      "claim": "The tokens selected by STARE for advantage amplification concentrate on reflection and self-correction vocabulary (uncertainty tokens, forking semantics).",
+      "evidence": [
+        "Figure 10: word cloud showing 'should be', 'but', 'instead', 'verification'",
+        "Figure 13: STARE surpasses GRPO-ds on reflection/self-correction categories",
+        "Response length grows in tandem with reflection tokens (Figure 3d)"
+      ],
+      "strength": "empirical",
+      "section": "5.3"
+    },
+    {
+      "id": "C13",
+      "claim": "Target-entropy closed-loop gating substantially reduces sensitivity to the reweighting factor W and selection ratio P.",
+      "evidence": [
+        "Figure 4b: all W ∈ [1.05, 1.5] steer entropy into target band with bounded oscillation",
+        "Figure 4c: P ∈ [5%, 40%] all prevent entropy collapse",
+        "Without gate (Figure 4a): W≥2.0 triggers divergence; with gate, stable across range"
+      ],
+      "strength": "empirical",
+      "section": "5.3"
+    },
+    {
+      "id": "C14",
+      "claim": "STARE achieves this with a minimal modification to the GRPO objective — only reweighting effective advantages of a selected token subset.",
+      "evidence": [
+        "Section 4.2: only the effective advantage Â_i is scaled/attenuated for the selected subset",
+        "The clipped surrogate GRPO objective is otherwise unchanged",
+        "Algorithm C in Appendix: pseudocode shows minimal change from GRPO"
+      ],
+      "strength": "architectural",
+      "section": "4"
+    }
+  ],
+  "metadata": {
+    "generated_at": "2026-06-19T11:48:00Z",
+    "num_claims": 14,
+    "claim_types": {
+      "theoretical_proof": 5,
+      "theoretical_with_empirical": 3,
+      "empirical": 5,
+      "architectural": 1
+    }
+  }
+}

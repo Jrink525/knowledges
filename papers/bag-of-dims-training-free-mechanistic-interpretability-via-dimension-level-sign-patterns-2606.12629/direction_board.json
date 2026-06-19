@@ -1,0 +1,41 @@
+{
+  "paper_id": "2606.12629",
+  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "research_directions": [
+    {
+      "rank": 1,
+      "direction": "Per-dim sign catalog at scale (70B+ models)",
+      "rationale": "Need to verify structure persists at larger scales",
+      "difficulty": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 2,
+      "direction": "Induction primitive: from sign-suppress to sign-induce",
+      "rationale": "Only suppression works; induction would enable feature injection",
+      "difficulty": "hard",
+      "impact": "high"
+    },
+    {
+      "rank": 3,
+      "direction": "Real-time safety monitoring via per-dim sign tracking",
+      "rationale": "Low-cost feature reading enables practical deployment monitoring",
+      "difficulty": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 4,
+      "direction": "Cross-architecture validation (SSMs, RNNs, MoE)",
+      "rationale": "Whether structure is unique to transformers is unknown",
+      "difficulty": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 5,
+      "direction": "Applying BoD features to alignment/steering",
+      "rationale": "Cheap feature extraction enables new steering approaches",
+      "difficulty": "medium",
+      "impact": "high"
+    }
+  ]
+}

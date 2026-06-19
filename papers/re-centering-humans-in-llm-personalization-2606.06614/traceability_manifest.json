@@ -1,0 +1,202 @@
+{
+  "manifest_version": "1.0",
+  "paper_id": "2606.06614",
+  "paper_title": "Re-Centering Humans in LLM Personalization",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim": "Real conversations produce substantially more problematic attributes (uncertain + rejected) than synthetic ones in attribute extraction.",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source": "Figure 2",
+          "description": "Human annotation of extracted user attributes: real data shows lower acceptance rate and higher proportions of uncertain and rejected judgments compared to synthetic datasets.",
+          "quote": "attributes extracted from human conversations contain substantially higher proportions of uncertain and rejected cases than those extracted from the synthetic benchmarks"
+        },
+        {
+          "source": "§4.2",
+          "description": "Text description of results showing synthetic data underestimates extraction difficulty.",
+          "quote": "an additional 22% of extracted user attributes from real conversations are judged problematic"
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "claim": "Real data provides a sufficiently large pool from which a more diverse subset can be selected than any synthetic dataset.",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source": "Table 4.1",
+          "description": "Diversity comparison: Filtered WildChat (0.737) > PersonaLens (0.706) > PrefEval (0.689) > raw WildChat (0.656) > CUPID (0.649)",
+          "quote": "We obtain a subset of 5,000 WildChat users that is substantially more diverse than all synthetic datasets we compare against"
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.3",
+      "claim": "Overgeneralization is the dominant failure mode in attribute extraction (53.9%), followed by missing evidence (20.3%) and task-context confusion (16.1%).",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source": "Appendix D, Table 5",
+          "description": "GPT-5.4 categorization of 1,225 uncertain/rejected attributes.",
+          "quote": "The most common failure mode is overgeneralization (53.9%), where narrow evidence is extrapolated into a stable user trait"
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.4",
+      "claim": "A supervised RoBERTa verifier trained on human annotations achieves the best F1 (0.726) for detecting problematic attributes.",
+      "section": "4.3",
+      "evidence": [
+        {
+          "source": "Table 2",
+          "description": "Performance comparison of attribute verifiers. RoBERTa achieves F1=0.726 (Precision=0.591, Recall=0.926) vs best LLM Claude+optimized prompt at F1=0.630.",
+          "quote": "a supervised RoBERTa verifier provides the strongest practical trade-off between precision and recall"
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.5",
+      "claim": "A verify-and-refine step increases human acceptance of extracted attributes from 58% to above 90%.",
+      "section": "4.3",
+      "evidence": [
+        {
+          "source": "§4.3",
+          "description": "Small-scale study on 250 attributes using RoBERTa verifier as reflection signal.",
+          "quote": "this step increases the average human acceptance rate from 58% to above 90%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.1",
+      "claim": "Humans and LLMs systematically disagree on attribute relevance: LLM-human agreement (κ=0.300) is much lower than human-human (κ=0.426) or LLM-LLL agreement (κ=0.597).",
+      "section": "5.2",
+      "evidence": [
+        {
+          "source": "Figure 3",
+          "description": "Full pairwise Cohen's κ matrix between all three human annotators and five LLMs showing human-human > LLM-human.",
+          "quote": "Human–human agreement (top-left block) is consistently higher than LLM–human agreement (off-diagonal)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.2",
+      "claim": "LLMs over-select 20-40% more attributes as relevant compared to humans.",
+      "section": "5.2",
+      "evidence": [
+        {
+          "source": "§5.2",
+          "description": "Relevance rate comparison: humans mark ~20% of attributes as relevant, LLMs mark 40-60%.",
+          "quote": "each human annotator marks only around 20% of attributes as relevant, whereas LLMs mark 40–60% as relevant across models"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.3",
+      "claim": "Attribute relevance cannot be reduced to semantic similarity or lexical retrieval.",
+      "section": "5.2",
+      "evidence": [
+        {
+          "source": "Figure 4",
+          "description": "Retrieval-based methods perform poorly: BM25 F1=0.243, semantic similarity F1=0.384, far below any LLM judge.",
+          "quote": "BM25 and semantic similarity achieve only 0.243 and 0.384 respectively, both substantially below the performance of LLM judges"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.4",
+      "claim": "GRPO-optimized Qwen3-4B achieves the best relevance selection F1 (0.641), significantly improving over zero-shot LLMs and RoBERTa.",
+      "section": "5.3",
+      "evidence": [
+        {
+          "source": "Table 3",
+          "description": "GRPO: Accuracy=0.870, Precision=0.611, Recall=0.674, F1=0.641. RoBERTa: F1=0.606. Best zero-shot (Claude): F1=0.515.",
+          "quote": "GRPO achieves the strongest performance among the methods we evaluate"
+        },
+        {
+          "source": "Appendix H, Table 7",
+          "description": "Example showing GRPO model self-correcting from 'The user is creative' → YES to → NO on a factual question.",
+          "quote": "The GRPO model catches itself mid-reasoning and applies a more calibrated standard"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim": "54.6% of personalized responses are judged by humans as no better than generic responses.",
+      "section": "6.2",
+      "evidence": [
+        {
+          "source": "§6.2",
+          "description": "Based on collected human preference ratings on each LLM's generation.",
+          "quote": "54.6% of personalized responses are judged by humans as no better than their generic counterparts (rating ≤ 3.0)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "claim": "Open-source models (Qwen3.5, Gemma-4) degrade response quality after personalization.",
+      "section": "6.2",
+      "evidence": [
+        {
+          "source": "Figure 5",
+          "description": "Human ratings by LLM generator showing open-source models below neutral baseline.",
+          "quote": "open-source models like Qwen3.5 and Gemma-4 even degrade responses after personalization"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.3",
+      "claim": "LLM judges systematically inflate personalization quality scores with only modest correlation to human ratings.",
+      "section": "6.2",
+      "evidence": [
+        {
+          "source": "Table 6",
+          "description": "All LLMs assign higher average ratings than humans (human: 3.176 vs Llama-3.3-70B: 4.019). Best Spearman ρ=0.376 (Llama), worst ρ=0.111 (Gemma).",
+          "quote": "humans assign lower ratings than all LLM judges, indicating that automated evaluation often overstates the benefit of personalization"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.4",
+      "claim": "Models that explicitly mention user attributes more often as generators also reward such mentions more as judges (r=0.90).",
+      "section": "6.2",
+      "evidence": [
+        {
+          "source": "Figure 7",
+          "description": "Scatter plot of explicit mention frequency vs tendency to reward explicit mentions. Spearman r=0.90, p=0.04.",
+          "quote": "models with higher explicit mention rates tend to assign larger rewards to explicit mentions during evaluation"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.5",
+      "claim": "Learned reward models achieve only modest Spearman correlation (~0.3) with human ratings for personalization quality.",
+      "section": "6.3",
+      "evidence": [
+        {
+          "source": "§6.3",
+          "description": "Evaluation of ModernBERT, Qwen2.5-1.5B, Llama-3.2-1B reward models.",
+          "quote": "the learned reward models reach only around 0.3 Spearman correlation with human ratings"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.6",
+      "claim": "Claude-Sonnet-4.6 is the only judge that significantly penalizes explicit attribute mentions, but over-penalizes relative to humans.",
+      "section": "6.2",
+      "evidence": [
+        {
+          "source": "Figure 6",
+          "description": "Claude-S4.6 shows Δ=-0.39 for explicit mentions vs human Δ=0.03.",
+          "quote": "Claude-S4.6 shows a significant negative gap, suggesting a preference for more implicit personalization"
+        },
+        {
+          "source": "§6.2",
+          "description": "Claude-S4.6 has lowest explicit mention rate (5%) as generator.",
+          "quote": "Claude-S4.6 has the lowest explicit mention rate as a generator (only 5%)"
+        }
+      ]
+    }
+  ]
+}

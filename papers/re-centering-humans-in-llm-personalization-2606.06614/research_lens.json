@@ -1,0 +1,62 @@
+{
+  "lens_version": "1.0",
+  "paper_id": "2606.06614",
+  "paper_title": "Re-Centering Humans in LLM Personalization",
+  "research_equation": {
+    "before": "PersonalizationScore ≈ f(generic_response, synthetic_persona, LLM_judge)",
+    "after": "PersonalizationScore = f'(generic_response, human_conversation, human_judge) — and f' ≠ f",
+    "insight": "The paper shows that substituting human data into each term of the personalization evaluation function produces fundamentally different results from synthetic evaluation, and that the gap is not a simple scalar shift but a structural misalignment at each stage."
+  },
+  "tri_pass_notes": {
+    "first_pass": {
+      "what": "Systematic comparison of synthetic vs human data across 3 personalization stages. Well-scoped, clean experimental design. Key finding: synthetic data overestimates performance at every stage.",
+      "puzzle": "The paper convincingly shows the gap exists but is less conclusive about why Stage 3 is particularly hard — is it annotation subjectivity, model limitation, or both?"
+    },
+    "second_pass": {
+      "what": "Detailed methodology: WildChat preprocessing (98K→16.5K users), attribute extraction with confidence filtering and clustering, relevance selection with majority voting, personalized generation with blind A/B comparison.",
+      "details": [
+        "Attribute extraction: Llama-3.3-70B, confidence≥0.4, agglomerative clustering (cosine 0.7 threshold)",
+        "Relevance: 3 human annotators, Cohen's κ for agreement analysis, binary YES/NO judgment",
+        "Generation: 5-point Likert A/B comparison, personalized vs generic, side-by-side",
+        "Verifier: roberta-base fine-tuned with Fβ weighting (β=2.0)",
+        "GRPO: Qwen3-4B, 15 epochs, 4×A100, 5 rollovers per prompt"
+      ],
+      "open_questions": [
+        "Would better models (stronger open-weight) close the extraction gap?",
+        "Does the verify-and-refine loop degrade attributes that were originally correct?",
+        "What is the ceiling on reward model correlation with more data / better architectures?"
+      ]
+    },
+    "third_pass": {
+      "what": "The paper's key theoretical contribution is reframing personalization evaluation as a human-centered measurement problem rather than a model alignment problem.",
+      "challenge_module_map": {
+        "attribute_extraction_gap": {
+          "challenge": "Conversation-to-attribute mapping is much noisier with real data",
+          "proposed_solution": "Post-extraction verification (RoBERTa) + refinement",
+          "limitation": "Tested on same distribution; generalization unknown"
+        },
+        "relevance_over_selection": {
+          "challenge": "LLMs consider 2-3× more attributes relevant than humans do",
+          "proposed_solution": "GRPO-based reasoning training that learns to self-correct",
+          "limitation": "Qwen3-4B may not scale to larger models"
+        },
+        "generation_quality_judgment": {
+          "challenge": "54.6% of personalized responses no better than generic; LLM judges inflate scores",
+          "proposed_solution": "Reward model training → only ρ≈0.3 achieved (unsatisfactory)",
+          "limitation": "Fundamentally difficult; may require user-specific judges"
+        },
+        "surface_level_personalization_feedback_loop": {
+          "challenge": "Generator-judge correlation (r=0.90) suggests surface-level tricks transfer from generation to evaluation",
+          "proposed_solution": "None proposed — observation only",
+          "limitation": "Root cause not addressed"
+        }
+      },
+      "research_program_implications": [
+        "Personalization benchmarks should include human data as a mandatory sanity check",
+        "LLM-as-judge is unreliable for personalization specifically (more than for general tasks)",
+        "The generator-judge coupling (r=0.90) suggests evaluation and generation should be studied independently",
+        "User-specific (vs aggregate) reward models may be necessary for Stage 3"
+      ]
+    }
+  }
+}

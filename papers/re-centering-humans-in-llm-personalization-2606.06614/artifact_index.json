@@ -1,0 +1,49 @@
+{
+  "paper_id": "2606.06614",
+  "paper_title": "Re-Centering Humans in LLM Personalization",
+  "paper_name": "re-centering-humans-in-llm-personalization",
+  "authors": ["Lechen Zhang", "Jiarui Liu", "Tal August"],
+  "institutions": ["University of Illinois Urbana-Champaign", "Carnegie Mellon University"],
+  "arxiv_url": "https://arxiv.org/abs/2606.06614",
+  "pdf_url": "https://arxiv.org/pdf/2606.06614",
+  "html_url": "https://arxiv.org/html/2606.06614v1",
+  "github": "https://github.com/orange0629/recenter-personalization",
+  "categories": ["cs.CL", "cs.AI", "cs.HC"],
+  "reading_date": "2026-06-19",
+  "artifacts": {
+    "report": {
+      "path": "report.md",
+      "format": "markdown",
+      "description": "Main deep-read report with 23 sections covering problem hook, framework, dataset, results per stage, interventions, limitations, ethics, claim index, and follow-up questions",
+      "sections": 23
+    },
+    "traceability_manifest": {
+      "path": "traceability_manifest.json",
+      "format": "json",
+      "description": "Claim-to-evidence links for all 15 claims (C1.1–C3.6) across all three stages",
+      "claim_count": 15
+    },
+    "research_lens": {
+      "path": "research_lens.json",
+      "format": "json",
+      "description": "Problem reconstruction with research equation, tri-pass notes (first/second/third), and challenge-module map",
+      "modules": 4
+    },
+    "direction_board": {
+      "path": "direction_board.json",
+      "format": "json",
+      "description": "7 ranked research direction seeds: cross-cultural GRPO generalization, user-specific reward models, cross-model verification, dynamic attribute updating, surface-vs-substantive judge training, GRPO distillation, and reward model scaling analysis",
+      "seeds": 7
+    },
+    "source_pdf": {
+      "path": "paper.pdf",
+      "format": "pdf",
+      "description": "Original arXiv PDF (1.58 MB)"
+    },
+    "references_dir": {
+      "path": "references/",
+      "format": "directory",
+      "description": "Placeholder for reference papers or supporting materials"
+    }
+  }
+}

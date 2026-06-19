@@ -1,0 +1,41 @@
+{
+  "paper_id": "2606.06614",
+  "paper_title": "Re-Centering Humans in LLM Personalization",
+  "research_directions": [
+    {
+      "rank": 1,
+      "direction": "Training data augmentation via real human conversation feedback",
+      "rationale": "Real data has higher diversity and exposes failures synthetic data misses",
+      "difficulty": "medium",
+      "impact": "high"
+    },
+    {
+      "rank": 2,
+      "direction": "Building human-aligned reward models for personalization",
+      "rationale": "Current LLM judges over-inflate scores; learned RMs only ~0.3 Spearman",
+      "difficulty": "hard",
+      "impact": "high"
+    },
+    {
+      "rank": 3,
+      "direction": "Implicit personalization (attribute integration without explicit mention)",
+      "rationale": "Explicit attribute mentions are over-rewarded by LLM judges but not by humans",
+      "difficulty": "hard",
+      "impact": "high"
+    },
+    {
+      "rank": 4,
+      "direction": "Cross-task attribute relevance models for Agent personalization",
+      "rationale": "Agent needs to know which user attributes matter for which task context",
+      "difficulty": "medium",
+      "impact": "medium"
+    },
+    {
+      "rank": 5,
+      "direction": "Overgeneralization detection and correction in Agent attribute extraction",
+      "rationale": "53.9% of extraction errors are overgeneralization \u2014 directly affects Agent assuming user preferences",
+      "difficulty": "medium",
+      "impact": "high"
+    }
+  ]
+}

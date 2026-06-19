@@ -1,0 +1,129 @@
+{
+  "manifest_version": "1.0",
+  "paper_id": "2606.12629",
+  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim": "Sign encodes content, magnitude encodes confidence in transformer hidden states",
+      "section": "3, Tables 1-2",
+      "evidence": [
+        {
+          "source": "Table 1",
+          "description": "Sign-only next-token prediction preserves 60-93% top-5 accuracy through LM head"
+        },
+        {
+          "source": "Table 2",
+          "description": "Pure Hamming scoring (no decoder) reaches 80-90% top-4096 across models"
+        },
+        {
+          "source": "Figure 1c",
+          "description": "Low-magnitude dimensions act as noise; 800 highest-magnitude dims outperform all dims"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "claim": "Transformer hidden dimensions are independent \u2014 pairwise mutual information is near-zero",
+      "section": "4, Table 3",
+      "evidence": [
+        {
+          "source": "Table 3",
+          "description": "Mean MI between dimension signs: 0.001-0.005 bits type-level, 0.0004-0.0006 bits contextual"
+        },
+        {
+          "source": "\u00a74",
+          "description": "Context lowers rather than creates pairwise coupling"
+        },
+        {
+          "source": "\u00a74",
+          "description": "MLP with full cross-dimension capacity adds zero AUC over per-dim logistic regression"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "claim": "Zero-training feature discovery: 175 semantic categories detectable at AUC 0.97-0.99",
+      "section": "5, Table 4",
+      "evidence": [
+        {
+          "source": "Table 4",
+          "description": "161-175/175 categories discoverable (threshold >0.75 per-dim AUC), prototype AUC 0.975-0.993"
+        },
+        {
+          "source": "\u00a75",
+          "description": "Trained probe adds only +0.018 AUC and converges to axis-aligned weights (99.9% sign agreement)"
+        },
+        {
+          "source": "Table 6",
+          "description": "Unsupervised discovery: 1500 features (100% yield, 99% sparsity) across all four models"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "claim": "Features are causally operative \u2014 flipping sign patterns suppresses concepts",
+      "section": "6, Table 8",
+      "evidence": [
+        {
+          "source": "Table 8",
+          "description": "Flipping feature sign pattern suppresses concept: -5 to -24% across models"
+        },
+        {
+          "source": "\u00a76",
+          "description": "Effect is magnitude-matched (sign, not magnitude) and concept-specific"
+        },
+        {
+          "source": "\u00a76",
+          "description": "Requires coalition-level flipping; individual dimensions are inert"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "claim": "Features survive attention projections and FFN neurons write axis-aligned sign patterns",
+      "section": "7, Tables 9-10",
+      "evidence": [
+        {
+          "source": "Table 9",
+          "description": "All 175 categories exceed null calibration in both K and V projections"
+        },
+        {
+          "source": "Table 10",
+          "description": "Up to 20% of features link to individual writer neurons (>0.70 sign agreement)"
+        },
+        {
+          "source": "\u00a77",
+          "description": "Top-200 neuron coalitions reconstruct 99.9% of prototypes via majority vote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "claim": "Cross-modality universality: same structure appears in vision and audio transformers",
+      "section": "8, Tables 14-17",
+      "evidence": [
+        {
+          "source": "Table 14",
+          "description": "DINOv2 (self-supervised vision): 9/12 ImageNet superclasses, 0.831 AUC"
+        },
+        {
+          "source": "Table 15",
+          "description": "ViT-Base (supervised vision): 11/12 superclasses, 0.977 AUC"
+        },
+        {
+          "source": "Table 17",
+          "description": "AST (audio): 50/50 categories, highest per-dim AUC across all models"
+        },
+        {
+          "source": "\u00a78",
+          "description": "Pure Hamming 1-NN: 93-97% accuracy across all modalities"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "generated_at": "2026-06-19T11:50:00Z",
+    "num_claims": 6
+  }
+}
