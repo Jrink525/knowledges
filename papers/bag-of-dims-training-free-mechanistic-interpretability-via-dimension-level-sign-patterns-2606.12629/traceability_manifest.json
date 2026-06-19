@@ -1,129 +1,396 @@
 {
-  "manifest_version": "1.0",
-  "paper_id": "2606.12629",
-  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "manifest_metadata": {
+    "paper": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+    "arxiv_id": "2606.12629v2",
+    "analysis_timestamp": "2026-06-19T11:50:00Z",
+    "total_claims": 17,
+    "total_evidence_items": 37
+  },
   "claims": [
     {
       "claim_id": "C1",
-      "claim": "Sign encodes content, magnitude encodes confidence in transformer hidden states",
-      "section": "3, Tables 1-2",
+      "claim": "Sign encodes semantic content; magnitude encodes confidence",
+      "section": "3.1",
       "evidence": [
         {
+          "evidence_id": "E1.1",
+          "type": "quantitative_table",
           "source": "Table 1",
-          "description": "Sign-only next-token prediction preserves 60-93% top-5 accuracy through LM head"
+          "description": "Sign-only through LM head preserves 60-93% top-5 accuracy. Random sign permutations yield 0%.",
+          "key_numbers": "sign-only top-5: 84% (Qwen), 72% (Gemma), 93% (Mistral), 59.5% (Qwen3-32B)"
         },
         {
+          "evidence_id": "E1.2",
+          "type": "quantitative_table",
           "source": "Table 2",
-          "description": "Pure Hamming scoring (no decoder) reaches 80-90% top-4096 across models"
+          "description": "Pure Hamming prediction without LM head: 80-90% top-4096 with zero learned parameters.",
+          "key_numbers": "Sign context majority top-4096: 80.5% (Qwen), 90.0% (Gemma), 81.5% (Mistral)"
         },
         {
-          "source": "Figure 1c",
-          "description": "Low-magnitude dimensions act as noise; 800 highest-magnitude dims outperform all dims"
+          "evidence_id": "E1.3",
+          "type": "experimental_observation",
+          "source": "\u00a73.1",
+          "description": "Top-800 highest-magnitude dimensions outperform all dimensions.",
+          "key_numbers": "Top-800 loud sign-only top-5: 90.0% (Qwen), 81.5% (Gemma), 96.5% (Mistral), 77.0% (Qwen3-32B)"
         }
       ]
     },
     {
       "claim_id": "C2",
-      "claim": "Transformer hidden dimensions are independent \u2014 pairwise mutual information is near-zero",
-      "section": "4, Table 3",
+      "claim": "Dimensions are functionally independent",
+      "section": "3.2",
       "evidence": [
         {
+          "evidence_id": "E2.1",
+          "type": "quantitative_table",
           "source": "Table 3",
-          "description": "Mean MI between dimension signs: 0.001-0.005 bits type-level, 0.0004-0.0006 bits contextual"
+          "description": "Pairwise mutual information < 0.006 bits across all models.",
+          "key_numbers": "Mean MI: 0.0014 (Qwen), 0.0011 (Gemma), 0.0051 (Mistral), 0.0014 (Qwen3-32B). Max possible: 1.0 bit."
         },
         {
-          "source": "\u00a74",
-          "description": "Context lowers rather than creates pairwise coupling"
+          "evidence_id": "E2.2",
+          "type": "experimental_observation",
+          "source": "\u00a73.2",
+          "description": "Context reduces pairwise coupling for every model.",
+          "key_numbers": "Contextual MI lower than type-level MI for all models"
         },
         {
-          "source": "\u00a74",
-          "description": "MLP with full cross-dimension capacity adds zero AUC over per-dim logistic regression"
+          "evidence_id": "E2.3",
+          "type": "experimental_observation",
+          "source": "\u00a73.2, Appendix B",
+          "description": "MLP with full cross-dimension capacity adds zero AUC over per-dim logistic regression.",
+          "key_numbers": "MLP never outperforms LogReg at any training scale (50-4000 examples)"
         }
       ]
     },
     {
       "claim_id": "C3",
-      "claim": "Zero-training feature discovery: 175 semantic categories detectable at AUC 0.97-0.99",
-      "section": "5, Table 4",
+      "claim": "175 semantic categories discoverable from single-token cache without training",
+      "section": "3.3",
       "evidence": [
         {
+          "evidence_id": "E3.1",
+          "type": "quantitative_table",
           "source": "Table 4",
-          "description": "161-175/175 categories discoverable (threshold >0.75 per-dim AUC), prototype AUC 0.975-0.993"
+          "description": "All 175 categories exceed null calibration on every model.",
+          "key_numbers": "Mean per-dim AUC: 0.801 (Qwen), 0.772 (Gemma), 0.844 (Mistral), 0.792 (Qwen3-32B). Prototype AUC: 0.975-0.993."
         },
         {
-          "source": "\u00a75",
-          "description": "Trained probe adds only +0.018 AUC and converges to axis-aligned weights (99.9% sign agreement)"
+          "evidence_id": "E3.2",
+          "type": "quantitative_table",
+          "source": "Table 5",
+          "description": "Trained probe adds only +0.018 AUC and converges to axis-aligned weights (99.9% sign agreement).",
+          "key_numbers": "LogReg 0.9997 vs sign 0.9814"
         },
         {
-          "source": "Table 6",
-          "description": "Unsupervised discovery: 1500 features (100% yield, 99% sparsity) across all four models"
+          "evidence_id": "E3.3",
+          "type": "ablation",
+          "source": "Appendix B",
+          "description": "MLP adds nothing over per-dim reading at any training scale.",
+          "key_numbers": "MLP wins 0/175 categories at 400-4000 examples"
         }
       ]
     },
     {
       "claim_id": "C4",
-      "claim": "Features are causally operative \u2014 flipping sign patterns suppresses concepts",
-      "section": "6, Table 8",
+      "claim": "Unsupervised discovery scales to 1500 features without labels",
+      "section": "3.3",
       "evidence": [
         {
-          "source": "Table 8",
-          "description": "Flipping feature sign pattern suppresses concept: -5 to -24% across models"
+          "evidence_id": "E4.1",
+          "type": "quantitative_table",
+          "source": "Table 6",
+          "description": "1500 random seeds produce 1500 valid features (100% yield).",
+          "key_numbers": "100% yield across 4 models. Mean dims/feature: 897-2826. 99% fire on <0.1% vocab."
         },
         {
-          "source": "\u00a76",
-          "description": "Effect is magnitude-matched (sign, not magnitude) and concept-specific"
-        },
-        {
-          "source": "\u00a76",
-          "description": "Requires coalition-level flipping; individual dimensions are inert"
+          "evidence_id": "E4.2",
+          "type": "experimental_observation",
+          "source": "Appendix A.2",
+          "description": "Unsupervised features achieve high quality: mean max-score 0.906.",
+          "key_numbers": "100% scoring >=0.80, 61.4% >=0.90"
         }
       ]
     },
     {
       "claim_id": "C5",
-      "claim": "Features survive attention projections and FFN neurons write axis-aligned sign patterns",
-      "section": "7, Tables 9-10",
+      "claim": "Type-level prototypes generalize to context and read polysemy",
+      "section": "3.4",
       "evidence": [
         {
-          "source": "Table 9",
-          "description": "All 175 categories exceed null calibration in both K and V projections"
+          "evidence_id": "E5.1",
+          "type": "experimental_observation",
+          "source": "\u00a73.4",
+          "description": "Contextual AUC: type-level prototypes detected in 25,600 tokens of running text.",
+          "key_numbers": "Mean contextual AUC: 0.814 (Qwen), 0.722 (Gemma), 0.856 (Mistral)"
         },
         {
-          "source": "Table 10",
-          "description": "Up to 20% of features link to individual writer neurons (>0.70 sign agreement)"
-        },
-        {
-          "source": "\u00a77",
-          "description": "Top-200 neuron coalitions reconstruct 99.9% of prototypes via majority vote"
+          "evidence_id": "E5.2",
+          "type": "quantitative_table",
+          "source": "Table 7",
+          "description": "Cross-category polysemy: 77-80% accuracy on three of four models.",
+          "key_numbers": "Accuracy: 79% (Qwen), 78% (Mistral), 77% (Gemma), 60% (Qwen3-32B)"
         }
       ]
     },
     {
       "claim_id": "C6",
-      "claim": "Cross-modality universality: same structure appears in vision and audio transformers",
-      "section": "8, Tables 14-17",
+      "claim": "Features are causally operative during live forward pass",
+      "section": "3.4",
       "evidence": [
         {
+          "evidence_id": "E6.1",
+          "type": "quantitative_table",
+          "source": "Table 8",
+          "description": "Flipping feature signs away suppresses concept by 5-24 logits.",
+          "key_numbers": "Away: -10 to -14 (Qwen), -19 to -24 (Gemma), -5 to -7 (Mistral), -5 to -9 (Qwen3-32B)"
+        },
+        {
+          "evidence_id": "E6.2",
+          "type": "quantitative_table",
+          "source": "Table 8",
+          "description": "Toward flip has \u22480 effect. Sign, not magnitude, is the causal variable.",
+          "key_numbers": "Toward: \u22480 for all models"
+        },
+        {
+          "evidence_id": "E6.3",
+          "type": "quantitative_table",
+          "source": "Table 32 (Appendix H)",
+          "description": "Disjoint coalition flip \u2248 random. Effect is concept-specific.",
+          "key_numbers": "Disjoint \u2248 Random \u2248 0 across all models"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "claim": "Features survive K/V attention projections",
+      "section": "3.5",
+      "evidence": [
+        {
+          "evidence_id": "E7.1",
+          "type": "quantitative_table",
+          "source": "Table 9",
+          "description": "All 175 categories exceed null calibration on both K and V.",
+          "key_numbers": "K discoverable: 55% (Gemma), 99% (Mistral), 53% (Qwen3-4B), 40% (Qwen3-32B)"
+        },
+        {
+          "evidence_id": "E7.2",
+          "type": "quantitative_table",
+          "source": "Table 18",
+          "description": "K/V preservation holds for vision and audio.",
+          "key_numbers": "K: 12/12 (DINOv2), 12/12 (ViT-Base), 50/50 (AST)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "claim": "FFN neurons write axis-aligned sign patterns",
+      "section": "3.6",
+      "evidence": [
+        {
+          "evidence_id": "E8.1",
+          "type": "quantitative_table",
+          "source": "Table 10",
+          "description": "Up to 20% of prototypes link to individual writer neurons at >0.70 sign agreement.",
+          "key_numbers": "Neurons >0.70: 20.1% (Qwen), 19.7% (Gemma), 1.9% (Mistral)"
+        },
+        {
+          "evidence_id": "E8.2",
+          "type": "quantitative_table",
+          "source": "Table 11",
+          "description": "Random weights never achieve linkage thresholds.",
+          "key_numbers": "Trained: 88/1500 (Qwen). Random: 0/1500. Shuffled: 0/1500."
+        },
+        {
+          "evidence_id": "E8.3",
+          "type": "quantitative_table",
+          "source": "Table 12",
+          "description": "Top-200 neuron coalitions reconstruct 99.9% of prototypes via majority vote.",
+          "key_numbers": "K=200 agreement: 0.786 (Qwen), 0.845 (Gemma), 0.758 (Mistral)"
+        },
+        {
+          "evidence_id": "E8.4",
+          "type": "quantitative_table",
+          "source": "Table 13",
+          "description": "FFN activations sign-readable at residual parity, surviving SwiGLU gate.",
+          "key_numbers": "Neuron per-dim AUC within \u00b10.05 of residual stream"
+        }
+      ]
+    },
+    {
+      "claim_id": "C9",
+      "claim": "Cross-modality universality in vision and audio",
+      "section": "3.7",
+      "evidence": [
+        {
+          "evidence_id": "E9.1",
+          "type": "quantitative_table",
           "source": "Table 14",
-          "description": "DINOv2 (self-supervised vision): 9/12 ImageNet superclasses, 0.831 AUC"
+          "description": "DINOv2 detects 9/12 superclasses. ViT-Base detects 11/12.",
+          "key_numbers": "DINOv2 prototype AUC: 0.831. ViT-Base: 0.977."
         },
         {
+          "evidence_id": "E9.2",
+          "type": "quantitative_table",
           "source": "Table 15",
-          "description": "ViT-Base (supervised vision): 11/12 superclasses, 0.977 AUC"
+          "description": "AST detects 50/50 ESC-50 categories.",
+          "key_numbers": "47/50 > 0.80 AUC. Best: Train 0.970, Thunderstorm 0.961."
         },
         {
+          "evidence_id": "E9.3",
+          "type": "quantitative_table",
+          "source": "Table 16",
+          "description": "Pure Hamming 1-NN achieves 93-97% across modalities.",
+          "key_numbers": "DINOv2: 93.0%. ViT-Base: 96.0%. AST: 97.0%."
+        },
+        {
+          "evidence_id": "E9.4",
+          "type": "quantitative_table",
           "source": "Table 17",
-          "description": "AST (audio): 50/50 categories, highest per-dim AUC across all models"
+          "description": "MLP adds <=0.007 AUC over LogReg across modalities.",
+          "key_numbers": "MLP gap: +0.007 (DINOv2), 0.000 (ViT-Base), 0.000 (AST)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim": "Random-init controls confirm structure requires training",
+      "section": "Appendix E",
+      "evidence": [
+        {
+          "evidence_id": "E10.1",
+          "type": "quantitative_table",
+          "source": "Table 26",
+          "description": "Randomly initialized models produce no monosemantic features.",
+          "key_numbers": "Discoverable: 0/175 (Qwen, Gemma). AUC drops to 0.60-0.68."
+        }
+      ]
+    },
+    {
+      "claim_id": "C11",
+      "claim": "Sign prototypes outperform SAE features",
+      "section": "Appendix A.1",
+      "evidence": [
+        {
+          "evidence_id": "E11.1",
+          "type": "quantitative_table",
+          "source": "Table 20",
+          "description": "Sign prototype wins 173/175 categories vs SAE best single feature on Gemma Scope 2.",
+          "key_numbers": "Sign mean AUC: 0.952. SAE best feature: 0.824."
+        }
+      ]
+    },
+    {
+      "claim_id": "C12",
+      "claim": "Per-layer coordinate systems are distinct",
+      "section": "\u00a75, Appendix D",
+      "evidence": [
+        {
+          "evidence_id": "E12.1",
+          "type": "experimental_observation",
+          "source": "\u00a75",
+          "description": "Cross-layer Jaccard similarity = 0.042 (chance level).",
+          "key_numbers": "Jaccard: 0.042"
         },
         {
-          "source": "\u00a78",
-          "description": "Pure Hamming 1-NN: 93-97% accuracy across all modalities"
+          "evidence_id": "E12.2",
+          "type": "quantitative_table",
+          "source": "Table 24",
+          "description": "Gemma shows U-shaped profile: 87% at h0, 29% mid, 78% at final layer.",
+          "key_numbers": "h0: 87%, h16: 29%, h34: 78%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C13",
+      "claim": "Causal effect is depth-gated",
+      "section": "\u00a75",
+      "evidence": [
+        {
+          "evidence_id": "E13.1",
+          "type": "experimental_observation",
+          "source": "\u00a75",
+          "description": "Qwen3-32B effect absent at h48 but present at h60.",
+          "key_numbers": "Detection AUC identical (0.91 vs 0.90) but only h60 patching works"
+        },
+        {
+          "evidence_id": "E13.2",
+          "type": "experimental_observation",
+          "source": "\u00a75",
+          "description": "Early corruptions re-derived by downstream layers.",
+          "key_numbers": "Read/write optima 12 layers apart on 32B model"
+        }
+      ]
+    },
+    {
+      "claim_id": "C14",
+      "claim": "Intervention is asymmetric: suppress but not induce",
+      "section": "\u00a75",
+      "evidence": [
+        {
+          "evidence_id": "E14.1",
+          "type": "experimental_observation",
+          "source": "\u00a75, Table 8",
+          "description": "Toward flip \u2248 0 effect. Only away suppresses.",
+          "key_numbers": "Toward: \u22480 across all models"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15",
+      "claim": "Combinatorial capacity eliminates superposition bottleneck",
+      "section": "\u00a75",
+      "evidence": [
+        {
+          "evidence_id": "E15.1",
+          "type": "theoretical_derivation",
+          "source": "\u00a75, Eq 7",
+          "description": "3^D - 1 possible sign-pattern features.",
+          "key_numbers": "~10^1220 features from 2560 dims"
+        },
+        {
+          "evidence_id": "E15.2",
+          "type": "experimental",
+          "source": "Appendix F",
+          "description": "Toy model: 71-100% feature recovery from sign patterns.",
+          "key_numbers": "96% (23/24) at d=20, n=100"
+        }
+      ]
+    },
+    {
+      "claim_id": "C16",
+      "claim": "Cross-architecture variation tracks D/V ratio, not parameter count",
+      "section": "\u00a75",
+      "evidence": [
+        {
+          "evidence_id": "E16.1",
+          "type": "comparative_observation",
+          "source": "\u00a75",
+          "description": "Mistral (D/V=0.13) achieves highest AUC. Qwen3-32B (0.034) and Gemma (0.010) lower.",
+          "key_numbers": "Mistral: 0.844 AUC. Qwen3-32B: 0.792. Gemma: 0.772."
+        },
+        {
+          "evidence_id": "E16.2",
+          "type": "experimental",
+          "source": "\u00a73.4, Appendix G",
+          "description": "Low D/V model fails polysemy. Others reach 77-80%",
+          "key_numbers": "Qwen3-32B polysemy AUC: 0.60-0.67. Others: 0.72-0.77."
+        }
+      ]
+    },
+    {
+      "claim_id": "C17",
+      "claim": "FFN write present but activation-selection absent in vision",
+      "section": "3.7",
+      "evidence": [
+        {
+          "evidence_id": "E17.1",
+          "type": "quantitative_table",
+          "source": "Table 19",
+          "description": "Static: matched neuron gap +0.20 (DINOv2), +0.30 (ViT-Base). Coalition: 0.50 (near random).",
+          "key_numbers": "Matched 0.69/0.79 vs unmatched 0.49. Coalition 0.50-0.52."
         }
       ]
     }
-  ],
-  "metadata": {
-    "generated_at": "2026-06-19T11:50:00Z",
-    "num_claims": 6
-  }
+  ]
 }

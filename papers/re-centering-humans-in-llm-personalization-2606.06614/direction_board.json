@@ -1,41 +1,91 @@
 {
+  "board_version": "1.0",
   "paper_id": "2606.06614",
   "paper_title": "Re-Centering Humans in LLM Personalization",
-  "research_directions": [
+  "seeds": [
     {
       "rank": 1,
-      "direction": "Training data augmentation via real human conversation feedback",
-      "rationale": "Real data has higher diversity and exposes failures synthetic data misses",
-      "difficulty": "medium",
-      "impact": "high"
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "The GRPO-trained Qwen3-4B achieves F1=0.641 for relevance alignment but this is only evaluated on a single held-out test set of 41 prompts and 47 users. Generalization to new domains, languages, and user populations is unestablished.",
+      "hidden_assumption_or_gap": "The GRPO intervention learns to match human relevance preferences on this specific data distribution. It may overfit to the annotation style of the three Prolific annotators, who share Western cultural norms.",
+      "research_question": "Does GRPO-based relevance alignment generalize across languages (e.g., Chinese, Arabic) where personalization norms differ fundamentally?",
+      "hypothesis": "The GRPO model will over-personalize attributes in collectivist cultures (where implicitness is valued) and under-personalize in cultures with different directness norms.",
+      "minimum_viable_experiment": "Translate the 41 prompts and attributes into 2-3 non-English languages, collect human relevance judgments from native speakers, and compare GRPO model performance against the English baseline.",
+      "negative_result_interpretation": "If GRPO generalizes well, the paper's intervention is robust. If performance degrades significantly, it suggests relevance judgment is culture-specific and cannot be solved with a single trained model.",
+      "killer_objection": "The prompts come from LIMA which is English-heavy Western content; translation artifacts may confound cross-cultural comparison.",
+      "killer_result": "A performance drop of >0.15 F1 in any non-English setting would confirm culture-specificity and necessitate per-culture models."
     },
     {
       "rank": 2,
-      "direction": "Building human-aligned reward models for personalization",
-      "rationale": "Current LLM judges over-inflate scores; learned RMs only ~0.3 Spearman",
-      "difficulty": "hard",
-      "impact": "high"
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "Reward models for personalization quality achieve only rho=0.3 Spearman correlation with humans. The paper suggests 'user-specific or preference-adaptive reward models' as future work but does not explore this.",
+      "hidden_assumption_or_gap": "The paper assumes a single global reward function can capture personalization quality. But personalization is inherently subjective.",
+      "research_question": "Can user-specific reward models (per-user fine-tuning with limited data) outperform a single global reward model for personalization quality?",
+      "hypothesis": "A meta-learning or few-shot approach that adapts a base reward model to individual user preferences will achieve significantly higher correlation (>0.5 Spearman) with human judgments.",
+      "minimum_viable_experiment": "Collect per-user preference data from 10-20 users (50 judgments each), train individual reward models via LoRA fine-tuning from a shared base, and measure within-user vs cross-user Spearman correlation.",
+      "negative_result_interpretation": "If per-user models do not improve, the limitation is not preference diversity but the fundamental difficulty of evaluating personalization quality.",
+      "killer_objection": "Per-user reward models are impractical at scale; users will not provide enough preference data.",
+      "killer_result": "Even with only 10 preferences per user, a meta-learned adapter outperforms the global rho=0.3 baseline."
     },
     {
       "rank": 3,
-      "direction": "Implicit personalization (attribute integration without explicit mention)",
-      "rationale": "Explicit attribute mentions are over-rewarded by LLM judges but not by humans",
-      "difficulty": "hard",
-      "impact": "high"
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "The verify-and-refine loop (Stage 1) is tested on only 250 attributes with a single extraction model (Llama-3.3-70B). The acceptance rate goes from 58% to >90% but the sample is small.",
+      "hidden_assumption_or_gap": "The revision step uses the same model that generated the problematic attributes. This may introduce confirmation bias.",
+      "research_question": "Does using a different model for revision (cross-model verification) improve attribute quality more than same-model verification?",
+      "hypothesis": "Cross-model verification (extract with model A, revise based on verifier feedback from model B) produces higher-quality attributes because the revision model is not anchored to its own prior outputs.",
+      "minimum_viable_experiment": "Extract attributes with Llama-3.3-70B, verify with RoBERTa, then randomly assign flagged attributes to revision by different models. Compare human acceptance rates.",
+      "negative_result_interpretation": "If cross-model revision does not improve, the bottleneck is the verifier's signal quality, not the revision model's impartiality.",
+      "killer_objection": "Cross-model revision is more expensive and may introduce new failure modes.",
+      "killer_result": "Cross-model revision achieves >95% acceptance vs 90% for same-model."
     },
     {
       "rank": 4,
-      "direction": "Cross-task attribute relevance models for Agent personalization",
-      "rationale": "Agent needs to know which user attributes matter for which task context",
-      "difficulty": "medium",
-      "impact": "medium"
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "The paper defines user attributes as stable and context-independent, but overgeneralization (53.9%) shows models turn ephemeral context into permanent traits.",
+      "hidden_assumption_or_gap": "The framework assumes attributes are stable enough to extract once and reuse. But real user preferences change over time.",
+      "research_question": "How much does human satisfaction with personalization degrade when attributes are static vs dynamically updated?",
+      "hypothesis": "Dynamic attribute updating (recency-weighted or context-dependent) significantly improves personalization quality over static attribute profiles.",
+      "minimum_viable_experiment": "Split 47 WildChat users' conversations chronologically. Compare static vs dynamic attribute profiles for late-turn prompts. Measure human preference.",
+      "negative_result_interpretation": "If dynamic attributes do not improve, the stability assumption holds reasonably well for initial-turn personalization.",
+      "killer_objection": "Dynamic updating requires large-scale real-time processing.",
+      "killer_result": "Dynamic attributes show >0.3 rating improvement on human preference scale."
     },
     {
       "rank": 5,
-      "direction": "Overgeneralization detection and correction in Agent attribute extraction",
-      "rationale": "53.9% of extraction errors are overgeneralization \u2014 directly affects Agent assuming user preferences",
-      "difficulty": "medium",
-      "impact": "high"
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "The generator-judge correlation (r=0.90, p=0.04) shows models reward explicit attribute mentions as both generators and judges.",
+      "hidden_assumption_or_gap": "LLM judges are measuring how much the response 'looks personalized' (explicit mentions) rather than 'feels personalized' (appropriate adaptation).",
+      "research_question": "Can we train a judge that distinguishes surface-level from substantive personalization?",
+      "hypothesis": "Fine-tuning on contrastive examples of explicit-but-shallow vs implicit-but-substantive personalization will yield a judge with higher human correlation.",
+      "minimum_viable_experiment": "Create 200 contrastive response pairs, fine-tune a judge. Compare Spearman with human ratings against baseline LLM judges.",
+      "negative_result_interpretation": "If no improvement, the problem is fundamental subjectivity, not measurement.",
+      "killer_objection": "Creating the contrastive dataset requires substantial human annotation.",
+      "killer_result": "Contrastive judge achieves Spearman rho>0.5 with humans."
+    },
+    {
+      "rank": 6,
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "GRPO example: base model marks 'user is creative' relevant to a music theory definition. GRPO model self-corrects: 'Wait, this is factual.'",
+      "hidden_assumption_or_gap": "LLMs conflate 'possible influence' with 'meaningful influence.' This over-selection may be fixable with a simple rule.",
+      "research_question": "Can we distill the GRPO self-correction into a lightweight two-step prompting strategy that matches GRPO performance?",
+      "hypothesis": "A two-step approach (answer without attributes, then check if each attribute changes the answer) matches or exceeds GRPO performance without training.",
+      "minimum_viable_experiment": "Compare: zero-shot LLM, GRPO model, two-step CoT prompting on Stage 2 test set.",
+      "negative_result_interpretation": "If two-step prompting does not approach GRPO, the self-correction requires RL-level optimization.",
+      "killer_objection": "Two-step prompting doubles cost and may introduce new failure modes.",
+      "killer_result": "Two-step prompting achieves F1>0.60, close to GRPO's 0.641."
+    },
+    {
+      "rank": 7,
+      "seed_type": "negative_result",
+      "trigger_evidence_summary": "Reward models achieve only rho=0.3 correlation with humans in Stage 3. The paper does not deeply analyze why.",
+      "hidden_assumption_or_gap": "The reward models use only 1,101 judgments from 3 annotators. The ceiling may be data-limited rather than fundamental.",
+      "research_question": "Does reward model performance for personalization quality scale with training data size?",
+      "hypothesis": "Reward model correlation will scale log-linearly with data size, suggesting the rho=0.3 ceiling is data-limited.",
+      "minimum_viable_experiment": "Train reward models on increasing fractions (10%, 25%, 50%, 75%, 100%) of the 1,101 judgments. Measure Spearman on held-out test set.",
+      "negative_result_interpretation": "If correlation plateaus before 100%, there is a fundamental ceiling.",
+      "killer_objection": "1,101 judgments from 3 annotators have high annotator-specific variance.",
+      "killer_result": "Clear log-linear scaling with no plateau, suggesting >10K judgments would yield rho>0.6."
     }
   ]
 }

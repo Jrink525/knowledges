@@ -231,6 +231,16 @@ for i, p in enumerate(papers, 1):
         lines.append(short_summary)
         lines.append('')
 
+    # Check artifact completeness
+    if has_deep_read:
+        missing = []
+        for art in ['traceability_manifest.json', 'research_lens.json', 'direction_board.json']:
+            if not os.path.exists(os.path.join(workspace_dir, 'papers', paper_dir_name, art)):
+                missing.append(art)
+        if missing:
+            lines.append(f'> ⚠️ 深度解读产出不完整：缺失 {", ".join(missing)}')
+            lines.append('')
+
     # Deep read link
     if has_deep_read:
         lines.append('### 🔍 深度解读')

@@ -1,41 +1,136 @@
 {
-  "paper_id": "2606.12629",
-  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
-  "research_directions": [
+  "direction_board_metadata": {
+    "paper": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+    "arxiv_id": "2606.12629v2",
+    "analysis_date": "2026-06-19",
+    "total_seeds": 12,
+    "ranking_scheme": "Each seed ranked 1-100 on Expected Impact (EI) and Feasibility (F), product = Priority Score. Seeds are projects (30-200 GPU-hr) stemming from this paper.",
+    "ranking_caveats": [
+      "Language-model seeds assume access to a single GPU and the type cache construction (20 min per model).",
+      "Vision/audio seeds assume access to base-size models (86M params).",
+      "No seed requires writing a new training loop, but some require human annotation effort."
+    ]
+  },
+  "seeds": [
     {
       "rank": 1,
-      "direction": "Per-dim sign catalog at scale (70B+ models)",
-      "rationale": "Need to verify structure persists at larger scales",
-      "difficulty": "medium",
-      "impact": "high"
+      "seed_name": "Full dimension catalog for one LM",
+      "priority_score": 85,
+      "expected_impact": 95,
+      "feasibility": 75,
+      "description": "Catalogue all 2560 dims at the optimal layer of a 4B model. For each dimension, report: (a) the tokens it most strongly activates for (positive and negative polarity), (b) the categories for which it achieves per-dim AUC > 0.75, (c) the category where it is the single best dim, (d) its monotonicity with token frequency/familiarity. Distribute as an interactive table.",
+      "why_important": "The paper's central open problem is 'cataloging what each dimension encodes.' This seed directly addresses that. A complete catalog would transform how the community evaluates feature quality.",
+      "effort": "2-3 weeks of analysis (labeling, clustering, visualization)"
     },
     {
       "rank": 2,
-      "direction": "Induction primitive: from sign-suppress to sign-induce",
-      "rationale": "Only suppression works; induction would enable feature injection",
-      "difficulty": "hard",
-      "impact": "high"
+      "seed_name": "Scale-up: test on 70B+ language models",
+      "priority_score": 82,
+      "expected_impact": 90,
+      "feasibility": 75,
+      "description": "Reproduce the main experiments (sign-only prediction, type cache, feature discovery, dimension independence, causal flip) on a 70B+ parameter model (e.g., Llama 3 70B, Qwen 2.5 72B). The type cache costs ~1400 token forward passes × number of tokens per model.",
+      "why_important": "The paper's main limitation is scale. Confirming at 70B+ would substantially increase confidence. If the structure degrades at scale, that's equally important to know.",
+      "effort": "2-3 weeks (GPU time ~30-50 hrs). Cache construction is the bottleneck."
     },
     {
       "rank": 3,
-      "direction": "Real-time safety monitoring via per-dim sign tracking",
-      "rationale": "Low-cost feature reading enables practical deployment monitoring",
-      "difficulty": "medium",
-      "impact": "high"
+      "seed_name": "SAE overlay: where do SAE features and sign patterns align?",
+      "priority_score": 80,
+      "expected_impact": 88,
+      "feasibility": 73,
+      "description": "For a model with existing SAEs (e.g., Gemma Scope 2), compare the SAE feature basis against sign-prototype space. Measure: (a) how many SAE features are axis-aligned (sign of SAE encoder weight matches per-dim sign polarity), (b) what fraction of SAE 'dead features' correspond to sign patterns, (c) whether SAE reconstruction error concentrates in sign agreement or magnitude reconstruction.",
+      "why_important": "Would bridge the gap between this paper and the active SAE literature. If many SAE features are axis-aligned, training cost could be dramatically reduced.",
+      "effort": "4-6 weeks. Requires running SAE forward passes on the same cache tokens."
     },
     {
       "rank": 4,
-      "direction": "Cross-architecture validation (SSMs, RNNs, MoE)",
-      "rationale": "Whether structure is unique to transformers is unknown",
-      "difficulty": "medium",
-      "impact": "medium"
+      "seed_name": "Polysemy mechanism: contextual dimension flipping",
+      "priority_score": 78,
+      "expected_impact": 85,
+      "feasibility": 72,
+      "description": "Characterize the ~42% of dimensions whose signs flip between type-level and contextual settings. For a set of polysemy cases (e.g., 'bat' as animal vs sports), track: (a) which specific dims flip between the two contexts, (b) whether flipped dims encode global context vs local context, (c) whether flipping a subset of context-sensitive dims shifts the readout between senses.",
+      "why_important": "Would directly address how context modulates the sign-based readout and provide a mechanistic account of contextual meaning in the standard basis.",
+      "effort": "3-4 weeks. Requires curated polysemy dataset and targeted intervention."
     },
     {
       "rank": 5,
-      "direction": "Applying BoD features to alignment/steering",
-      "rationale": "Cheap feature extraction enables new steering approaches",
-      "difficulty": "medium",
-      "impact": "high"
+      "seed_name": "Magnitude induction primitive",
+      "priority_score": 76,
+      "expected_impact": 92,
+      "feasibility": 62,
+      "description": "Design a magnitude-based induction primitive. Since flipping signs toward expected does not induce a concept (confirmation: Table 8 Toward ≈ 0), but having the right signs is necessary for detection, the missing element is magnitude/confidence. Test: (a) scaling up magnitudes of a feature's registered dims during forward pass, (b) adding activation to dims that currently have the 'wrong' sign for the target concept, (c) combining sign-flip (toward) with magnitude scaling.",
+      "why_important": "Would complete the causal toolkit (suppress + induce). Enables fine-grained concept control for safety applications.",
+      "effort": "4-6 weeks. Requires iterative intervention experiments."
+    },
+    {
+      "rank": 6,
+      "seed_name": "Time-varying type cache: token frequency effects",
+      "priority_score": 72,
+      "expected_impact": 75,
+      "feasibility": 70,
+      "description": "Analyze how token frequency and corpus statistics affect per-dim sign patterns. Test: (a) are rare tokens encoded with lower magnitude (less confidence)? (b) do frequent tokens have more registered dimensions per feature? (c) does the D/V ratio limitation (Limitation 4) manifest primarily as a low-frequency token problem?",
+      "why_important": "Would clarify the statistical properties of the type cache and identify whether the framework disproportionately fails on rare tokens (a known limitation of many interpretability methods).",
+      "effort": "2-3 weeks. Analysis on existing cache data."
+    },
+    {
+      "rank": 7,
+      "seed_name": "Cross-architecture comparison: Mamba vs Transformer",
+      "priority_score": 70,
+      "expected_impact": 82,
+      "feasibility": 58,
+      "description": "Test whether the same per-dim sign structure appears in non-transformer architectures (e.g., Mamba SSMs, RWKV). If sign-magnitude encoding is a general property of large models trained with gradient descent, it should appear; if it's specific to the residual-stream + FFN + attention architecture, it won't.",
+      "why_important": "Would determine whether Bag of Dims is a 'transformer-specific' discovery or a general property of neural language models. Has implications for which models can leverage training-free interpretability.",
+      "effort": "6-10 weeks. Requires setting up inference for non-transformer models."
+    },
+    {
+      "rank": 8,
+      "seed_name": "Multimodal transfer: do CLIP sign patterns cross domains?",
+      "priority_score": 68,
+      "expected_impact": 78,
+      "feasibility": 59,
+      "description": "Test whether sign patterns discovered in one modality (e.g., text) transfer to another modality (e.g., images) in a vision-language model like CLIP. If a 'cat' concept is encoded by a specific sign pattern in the text encoder, does the image encoder's CLS token for a cat image activate the same pattern?",
+      "why_important": "Would extend the universality claim to cross-modal alignment. Important for multi-modal safety applications.",
+      "effort": "6-8 weeks. Requires CLIP inference pipeline and cross-modal dataset."
+    },
+    {
+      "rank": 9,
+      "seed_name": "Safety monitoring: real-time sign-pattern detector",
+      "priority_score": 65,
+      "expected_impact": 80,
+      "feasibility": 52,
+      "description": "Build a real-time monitoring system that detects safety-relevant sign patterns (e.g., 'violence', 'self-harm', 'deception') at inference time. Evaluate: (a) latency (sub-millisecond per token), (b) coverage vs existing classifiers, (c) false positive rate, (d) robustness to adversarial input.",
+      "why_important": "Practical safety application of the framework. If sign patterns detect features reliably at inference time with near-zero overhead, this is a deployable safety monitor.",
+      "effort": "8-12 weeks. Requires system engineering + safety category annotation."
+    },
+    {
+      "rank": 10,
+      "seed_name": "Explaining activation steering: sign-pattern view",
+      "priority_score": 62,
+      "expected_impact": 72,
+      "feasibility": 52,
+      "description": "Analyze existing activation steering methods (e.g., activation addition, representation engineering) in terms of sign patterns. Test: (a) do steering vectors primarily inflate sign agreement with the target concept on feature-registered dims? (b) do they flip sign on context-sensitive dims? (c) can steering be replicated by targeted sign flips alone?",
+      "why_important": "Would connect the sign-pattern framework to the active steering literature. If steering reduces to sign-pattern manipulation, it becomes more tractable and predictable.",
+      "effort": "6-8 weeks. Requires implementing steering baselines + sign-pattern analysis."
+    },
+    {
+      "rank": 11,
+      "seed_name": "Superposition indicator: per-layer MI profile",
+      "priority_score": 58,
+      "expected_impact": 68,
+      "feasibility": 48,
+      "description": "Measure per-layer pairwise MI at every layer of multiple models to characterize whether any layer exhibits bottleneck-pressure coupling (MI > 0.05 bits) consistent with Elhage's superposition regime. If MI is uniformly low across all layers, this would strengthen the claim that real transformers do not operate in the superposition regime.",
+      "why_important": "The paper's claim that superposition doesn't bind in real transformers is one of its most consequential (and counter-claimed) findings. A comprehensive per-layer MI profile would be the definitive test.",
+      "effort": "4-6 weeks. Requires cache construction at every layer for multiple models."
+    },
+    {
+      "rank": 12,
+      "seed_name": "FFN neuron-to-feature full mapping",
+      "priority_score": 55,
+      "expected_impact": 70,
+      "feasibility": 42,
+      "description": "For a single model layer, map every FFN neuron to the sign-prototype features it contributes to (via down_proj weight analysis). Produce: (a) a sparse matrix mapping neurons ↔ features, (b) neuron polysemanticity distribution, (c) an analysis of whether neurons are more or less polysemantic than dimensions. Test the 'sparse activation → non-overlapping writes' hypothesis.",
+      "why_important": "Would give a complete mechanistic picture of how features are written at one layer. Testing the paper's hypothesis about why dimensions are independent.",
+      "effort": "8-12 weeks. Requires full static weight analysis + clustering."
     }
   ]
 }

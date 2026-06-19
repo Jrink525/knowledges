@@ -1,53 +1,82 @@
 {
-  "paper_id": "2606.12629",
-  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
-  "original_problem": "Mechanistic interpretability for transformers requires expensive training (SAEs need GPU-hours, probes need labeled datasets) to discover feature directions, making it hard to scale to large models.",
-  "reconstructed_problem": {
-    "root_cause": "The field assumed features live in rotated subspaces (superposition hypothesis), requiring learned rotations to extract them. In reality, individual dimensions already encode discrete semantic content via their sign, making training-free readout possible.",
-    "mechanism": "Each hidden dimension acts as an independent binary register: sign(+1/-1)=semantic content, magnitude=confidence. Features are coalitions of dimensions with consistent sign patterns, readable via simple sign-majority voting.",
-    "why_existing_solutions_fail": "SAEs search for sparse features in a rotated basis, but the standard basis is already sparse (100% feature yield, 99% sparsity with simple unsupervised seeds). Probes converge to axis-aligned weights anyway."
+  "research_lens_metadata": {
+    "paper": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+    "arxiv_id": "2606.12629v2",
+    "analysis_date": "2026-06-19"
   },
-  "key_insights": [
-    {
-      "insight": "Transformer dimensions are nearly independent (MI < 0.006 bits) \u2014 no superposition binding in real models",
-      "implication": "No rotation needed; the standard basis IS the feature basis"
-    },
-    {
-      "insight": "Sign carries semantic content, magnitude carries confidence",
-      "implication": "Binary feature detection via sign voting; continuous via magnitude weighting"
-    },
-    {
-      "insight": "Structure appears across modalities (language, vision, audio)",
-      "implication": "Likely a convergent property of gradient descent on transformers, not language-specific"
-    }
-  ],
-  "solution_architecture": {
-    "name": "Bag-of-Dims (BoD)",
-    "components": [
-      {
-        "component": "Single-Token Type Cache",
-        "input": "vocabulary tokens",
-        "operation": "One forward pass per token, store hidden state",
-        "output": "H \u2208 R^(V\u00d7D) matrix per layer"
-      },
-      {
-        "component": "Per-Dimension AUC Ranking",
-        "input": "anchor tokens + full vocab cache",
-        "operation": "Per-dim AUC measures how well sign separates category from full vocab",
-        "output": "Registered dims + sign prototype per category"
-      },
-      {
-        "component": "Hamming Score Predictor",
-        "input": "new token + sign prototype",
-        "operation": "Count fraction of registered dims where sign matches expected polarity",
-        "output": "Normalized Hamming distance score"
-      }
+  "original_problem_statement": "Reading features from transformer hidden states requires training a separate model: sparse autoencoders need millions of contextual activations and GPU-hours; probes need labeled datasets per property.",
+  "reconstructed_problem": {
+    "what_the_field_thinks": "Transformer hidden states encode features in learned, distributed directions. Decoding requires learned rotations (SAEs, probes) to find the right basis. The superposition hypothesis suggests features are geometrically packed.",
+    "what_this_paper_shows": "Individual dimensions of the standard basis function as independent binary registers. Sign encodes content, magnitude encodes confidence. Features are subsets of dims with consistent sign patterns\u2014readable by counting sign agreements with zero training.",
+    "key_insight": "The sign/magnitude decomposition is new: prior work reads activation magnitudes through learned projections; this work reads signs in the standard basis directly.",
+    "hidden_assumptions_exposed": [
+      "Superposition may not bind in real transformers (MI < 0.006 bits vs 0.05-0.10 in toy models)",
+      "Features need not be orthogonal directions; they can be sign agreement patterns over shared dims",
+      "The standard basis is already a feature basis",
+      "Per-dim independence is an emergent property of training",
+      "SAE-scale coverage is achievable without optimization"
+    ],
+    "paradigm_shift": "The open problem shifts from 'finding the right rotation' (via SAEs/probes) to 'cataloging what each dimension encodes at each layer'."
+  },
+  "methodological_reconstruction": {
+    "key_techniques": [
+      "Single-token type cache: one forward pass per vocab token, no context, no labels",
+      "Per-dimension AUC for feature discovery (sign separability)",
+      "Hamming distance/sign agreement counting as training-free classifier",
+      "Unsupervised discovery via centered signs + nearest-neighbor Hamming",
+      "Causal sign-flip intervention during live forward pass",
+      "Static weight inspection for FFN\u2192residual circuit tracing"
+    ],
+    "what_was_not_needed": [
+      "No sparse autoencoder training",
+      "No labeled datasets per property",
+      "No gradient computation for feature reading",
+      "No contextual data for feature discovery",
+      "No learned rotation or projection"
+    ],
+    "control_conditions": [
+      "Random-sign permutations \u2192 0% accuracy",
+      "Random-weight models \u2192 no features discoverable",
+      "Column-shuffled weights \u2192 no neuron-prototype linkage",
+      "Null calibration with 100 random anchor sets",
+      "Disjoint coalition control for causal intervention"
     ]
   },
-  "what_problem_remains": [
-    "Tested only on 4-32B language models and 86M vision/audio models; unclear at 70B+",
-    "Depth-gated causality: sign-flip only works near output, earlier layers re-derive",
-    "Directional asymmetry: can suppress (flip away) but not induce concepts (flip toward)",
-    "Polysemy sensing at Qwen3-32B is near-chance, attributed to low D/V ratio"
-  ]
+  "key_questions_raised": [
+    {
+      "question": "Why do different training objectives all produce the same per-dim structure?",
+      "suggested_answer": "Shared architecture (residual stream + FFN writes + sparse activation)."
+    },
+    {
+      "question": "Does the structure persist at 70B+ parameters?",
+      "suggested_answer": "Consistent from 4B to 32B suggests yes, but untested."
+    },
+    {
+      "question": "Can we induce concepts (not just suppress)?",
+      "suggested_answer": "Requires a magnitude operation. Not provided in this paper."
+    },
+    {
+      "question": "What do the flipping 42% of dims encode?",
+      "suggested_answer": "Likely syntactic role, reference, context-dependent properties."
+    },
+    {
+      "question": "Does D/V ratio fully explain cross-model variation?",
+      "suggested_answer": "Primary variable identified; other factors may contribute."
+    }
+  ],
+  "review_of_reviews_lens": {
+    "what_would_a_skeptic_say": [
+      "Sign patterns may be correlational epiphenomena",
+      "Causal effect only near output\u2014limits the 'computational unit' claim",
+      "Qwen3-32B polysemy failure suggests framework breaks at low D/V ratios",
+      "1500 unsupervised features may not be semantically coherent"
+    ],
+    "what_makes_it_compelling": [
+      "Converging evidence from 6+ experimental paradigms",
+      "Head-to-head SAE comparison (wins 173/175 categories)",
+      "Random-weight controls rule out architectural artifacts",
+      "Sign/magnitude decomposition explains the logit lens",
+      "Cross-modal universality shows structure is fundamental to transformer training"
+    ]
+  }
 }
