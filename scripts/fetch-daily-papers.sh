@@ -1,69 +1,41 @@
 #!/bin/bash
 # ============================================================
 # fetch-daily-papers.sh
-# 从 Hugging Face Daily Papers API 拉取当日热门论文，
-# 用 arXiv API 获取分类标签，按兴趣分类过滤，输出 JSON。
+# 从 Hugging Face Daily Papers API 拉取论文（过去 ~24h），
+# 用 arXiv API 获取分类标签，按兴趣分类过滤，去重，输出 JSON。
 #
 # 用法:
 #   ./scripts/fetch-daily-papers.sh [date] [max_papers]
 #     默认 date=today, max_papers=10
-#     示例: ./scripts/fetch-daily-papers.sh 2026-06-17 15
 #
-# 输出: 过滤后的论文 JSON 数组到 stdout
+# 去重: 每次运行记录已处理的 paper IDs 到 papers/.seen-papers.json，
+#       下次跳过这些 ID（滚动 24h 窗口）。
 # ============================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
-OUTPUT_DIR="${WORKSPACE_DIR}/papers"
 
 # 配置
 MAX_PAPERS="${2:-10}"
 DATE="${1:-$(date -u '+%Y-%m-%d')}"
-DEFAULT_OUTPUT="${WORKSPACE_DIR}/papers/today-hf-papers.json"
-OUTPUT_FILE="${3:-$DEFAULT_OUTPUT}"
+OUTPUT_FILE="${WORKSPACE_DIR}/papers/today-hf-papers.json"
+STATE_FILE="${WORKSPACE_DIR}/papers/.seen-papers.json"
 HF_API="https://huggingface.co/api/daily_papers"
 ARXIV_API="https://export.arxiv.org/api/query"
-ARXIV_PAGE="https://arxiv.org/abs"
-
-# 目标 arXiv 分类 (含一级和二级)
-INTEREST_CATS=(
-  "cs.AI"
-  "cs.CL"
-  "cs.LG"
-  "cs.SE"
-  "cs.MA"
-  "cs.IR"
-  "cs.HC"
-)
-
-# 补充关键词 —— 当 arXiv 分类不可用时 fallback 使用
-INTEREST_KEYWORDS=(
-  "agent"
-  "agentic"
-  "multi-agent"
-  "software engineering"
-  "llm agent"
-  "code agent"
-  "autonomous"
-  "reinforcement learning"
-  "reasoning"
-  "large language model"
-  "foundation model"
-)
 
 # 临时文件
 TMP_RAW=$(mktemp)
 TMP_ARXIV=$(mktemp)
-trap 'rm -f "$TMP_RAW" "$TMP_ARXIV"' EXIT
+TMP_PY=$(mktemp /tmp/fetch-papers.XXXXXX.py)
+trap 'rm -f "$TMP_RAW" "$TMP_ARXIV" "$TMP_PY"' EXIT
 
 log() { echo "[$(date '+%H:%M:%S')] $*" >&2; }
 
 # ---------- 1. Fetch from HF ----------
 log "Fetching daily papers from HF API (date=$DATE)..."
-
 if ! curl -sf --max-time 30 "$HF_API?date=$DATE" > "$TMP_RAW" 2>/dev/null; then
-  log "WARNING: HF API failed, trying without date param..."
+  log "WARNING: HF API failed with date, trying without..."
   curl -sf --max-time 30 "$HF_API" > "$TMP_RAW" 2>/dev/null || {
     log "ERROR: HF API unreachable"
     echo '[]'
@@ -71,60 +43,63 @@ if ! curl -sf --max-time 30 "$HF_API?date=$DATE" > "$TMP_RAW" 2>/dev/null; then
   }
 fi
 
-# 解析为 arXiv ID 列表
+# Parse arXiv IDs
 PAPER_IDS=$(python3 -c "
 import json,sys
 data = json.load(sys.stdin)
-ids = []
-for item in data:
-    pid = item.get('paper', {}).get('id', '')
-    if pid:
-        ids.append(pid)
+ids = [item.get('paper',{}).get('id','') for item in data if item.get('paper',{}).get('id','')]
 print(' '.join(ids))
 " < "$TMP_RAW")
 
 ID_COUNT=$(echo "$PAPER_IDS" | wc -w)
 log "Found $ID_COUNT papers in HF daily feed"
-
-if [ "$ID_COUNT" -eq 0 ]; then
-  log "ERROR: No papers found"
-  echo '[]'
-  exit 0
-fi
+[ "$ID_COUNT" -eq 0 ] && { echo '[]'; exit 0; }
 
 # ---------- 2. Fetch arXiv categories ----------
 log "Fetching arXiv categories for $ID_COUNT papers..."
 ID_LIST=$(echo "$PAPER_IDS" | tr ' ' ',')
-
-# arXiv API batch query (max ~50 IDs at a time)
 curl -sf --max-time 60 "${ARXIV_API}?id_list=${ID_LIST}&max_results=${ID_COUNT}" > "$TMP_ARXIV" 2>/dev/null || {
   log "WARNING: arXiv API failed, falling back to keyword-only filtering"
   echo "" > "$TMP_ARXIV"
 }
 
-# ---------- 3. Build parsed JSON ----------
-# 将 arXiv xml 解析为 id -> categories 映射
-python3 -c "
-import json, sys, xml.etree.ElementTree as ET
+# ---------- 3. Build Python filter + dedup script ----------
+cat > "$TMP_PY" << 'PYEOF'
+import json, os, sys, xml.etree.ElementTree as ET
+
+# Args from shell
+hf_json_path = sys.argv[1]
+arxiv_xml_path = sys.argv[2]
+state_file_path = sys.argv[3]
+output_path = sys.argv[4]
+max_papers = int(sys.argv[5])
+run_date = sys.argv[6]
+
+# Load seen IDs
+seen_ids = set()
+if os.path.exists(state_file_path):
+    try:
+        with open(state_file_path) as f:
+            seen_ids = set(json.load(f).get('ids', []))
+    except Exception:
+        seen_ids = set()
 
 # Read HF data
-with open('$TMP_RAW') as f:
+with open(hf_json_path) as f:
     hf_data = json.load(f)
 
 # Parse arXiv XML
 arxiv_cats = {}
-arxiv_xml = open('$TMP_ARXIV').read() if open('$TMP_ARXIV').read().strip() else None
-if arxiv_xml and arxiv_xml.startswith('<?xml'):
+arxiv_raw = open(arxiv_xml_path).read() if os.path.getsize(arxiv_xml_path) > 0 else None
+if arxiv_raw and arxiv_raw.strip().startswith('<?xml'):
     try:
         ns = {'a': 'http://www.w3.org/2005/Atom', 'ar': 'http://arxiv.org/schemas/atom'}
-        root = ET.fromstring(arxiv_xml)
+        root = ET.fromstring(arxiv_raw)
         for entry in root.findall('a:entry', ns):
             link = entry.find('a:id', ns)
-            if link is not None:
-                # id format: http://arxiv.org/abs/XXXX.XXXXXv1
-                arxiv_id = link.text.split('/')[-1].split('v')[0]
-            else:
+            if link is None:
                 continue
+            arxiv_id = link.text.split('/')[-1].split('v')[0]
             cats = []
             for cat in entry.findall('a:category', ns):
                 term = cat.get('term', '')
@@ -139,38 +114,33 @@ if arxiv_xml and arxiv_xml.startswith('<?xml'):
     except Exception as e:
         sys.stderr.write(f'arXiv XML parse error: {e}\n')
 
-# Interest categories set
+# Interest categories & keywords
 interest_cats = {'cs.ai', 'cs.cl', 'cs.lg', 'cs.se', 'cs.ma', 'cs.ir', 'cs.hc'}
-interest_keywords = ['agent', 'agentic', 'multi-agent', 'software engineering',
-                     'llm agent', 'code agent', 'autonomous', 'reinforcement learning',
-                     'reasoning', 'large language model', 'foundation model',
-                     'tool use', 'llm', 'code generation', 'ai engineer']
+interest_keywords = [
+    'agent', 'agentic', 'multi-agent', 'software engineering',
+    'llm agent', 'code agent', 'autonomous', 'reinforcement learning',
+    'reasoning', 'large language model', 'foundation model',
+    'tool use', 'llm', 'code generation', 'ai engineer',
+]
 
 def matches_interest(title, summary, cats, keywords):
-    '''Return a score: higher = better match'''
     score = 0
     title_lower = (title or '').lower()
     summary_lower = (summary or '').lower()
-    
-    # arXiv category match (strong signal)
-    if cats:
-        for c in cats:
-            if c.lower() in interest_cats:
-                score += 3
-    
-    # Keyword match in title
+    for c in cats:
+        if c.lower() in interest_cats:
+            score += 3
     for kw in keywords:
         if kw in title_lower:
             score += 2
-    
-    # Keyword match in summary
     for kw in keywords:
         if kw in summary_lower:
             score += 1
-    
     return score
 
 results = []
+new_ids = []
+
 for item in hf_data:
     paper = item.get('paper', {})
     pid = paper.get('id', '')
@@ -183,14 +153,14 @@ for item in hf_data:
     
     if not pid:
         continue
+    # Skip papers we already reported on
+    if pid in seen_ids:
+        continue
     
     cats = arxiv_cats.get(pid, [])
-    # Also use HF ai_keywords for matching
     kw_list = ai_keywords if isinstance(ai_keywords, list) else []
-    
     score = matches_interest(title, summary + ' ' + ai_summary, cats, kw_list)
     
-    # Minimum score to include
     if score >= 2 or (cats and any(c.lower() in interest_cats for c in cats)):
         results.append({
             'id': pid,
@@ -206,19 +176,27 @@ for item in hf_data:
             'github_url': github,
             'hf_discussion': f'https://huggingface.co/papers/{pid}'
         })
+        new_ids.append(pid)
 
-# Sort by score (desc), then upvotes (desc)
+# Sort & limit
 results.sort(key=lambda r: (-r['score'], -r['upvotes']))
+limited = results[:max_papers]
 
-# Take top N
-limited = results[:${MAX_PAPERS}]
+# Extract only the actually-outputted paper IDs (top N)
+outputted_ids = [p['id'] for p in limited]
 
-# Write output file path
-output = open('$OUTPUT_FILE', 'w')
-json.dump(limited, output, indent=2, ensure_ascii=False)
-output.close()
+# Save state (rolling 24h window: only block these IDs next run)
+with open(state_file_path, 'w') as f:
+    json.dump({'ids': outputted_ids, 'updated': run_date}, f)
+
+# Write output
+with open(output_path, 'w') as f:
+    json.dump(limited, f, indent=2, ensure_ascii=False)
 
 print(json.dumps(limited, indent=2, ensure_ascii=False))
-" 2>&1
+PYEOF
 
-log "Saved filtered papers to $OUTPUT_FILE ($(python3 -c "import json; d=json.load(open('$OUTPUT_FILE')); print(len(d))" 2>/dev/null) papers)"
+python3 "$TMP_PY" "$TMP_RAW" "$TMP_ARXIV" "$STATE_FILE" "$OUTPUT_FILE" "$MAX_PAPERS" "$DATE"
+
+COUNT=$(python3 -c "import json; print(len(json.load(open(\"$OUTPUT_FILE\"))) or 0)" 2>/dev/null || echo 0)
+log "Done: $COUNT papers saved to $OUTPUT_FILE"
