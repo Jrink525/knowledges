@@ -31,8 +31,8 @@ fi
 
 cd "$(git rev-parse --show-toplevel)"
 
-# 知识文件目录（不含 workspace 基础设施）
-KNOWLEDGE_DIRS=(
+# 知识文件目录（只包含磁盘上实际存在的，不含 workspace 基础设施）
+ALL_KNOWN_DIRS=(
   ai-tools
   business
   database
@@ -49,16 +49,28 @@ KNOWLEDGE_DIRS=(
   vulnerability-research
 )
 
+# 只取实际存在的目录
+KNOWLEDGE_DIRS=()
+for d in "${ALL_KNOWN_DIRS[@]}"; do
+  [ -d "$d" ] && KNOWLEDGE_DIRS+=("$d")
+done
+
+# 拼 exclude 模式
+EXCLUDE_PATTERNS=()
+for d in "${ALL_KNOWN_DIRS[@]}"; do
+  EXCLUDE_PATTERNS+=(":!$d/")
+done
+
 # 检查 workspace 基础设施文件是否有变更
-outside_files=$(git diff --name-only HEAD -- ':!:ai-tools/' ':!:business/' ':!:database/' ':!:image/' ':!:infrastructure/' ':!:java/' ':!:life/' ':!:papers/' ':!:programming/' ':!:prompt-engineering/' ':!:sre/' ':!:startup/' ':!:spring/' ':!:vulnerability-research/' 2>/dev/null)
+outside_files=$(git diff --name-only HEAD -- "${EXCLUDE_PATTERNS[@]}" 2>/dev/null)
 if [ -n "$outside_files" ]; then
   echo "⚠️ 以下知识目录外的文件有未提交变更:"
   echo "$outside_files"
   echo
 fi
 
-# 只暂存知识文件目录内的变更
-git add "${KNOWLEDGE_DIRS[@]}"
+# 只暂存知识文件目录内实际存在的目录的变更
+git add "${KNOWLEDGE_DIRS[@]}" 2>/dev/null || true
 
 # 检查有没有东西要提交
 if git diff --cached --quiet; then
@@ -68,9 +80,9 @@ fi
 
 echo "📦 暂存的变更："
 for dir in "${KNOWLEDGE_DIRS[@]}"; do
-  count=$(git diff --cached --name-only -- "$dir" 2>/dev/null | wc -l)
-  if [ "$count" -gt 0 ]; then
-    git diff --cached --stat -- "$dir"
+  count=$(git diff --cached --name-only -- "$dir" 2>/dev/null | wc -l 2>/dev/null)
+  if [ "${count:-0}" -gt 0 ] 2>/dev/null; then
+    git diff --cached --stat -- "$dir" 2>/dev/null || true
   fi
 done
 
