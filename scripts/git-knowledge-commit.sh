@@ -43,6 +43,7 @@ ALL_KNOWN_DIRS=(
   papers
   programming
   prompt-engineering
+  scripts
   sre
   startup
   spring
