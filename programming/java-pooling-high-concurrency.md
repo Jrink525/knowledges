@@ -372,7 +372,196 @@ public abstract class Filter {
 - 连接泄露检测（借出不还 → 输出堆栈）
 - Web 监控页面（`/druid/index.html`）
 
-### 4.4 HTTP 连接池最佳实践
+### 4.4 开源实现：Tomcat JDBC Pool 的设计差异
+
+Tomcat 自带了一个独立的 JDBC 连接池实现（`tomcat-jdbc`），和 HikariCP、Druid 走的是**完全不同的设计路线**。
+
+#### 4.4.1 和 HikariCP 的根本区别
+
+| 对比维度 | HikariCP | Tomcat JDBC Pool |
+|----------|----------|------------------|
+| 核心容器 | ConcurrentBag（无锁化） | `FairBlockingQueue` + synchronized |
+| 队列策略 | ThreadLocal + CAS | `ReentrantLock` + `Condition`（公平锁） |
+| 并发处理 | 尽量无锁 | 基于锁的同步 |
+| 设计哲学 | 极致速度 | 功能丰富 + 兼容性强 |
+| 内存占用 | 极致精简 | 更多特性支持 |
+
+#### 4.4.2 FairBlockingQueue：Tomcat 的公平机制
+
+```java
+// Tomcat JDBC Pool 的 FairBlockingQueue（简化版）
+public class FairBlockingQueue<T> {
+    private final ReentrantLock lock = new ReentrantLock(true);  // 🔑 公平锁
+    private final Condition notEmpty = lock.newCondition();
+    private final AtomicInteger size = new AtomicInteger(0);
+    // 内部实际使用 ConcurrentLinkedQueue
+    private final Queue<T> queue = new ConcurrentLinkedQueue<>();
+
+    public T poll(long timeout, TimeUnit unit) throws InterruptedException {
+        long nanos = unit.toNanos(timeout);
+        lock.lockInterruptibly();
+        try {
+            while (queue.isEmpty()) {
+                if (nanos <= 0) return null;
+                nanos = notEmpty.awaitNanos(nanos);  // 公平等待
+            }
+            T element = queue.poll();
+            if (element != null) size.decrementAndGet();
+            return element;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean offer(T t) {
+        queue.add(t);
+        size.incrementAndGet();
+        lock.lock();  // 通知等待线程
+        try {
+            notEmpty.signal();
+        } finally {
+            lock.unlock();
+        }
+        return true;
+    }
+}
+```
+
+**为什么 Tomcat 用公平锁？**
+
+Tomcat 是 Web 容器，需要公平对待每个请求。如果某个请求一直在等连接而其他请求后来居上，用户体验会很差。公平锁保证了**先等待的请求先拿到连接**，避免线程饿死。
+
+> 而 HikariCP 的观点是：公平锁的性能开销大于饿死的概率。
+> — 这就是两种设计哲学的差异。
+
+#### 4.4.3 Tomcat JDBC Pool 的独特能力
+
+Tomcat JDBC Pool 有几个 HikariCP 没有的内置功能：
+
+```java
+// 1. 连接借出前执行 SQL 初始化
+ResourcePool pool = new ResourcePool(props);
+pool.setInitSQL("SET time_zone='+08:00', sql_mode=''");
+// 每次新连接建立后，自动执行这段 SQL
+
+// 2. 拦截器链
+// 内置拦截器：
+//   - SlowQueryReport（慢查询报告）
+//   - ConnectionState（自动缓存只读/隔离级别设置，减少 SQL 发送）
+//   - StatementCache（预编译语句缓存，提升热点查询性能）
+//   - ResetAbandonedTimer（防止连接被误标记为泄露）
+```
+
+#### 4.4.4 连接池对比：HikariCP vs Tomcat vs Druid
+
+```
+性能排行：     HikariCP  >  Tomcat JDBC  >  Druid
+功能丰富度：   Druid  >  Tomcat JDBC  >  HikariCP
+运维监控：     Druid（Web 监控）> Tomcat（JMX）> HikariCP（基础 JMX）
+
+选型建议：
+  - 追求极致性能、微服务 → HikariCP（Spring Boot 默认，基本不用改）
+  - 需要慢 SQL 日志、SQL 防火墙 → Druid（适合 DBA 运维）
+  - 已经深度使用 Tomcat、需要拦截器 → Tomcat JDBC Pool
+```
+
+### 4.5 Tomcat 连接器（Connector）的线程池是怎么工作的
+
+除了数据库连接池，Tomcat 自身还有一个**处理 HTTP 请求的线程池**——这才是每个 Java Web 应用背后最关键的池。
+
+#### 4.5.1 Tomcat 请求处理生命周期
+
+```
+客户端请求
+    ↓
+┌─────────────────────────────────┐
+│  Acceptor 线程（少量）            │
+│  从 TCP 连接上接收请求 socket     │
+└────────────┬────────────────────┘
+             ↓
+┌─────────────────────────────────┐
+│  Poller 线程（少量）              │
+│  检查 socket 可读/可写            │
+│  注册到 EventLoop                 │
+└────────────┬────────────────────┘
+             ↓
+┌─────────────────────────────────┐
+│  Worker 线程池（默认 200）        │
+│  执行业务逻辑：Servlet → Filter  │
+│  → 最终执行你的 Controller        │
+└─────────────────────────────────┘
+```
+
+**3 层池化：**
+1. **Acceptor** — 接收连接的线程（通常 1~2 个就够了）
+2. **Poller** — 事件轮询线程（NIO，少量，取决于 CPU）
+3. **Worker** — 执行 Servlet 业务的线程池
+
+#### 4.5.2 NIO vs NIO2 vs APR 三种连接器
+
+| 连接器 | 线程模型 | Worker 池 | 适用场景 |
+|--------|---------|-----------|----------|
+| **BIO**（已废弃） | 1 请求 = 1 线程 | 线程池直接处理 | ❌ 不要用 |
+| **NIO** (默认) | Acceptor + Poller + Worker | 最小 10，最大 200 | 通用，长连接 |
+| **NIO2** | 异步 I/O (AIO) | Worker 池更灵活 | 大文件上传/下载 |
+| **APR** | 原生 OS 事件驱动 | Worker 池 | 高性能 Linux |
+
+#### 4.5.3 生产配置：Tomcat 线程池调优
+
+```yaml
+server:
+  tomcat:
+    threads:
+      max: 200                    # Worker 最大线程数
+      min-spare: 10               # 常驻最小线程数
+    accept-count: 100             # 排队上限（超过 = 拒绝连接）
+    max-connections: 10000        # 最大 TCP 连接数（NIO 下很大）
+    connection-timeout: 5000      # 5s 连不上就关掉
+```
+
+**关键参数详解：**
+
+| 参数 | 说人话 | 调优建议 |
+|------|--------|----------|
+| `max-threads` | 同时处理多少个请求 | 一般 CPU×2 ~ CPU×4，超过 200 通常说明业务慢了 |
+| `accept-count` | 排队的请求上限 | 宁可拒绝也不让请求等太久（设 100~200） |
+| `max-connections` | 同时保持多少 TCP 连接 | NIO 下可以设很大（10K+），实际受 fd 限制 |
+| `min-spare-threads` | 多少线程常驻 | 设成预期的基线 QPS 所需线程数 |
+
+#### 4.5.4 Tomcat 线程池和 Spring Boot 的关系
+
+```
+Tomcat Connector (Worker 线程池)
+    ↓ 收到请求后，从 Worker 池拿出一个线程
+    ↓ 执行 Servlet API 调用链
+    ↓ 最终到达 Spring DispatcherServlet
+        ↓
+    Spring 自己还会用 async 线程池或 TaskExecutor
+        去执行异步任务（如 @Async）
+```
+
+**关键认知：** Tomcat 的 Worker 线程池处理的是**请求 IO 线程**。如果你的业务里有异步操作（@Async、CompletableFuture），那些操作跑的是**应用线程池**而不是 Tomcat Worker 池。两个池之间要独立监控。
+
+#### 4.5.5 实战案例：高并发下 Tomcat 调优
+
+```yaml
+# 情景：电商秒杀系统，峰值 5000 QPS
+server:
+  tomcat:
+    threads:
+      max: 200                    # 够用就行
+      min-spare: 50               # 预热线程数多一些
+    accept-count: 200             # 允许排队 200 个
+    max-connections: 5000         # NIO 下可支撑大并发连接
+    connection-timeout: 3000      # 3s 连不上就放弃
+```
+
+**监控指标：**
+- `tomcat.threads.current` 是否接近 `maxThreads`？→ 线程不够了
+- `tomcat.threads.active` 是否长时间占满？→ 业务逻辑太慢
+- `connection-count` 是否远大于线程数？→ 正常（NIO 特性）
+
+### 4.6 HTTP 连接池最佳实践
 
 ```java
 // OkHttp 连接池配置
