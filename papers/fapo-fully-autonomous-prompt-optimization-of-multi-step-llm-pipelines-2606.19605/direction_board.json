@@ -1,0 +1,100 @@
+{
+  "meta": {
+    "paper": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "arxiv_id": "2606.19605",
+    "slug": "fapo-2606.19605"
+  },
+  "direction_seeds": [
+    {
+      "seed_id": "D1",
+      "seed_type": "unavailable_mechanism",
+      "title": "Learning Escalation Rules Instead of Heuristic Attribution",
+      "trigger_evidence_summary": "FAPO uses heuristic rules for failure attribution and escalation decisions (Section 3.2, Appendix A.3). The escalation logic is deterministic: prompt → parameter → structure based on attribution report heuristics.",
+      "hidden_assumption_or_gap": "The escalation policy assumes that heuristically classified failures map cleanly to optimization levels. No learned model or probabilistic reasoning is used to decide when prompt optimization has truly plateaued.",
+      "research_question": "Can a learned escalation policy (trained on optimization trajectories) outperform heuristic attribution rules in deciding when to escalate from prompt to structural changes?",
+      "hypothesis": "A learned policy that considers the full trajectory of prompt edits, their score impacts, and failure cluster evolution would make better (or earlier) escalation decisions than current heuristics, potentially reducing optimization rounds or finding better structural variants.",
+      "minimum_viable_experiment": "Collect all FAPO optimization trajectories (variant sequences + scores + attribution reports). Train a small classifier on the trajectory state to predict whether structural change would help. Evaluate on held-out trails: compare learned vs heuristic escalation in terms of final score and rounds to convergence.",
+      "negative_result_interpretation": "If learned escalation performs worse, it suggests that heuristic rules are already near-optimal for the problem distributions tested, or that trajectory data is too sparse for reliable learning.",
+      "killer_objection": "Few-shot nature of optimization (each tenant has limited trials) makes learning over trajectories data-starved. The heuristic rules may already capture expert intuition well enough.",
+      "killer_result": "A learned policy reaching the same final score in 20% fewer rounds on average would demonstrate clear value."
+    },
+    {
+      "seed_id": "D2",
+      "seed_type": "proxy_mismatch",
+      "title": "Temporal Integration of Attribution Across Optimization Rounds",
+      "trigger_evidence_summary": "FAPO attributes failures per evaluation round independently (Section 3.2, Figure 2). There is no explicit mechanism to track how the failure distribution evolves across rounds or to detect when a previously fixed failure category re-emerges.",
+      "hidden_assumption_or_gap": "Attribution is stateless across rounds — the optimizer does not maintain a temporal model of failure evolution. Regression failures (a fix to one category causing new failures in another) must be rediscovered each round.",
+      "research_question": "Does maintaining a temporal model of failure attribution across optimization rounds improve optimization efficiency and final score quality?",
+      "hypothesis": "Tracking failure distribution changes over rounds would enable proactive detection of regression failures, reduce re-optimization of previously addressed issues, and identify cyclical failure patterns that heuristic single-round attribution misses.",
+      "minimum_viable_experiment": "Augment FAPO's iteration memory with attribution history per variant. After each evaluation, compare the failure distribution to the previous round. Flag regressions and re-emerging categories. Compare number of rounds to converge and final score vs standard FAPO on HotpotQA and IFBench.",
+      "negative_result_interpretation": "If temporal tracking doesn't improve outcomes, it suggests that the optimizer's LLM-based reasoning already implicitly accounts for history through context window, making explicit tracking redundant.",
+      "killer_objection": "The Claude Code context already contains variant history; temporal tracking may be redundant. The iteration memory log already records variant-level information.",
+      "killer_result": "Temporal tracking reducing required optimization rounds by ≥30% while maintaining or improving final score would be strong evidence."
+    },
+    {
+      "seed_id": "D3",
+      "seed_type": "evidence_gap",
+      "title": "Multi-Orchestrator Generalization",
+      "trigger_evidence_summary": "FAPO exclusively uses Claude Code as its orchestrator (Section 3, 'FAPO uses Claude Code as its orchestrator optimization layer'). The paper does not evaluate GPT-4 agents, open-source coding agents (e.g., CodeLlama, DeepSeek-Coder), or specialized optimizers.",
+      "hidden_assumption_or_gap": "The results implicitly assume Claude Code's strengths (long context, tool use, code editing) are essential for FAPO's success. It's unknown whether FAPO's architecture generalizes to other LLM-powered coding agents.",
+      "research_question": "To what extent does FAPO's performance depend on the specific orchestrator model (Claude Code) vs. being a property of the FAPO architecture itself?",
+      "hypothesis": "The FAPO architecture (three-agent design, attribution-guided search, scope contracts) is the primary driver of improvement. A sufficiently capable alternative orchestrator with similar tool-use capabilities would achieve comparable results.",
+      "minimum_viable_experiment": "Replicate the FAPO codebase with a GPT-4-based orchestrator agent (using the same FAPO tools/commands). Run the HotpotQA and CTIBench-RCM benchmarks. Compare: final scores, number of rounds to converge, types of changes proposed, and cost per optimization.",
+      "negative_result_interpretation": "If GPT-4-orchestrated FAPO performs significantly worse, it suggests Claude Code's specific capabilities (structured thinking, code reasoning, tool discipline) are critical, limiting FAPO's portability.",
+      "killer_objection": "Replicating the Claude Code agent architecture (custom skills, commands, repo instructions) for another model is itself a significant engineering effort, and differences in tool-use capability would confound results.",
+      "killer_result": "An alternative orchestrator achieving ≥90% of Claude Code's mean scores across 3+ benchmarks would demonstrate good architectural portability."
+    },
+    {
+      "seed_id": "D4",
+      "seed_type": "assumption_violation",
+      "title": "Beyond Single-Pipeline Optimization: Pareto Frontiers over Cost-Quality-Tradeoffs",
+      "trigger_evidence_summary": "FAPO optimizes against a single score function (Section 2: 'optimize against a score function'). The optimization objective is scalar — typically accuracy or exact match. Cost, latency, and token usage are not optimization dimensions.",
+      "hidden_assumption_or_gap": "The paper assumes the optimization goal is a single metric. In production, users often care about multiple objectives: accuracy vs cost vs latency vs interpretability. FAPO doesn't explore Pareto-optimal trade-offs.",
+      "research_question": "Can FAPO be extended to multi-objective optimization that discovers Pareto frontiers over accuracy, cost, latency, and interpretability — while maintaining the prompt-first escalation discipline?",
+      "hypothesis": "Multi-objective FAPO with tenant-defined preference constraints can discover Pareto-optimal pipeline variants that outperform single-objective optimized pipelines on composite utility scores.",
+      "minimum_viable_experiment": "Add a multi-objective scoring interface: composite score = α*accuracy + β*(1/cost) + γ*(1/latency). Run FAPO on HotpotQA and Papillon with 3-4 different (α, β, γ) weight vectors. Compare discovered variants to single-objective baseline. Check whether Pareto-optimal variants are meaningfully different from single-objective optimized ones.",
+      "negative_result_interpretation": "If multi-objective optimization simply converges to the accuracy-optimal variant regardless of weights, it suggests cost/latency are secondary and single-objective optimization suffices for practical Pareto fronts.",
+      "killer_objection": "Multi-objective optimization dramatically expands the search space, potentially requiring more budget and making the attribution methodology less clean. The current 'smallest useful change' principle may conflict with exploring cost-performance trade-offs.",
+      "killer_result": "Finding a variant with 95% of accuracy-optimal performance at 50% of the cost would be practically significant for production deployment."
+    },
+    {
+      "seed_id": "D5",
+      "seed_type": "tiny_example",
+      "title": "FAPO for Collaborative Multi-Agent Pipeline Optimization",
+      "trigger_evidence_summary": "FAPO optimizes a single pipeline for a single task model (Section 2: 'treats an LLM pipeline as an inspectable workflow'). The orchestrator is separate from the task model, but the pipeline itself has a single task model executing all LLM nodes.",
+      "hidden_assumption_or_gap": "FAPO assumes a single 'task model' powers the entire pipeline. Modern multi-agent systems use heterogeneous models for different steps (e.g., cheap model for retrieval, expensive model for reasoning). FAPO doesn't address optimization across heterogeneous model assignments.",
+      "research_question": "Can FAPO's attribution-driven optimization extend to heterogeneous multi-agent pipelines where different nodes use different task models, with optimization spanning both prompt/structure and model assignment?",
+      "hypothesis": "FAPO's attribution framework can identify which pipeline steps benefit from more capable (or more specialized) models, enabling cross-model optimization that outperforms single-model optimization at comparable or lower total cost.",
+      "minimum_viable_experiment": "Create a mixed-model pipeline for HotpotQA: BM25 + cheap LLM for initial retrieval summary, capable LLM for final reasoning. Extend FAPO's scope to include 'model assignment' as an optimization level. Compare standard single-model FAPO vs mixed-model FAPO on accuracy and per-query cost.",
+      "negative_result_interpretation": "If mixed-model FAPO doesn't improve accuracy-cost Pareto, it suggests that once prompts and structure are optimized, model capability is the dominant remaining factor — you can't substitute a weaker model even with optimal prompts.",
+      "killer_objection": "Adding model assignment to the search space significantly increases complexity and may undermine the 'smallest useful change' principle. The orchestrator would need to reason about model capabilities, which is a new reasoning dimension.",
+      "killer_result": "Mixed-model FAPO achieving comparable accuracy at ≤60% of the cost of single-model FAPO would be compelling for production deployment."
+    },
+    {
+      "seed_id": "D6",
+      "seed_type": "negative_result",
+      "title": "Why FAPO Fails on AIME: Understanding the Math Reasoning Bottleneck",
+      "trigger_evidence_summary": "AIME is the only benchmark where GEPA leads (Section 4.3): 'AIME is the only benchmark where GEPA leads FAPO across all three model comparisons; relative to the baselines, FAPO yields mixed results (-2.22, +3.78, and +1.55 pp) that fall within the noise range.' The authors speculate overfitting to small sample sizes.",
+      "hidden_assumption_or_gap": "The paper's speculation (overfitting to small AIME dev set) is unrebutted. But AIME is also a fundamentally different problem: it requires multi-step symbolic reasoning with exact answer format, where prompt engineering alone may be ineffective because the difficulty is cognitive (multi-step derivation), not representational (retrieval/format).",
+      "research_question": "Is FAPO's prompt-first approach fundamentally less suited for math reasoning tasks where the bottleneck is multi-step symbolic/numerical derivation rather than retrieval or formatting?",
+      "hypothesis": "AIME's negative results stem from an inherent limitation of prompt-first optimization for tasks where the dominant failure mode is insufficient reasoning depth or quality — a problem that may require chain-of-thought paradigm shifts rather than prompt refinement or structural adjustments.",
+      "minimum_viable_experiment": "Run FAPO on AIME with a modified scope: allow chain-of-thought structure changes (e.g., self-consistency, verification nodes, decomposition) from the start. Compare to prompt-only FAPO and GEPA. Also run AIME with larger dev set (3x) to test the overfitting hypothesis directly.",
+      "negative_result_interpretation": "If even structural FAPO underperforms GEPA on AIME, it suggests that mathematical reasoning optimization has different dynamics — the 'correct' prompt structure is more about reasoning paradigm than retrieval/format architecture.",
+      "killer_objection": "AIME's small size (30 test problems) makes any comparison noisy. The failure may be statistical rather than structural. The paper's speculation about overfitting may be correct.",
+      "killer_result": "Structural FAPO achieving ≥+5 pp over GEPA on AIME would definitively show that the original failure was prompt-level constraints, not a fundamental limitation."
+    },
+    {
+      "seed_id": "D7",
+      "seed_type": "cross_domain_transfer",
+      "title": "FAPO for Continuous Adaptation: Optimizing Pipelines Under Distribution Shift",
+      "trigger_evidence_summary": "FAPO optimizes once on a static dataset (Section 4.2: fixed train/validation/test splits). The paper does not address how optimized pipelines perform under distribution shift or how FAPO could be used for continuous adaptation.",
+      "hidden_assumption_or_gap": "FAPO assumes a stationary evaluation distribution. In production, data distributions, task specifications, and model behaviors shift over time. An optimization that's optimal today may degrade tomorrow.",
+      "research_question": "Can FAPO's optimization loop be adapted for continuous, lightweight re-optimization under distribution shift, while maintaining the prompt-first escalation discipline?",
+      "hypothesis": "A continuous FAPO variant that periodically re-attributes failures on fresh data and applies small prompt corrections would maintain performance under slow distribution shifts more efficiently than full re-optimization from scratch.",
+      "minimum_viable_experiment": "Create a synthetic distribution shift over HotpotQA by removing certain question types from initial optimization and reintroducing them later. Compare: (1) no re-optimization, (2) full FAPO re-optimization, (3) lightweight 'delta-FAPO' that only re-attributes on new data and applies prompt-only changes. Measure performance over time and cumulative optimization cost.",
+      "negative_result_interpretation": "If delta-FAPO fails to track the shift, it suggests that distribution shifts often require structural changes, which lightweight re-optimization cannot provide. If all three variants perform similarly, it suggests HotpotQA is robust to the tested shift type.",
+      "killer_objection": "Continuous optimization risks concept drift in the optimization objective itself. The guardrails against overfitting (split access, etc.) may interact badly with continuous adaptation.",
+      "killer_result": "Delta-FAPO maintaining ≥95% of full re-optimization performance at ≤30% of cost would demonstrate practical value for production monitoring."
+    }
+  ]
+}

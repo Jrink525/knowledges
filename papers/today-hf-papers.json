@@ -1,0 +1,169 @@
+[
+  {
+    "id": "2606.15527",
+    "arxiv_id": "2606.15527",
+    "title": "Selective Synergistic Learning for Video Object-Centric Learning",
+    "summary": "Typical video object-centric learning (VOCL) approaches employ slot-based frameworks that rely on reconstruction-driven encoder-decoder architectures, where learning is mediated by two spatial maps: attention maps from the encoder and object maps from the decoder. As these two distinct maps exhibit different properties, a recent dense alignment strategy attempted to reconcile this discrepancy by enforcing agreement across all spatio-temporal patches via contrastive learning. However, this indiscriminate alignment inadvertently propagates the inherent weaknesses of each module, such as noisy encoder predictions and blurred decoder boundaries. Moreover, computing dense similarities across all pairs incurs a computational cost quadratic in the total number of spatio-temporal patches, severely limiting scalability. Motivated by this, we propose Selective Synergistic Learning (SSync). Instead of exhaustive patch-to-patch alignment, SSync prevents error propagation by selectively distilling only the most reliable cues: leveraging the encoder strictly for boundary refinement and the decoder for interior denoising. This is realized via a pseudo-labeling with linear complexity, eliminating the need for quadratic spatial comparisons. Also, to prevent the reinforcement of architectural biases like slot redundancy, we introduce a transitive pseudo-label merging that consolidates overlapping slots based on spatio-temporal activation consistency. Extensive studies demonstrate that SSync improves decomposition quality and serves as a versatile, plug-and-play module while also exhibiting exceptional robustness to slot configurations. Code is available at github.com/wjun0830/SSync.",
+    "ai_summary": "Selective Synergistic Learning (SSync) addresses limitations in video object-centric learning by selectively distilling reliable cues through pseudo-labeling and transitive merging to improve object decomposition quality and robustness.",
+    "arxiv_categories": [
+      "cs.CV",
+      "cs.AI"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.15527",
+    "pdf_url": "https://arxiv.org/pdf/2606.15527",
+    "github_url": "https://github.com/wjun0830/SSync",
+    "hf_discussion": "https://huggingface.co/papers/2606.15527"
+  },
+  {
+    "id": "2606.19531",
+    "arxiv_id": "2606.19531",
+    "title": "ImageWAM: Do World Action Models Really Need Video Generation, or Just Image Editing?",
+    "summary": "World Action Models (WAMs) commonly rely on video generation to bridge visual world modeling and robot control. However, video-based WAMs face three coupled limitations: dense multi-frame future tokens make inference costly, full video prediction spends capacity on action-irrelevant temporal and appearance details, and long-horizon future imagination may introduce errors that mislead action prediction. These issues raise a simple question: Does world action model really need video generation? We propose ImageWAM, a simple WAM framework that repurposes pretrained image editing models for robot action prediction. In contrast to video generation, image editing provides a better-matched prior: it only needs to model a target-frame transformation, focuses on action-relevant current-to-target visual differences, and grounds task instructions to localized visual changes through edit pretraining. In practice, ImageWAM does not decode the target frame at inference time; instead, it conditions a flow-matching action expert on the KV caches produced by image-editing denoising, using them as a compact world-action context. ImageWAM outperforms standard VLA baselines and matching competitive WAMs without additional policy pretraining across different simulator and real-world experiments. It also reduces FLOPs to 1/6 and latency to 1/4 of video-based WAMs. Attention analysis further shows that editing caches focus on task-relevant change regions, supporting image editing as an effective alternative to video-based world-action modeling.",
+    "ai_summary": "ImageWAM demonstrates that pretrained image editing models can effectively replace video generation in world action models for robot control, achieving better performance with reduced computational costs.",
+    "arxiv_categories": [
+      "cs.CV",
+      "cs.RO"
+    ],
+    "score": 15,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19531",
+    "pdf_url": "https://arxiv.org/pdf/2606.19531",
+    "github_url": "https://github.com/yuyangalin/ImageWAM",
+    "hf_discussion": "https://huggingface.co/papers/2606.19531"
+  },
+  {
+    "id": "2606.19605",
+    "arxiv_id": "2606.19605",
+    "title": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "summary": "Multi-step LLM pipelines fail through interactions among retrieval, reasoning, and formatting steps, so prompt-only optimization can miss bottlenecks in the chain. We present FAPO (Fully Autonomous Prompt Optimization), a framework that lets Claude Code optimize an LLM pipeline inside a standardized codebase. FAPO evaluates a pipeline, inspects intermediate steps, diagnoses failures, proposes scoped changes, and validates variants repeatedly to optimize against a score function. It first tries prompt edits and, only when prompt optimization appears insufficient, changes chain structure within the permitted scope when attribution identifies a structural bottleneck. Across six benchmarks and three task models, FAPO beats the baseline GEPA in 15 of 18 model-benchmark comparisons. In 11 model-benchmark comparisons, FAPO wins with non-overlapping mean pm trial-standard-deviation ranges, and the mean FAPO-GEPA gain is +14.1 pp. In the six HoVer and IFBench comparisons where prompt-first search escalated to structural changes, FAPO wins all six with a mean gain of +33.8 pp. FAPO also improves performance on security tasks: on CTIBench-RCM, a security CVE-to-CWE task, prompt-only FAPO lifts test accuracy by +4.0 pp on GPT-5, +7.1 pp on Foundation-Sec-8B-Instruct, and +2.0 pp on Foundation-Sec-8B-Reasoning. These results position FAPO as a state-of-the-art pipeline optimization technique for both general-purpose and security-focused tasks.",
+    "ai_summary": "FAPO optimizes LLM pipelines by combining prompt editing with structural changes, demonstrating superior performance across multiple benchmarks and security tasks.",
+    "arxiv_categories": [
+      "cs.SE",
+      "cs.AI"
+    ],
+    "score": 14,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19605",
+    "pdf_url": "https://arxiv.org/pdf/2606.19605",
+    "github_url": "https://github.com/cisco-foundation-ai/fully-automated-prompt-optimization",
+    "hf_discussion": "https://huggingface.co/papers/2606.19605"
+  },
+  {
+    "id": "2606.19704",
+    "arxiv_id": "2606.19704",
+    "title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+    "summary": "Agent benchmarks are growing fast, but no single benchmark touches more than four or five of the dimensions that deployment exposes. This paper aggregates the largest coordinated deep-dive of one MCP-based industrial-agent benchmark to date: fourteen parallel implementation studies covering new asset classes (including a multi-modal visual extension), alternative orchestrations, retrieval strategies, reasoning modes, infrastructure optimizations, and evaluation-methodology probes. Consolidating those studies with seven prior agent benchmarks, we argue that aggregate-score leaderboards systematically underspecify deployed-agent evaluation. Rankings derived from aggregate scores do not transfer to out-of-distribution settings; recent public-to-hidden competition retrospectives provide direct empirical evidence of this rank instability. We propose ranking configurations by predictive validity, the correlation between in-sample and out-of-sample rank, rather than in-sample mean, and report a twelve-tier measurement apparatus that exposes the deployment-relevant dimensions HELM and its agent-era successors collapse. The position is operationalized through three falsifiable out-of-distribution criteria with explicit thresholds; existing evidence partly supports it but is too thin to confirm. We close with a pre-registered pilot design and a field-level vision for what the next generation of agentic benchmarks should report.",
+    "ai_summary": "Aggregate-score leaderboards in agent benchmarks fail to capture deployment-relevant dimensions and show rank instability, necessitating new evaluation frameworks based on predictive validity and out-of-distribution criteria.",
+    "arxiv_categories": [
+      "cs.AI"
+    ],
+    "score": 13,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19704",
+    "pdf_url": "https://arxiv.org/pdf/2606.19704",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.19704"
+  },
+  {
+    "id": "2606.19980",
+    "arxiv_id": "2606.19980",
+    "title": "ENPIRE: Agentic Robot Policy Self-Improvement in the Real World",
+    "summary": "Achieving dexterous robotic manipulation in the real world heavily relies on human supervision and algorithm engineering, which becomes a central bottleneck in the pursuit of general physical intelligence. Although emerging coding agents can generate code to automate algorithm search, their successes remain largely confined in digital environments. We conjecture that the missing abstraction to automate robotics research is a repeatable feedback loop for real-world policy improvement: reset the scene, execute a policy, verify the outcome, and refine the next iteration. To bridge this gap, we introduce ENPIRE, a harness framework for coding agents that instantiates this physical feedback routine with four core modules: an Environment module (EN) for automatic reset and verification, a Policy Improvement module (PI) that launches policy refinement, a Rollout module (R) to evaluate policies with one or multiple physical robots operating in parallel, and an Evolution module (E) in which coding agents analyze logs, consult literature, improve training infrastructure and algorithm code to address failure modes. This closed-loop system transforms real-world manipulation learning into a controllable optimization procedure, minimizing human effort while allowing fair ablations across training recipe and agent variants. Powered by ENPIRE, frontier coding agents can autonomously train a policy to achieve a 99% success rate on challenging, dexterous manipulation tasks, such as organizing a pin box, fastening a zip tie, and tool use, a process that further accelerates when we dispatch an agent team on a robot fleet. Our results suggest a practical and scalable path toward deploying coding agents to autonomously advancing robotics in the physical world.",
+    "ai_summary": "ENPIRE framework enables autonomous robotics research through a closed-loop system that automates policy improvement via environment feedback, policy refinement, and evolutionary code optimization.",
+    "arxiv_categories": [
+      "cs.AI"
+    ],
+    "score": 13,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19980",
+    "pdf_url": "https://arxiv.org/pdf/2606.19980",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.19980"
+  },
+  {
+    "id": "2606.16122",
+    "arxiv_id": "2606.16122",
+    "title": "Thinking with Visual Grounding",
+    "summary": "Visual thinking should not only sound right; it should show its evidence. While recent vision-language models (VLMs) can produce natural-language reasoning traces, these traces often leave the supporting image regions implicit, making them hard to verify and difficult to supervise. We introduce visually grounded thinking, a reasoning process in which models interleave natural-language thoughts with explicit point or box groundings of the visual evidence used at each step. This lets the model express intermediate reasoning in language while grounding key objects in the image regions they refer to. To train this behavior, we construct a scalable synthesis pipeline that distills correct visual reasoning traces, extracts the visual objects required by the traces, grounds them with a SAM3-based agent, and derives aligned point and box supervision from the resulting masks. We further propose grounding-aware reinforcement learning, which combines answer correctness rewards with dense grounding rewards that score whether generated object references match the correct image evidence. Across two counting benchmarks and four spatial reasoning benchmarks, adding visually grounded thinking to Gemma3-4B-IT consistently improves performance over the original model and the non-grounded thinking baseline. On spatial reasoning, the visually grounded thinking 4B models match, and in some cases surpass, Gemma3-27B-IT from the same model family. Our analysis shows that point grounding is well suited to counting, while box grounding benefits most from explicit grounding rewards on spatial tasks. Overall, our results show that VLMs think better when their intermediate thoughts are tied to the image regions that make them true.",
+    "ai_summary": "Visually grounded thinking integrates natural-language reasoning with explicit visual evidence grounding in vision-language models, improving reasoning accuracy through scalable synthesis and reinforcement learning techniques.",
+    "arxiv_categories": [
+      "cs.AI"
+    ],
+    "score": 13,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.16122",
+    "pdf_url": "https://arxiv.org/pdf/2606.16122",
+    "github_url": "https://github.com/Jun-Kai-Zhang/visually_grounded_thinking",
+    "hf_discussion": "https://huggingface.co/papers/2606.16122"
+  },
+  {
+    "id": "2606.19830",
+    "arxiv_id": "2606.19830",
+    "title": "JAMER: Project-Level Code Framework Dataset and Benchmark on Professional Game Engines",
+    "summary": "Current AI-driven game development has made substantial progress in asset generation, gameplay design, and web-based game coding, yet project-level code engineering on professional game engines remains largely unexplored due to the absence of large-scale datasets and deterministic evaluation methods. We present JamSet and JamBench, the first project-level game code framework dataset and benchmark built on a professional game engine. Our key insight is that Game Jam competitions, community events where developers build complete games under tight time constraints, yield thousands of open-source projects suitable for this purpose. Building on the Godot engine's text-based format and headless execution mode, we design a deterministic verification pipeline from file integrity to runtime behavior collection, distilling 8,133 verified projects from over 240,000 repositories. Of these, 300 manually verified projects form JamBench; the rest constitute JamSet. JamBench defines theme-driven generation and code completion tasks, evaluated through a pipeline combining compilation pass rates, Structural Completeness Score (SCS), and Behavioral Alignment Score (BAS). Evaluation of 9 frontier models reveals a capability cliff as project scale increases, with runtime pass rates dropping from 80.4% on small projects to 5.7% on large ones (Task2a). Code Agents improve compilation rates yet yield no gains in runtime behavioral quality, indicating that the bottleneck lies in architectural design rather than syntactic correctness. Experiments validate JamSet as effective training data. All data and code are publicly available.",
+    "ai_summary": "Game development frameworks and benchmarks were created using data from game jam competitions to evaluate code generation and project-level programming capabilities.",
+    "arxiv_categories": [
+      "cs.SE",
+      "cs.CL"
+    ],
+    "score": 13,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19830",
+    "pdf_url": "https://arxiv.org/pdf/2606.19830",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.19830"
+  },
+  {
+    "id": "2606.16817",
+    "arxiv_id": "2606.16817",
+    "title": "Understanding the Behaviors of Environment-aware Information Retrieval",
+    "summary": "Recent retrieval-augmented generation (RAG) approaches have demonstrated strong capability in handling complex queries, yet current research overlooks a critical challenge: different retrievers require fundamentally different query formulation strategies for optimal performance. In this work, we present the first systematic analysis of how LLMs can learn to adapt their query formulation strategies for different retrievers via reinforcement learning (RL). Our empirical study reveals that RL effectively teaches an LLM to tailor its queries to specific retriever characteristics. We discover that different retrievers exhibit surprisingly distinct optimal query styles (e.g., descriptive vs. question-like), suggesting strategies learned for one retriever ineffective for another. We further show that performance can be enhanced by incorporating retriever-specific human guidance and by scaling model size. To facilitate learning over multi-retrieval-step trajectories, we introduce a branching-based rollout technique that improves training stability. Our work provides the first empirical evidence and actionable insights for building truly retriever-aware RAG systems. Code and resources are available at https://github.com/LCO-Embedding/Envs-aware-Information-Retrieval.",
+    "ai_summary": "Large language models can be trained via reinforcement learning to adapt query formulation strategies for different retrievers, with distinct optimal query styles and improved performance through retriever-specific guidance and model scaling.",
+    "arxiv_categories": [
+      "cs.CL",
+      "cs.IR"
+    ],
+    "score": 12,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.16817",
+    "pdf_url": "https://arxiv.org/pdf/2606.16817",
+    "github_url": "https://github.com/LCO-Embedding/Envs-aware-Information-Retrieval",
+    "hf_discussion": "https://huggingface.co/papers/2606.16817"
+  },
+  {
+    "id": "2604.13416",
+    "arxiv_id": "2604.13416",
+    "title": "DF3DV-1K: A Large-Scale Dataset and Benchmark for Distractor-Free Novel View Synthesis",
+    "summary": "Advances in radiance fields have enabled photorealistic novel view synthesis. In several domains, large-scale real-world datasets have been developed to support comprehensive benchmarking and to facilitate progress beyond scene-specific reconstruction. However, for distractor-free radiance fields, a large-scale dataset with clean and cluttered images per scene remains lacking, limiting the development. To address this gap, we introduce DF3DV-1K, a large-scale real-world dataset comprising 1,048 scenes, each providing clean and cluttered image sets for benchmarking. In total, the dataset contains 89,924 images captured using consumer cameras to mimic casual capture, spanning 128 distractor types and 161 scene themes across indoor and outdoor environments. A curated subset of 41 scenes, DF3DV-41, is systematically designed to evaluate the robustness of distractor-free radiance field methods under challenging scenarios. Using DF3DV-1K, we benchmark nine recent distractor-free radiance field methods and 3D Gaussian Splatting, identifying the most robust methods and the most challenging scenarios. Beyond benchmarking, we demonstrate an application of DF3DV-1K by fine-tuning a diffusion-based 2D enhancer to improve radiance field methods, achieving average improvements of 0.96 dB PSNR and 0.057 LPIPS on the held-out set (e.g., DF3DV-41) and the On-the-go dataset. We hope DF3DV-1K facilitates the development of distractor-free vision and promotes progress beyond scene-specific approaches. The dataset and leaderboard are available at https://johnnylu305.github.io/df3dv1k_web/.",
+    "ai_summary": "A large-scale real-world dataset called DF3DV-1K is introduced to address the lack of clean and cluttered image sets for distractor-free radiance field research, containing 1,048 scenes with 89,924 images across 128 distractor types and 161 scene themes, along with a curated subset DF3DV-41 for robustness evaluation, and demonstrates improved performance when used to fine-tune a diffusion-based 2D enhancer for radiance field methods.",
+    "arxiv_categories": [
+      "cs.CV",
+      "cs.AI"
+    ],
+    "score": 10,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2604.13416",
+    "pdf_url": "https://arxiv.org/pdf/2604.13416",
+    "github_url": "https://github.com/johnnylu305/DF3DV",
+    "hf_discussion": "https://huggingface.co/papers/2604.13416"
+  },
+  {
+    "id": "2606.19419",
+    "arxiv_id": "2606.19419",
+    "title": "Playful Agentic Robot Learning",
+    "summary": "Current agentic robot systems can write executable Code-as-Policy programs, observe feedback, and revise behavior across multiple attempts, but they remain largely task-driven: reusable skills are acquired only after explicit instructions. We study Playful Agentic Robot Learning, where an embodied coding agent uses self-directed play as a continual skill-learning stage before downstream tasks arrive. We introduce RATs, Robotics Agent Teams designed for play-time skill acquisition. During play, RATs proposes novel yet learnable exploratory tasks, plans and executes robot-code policies, verifies intermediate progress, diagnoses failures, retries with dense, step-level feedback, and distills successful executions into a persistent code skill library. At test time, the agent reuses relevant skills from this frozen library to help solve new tasks. Experiments in LIBERO-PRO and MolmoSpaces show that play-learned skills improve held-out downstream tasks over no-play and random-play baselines, with 20.6 and 17.0 percentage-point gains over CaP-Agent0 on LIBERO-PRO and MolmoSpaces, respectively. Moreover, the learned skills can be plugged into other inference-time Code-as-Policy agents by simply retrieving them into the context, improving RoboSuite and real-world transfer by 8.9 and 8.8 points, respectively, without finetuning the underlying model.",
+    "ai_summary": "Embodied robots learn reusable skills through self-directed play and exploration, then apply these skills to improve performance on downstream tasks without additional training.",
+    "arxiv_categories": [
+      "cs.RO",
+      "cs.AI"
+    ],
+    "score": 9,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19419",
+    "pdf_url": "https://arxiv.org/pdf/2606.19419",
+    "github_url": "https://github.com/Playful-RATs/rats",
+    "hf_discussion": "https://huggingface.co/papers/2606.19419"
+  }
+]

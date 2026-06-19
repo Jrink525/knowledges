@@ -1,0 +1,269 @@
+{
+  "paper_id": "2606.19704",
+  "paper_title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+  "slug": "beyond-static-leaderboards",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "summary": "Aggregate-score leaderboards systematically underspecify deployed-agent evaluation dimensions",
+      "section": "1",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §1",
+          "quote": "the Spearman correlation between public-leaderboard rankings and hidden-evaluation rankings was ρ=−0.13 on the execution track (n=13, statistically indistinguishable from zero) and ρ=0.69 on the planning track (n=20)",
+          "reference": "Patel et al., 2026"
+        },
+        {
+          "source": "HTML §2.3",
+          "quote": "Public–hidden Spearman is ρ=0.69 for planning (n=20, robustly positive) and ρ=−0.13 for execution (n=13, p=0.71, statistically indistinguishable from zero)",
+          "reference": "Patel et al., 2026"
+        }
+      ],
+      "support_level": "partially_empirical",
+      "notes": "Execution track CI spans [-0.64, +0.45], treated as suggestive only"
+    },
+    {
+      "claim_id": "C2.1",
+      "summary": "Aggregate scores collapse orthogonal dimensions: different configurations with same Pass1 score exhibit qualitatively different behavior",
+      "section": "2.1",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §2.1",
+          "quote": "Per-rubric reasoning sensitivity. Reasoning-on vs. reasoning-off configurations score similarly on overall rubric mean but differ by 31 percentage points on clarity-specific scoring",
+          "reference": "Li et al., 2026c"
+        },
+        {
+          "source": "HTML §2.1",
+          "quote": "Multi-turn artifact reuse. Plan-Execute and Supervisor-Specialist architectures score similarly on single-turn Pass1 but differ by 4.2× on turn-2-to-5 latency",
+          "reference": "Li et al., 2026b"
+        },
+        {
+          "source": "HTML §2.1",
+          "quote": "Retrieval-strategy trade-off. Single-pass RAG and agentic multi-hop retrieval show 50–68% vs. ~90% accuracy with 4.5×–10× token inflation",
+          "reference": "Li et al., 2026a"
+        }
+      ],
+      "support_level": "convergent_architectural_sensitivity",
+      "notes": "Three concrete cases from independent studies on same benchmark family"
+    },
+    {
+      "claim_id": "C2.2",
+      "summary": "LLM-as-Judge measurement is reflexive: leaderboard risks measuring its own judge as much as systems it evaluates",
+      "section": "2.2",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §2.2",
+          "quote": "Condition Insight CAR moves from 0.68 to 0.91 under a constrained-prompting design, a 20pp improvement attributable to prompting rather than to backbone-model choice",
+          "reference": "O'Donncha et al., 2026"
+        },
+        {
+          "source": "HTML §2.2",
+          "quote": "ARE/Gaia2 verifier achieves 0.99 precision and 0.95 recall against 450 hand-labeled trajectories",
+          "reference": "Froger et al., 2025"
+        },
+        {
+          "source": "HTML §2.2",
+          "quote": "LLM-as-judge inter-rater reliability reaches only Krippendorff α=0.61, well below the human–human range α∈[0.74,0.82]",
+          "reference": "Feng et al., 2026"
+        }
+      ],
+      "support_level": "convergent_empirical",
+      "notes": "Three independent data points from different systems"
+    },
+    {
+      "claim_id": "C2.3",
+      "summary": "Out-of-distribution behavior, not in-sample mean, is the deployment question",
+      "section": "2.3",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §2.3",
+          "quote": "Exgentic's analysis observed cross-benchmark rank correlations of 0.32–0.85 across six heterogeneous benchmarks",
+          "reference": "Bandel et al., 2026"
+        },
+        {
+          "source": "HTML §2.3",
+          "quote": "current architectures do not achieve robust generalization but instead optimize for specific task distributions",
+          "reference": "Bandel et al., 2026"
+        },
+        {
+          "source": "HTML §2.3",
+          "quote": "leaderboard ranks reflect a user's utility function only by accident",
+          "reference": "Ethayarajh and Jurafsky, 2020"
+        },
+        {
+          "source": "HTML §2.3",
+          "quote": "Dehghani et al. document the 'benchmark lottery'",
+          "reference": "Dehghani et al., 2021"
+        }
+      ],
+      "support_level": "theoretical_with_empirical_backing"
+    },
+    {
+      "claim_id": "C3.1",
+      "summary": "No single prior benchmark covers more than 4-5 of the 12 tiers; deployment-extension tiers (T8-T12) are absent from almost all",
+      "section": "3",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §3",
+          "quote": "No single prior benchmark reports more than four or five tiers; the deployment-extension tiers (T8–T12) are absent from almost all of them",
+          "reference": "Figure 2 (paper's coverage analysis)"
+        }
+      ],
+      "support_level": "analytical_synthesis"
+    },
+    {
+      "claim_id": "C4.1",
+      "summary": "Three OOD criteria operationalize predictive validity: held-out (mild), cross-subset (moderate), adversarial (strongest)",
+      "section": "4.1",
+      "falsifiable": false,
+      "evidence": [
+        {
+          "source": "HTML §4.1",
+          "quote": "Stratified random split of an existing benchmark... Tests whether the leaderboard ranking on a sample predicts ranking on the full population",
+          "reference": "Criterion A definition"
+        },
+        {
+          "source": "HTML §4.1",
+          "quote": "Rank on k−1 subsets, test on the held-out subset; rotate across all subsets",
+          "reference": "Criterion B definition"
+        },
+        {
+          "source": "HTML §4.1",
+          "quote": "Semantically-equivalent paraphrases of base scenarios across four classes: paraphrase, identifier renaming, time-window shifting, distractor injection",
+          "reference": "Criterion C definition"
+        }
+      ],
+      "support_level": "proposal"
+    },
+    {
+      "claim_id": "C4.2",
+      "summary": "Four falsification conditions specify when the position is considered refuted",
+      "section": "4.3",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §4.3",
+          "quote": "Spearman rank correlation between in-sample and OOD rankings ρ<0.85 across at least two of three OOD criteria",
+          "reference": "Condition 1"
+        },
+        {
+          "source": "HTML §4.3",
+          "quote": "Top-3 in-sample configurations leave top-5 on out-of-sample in ≥10% of holdout splits",
+          "reference": "Condition 2"
+        },
+        {
+          "source": "HTML §4.3",
+          "quote": "Mean-vs.-OOD-variance correlation ρ_Pearson>0.2",
+          "reference": "Condition 3"
+        },
+        {
+          "source": "HTML §4.3",
+          "quote": "PV-ranking top-10 differs from mean-ranking top-10 with Jaccard overlap <0.85",
+          "reference": "Condition 4"
+        },
+        {
+          "source": "HTML §4.3",
+          "quote": "Patel et al. report execution-track public–private Spearman ρ=−0.13, well below the 0.85 threshold",
+          "reference": "Partial support evidence"
+        }
+      ],
+      "support_level": "proposal_with_partial_evidence",
+      "notes": "Condition 1 partially supported by CODS-2025 execution track data"
+    },
+    {
+      "claim_id": "C5.1",
+      "summary": "14 parallel implementation studies converge on same measurement dimensions from distinct architectural starting points",
+      "section": "5",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §5.1",
+          "quote": "Reasoning-on raised total latency by 21.5% (15.08 s to 18.32 s) and planning latency by 41.9%",
+          "reference": "Li et al., 2026c (G21)"
+        },
+        {
+          "source": "HTML §5",
+          "quote": "35.5% contained unnecessary calls to the expensive Deep-TSFM tool, 96% of them on wrong-domain scenarios",
+          "reference": "Mazeeva et al., 2026 (G14)"
+        },
+        {
+          "source": "HTML §5.4",
+          "quote": "Replacing MCP tool execution with text-RAG collapsed remaining-useful-life pass-all-3 from 100% to 20%",
+          "reference": "Feng et al., 2026 (G30)"
+        }
+      ],
+      "support_level": "convergent_architectural_sensitivity",
+      "notes": "Authors frame as convergent architectural sensitivity rather than independent triangulation"
+    },
+    {
+      "claim_id": "C5.2",
+      "summary": "MCP-stdio subprocess overhead is a dominant per-call latency floor",
+      "section": "Appendix E",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML Appendix E",
+          "quote": "Groups G7, G9, G12, and G27 independently measure MCP-stdio subprocess overhead as a dominant per-call latency floor",
+          "reference": "Pattern C"
+        },
+        {
+          "source": "HTML Appendix E",
+          "quote": "G7 reports a 5–6s residual per call... G9 measures discovery as 2–3s per query",
+          "reference": "Pattern C detail"
+        }
+      ],
+      "support_level": "convergent_architectural_sensitivity"
+    },
+    {
+      "claim_id": "C5.3",
+      "summary": "Judge-independent verification is both feasible and necessary",
+      "section": "5.3",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §5.3",
+          "quote": "ARE/Gaia2's DAG oracle does analogous trajectory-level verification, achieving 0.99 precision and 0.95 recall against 450 hand-labeled trajectories",
+          "reference": "Froger et al., 2025"
+        },
+        {
+          "source": "HTML §5.3",
+          "quote": "PHMForge: LLM-as-judge inter-rater reliability sits at Krippendorff α=0.61 on a 30-scenario stratified sample",
+          "reference": "Feng et al., 2026"
+        }
+      ],
+      "support_level": "convergent_empirical"
+    },
+    {
+      "claim_id": "C5.4",
+      "summary": "Substrate, asset, and query-formulation are deployment-relevant axes invisible to fixed-substrate leaderboards",
+      "section": "5.4",
+      "falsifiable": true,
+      "evidence": [
+        {
+          "source": "HTML §5.4",
+          "quote": "Withholding domain tools took completion from 80.8% down to 25%",
+          "reference": "Feng et al., 2026"
+        },
+        {
+          "source": "HTML §5.4",
+          "quote": "Cross-equipment transfer dropped pass rate from 84.1% on bearings to 42.7% on motors",
+          "reference": "Feng et al., 2026"
+        },
+        {
+          "source": "HTML §5.4",
+          "quote": "Operator-style fuzzy queries fell from 80.6% to 48.6% (McNemar p=0.002)",
+          "reference": "Feng et al., 2026"
+        }
+      ],
+      "support_level": "empirical"
+    }
+  ],
+  "claim_count": 11,
+  "generated_at": "2026-06-19T06:24:00Z",
+  "schema": "paper-deep-reading/traceability_manifest/v1"
+}

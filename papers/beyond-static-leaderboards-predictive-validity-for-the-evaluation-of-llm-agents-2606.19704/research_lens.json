@@ -1,0 +1,130 @@
+{
+  "paper_id": "2606.19704",
+  "paper_title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+  "slug": "beyond-static-leaderboards",
+  "research_equation": {
+    "before": "R(leaderboard) ≈ R(deployment)",
+    "assumption": "In-sample aggregate score rank (Ȳ_c) is a sufficient statistic for deployment rank",
+    "problem": "Empirically false: CODS-2025 ρ=-0.13 (execution), ρ=0.69 (planning, upper CI on falsification threshold)",
+    "after": "R(leaderboard) should predict R(deployment) via PV(c) = αȲ_c - βσ_{Y_c,OOD} - γIQR(Y_c)",
+    "operationalization": "Three OOD criteria (A: held-out, B: cross-subset, C: adversarial) + four falsification thresholds"
+  },
+  "tri_pass_notes": {
+    "first_pass": {
+      "synopsis": "Position paper arguing that aggregate-score leaderboards underspecify deployed LLM agent evaluation. Proposes predictive validity (PV) as ranking criterion with 12-tier measurement apparatus and three OOD criteria.",
+      "novelty": "First paper to propose PV (correlation of in-sample to out-of-sample rank) as a leaderboard ranking criterion, paired with explicit falsification thresholds",
+      "audience": "AI/ML evaluation methodologists, agent benchmark designers, LLM deployment operators"
+    },
+    "second_pass": {
+      "method_strengths": [
+        "Explicit falsification thresholds (4 conditions) — rare in evaluation methodology papers",
+        "Convergent architectural sensitivity across 14 implementation studies provides structural evidence without requiring new controlled experiments",
+        "12-tier apparatus is grounded in existing benchmarks, not invented de novo",
+        "Five convergence patterns (Appendix E) distill cross-study insight elegantly",
+        "Pre-registered pilot design with clear decision rules (low-power/middle/strong findings)",
+        "Acknowledges epistemic limitations transparently"
+      ],
+      "method_weaknesses": [
+        "All evidence from one domain (industrial asset O&M on AssetOpsBench) — domain specificity is a real limitation",
+        "14 extension studies are unpublished implementation reports, not peer-reviewed",
+        "PV score weights (α, β, γ) are not finalized — no empirical fitting done",
+        "Tier orthogonality is asserted as a 'working hypothesis' without empirical test",
+        "No controlled experiment run by the authors themselves — the paper is a synthesis"
+      ],
+      "key_figures": [
+        "Figure 1: 14 extensions along 6 axes (visual overview of study scope)",
+        "Figure 2: Benchmark × tier coverage (shows no benchmark >5/12 tiers)",
+        "Figure 3: Headline improvement per team (log-scale, colored by axis)",
+        "Figure 4: Evidence heatmap (14 studies × 4 evaluation dimensions)",
+        "Figure 5: Rank correlations with Fisher-z CIs and falsification threshold"
+      ]
+    },
+    "third_pass": {
+      "hidden_assumptions": [
+        "Tier orthogonality: the 12 tiers are assumed non-redundant without empirical testing",
+        "OOD criterion completeness: three criteria (held-out, cross-subset, adversarial) exhaust the 'deployment-relevant' shift space",
+        "PV formula form: linear combination (α-β-γ) is assumed adequate without testing nonlinear forms",
+        "One-domain generalizability: AssetOpsBench patterns transfer to other MCP domains",
+        "Spearman ρ=0.85 threshold: arbitrary or empirically grounded? The paper does not justify this specific value beyond CODS-2025 data"
+      ],
+      "challenge_to_module_map": {
+        "dimension_collapse": {
+          "challenge": "Aggregate scores hide qualitatively different behavior",
+          "module": "T1-T12 multi-tier apparatus",
+          "evidence_gap": "Tier orthogonality unvalidated"
+        },
+        "judge_reflexivity": {
+          "challenge": "LLM-as-judge measures its own biases",
+          "module": "T12: Evidence Grounding & Verification",
+          "evidence_gap": "No standardized rule pipeline shared across leaderboards yet"
+        },
+        "rank_instability": {
+          "challenge": "In-sample rank ≠ deployment rank",
+          "module": "PV(c) score + 3 OOD criteria",
+          "evidence_gap": "PV score weights not empirically fit; full study not run"
+        },
+        "infrastructure_conflation": {
+          "challenge": "MCP-stdio overhead confounded with reasoning ability",
+          "module": "T8: Deployment Infrastructure",
+          "evidence_gap": "No persistent MCP server standard exists"
+        },
+        "scenario_binding": {
+          "challenge": "141-scenario corpus is binding constraint on extension work",
+          "module": "Cross-domain and cross-model generalization (Cluster III/IV)",
+          "evidence_gap": "Scenario generation automation is nascent"
+        }
+      }
+    }
+  },
+  "key_concepts": [
+    {
+      "term": "Predictive Validity",
+      "definition": "Correlation between in-sample rank and out-of-sample rank, not in-sample mean",
+      "significance": "Primary contribution: new ranking criterion for agent leaderboards"
+    },
+    {
+      "term": "Rank Instability",
+      "definition": "Leaderboard rankings inconsistent across distributionally-different settings",
+      "significance": "Core empirical phenomenon motivating the position"
+    },
+    {
+      "term": "LLM-as-Judge Reflexivity",
+      "definition": "Measurement instrument with model-specific biases; leaderboard measures its own judge",
+      "significance": "Structural critique requiring judge-independent anchor"
+    },
+    {
+      "term": "Convergent Architectural Sensitivity",
+      "definition": "Multiple independent teams converging on same measurement gaps from different architectures",
+      "significance": "Epistemic framing of evidence: not independent replication but convergent sensitivity"
+    },
+    {
+      "term": "Falsification Thresholds",
+      "definition": "Four explicit conditions under which the position is considered refuted",
+      "significance": "Methodological best practice: makes position falsifiable, not merely persuasive"
+    }
+  ],
+  "related_work_clusters": [
+    {
+      "cluster": "Agent Benchmarks (wave 1)",
+      "papers": ["SWE-Bench (Jimenez et al., 2024)", "τ-Bench (Yao et al., 2024)", "ARE/Gaia2 (Froger et al., 2025)", "MCP-Universe (Luo et al., 2025)", "MCP-Bench (Wang et al., 2026)", "AssetOpsBench (Patel et al., 2025)", "Exgentic (Bandel et al., 2026)"],
+      "relationship": "Source benchmarks whose metrics are consolidated into the 12-tier apparatus"
+    },
+    {
+      "cluster": "NLP Leaderboard Critique",
+      "papers": ["Ethayarajh & Jurafsky (2020)", "Bowman & Dahl (2021)", "Raji et al. (2021)", "Dehghani et al. (2021)", "Recht et al. (2019)"],
+      "relationship": "Anchoring critique — leaderboard ranks reflect user utility 'only by accident'"
+    },
+    {
+      "cluster": "Multi-Dimensional Evaluation Frameworks",
+      "papers": ["HELM (Liang et al., 2022)", "Dynabench (Kiela et al., 2021)"],
+      "relationship": "Predecessor frameworks that address multi-dimensionality for single-shot models but not agents"
+    },
+    {
+      "cluster": "Interactive Evaluation",
+      "papers": ["Xuan et al. (2026): Interactive Evaluation Requires a Design Science"],
+      "relationship": "Names the structural change without proposing a ranking criterion — gap this paper fills"
+    }
+  ],
+  "generated_at": "2026-06-19T06:24:00Z",
+  "schema": "paper-deep-reading/research_lens/v1"
+}

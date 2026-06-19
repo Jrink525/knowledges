@@ -1,0 +1,130 @@
+{
+  "paper_id": "2606.19704",
+  "paper_title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+  "slug": "beyond-static-leaderboards",
+  "seeds": [
+    {
+      "rank": 1,
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "PV score weights (α, β, γ) are specified as 'fit on Criterion-A holdouts to maximize Spearman correlation between PV rank and Criterion-B/C ranks' but not actually fit — the paper acknowledges this explicitly",
+      "hidden_assumption_or_gap": "The linear form PV(c)=α·Ȳ_c - β·σ_Y_c,OOD - γ·IQR(Y_c) may not be the optimal functional form; higher-order interactions or non-linear terms may be needed. No empirical data supports α+β+γ=1 simplex constraint",
+      "research_question": "For a given multi-agent benchmark, what functional form and weight set for PV(c) maximizes the correlation between in-sample and out-of-sample rank across all three OOD criteria?",
+      "hypothesis": "A non-linear form (e.g., PV(c) = α·Ȳ_c / (β·σ_OOD + γ·IQR)) outperforms the linear form, and optimal weights vary significantly by benchmark (no one-size-fits-all PV formula)",
+      "minimum_viable_experiment": "Take AssetOpsBench+CODS-2025 data (149 teams, 3 architectures). Compute PV(c) under 10+ functional forms and weight configurations. Measure Spearman ρ between PV rank and Criterion-B/C ranks. Find whether any form consistently achieves ρ > 0.85",
+      "negative_result_interpretation": "If optimal weights vary wildly across OOD criteria, PV is not a stable criterion and the field needs a different approach entirely (e.g., no aggregation, multi-objective reporting only)",
+      "killer_objection": "PV score still collapses multiple axes into one number — the paper's own critique of aggregate scores applies to PV score itself, only slightly mitigated by the 3-OOD-criteria structure",
+      "killer_result": "A single weight configuration achieves ρ > 0.90 across all three AssetOpsBench OOD criteria and replicates on one additional benchmark (e.g., SWE-Bench or MCP-Bench)"
+    },
+    {
+      "rank": 2,
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "Pattern C (Appendix E): G7, G9, G12, G27 independently measure MCP-stdio subprocess overhead as dominant per-call latency floor (5-6s residual per call, 2-3s discovery per query)",
+      "hidden_assumption_or_gap": "Current benchmarks treat MCP-stdio overhead as part of 'agent performance' — but protocol overhead should be separated from reasoning and tool-calling ability. A persistent non-stdio MCP server would eliminate this confound",
+      "research_question": "How much of the measured 'agent latency' on AssetOpsBench and similar MCP-based benchmarks is attributable to stdio transport overhead vs. actual reasoning and tool execution?",
+      "hypothesis": "40-60% of E2E latency in current MCP-based agent benchmarks is protocol overhead (subprocess spawn + stdio transport). Removing this confound would reorder rankings significantly",
+      "minimum_viable_experiment": "Implement a persistent MCP server with socket reuse (non-stdio transport). Run AssetOpsBench's 141 scenarios with both stdio and persistent transport. Compare E2E latency decomposition and rank order changes",
+      "negative_result_interpretation": "If rank order is stable between stdio and non-stdio transport, then MCP overhead is a uniform tax that doesn't affect evaluation — though latency magnitudes would still be overestimated",
+      "killer_objection": "Building persistent MCP servers is infrastructure work, not research — but establishing the magnitude of the confound is the research contribution",
+      "killer_result": "Rank correlation between stdio and persistent transport falls below 0.70, showing the evaluation artifact of protocol choice is larger than anyone assumed"
+    },
+    {
+      "rank": 3,
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "Tier orthogonality is explicitly noted as a 'working hypothesis' (Section 3, Limitations): 'We claim the twelve tiers are roughly orthogonal. We have not empirically tested this'",
+      "hidden_assumption_or_gap": "The 12 tiers are assumed non-redundant, but many may correlate strongly. If T6 (Failure Modes) ≈ T2 (Tool Hygiene) or T9 (Multi-Turn) ≈ T11 (Knowledge Augmentation), the apparatus collapses to fewer effective dimensions",
+      "research_question": "How many independent evaluation dimensions does a factor analysis of the 12-tier measurement apparatus reveal, and are ~12 dimensions stable across different agent benchmarks?",
+      "hypothesis": "Factor analysis reveals 5-7 latent dimensions, not 12 — several tiers are highly correlated. But these 5-7 dimensions are different from the 3-4 typical of current single-shot benchmarks",
+      "minimum_viable_experiment": "Collect 12-tier measurements for 50+ agent configurations on AssetOpsBench. Run PCA/exploratory factor analysis. Determine effective rank and compare to single-shot benchmark structure",
+      "negative_result_interpretation": "If fewer than 5 latent dimensions emerge, the 12-tier apparatus is over-parameterized and can be simplified, which would actually be a pragmatic win",
+      "killer_objection": "Factor analysis assumes linear relationships — the tiers may have non-linear interactions that collapse/reinforce depending on regime",
+      "killer_result": "Clear elbow at 8-9 factors, with the deployment-extension tiers (T8-T12) loading on separate factors from core tiers (T1-T7)"
+    },
+    {
+      "rank": 4,
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "Authors acknowledge: 'All evidence is drawn from industrial asset operations and maintenance, specifically AssetOpsBench and its extensions. Whether the twelve-tier apparatus generalizes to other MCP-based domains is open'",
+      "hidden_assumption_or_gap": "The predictive validity approach may be AssetOpsBench-specific. Different domains (scientific assistants, customer service, code generation) may have different deployment-relevant dimensions",
+      "research_question": "Does the 12-tier measurement apparatus and predictive validity ranking criterion replicate across three heterogeneous MCP-based agent domains (e.g., industrial O&M, scientific computing, customer service)?",
+      "hypothesis": "The core tiers (T1-T7) transfer across domains, but the deployment-extension tiers (T8-T12) have domain-specific manifestations. PV as a criterion transfers, but the specific tier structure needs domain adaptation",
+      "minimum_viable_experiment": "Select 3 diverse MCP-based agent benchmarks. For each, implement 4-6 agent configurations spanning reasonable variation. Collect 12-tier measurements. Compare factor structures and PV rank stability across domains",
+      "negative_result_interpretation": "If factor structures differ radically across domains, the field needs domain-specific evaluation frameworks — 'one apparatus to rule them all' is not viable",
+      "killer_objection": "Implementing 12-tier measurement for multiple benchmarks requires significant engineering effort across domains, limiting the number of teams that can do this work",
+      "killer_result": "At least 8 of 12 tiers show >0.70 loading similarity across domains, suggesting a core evaluation framework exists"
+    },
+    {
+      "rank": 5,
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "Industrial deployment validity gap: 'All proposed predictive-validity criteria remain internal to AssetOpsBench's measurement apparatus. We do not yet have data linking framework rankings to real deployed-system outcomes'",
+      "hidden_assumption_or_gap": "PV rank within AssetOpsBench is assumed to predict real deployment outcomes (operator override rate, incident reduction, false-alarm rate). This is an untested proxy relationship",
+      "research_question": "What is the correlation between PV-ranked agent configurations on AssetOpsBench and real-world deployment outcomes (operator override rate, mean-time-between-failures, false positive rate) in an industrial asset management setting?",
+      "hypothesis": "PV rank predicts deployment outcomes significantly better than aggregate-score rank (ρ > 0.2 improvement), but even PV has a ceiling below 0.8 correlation due to unmeasured deployment factors",
+      "minimum_viable_experiment": "Partner with an industrial operator running 3-5 agent configurations in production. Collect PV measurements on AssetOpsBench + deployment metrics for 90 days. Compute correlation between evaluation rank and deployment rank",
+      "negative_result_interpretation": "If even PV rank correlates poorly with deployment outcomes (<0.5), the entire approach of benchmark-based prediction for agent deployment needs fundamental rethinking",
+      "killer_objection": "Real deployment outcomes are influenced by many non-measurable factors (operator trust, organizational process, maintenance team composition) — no benchmark can capture these",
+      "killer_result": "PV rank achieves >0.70 correlation with at least one deployment outcome metric, while aggregate score rank shows <0.30"
+    },
+    {
+      "rank": 6,
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "Pattern E: 'Groups G7, G8, G12, and G30 all confront the same problem: the original 141-scenario corpus is small' — scenario-corpus size is the binding constraint on extension work",
+      "hidden_assumption_or_gap": "141 scenarios across 6 subsets may be insufficient for reliable rank estimation. The 'benchmark lottery' (Dehghani et al., 2021) applies: small scenario counts inflate variance",
+      "research_question": "How many scenarios are needed per evaluation tier to obtain stable (95% CI width < 0.1) rank estimates for agent configurations?",
+      "hypothesis": "Per-tier scenario requirements vary from ~30 (T1 Success) to ~200+ (T6 Failure Modes, T9 Multi-Turn Dialog). The current 141-scenario corpus is adequate for ~3-4 tiers but insufficient for full 12-tier coverage",
+      "minimum_viable_experiment": "Bootstrap sample from AssetOpsBench at varying scenario counts (25, 50, 75, 100, 141, 200). Compute rank stability (CI width, rank-order reproducibility) at each sample size for each tier",
+      "negative_result_interpretation": "If even 141 scenarios provide stable ranks across all 12 tiers, then scenario authoring is not the binding constraint — the issue is architectural diversity, not scenario count",
+      "killer_objection": "Power analysis is scenario-count-dependent but also distribution-dependent — random sampling from 141 may not capture the same failure-mode diversity as carefully designed new scenarios",
+      "killer_result": "Clear minimum thresholds: T1 needs only ~30 scenarios at ρ>0.90 stability, T9 needs >200, and T12 needs >150 — confirming that the 141-scenario corpus causes systematic undersampling of deployment-relevant dimensions"
+    },
+    {
+      "rank": 7,
+      "seed_type": "negative_result",
+      "trigger_evidence_summary": "CODS-2025 execution track ρ=-0.13 with n=13 — p=0.71, statistically indistinguishable from zero. But n=13 is too small for definitive judgment: '95% bootstrap CI spans [-0.64, +0.45]'",
+      "hidden_assumption_or_gap": "The execution track result is widely cited as evidence of rank instability, but its CI width is massive. The field may be over-interpreting a single under-powered result",
+      "research_question": "With adequate sample size (n > 50 teams), what is the true public-to-hidden Spearman correlation for execution tasks in agentic competitions?",
+      "hypothesis": "With n>50, the true ρ settles in the range [0.3, 0.6] — better than -0.13 but still below the 0.85 falsification threshold, confirming the position but with a more moderate magnitude",
+      "minimum_viable_experiment": "Replicate the CODS-2025 competition structure but with execution-only track and n>50 teams. Measure public-to-hidden Spearman with adequate statistical power",
+      "negative_result_interpretation": "If ρ > 0.85 with n>50, the position paper's central claim about rank instability in execution tasks is refuted — the original ρ=-0.13 was a small-n artifact",
+      "killer_objection": "Running a second 149-team competition specifically to validate the original result is expensive and logistically complex",
+      "killer_result": "With n=60+ teams, ρ remains below 0.50 and 95% CI upper bound is below 0.85 — the position survives the replication check"
+    },
+    {
+      "rank": 8,
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "Alternative view (i): 'Aggregate scores are sufficient for the model-comparison purpose leaderboards actually serve.' This is the strongest counter-position",
+      "hidden_assumption_or_gap": "The paper's response is 'our claim is narrower, that rankings derived from such scores do not transfer.' But if leaderboards are primarily model comparison tools, not deployment prediction tools, is transferability even the right criterion?",
+      "research_question": "For the purpose of model comparison (not deployment prediction), do aggregate-score leaderboards adequately serve their stated purpose, or does rank instability undermine even model-level comparisons?",
+      "hypothesis": "Even for model-level comparison, aggregate-score rankings are unstable: a model ranked #1 on one benchmark distribution may rank #5 on a different split of the same benchmark (within-benchmark rank instability)",
+      "minimum_viable_experiment": "Compute within-benchmark rank stability across 100 random 80/20 splits of existing leaderboards (e.g., SWE-Bench, MCP-Bench). Measure how often top-3 models stay top-3 across splits",
+      "negative_result_interpretation": "If within-benchmark rank stability is high (>0.85) across splits, the aggregate-score critique only applies to cross-benchmark/deployment transfer, and model comparison leaderboards are fit for purpose",
+      "killer_objection": "This expands the paper's own scope beyond what it claims — the paper focuses on deployment, not within-benchmark stability",
+      "killer_result": "Within-benchmark top-3 stability across splits is only ~60% — even model comparison is affected by rank instability"
+    },
+    {
+      "rank": 9,
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "Pre-registered pilot decision rule: 'If pilot train-holdout Spearman exceeds 0.95 across all three architectures, we revise the central claim downward'",
+      "hidden_assumption_or_gap": "The paper provides no implementation details for the pre-registered pilot. Which 30 scenarios? Which 3 architectures? What perturbation methods? The pilot design is sketched but not specified",
+      "research_question": "Can a concrete, reproducible pre-registration package for the predictive validity pilot study be produced, including exact scenario splits, architecture definitions, perturbation code, and analysis scripts?",
+      "hypothesis": "A fully pre-registered pilot with 30 scenarios, 3 architectures (PE, SS, ReAct), and the 4-class adversarial perturbation suite provides sufficient statistical power for the decision rule",
+      "minimum_viable_experiment": "Produce a complete pre-registration (OSF or similar) including: scenario selection criteria, 4 perturbation classes for each of 30 scenarios, implementation for 3 architectures, analysis pipeline, and decision tree",
+      "negative_result_interpretation": "If the pre-registration reveals design ambiguities (e.g., how to handle scenarios where perturbations produce invalid queries), the pilot needs iterative refinement before execution",
+      "killer_objection": "Pre-registration may be premature if the 12-tier measurement pipeline isn't stable — the pilot would measure measurement error rather than predictive validity",
+      "killer_result": "A complete, executable pre-registration package that another lab could independently reproduce"
+    },
+    {
+      "rank": 10,
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "Papers recommendations for persistent MCP infrastructure: 'Three of fourteen studies independently identified MCP-stdio overhead as a dominant latency floor'",
+      "hidden_assumption_or_gap": "No study in the corpus implements a persistent non-stdio MCP server end-to-end and compares evaluation outcomes. The recommendation is made but the mechanism is unavailable",
+      "research_question": "What architectural changes to MCP server design are required to eliminate protocol overhead as a confound in agent evaluation, and does this change affect rank orders?",
+      "hypothesis": "A lightweight, persistent MCP server using Unix domain sockets or TCP keep-alive reduces per-call latency by 60-80% and changes pass/fail outcomes on latency-sensitive scenarios",
+      "minimum_viable_experiment": "Design and implement a persistent MCP server specification. Fork AssetOpsBench's MCP tooling to support it. Compare evaluation outcomes (pass rates, latency, rank order) with stdio baseline across 50+ scenarios",
+      "negative_result_interpretation": "If a persistent server doesn't significantly change rank orders or pass rates, the MCP-overhead concern is real for latency but not for evaluation — a weaker finding than expected",
+      "killer_objection": "This is engineering, not research. The contribution would be in demonstrating that evaluation outcomes change, not in building the server",
+      "killer_result": "A persistent MCP server changes classification outcomes on 15%+ of benchmark scenarios, showing protocol choice is a significant evaluation confound"
+    }
+  ],
+  "seed_count": 10,
+  "generated_at": "2026-06-19T06:24:00Z",
+  "schema": "paper-deep-reading/direction_board/v1"
+}

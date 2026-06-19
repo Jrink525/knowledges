@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "paper": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "arxiv_id": "2606.19605",
+    "slug": "fapo-2606.19605"
+  },
+  "research_equation": {
+    "problem": "Multi-step LLM pipelines fail through error propagation across retrieval, reasoning, formatting, and control flow steps. Prompt-only optimization cannot diagnose or fix structural bottlenecks in the chain.",
+    "existing_solution": "GEPA, DSPy, and other prompt-programming systems optimize prompts within fixed pipeline structures. They lack step-level failure attribution and cannot modify chain topology.",
+    "gap": "No existing system combines step-level failure attribution, scope-constrained multi-level optimization (prompt → parameter → structure), and agentic workspace-level iteration in a reproducible, guardrailed framework.",
+    "proposed_solution": "FAPO uses Claude Code to drive a closed-loop optimization cycle: evaluate pipeline → attribute failures via intermediate step inspection → propose scoped changes → review → validate variants. It starts with prompt edits and escalates to structural changes only when evidence shows prompt optimization is insufficient.",
+    "key_claim": "Pipeline-aware, evidence-grounded optimization with prompt-first escalation beats prompt-only search (15/18 benchmark wins, +14.1 pp mean gain) and can achieve even larger gains (+33.8 pp) when structural changes are needed."
+  },
+  "tri_pass_notes": {
+    "first_pass": {
+      "what": "FAPO is a Claude Code-based framework for autonomous optimization of multi-step LLM pipelines. It treats the pipeline as an inspectable workflow, records intermediate step outputs, attributes failures to specific steps, and iterates through prompt → parameter → structure optimization levels under tenant-defined guardrails.",
+      "contributions": [
+        "Claude Code-based pipeline optimization with prompt-first escalation to structural changes",
+        "Reproducible workspace procedure with intermediate step recording and variant history",
+        "Demonstrated performance gains across QA, fact verification, instruction following, math, and security classification"
+      ],
+      "strengths": [
+        "Clear, well-motivated problem (prompt-only optimization misses structural bottlenecks)",
+        "Strong empirical results (15/18 wins, detailed statistical reporting)",
+        "Practical tenant isolation model for enterprise deployment",
+        "Thoughtful guardrails against overfitting (split access, scope contracts, iteration memory, variant immutability)",
+        "Security domain results add credibility beyond benchmarks"
+      ],
+      "weaknesses": [
+        "Comparison with GEPA is not fully controlled (FAPO has broader search space by design)",
+        "AIME results inconclusive — suggests scope for improvement in math reasoning optimization",
+        "Single orchestrator model (Claude Code) — unclear how FAPO generalizes to other coding agents",
+        "Higher variance when structural changes are allowed due to path dependence"
+      ]
+    },
+    "second_pass": {
+      "method_family": "Agent-driven closed-loop optimization over discrete LLM pipeline configurations, with attribution-guided search",
+      "key_techniques": [
+        "Claude Code as orchestrator with three specialized agents (optimization, step-attribution, variant-reviewer)",
+        "LangGraph-based pipeline representation for step-level inspection",
+        "Tenant workspace model with playbook-defined scope contracts",
+        "Prompt-first escalation policy for controlled optimization levels",
+        "Heuristic + LLM-based failure attribution for root cause localization",
+        "Independent reviewer subagent for safety and scope compliance"
+      ],
+      "evaluation_protocol": "Three trials per model-benchmark cell, best validation-selected variant reported with mean ± trial std dev. GEPA comparison starts from identical baseline pipelines. FAPO budget: 50 variants or 10 rounds per trial."
+    },
+    "third_pass": {
+      "unresolved_questions": [
+        "How does FAPO scale with more complex pipelines (10+ nodes)?",
+        "Can FAPO optimize pipelines with non-deterministic or agentic steps (tool use, sub-agents)?",
+        "How sensitive are results to the orchestrator model (Claude Code vs alternatives)?",
+        "What is the cost (in API calls, tokens, wall time) of FAPO relative to GEPA?",
+        "Can the escalation rules be learned rather than heuristically determined?",
+        "How does FAPO handle pipelines with human-in-the-loop steps?"
+      ],
+      "threats_to_validity": [
+        "Broader search space for FAPO than GEPA makes comparison non-apples-to-apples",
+        "Single orchestrator model limits generalizability claims",
+        "AIME negative results unexplained — possible overfitting to small dev set",
+        "GEPA reproduction uses different reflector model than original paper",
+        "Token budget asymmetry between GPT-4.1-mini and GPT-5.4-mini complicates cross-model analysis",
+        "No ablation study isolating prompt-only vs structural-only FAPO contributions"
+      ]
+    }
+  },
+  "challenge_to_module_map": [
+    {
+      "challenge": "Error propagation across pipeline steps",
+      "fapo_module": "Step-output recording + failure attribution (step-attribution subagent)",
+      "how_addressed": "Records every node's output in step_outputs dict; attribution analyzes step names, output content, empty steps, and cascading failures"
+    },
+    {
+      "challenge": "Prompt-only optimization cannot fix structural bottlenecks",
+      "fapo_module": "Prompt-first escalation policy with scope contracts",
+      "how_addressed": "Escalates from prompt edits → chain parameters → chain structure only when attribution indicates structural bottleneck and scope permits"
+    },
+    {
+      "challenge": "Overfitting to optimization examples",
+      "fapo_module": "Four guardrails (split access, scope constraints, iteration memory, variant immutability)",
+      "how_addressed": "Optimizer sees only training cases; validation/test expose aggregates only; every variant is immutable and logged"
+    },
+    {
+      "challenge": "Reproducibility and isolation across tasks",
+      "fapo_module": "Tenant workspace model",
+      "how_addressed": "Each tenant has isolated directories for chains, prompts, configs, datasets; shared runtime enforces path- and module-level isolation"
+    },
+    {
+      "challenge": "Verification that changes respect task constraints",
+      "fapo_module": "Variant-reviewer subagent",
+      "how_addressed": "Independently checks scope compliance, placeholder integrity, data leakage, scorer compatibility, state protocol, and import safety"
+    }
+  ]
+}

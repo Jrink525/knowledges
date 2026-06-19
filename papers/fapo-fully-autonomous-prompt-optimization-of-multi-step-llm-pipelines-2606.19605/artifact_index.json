@@ -1,0 +1,30 @@
+{
+  "artifact_index": {
+    "title": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "slug": "fapo-2606.19605",
+    "arxiv_id": "2606.19605",
+    "version": "1",
+    "date": "2026-06-17",
+    "authors": [
+      "Paul Kassianik",
+      "Baturay Saglam",
+      "Huaibo Zhao",
+      "Blaine Nelson",
+      "Supriti Vijay",
+      "Aman Priyanshu",
+      "Amin Karbasi"
+    ],
+    "affiliations": ["Foundation AI–Cisco Systems Inc.", "Yale University"],
+    "artifact_dir": "papers/fapo-2606.19605/",
+    "artifacts": {
+      "report_md": "report.md",
+      "traceability_manifest_json": "traceability_manifest.json",
+      "research_lens_json": "research_lens.json",
+      "direction_board_json": "direction_board.json",
+      "artifact_index_json": "artifact_index.json",
+      "paper_pdf": "paper.pdf",
+      "raw_text": "paper_text.txt"
+    },
+    "skill_version": "paper-deep-reading v1.2.0"
+  }
+}

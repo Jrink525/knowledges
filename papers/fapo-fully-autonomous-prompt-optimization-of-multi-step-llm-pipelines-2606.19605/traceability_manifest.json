@@ -1,0 +1,275 @@
+{
+  "meta": {
+    "paper": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "arxiv_id": "2606.19605",
+    "source_file": "paper_text.txt",
+    "claim_convention": "C{s}.{n} = section s, nth claim"
+  },
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "Multi-step LLM pipelines fail through interactions among retrieval, reasoning, and formatting steps, so prompt-only optimization can miss bottlenecks in the chain.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "Multi-step LLM pipelines fail through interactions among retrieval, reasoning, and formatting steps, so prompt-only optimization can miss bottlenecks in the chain.",
+          "section": "Abstract"
+        }
+      ],
+      "claim_type": "problem_statement"
+    },
+    {
+      "claim_id": "C1.2",
+      "claim_text": "FAPO beats the baseline GEPA in 15 of 18 model-benchmark comparisons.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "Across six benchmarks and three task models, FAPO beats the baseline GEPA in 15 of 18 model-benchmark comparisons.",
+          "section": "Abstract"
+        },
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "FAPO wins 15 of 18 model–benchmark comparisons, with a mean gain of +14.1 pp.",
+          "section": "1 Introduction"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C1.3",
+      "claim_text": "The mean FAPO-GEPA gain is +14.1 percentage points across all comparisons.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "the mean FAPO–GEPA gain is +14.1 pp.",
+          "section": "Abstract"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C1.4",
+      "claim_text": "In prompt-first escalations to structural changes on HoVer and IFBench, FAPO wins all six with a mean gain of +33.8 pp.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "In the six HoVer and IFBench comparisons where prompt-first search escalated to structural changes, FAPO wins all six with a mean gain of +33.8 pp.",
+          "section": "Abstract"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C1.5",
+      "claim_text": "FAPO improves CTIBench-RCM test accuracy: +4.0 pp on GPT-5, +7.1 pp on Foundation-Sec-8B-Instruct, +2.0 pp on Foundation-Sec-8B-Reasoning.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "prompt-only FAPO lifts test accuracy by +4.0 pp on GPT-5, +7.1 pp on Foundation-Sec-8B-Instruct, and +2.0 pp on Foundation-Sec-8B-Reasoning.",
+          "section": "Abstract"
+        },
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "Table 3: CTIBench-RCM optimization. All scores are exact-match accuracy (%)",
+          "section": "4.4 Case Studies"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C2.1",
+      "claim_text": "FAPO uses Claude Code as its orchestrator optimization layer, separate from the task model being evaluated.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "FAPO uses Claude Code as its orchestrator optimization layer, separate from the task model being evaluated.",
+          "section": "3 Claude-Driven Optimization"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C2.2",
+      "claim_text": "FAPO first attempts prompt-level optimization and escalates to structural changes only when attribution indicates prompt edits are not enough to resolve the dominant bottleneck.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "It first tries prompt edits and, only when prompt optimization appears insufficient, changes chain structure within the permitted scope when attribution identifies a structural bottleneck.",
+          "section": "Abstract"
+        },
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "FAPO first attempts prompt-level optimization and escalates to structural changes only when attribution indicates that prompt edits are not enough to resolve the dominant bottleneck.",
+          "section": "1 Introduction"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C2.3",
+      "claim_text": "The optimization loop uses three core agents: optimization agent, step-attribution subagent, and variant-reviewer subagent.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "The optimization loop uses three core agents. The optimization agent reads the tenant playbook and scope contract then drives the optimization loop. The step-attribution subagent analyzes failures after each evaluation. The variant-reviewer subagent checks each proposal for scope compliance, placeholder integrity, data leakage, and scorer compatibility.",
+          "section": "3.1 Implementation Components"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C2.4",
+      "claim_text": "Three optimization levels are possible: prompt text, chain parameters, or chain structure.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "Currently three levels are possible: prompt text, chain parameters, or chain structure.",
+          "section": "3.2 The Optimization Loop"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C2.5",
+      "claim_text": "FAPO uses four guardrails against overfitting: split access controls, scope constraints, iteration memory, and variant immutability.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "Split access controls: The optimizer agent sees individual training cases. Validation and test expose aggregate scores only. Scope constraints: Tenant playbooks define allowed and forbidden changes. Iteration memory: A structured log records variants, scores, and exhaustion reasons. Variant immutability: Every accepted or rejected attempt gets a new variant file.",
+          "section": "3.3 Guardrails and Data Hygiene"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C2.6",
+      "claim_text": "FAPO organizes optimization around a tenant model with isolated workspaces, ensuring reproducibility, isolation, and extensibility.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "We introduce this organizational structure to ensure reproducibility, isolation, and extensibility. All variants and scores are recorded in the tenant-level directories for full visibility into prior runs and optimization attempts.",
+          "section": "2.2 Tenant Organization"
+        }
+      ],
+      "claim_type": "design"
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "On HoVer, FAPO extended the baseline 3-hop retrieval chain to 4-5 hops with multi-query BM25 search and entity-aware rescue.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "On HoVer, attribution identified insufficient retrieval coverage. FAPO extended the baseline 3-hop retrieval chain to 4–5 hops, with multi-query BM25 search and entity-aware rescue.",
+          "section": "4.3 Results"
+        }
+      ],
+      "claim_type": "technical_detail"
+    },
+    {
+      "claim_id": "C3.2",
+      "claim_text": "On IFBench, FAPO added deterministic post-processing nodes that enforce instruction constraints, producing gains of +19.84 to +38.95 pp.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "On IFBench, attribution identified format failures. FAPO added deterministic post-processing nodes that enforce instruction constraints. These changes produce gains of +24.78 to +48.56 pp on HoVer and +19.84 to +38.95 pp on IFBench.",
+          "section": "4.3 Results"
+        }
+      ],
+      "claim_type": "technical_detail"
+    },
+    {
+      "claim_id": "C3.3",
+      "claim_text": "FAPO wins 9 of 12 prompt-only comparisons, six with non-overlapping mean ± trial-standard-deviation ranges.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "On prompt-only comparisons, FAPO wins 9 of 12. We also consider CTIBench Root Cause Mapping",
+          "section": "1 Introduction"
+        },
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "On the remaining benchmarks, optimization stayed at the prompt level. FAPO wins 9 of 12 prompt-only comparisons, six of which have non-overlapping mean ± trial-standard-deviation ranges",
+          "section": "4.3 Results"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C3.4",
+      "claim_text": "AIME is the only benchmark where GEPA leads FAPO across all three model comparisons; results are inconclusive.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "AIME is the only benchmark where GEPA leads FAPO across all three model comparisons; relative to the baselines, FAPO yields mixed results (-2.22, +3.78, and +1.55 pp across the three task models) that fall within the noise range",
+          "section": "4.3 Results"
+        }
+      ],
+      "claim_type": "result"
+    },
+    {
+      "claim_id": "C3.5",
+      "claim_text": "FAPO has higher run-to-run variation when prompt-first search escalates to pipeline changes due to path dependence in optimization trajectory.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "FAPO has higher run-to-run variation when prompt-first search is allowed to escalate to pipeline changes. This reflects path dependence in the optimization trajectory.",
+          "section": "4.5 Discussion"
+        }
+      ],
+      "claim_type": "observation"
+    },
+    {
+      "claim_id": "C3.6",
+      "claim_text": "GPT-4.1-mini outperforms GPT-5.4-mini on four of six baselines due to asymmetric token budgeting (shared max_completion_tokens for GPT-5.4-mini).",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "GPT-4.1-mini outperforms GPT-5.4-mini on four of the six baseline test benchmarks. Both models were given an identical 16,000-token generation budget, but the provider accounts for that budget differently",
+          "section": "4.5 Discussion"
+        }
+      ],
+      "claim_type": "observation"
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "FAPO integrates the adversarial evaluate-analyze-propose-iterate search pattern from jailbreaking literature but changes the objective to mean score improvement across evaluation cases.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "We use this closed-loop search pattern, but change the objective from finding one successful failure case to improving the mean score of one pipeline variant across N evaluation cases.",
+          "section": "1 Introduction"
+        },
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "FAPO is a constructive continuation of this search pattern. It keeps the evaluate–analyze–propose–iterate loop but changes the target to aggregate validation performance for one deployable pipeline variant.",
+          "section": "5 Related Work"
+        }
+      ],
+      "claim_type": "technical_detail"
+    },
+    {
+      "claim_id": "C4.2",
+      "claim_text": "The GEPA reproduction uses Claude Opus 4.6 as reflector, which may strengthen GEPA on HoVer and IFBench relative to reported scores.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "We use Claude Opus 4.6 through Bedrock with default settings as GEPA's reflector, replacing the original reflector model; this may strengthen GEPA on HoVer and IFBench relative to the reported scores.",
+          "section": "4.5 Discussion"
+        }
+      ],
+      "claim_type": "methodological_note"
+    },
+    {
+      "claim_id": "C4.3",
+      "claim_text": "The FAPO budget is limited to 50 variants or 10 optimization rounds per trial, whichever comes first.",
+      "evidence": [
+        {
+          "source_file": "paper_text.txt",
+          "quote_text": "The FAPO budget is limited to 50 variants or 10 optimization rounds per trial, whichever comes first.",
+          "section": "4.2 Experimental Protocol"
+        }
+      ],
+      "claim_type": "experimental_design"
+    }
+  ]
+}

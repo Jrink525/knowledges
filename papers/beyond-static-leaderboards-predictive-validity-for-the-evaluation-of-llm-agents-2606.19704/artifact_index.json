@@ -1,0 +1,55 @@
+{
+  "paper_id": "2606.19704",
+  "paper_title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+  "slug": "beyond-static-leaderboards",
+  "generated_at": "2026-06-19T06:24:00Z",
+  "source": {
+    "type": "arXiv HTML",
+    "url": "https://arxiv.org/html/2606.19704v1",
+    "note": "Full paper extracted via HTML parsing (70,500 chars raw, 64,525 chars structured text)"
+  },
+  "artifacts": [
+    {
+      "filename": "report.md",
+      "path": "papers/beyond-static-leaderboards-2606.19704/report.md",
+      "format": "markdown",
+      "description": "Main deep-read report: ~25 anchored sections covering problem, position, three critiques, 12-tier apparatus, PV criteria, 14 studies, convergence patterns, falsification thresholds, limitations, and claim index",
+      "size_bytes": 13057,
+      "generated": "2026-06-19T06:24:00Z"
+    },
+    {
+      "filename": "traceability_manifest.json",
+      "path": "papers/beyond-static-leaderboards-2606.19704/traceability_manifest.json",
+      "format": "json",
+      "description": "Claim-level traceability: 11 claims with evidence quotes, sources, and support levels (convergent_architectural_sensitivity, convergent_empirical, theoretical_with_empirical_backing, proposal, analytical_synthesis)",
+      "size_bytes": 11164,
+      "generated": "2026-06-19T06:24:00Z"
+    },
+    {
+      "filename": "research_lens.json",
+      "path": "papers/beyond-static-leaderboards-2606.19704/research_lens.json",
+      "format": "json",
+      "description": "Problem reconstruction via research equation (before → after), tri-pass notes (first/second/third pass), challenge-to-module mapping with evidence gaps, key concepts, and related work clusters",
+      "size_bytes": 7481,
+      "generated": "2026-06-19T06:24:00Z"
+    },
+    {
+      "filename": "direction_board.json",
+      "path": "papers/beyond-static-leaderboards-2606.19704/direction_board.json",
+      "format": "json",
+      "description": "10 ranked research direction seeds with seed_type, trigger_evidence, hidden_assumption, MVE, killer objection, and killer result. Top seeds: PV weight fitting, MCP-stdio overhead, tier orthogonality, cross-domain transfer, deployment validity gap",
+      "size_bytes": 17867,
+      "generated": "2026-06-19T06:24:00Z"
+    },
+    {
+      "filename": "paper.pdf",
+      "path": "papers/beyond-static-leaderboards-2606.19704/paper.pdf",
+      "format": "pdf",
+      "description": "Original PDF from arXiv (357 KB)",
+      "size_bytes": 357000,
+      "generated": "2026-06-19T06:24:00Z"
+    }
+  ],
+  "total_artifacts": 5,
+  "schema": "paper-deep-reading/artifact_index/v1"
+}
