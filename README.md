@@ -14,6 +14,7 @@
   - `ai-tools/autoresearch/report.md`
 
 ### ai-tools/career/ (`ai-tools/career`)
+  - `ai-tools/career/agent-loop-architecture.md`
   - `ai-tools/career/agentic-code-review-addy-osmani.md`
   - `ai-tools/career/claude-code-learn-any-field.md`
   - `ai-tools/career/dont-outsource-the-learning.md`
@@ -111,10 +112,12 @@
   - `ai-tools/inference/grit-rewriting-git-in-rust.md`
   - `ai-tools/inference/how-llms-actually-work.md`
   - `ai-tools/inference/how-to-actually-use-claude.md`
+  - `ai-tools/inference/how-to-fine-tune-llms-2026.md`
   - `ai-tools/inference/how-we-build-evals-for-deep-agents.md`
   - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
   - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
   - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
+  - `ai-tools/inference/learning-path-llm-agent.md`
   - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
   - `ai-tools/inference/llm-engineering-roadmap-2026.md`
   - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
@@ -148,6 +151,7 @@
   - `ai-tools/tooling/20-claude-skills-templates.md`
   - `ai-tools/tooling/30-claude-workflows-skills-power-user.md`
   - `ai-tools/tooling/32-claude-code-hacks.md`
+  - `ai-tools/tooling/7-day-claude-code-agent.md`
   - `ai-tools/tooling/7-days-claude-ai-employee-guide.md`
   - `ai-tools/tooling/agent-harness-self-repair-opik.md`
   - `ai-tools/tooling/agent-memory-framework-remember-cite-forget.md`
@@ -263,6 +267,7 @@
   - `programming/java/java-concurrency-complete-graph.md`
   - `programming/java/java-concurrency-fundamentals.md`
   - `programming/java/java-jvm-memory-model.md`
+  - `programming/java/java-pooling-high-concurrency.md`
   - `programming/java/jvm-tuning-and-profiling-complete-guide.md`
   - `programming/java/leetcode-complete-dsa-pattern-sheet.md`
   - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
@@ -280,6 +285,13 @@
 
 ### papers/ (`论文笔记`)
   - `papers/README.md`
+  - `papers/daily-report-2026-06-19.md`
+
+### papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/ (`papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629`)
+  - `papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md`
+
+### papers/beyond-static-leaderboards-predictive-validity-for-the-evaluation-of-llm-agents-2606.19704/ (`papers/beyond-static-leaderboards-predictive-validity-for-the-evaluation-of-llm-agents-2606.19704`)
+  - `papers/beyond-static-leaderboards-predictive-validity-for-the-evaluation-of-llm-agents-2606.19704/report.md`
 
 ### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
   - `papers/coding-agents-misalignment-2605.29442/report.md`
@@ -290,6 +302,15 @@
 ### papers/end-of-code-review-2606.13175/ (`papers/end-of-code-review-2606.13175`)
   - `papers/end-of-code-review-2606.13175/report.md`
 
+### papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/ (`papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605`)
+  - `papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/report.md`
+
+### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
+  - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
+
+### papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/ (`papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236`)
+  - `papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md`
+
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
 
@@ -298,7 +319,7 @@
 
 ---
 
-总计 **235** 篇知识文档
+总计 **246** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -310,5 +331,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-18 22:14 UTC]_
+_[自动生成于 2026-06-19 16:05 UTC]_
 
