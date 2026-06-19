@@ -39,7 +39,7 @@ input_json = sys.argv[1]
 workspace_dir = sys.argv[2]
 report_file = sys.argv[3]
 date_display = sys.argv[4]
-api_key = sys.argv[5] if len(sys.argv) > 5 else ''
+api_key = os.environ.get('OPENAI_API_KEY', '')
 api_base = os.environ.get('OPENAI_BASE_URL', 'https://api.deepseek.com/v1')
 api_model = 'deepseek-chat'
 
@@ -270,7 +270,7 @@ print(f'With deep-read: {with_count}')
 PYEOF
 
 # Pass OPENAI_API_KEY as the 5th argument
-python3 "$TMP_PY" "$INPUT_JSON" "$WORKSPACE_DIR" "$REPORT_FILE" "$DATE" "${OPENAI_API_KEY:-}"
+python3 "$TMP_PY" "$INPUT_JSON" "$WORKSPACE_DIR" "$REPORT_FILE" "$DATE"
 
 # ---------- 提交到 GitHub ----------
 if [ -f "${SCRIPT_DIR}/git-knowledge-commit.sh" ]; then
