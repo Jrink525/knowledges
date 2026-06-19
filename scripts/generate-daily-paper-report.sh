@@ -40,6 +40,8 @@ workspace_dir = sys.argv[2]
 report_file = sys.argv[3]
 date_display = sys.argv[4]
 api_key = sys.argv[5] if len(sys.argv) > 5 else ''
+api_base = os.environ.get('OPENAI_BASE_URL', 'https://api.deepseek.com/v1')
+api_model = 'deepseek-chat'
 
 with open(input_json) as f:
     papers = json.load(f)
@@ -58,8 +60,8 @@ def slugify(title):
     return s
 
 # ---------- Call OpenAI to generate Chinese summary + recommendation ----------
-def generate_enrichments(papers_list, api_key):
-    """Batch-generate Chinese summaries and recommendations via OpenAI API."""
+def generate_enrichments(papers_list, api_key, api_base, api_model):
+    """Batch-generate Chinese summaries and recommendations via LLM API."""
     if not api_key or len(api_key) < 10:
         return {}
 
@@ -104,9 +106,9 @@ GitHub: {github}""")
 只返回 JSON，不要其它文字。"""
 
     payload = json.dumps({
-        "model": "gpt-4o-mini",
+        "model": api_model,
         "messages": [
-            {"role": "system", "content": "你是一个 AI 研究助手，擅长论文分析和个性化推荐。"},
+            {"role": "system", "content": "你是一个 AI 研究助手，擅长论文分析和个性化推荐。请用中文回答，语言自然流畅，不要过于学术化。"},
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
@@ -114,7 +116,7 @@ GitHub: {github}""")
     }).encode('utf-8')
 
     req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
+        f"{api_base.rstrip('/')}/chat/completions",
         data=payload,
         headers={
             "Authorization": f"Bearer {api_key}",
@@ -146,7 +148,7 @@ GitHub: {github}""")
 
 # Generate enrichments
 sys.stderr.write("Generating Chinese summaries and recommendations...\n")
-enrichments = generate_enrichments(papers, api_key)
+enrichments = generate_enrichments(papers, api_key, api_base, api_model)
 sys.stderr.write(f"Got enrichments for {len(enrichments)} papers\n")
 
 # ---------- Build report ----------
