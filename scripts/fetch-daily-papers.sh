@@ -18,7 +18,7 @@ WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 
 # 配置
 MAX_PAPERS="${2:-10}"
-DATE="${1:-$(date -u '+%Y-%m-%d')}"
+DATE="${1:-$(date -u -d '-1 day' '+%Y-%m-%d')}"
 OUTPUT_FILE="${WORKSPACE_DIR}/papers/today-hf-papers.json"
 STATE_FILE="${WORKSPACE_DIR}/papers/.seen-papers.json"
 HF_API="https://huggingface.co/api/daily_papers"
