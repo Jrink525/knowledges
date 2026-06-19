@@ -76,10 +76,151 @@
 
 | 框架 | 特点 | 适用场景 |
 |------|------|---------|
-| [Pydantic AI](https://ai.pydantic.dev/) | 类型安全，Schema 定义 Agent 行为。适合有类型系统思维的人 | **推荐优先学**。自动编码、结构化输出 |
+| [Pydantic AI](https://ai.pydantic.dev/)（简称 Pi） | 类型安全，Pydantic Schema 定义 Agent 行为。跟 Java 类型系统思维完全合拍 | **推荐优先学**。自动编码、结构化输出 |
 | [Spring AI](https://docs.spring.io/spring-ai/reference/) | Java 生态，DI/Template 模式。支持 OpenAI、Ollama 等 | 已有 Spring 基础，1 小时上手 |
 | [Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk) | MCP + Tool-Use 原生支持 | 搭高级 Agent（投研、多步推理）|
 | [LangGraph](https://langchain-ai.github.io/langgraph/) | 图状态机编排 Agent 多步流程 | 复杂工作流（投研流水线、自动 PR review）|
+
+---
+
+#### Pydantic AI（Pi 框架）详解
+
+> 官网：<https://ai.pydantic.dev/>  |  Python 框架 | 与 Pydantic（数据验证库）同一团队 | 最强类型安全
+
+**为什么推荐你从 Pi 入手？**
+- 你有 Java 工程背景，Pydantic 的 Schema 定义类比 Java 的 POJO + JSR-303 校验，思维契合
+- 所有 Agent 输入/输出都用 Pydantic Model 定义，IDE 自动补全 + 类型检查
+- 天然支持 Ollama、OpenAI、Claude、Google 等多种 LLM 后端
+- 内置 Tool-Use、多 Agent 编排、结构化结果提取
+
+**三个递进 Demo：**
+
+⭐ **Demo 1：Hello Agent（5分钟上手）**
+
+```python
+from pydantic_ai import Agent
+
+# 一行定义一个 Agent，类型是它的签名
+agent = Agent('openai:gpt-4o', system_prompt='你是一个代码助手，擅长 Java 代码审查')
+
+result = agent.run_sync('Review: public void doStuff() { /* complex logic */ }')
+print(result.data)
+```
+
+⭐ **Demo 2：带工具的 Agent（自动编码 Agent）**
+
+```python
+from pydantic_ai import Agent, RunContext
+from pydantic import BaseModel
+import subprocess
+
+class CodeReview(BaseModel):
+    issues: list[str]
+    score: int  # 1-10
+    suggestion: str
+
+agent = Agent(
+    'openai:gpt-4o',
+    result_type=CodeReview,  # 结构化输出，自动解析
+    system_prompt='你是高级 Java 代码审查员'
+)
+
+@agent.tool
+def run_checkstyle(ctx: RunContext, file_path: str) -> str:
+    """运行 checkstyle 检查代码规范"""
+    result = subprocess.run(['checkstyle', file_path], capture_output=True, text=True)
+    return result.stdout
+
+@agent.tool
+def git_diff(ctx: RunContext, branch: str) -> str:
+    """获取指定分支的 Git 差异"""
+    result = subprocess.run(['git', 'diff', f'main..{branch}'], capture_output=True, text=True)
+    return result.stdout[:5000]
+
+# 用法
+result = agent.run_sync('审查 feature/agent-auto-coding 分支的代码质量')
+print(f"评分: {result.data.score}")
+print(f"问题: {result.data.issues}")
+```
+
+⭐ **Demo 3：多 Agent 编排（投研 Agent）**
+
+```python
+from pydantic_ai import Agent
+from pydantic import BaseModel
+
+class ResearchReport(BaseModel):
+    company: str
+    market_position: str
+    financial_health: str
+    technical_analysis: str
+    risk_factors: list[str]
+    recommendation: str
+
+# 三个专业 Agent
+collector = Agent('openai:gpt-4o', system_prompt='搜索收集企业基础信息')
+analyzer = Agent('openai:gpt-4o', system_prompt='财务和技术面分析师')
+writer = Agent('openai:gpt-4o', result_type=ResearchReport,
+               system_prompt='整合分析结果生成投资研究报告')
+
+# 多步编排
+async def research_pipeline(company: str):
+    # 1. 信息收集
+    raw = await collector.run(f'收集 {company} 最近财报和新闻')
+
+    # 2. 分析
+    analysis = await analyzer.run(f'基于以下信息进行分析：{raw.data[:3000]}')
+
+    # 3. 写报告
+    report = await writer.run(f'基于分析：{analysis.data}，生成投资建议')
+    return report.data
+```
+
+**Pi 框架学习路径：**
+1. 官网 Quickstart（10分钟）
+2. 定义带 result_type 的结构化 Agent（理解类型驱动）
+3. 添加 tool（理解 Tool-Use 模式）
+4. 多 Agent 编排（理解 Agent Chain）
+5. 对接自己微调后部署在 Ollama 上的模型（`ollama:qwen3-4b`）
+
+---
+
+#### Spring AI 实战要点
+
+| 模块 | 说明 |
+|------|------|
+| ChatClient | 统一聊天接口，切换模型只要改配置 |
+| Tool Calling | @Tool 注解注册 Java 方法为 AI 工具 |
+| Advisors | 拦截器链（QuestionAnswerAdvisor 等） |
+| VectorStore | PGVector/Redis 做 RAG |
+| Function Calling | 直接调 Spring Bean 方法 |
+
+**最小 Demo：**
+
+```java
+var client = ChatClient.builder(chatModel).build();
+
+String response = client.prompt()
+    .system("你是一个代码审查助手")
+    .user("审查这段代码: ...")
+    .call()
+    .content();
+```
+
+---
+
+#### Claude Agent SDK 实战要点
+
+- 原生 MCP（Model Context Protocol）支持
+- ```python
+from claude_agent_sdk import Agent
+agent = Agent(
+    api_key="sk-ant-...",
+    mcp_servers=["./investment-mcp-server.js"]  # 投研数据源
+)
+```
+- 适合复杂多步推理的工具链
+- 与 Spring AI 可同时使用：Claude Agent SDK 搭推理层，Spring AI 搭服务层
 
 ---
 
@@ -99,7 +240,9 @@
           集成：自己微调的模型 + Agent 框架 + Spring AI → 完整应用
 ```
 
-**最短路**：Karpathy GPT 视频 (1 天) → Unsloth 微调 (1 天) → Pydantic AI/Spring AI 搭 Agent (3 天) → 第 1 周跑起来 MVP。
+**最短路**：Karpathy GPT 视频 (1 天) → Unsloth 微调 (1 天) → **Pydantic AI（Pi）搭 Agent** (2 天) → Spring AI 集成 (1 天) → 第 1 周跑起来 MVP。
+
+> Pi 框架的 Type-Safe 思维跟你的 Java 背景天然合拍，建议作为 Agent 入口框架优先练手。
 
 ---
 
