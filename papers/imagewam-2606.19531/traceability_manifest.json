@@ -1,0 +1,297 @@
+{
+  "paper": {
+    "title": "ImageWAM: Do World Action Models Really Need Video Generation, or Just Image Editing?",
+    "arxivId": "2606.19531",
+    "date": "2026-06-17"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "claim": "Video-based WAMs face three coupled limitations: dense multi-frame future tokens make inference costly, full video prediction spends capacity on action-irrelevant details, and long-horizon future imagination may introduce errors that mislead action prediction.",
+      "type": "motivation",
+      "locations": [
+        {
+          "section": "1. Introduction",
+          "span": "However, this bridge also reveals a mismatch..."
+        },
+        {
+          "section": "Abstract",
+          "span": "However, video-based WAMs face three coupled limitations..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "empirical",
+          "description": "Efficiency comparison (Table 5): FastWAM-IDM (full video) 63.65 TFLOPs, 1081ms vs ImageWAM 9.72 TFLOPs, 263ms",
+          "location": "Section 4.3, Table 5"
+        },
+        {
+          "type": "qualitative",
+          "description": "Future-video artifact analysis showing distorted observations around task-relevant objects (Figure 5)",
+          "location": "Section 4.3, Figure 5"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C2",
+      "claim": "Image editing models offer a more direct visual generative prior for language-conditioned manipulation: they provide instruction-to-change alignment, an easier goal/change proxy, and compact inference.",
+      "type": "insight",
+      "locations": [
+        {
+          "section": "1. Introduction",
+          "span": "We argue that image editing models offer a more direct visual generative prior..."
+        },
+        {
+          "section": "2.1 Image Editing",
+          "span": "We study image editing from a robotics perspective..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "reasoning",
+          "description": "Three properties identified: instruction-to-change alignment, easier goal/change proxy, compact inference",
+          "location": "Section 1"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C3",
+      "claim": "ImageWAM repurposes pretrained image editing models for robot action prediction by extracting KV caches from editing denoising as compact world-action context, without decoding dense multi-frame videos.",
+      "type": "method",
+      "locations": [
+        {
+          "section": "3.2 ImageWAM Architecture",
+          "span": "The editing cache is defined as the set of layer-wise KV pairs..."
+        },
+        {
+          "section": "3.4 Efficient Inference",
+          "span": "At inference time, ImageWAM avoids full future-video generation..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "architectural",
+          "description": "C_edit^τ = {(K_ℓ^τ, V_ℓ^τ)}^L_{ℓ=1} = f_edit^τ(o_t, l). At inference: single editing forward step yields cache, then action denoising.",
+          "location": "Equations 5, 10, 11"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C4",
+      "claim": "ImageWAM outperforms standard VLA baselines without additional policy pretraining across simulator and real-world experiments.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.2 Main Results",
+          "span": "Results on RoboTwin 2.0..."
+        },
+        {
+          "section": "4.2 Main Results",
+          "span": "Results on Real-world..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "RoboTwin 2.0: ImageWAM 93.38% vs π₀ 62.16%, vs π₀.₅ 79.75%, vs ABot-M0 80.80% (all without P.T.)",
+          "location": "Table 1",
+          "value": "93.38"
+        },
+        {
+          "type": "numeric",
+          "description": "Real-world: ImageWAM 84.5% vs π₀ 55.8% (+28.7 pts), vs π₀.₅ 72.3% (+12.2 pts)",
+          "location": "Table 4",
+          "value": "84.5"
+        },
+        {
+          "type": "numeric",
+          "description": "LIBERO: ImageWAM 98.4% vs OpenVLA 76.5%, vs GR00T N1 76.5%",
+          "location": "Table 2",
+          "value": "98.4"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C5",
+      "claim": "ImageWAM matches competitive video-generation-based WAMs without additional policy pretraining.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.2 Main Results",
+          "span": "Compared with video-generation-based WAMs, ImageWAM reaches comparable performance..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "RoboTwin 2.0: ImageWAM 93.38% vs FastWAM 91.83%, vs Motus 87.80%, vs LingBot-VA 92.20%",
+          "location": "Table 1"
+        },
+        {
+          "type": "numeric",
+          "description": "LIBERO: ImageWAM 98.4% vs FastWAM 97.6%, vs Motus 97.7%, vs LingBot-VA 98.5%",
+          "location": "Table 2"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C6",
+      "claim": "ImageWAM reduces FLOPs to 1/6 and latency to 1/4 of video-based WAMs.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "Abstract",
+          "span": "It also reduces FLOPs to 1/6 and latency to 1/4 of video-based WAMs."
+        },
+        {
+          "section": "4.3 Efficiency Comparison",
+          "span": ""
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "ImageWAM: 9.72 TFLOPs, 263ms vs FastWAM-IDM: 63.65 TFLOPs, 1081ms. Ratio: 6.55× FLOPs, 4.1× latency",
+          "location": "Table 5",
+          "value": "9.72 TFLOPs, 263ms"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C7",
+      "claim": "ImageWAM achieves strong real-world performance on diverse tasks including long-horizon manipulation, deformable-object manipulation, visual occlusion, and fine-grained control.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.2 Main Results",
+          "span": "ImageWAM achieves an average success rate of 84.5%..."
+        },
+        {
+          "section": "7.1 Real-World Experiments Detail",
+          "span": ""
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "T1 (Stack Bowls): 94%, T2 (Fold Towel): 84%, T3 (Drawer & Marker): 78%, T4 (Hang Cup): 82%",
+          "location": "Table 4"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C8",
+      "claim": "Editing caches focus on task-relevant change regions, as shown by attention analysis.",
+      "type": "analysis",
+      "locations": [
+        {
+          "section": "Abstract",
+          "span": "Attention analysis further shows that editing caches focus on task-relevant change regions..."
+        },
+        {
+          "section": "4.3",
+          "span": "Figure 4: Attention visualization"
+        }
+      ],
+      "evidence": [
+        {
+          "type": "qualitative",
+          "description": "Attention visualization (Figure 4) shows editing cache attention maps concentrating on regions where task-relevant visual change occurs",
+          "location": "Figure 4"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C9",
+      "claim": "The gains from ImageWAM are not merely due to stronger image recognition or language alignment, but from editing-specific pretraining.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.4 Ablation Study",
+          "span": "Comparison with unified understanding-and-generation models"
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "ImageWAM (LIBERO): 98.4% vs BagelVLA w/ K.F.: reported lower performance; ImageWAM (RoboTwin Clean): 84.4% vs BagelVLA w/ K.F.: 75.3%",
+          "location": "Table 6"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C10",
+      "claim": "Instruction conditioning and editing-oriented feature extraction are important for obtaining action-relevant representations.",
+      "type": "analysis",
+      "locations": [
+        {
+          "section": "1. Introduction",
+          "span": "Our analyses further show that instruction conditioning and editing-oriented feature extraction are important..."
+        }
+      ],
+      "evidence": [
+        {
+          "type": "ablation",
+          "description": "Comparison with BagelVLA (unified model) shows editing-specific pretraining provides significant advantage",
+          "location": "Table 6"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "C11",
+      "claim": "ImageWAM shows strong robustness to visual domain shifts, dramatically outperforming video-based WAM on LIBERO-Plus.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.2 Main Results",
+          "span": "Under the LIBERO-Plus setting, ImageWAM maintains an average success rate of 83.1%"
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "LIBERO-Plus: ImageWAM (FLUX.2 4B) 83.1% vs FastWAM 51.5%. Camera: 80.8% vs 16.4%, Layout: 80.5% vs 60.7%",
+          "location": "Table 3",
+          "value": "83.1"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "C12",
+      "claim": "Scaling the image editing backbone from 4B to 9B parameters improves performance on LIBERO-Plus.",
+      "type": "result",
+      "locations": [
+        {
+          "section": "4.4 Ablation Study",
+          "span": "Effect of using a larger editing backbone on LIBERO-Plus"
+        }
+      ],
+      "evidence": [
+        {
+          "type": "numeric",
+          "description": "FLUX.2 4B: 83.1% → FLUX.2 9B: 85.2% (+2.1 pts). Largest gains on Robot (+8.4 pts), Language (+3.8 pts), Layout (+2.6 pts)",
+          "location": "Table 7",
+          "value": "83.1 → 85.2"
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "metadata": {
+    "total_claims": 12,
+    "verified_high_confidence": 8,
+    "verified_medium_confidence": 4,
+    "verified_low_confidence": 0
+  }
+}

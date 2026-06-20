@@ -1,0 +1,373 @@
+{
+  "manifest_version": "1.0",
+  "paper_id": "2606.15133",
+  "paper_title": "DragMesh-2: Physically Plausible Dexterous Hand-Object Interaction with Articulated Objects",
+  "traceability_manifest": [
+    {
+      "id": "C1.1",
+      "claim": "Articulated objects cannot be directly controlled; their motion must emerge through sustained hand–object contact",
+      "category": "system_design",
+      "confidence": "high",
+      "location": {
+        "section": "3.1",
+        "text": "The policy controls only the hand. The object joint has no action channel, so the target part can move only through hand–handle contact."
+      },
+      "evidence": {
+        "type": "formalization",
+        "detail": "This is the core task formulation of DragMesh-2. The target joint has no action channel; only 51-DoF hand is controlled."
+      },
+      "supporting_details": [
+        "Hand: 51-DoF SMPL-X (6 wrist DoFs + 45 finger joints)",
+        "Observation: No RGB, depth, point clouds, force, or tactile signals",
+        "Action: 51-dimensional increment to hand PD target, clipped to joint limits"
+      ]
+    },
+    {
+      "id": "C1.2",
+      "claim": "Geometric trajectory replay or open-loop execution does not model the contact dynamics required to move the articulated part",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4 (Table 2, Figure 2)",
+        "text": "Trajectory tracking reaches 1.00 at ×1 on all objects but drops to 0.71 at ×2 and ×4"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Trajectory tracking (open-loop replay) mean success: ×1=1.00, ×2=0.71, ×4=0.71"
+      },
+      "supporting_details": [
+        "7 GAPartNet objects, 20 episodes each",
+        "Deterministic execution only (open-loop)"
+      ]
+    },
+    {
+      "id": "C1.3",
+      "claim": "Policies trained only for task completion under fixed dynamics can overfit nominal contact loads, especially without tactile or force feedback",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 4",
+        "text": "As training extends from 150 to 500 epochs, nominal success rises from 0.90 to 1.00, yet strong-damping success collapses from 0.55 to 0.10"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Training-length study on a single object: longer training buys nominal success but drives policy into saturated low-robustness regime",
+        "measurements": {
+          "150_epochs": { "succ_x1": 0.90, "succ_x4": 0.55, "clip099_x4": 0.90 },
+          "200_epochs": { "succ_x1": 0.90, "succ_x4": 0.50, "clip099_x4": 0.97 },
+          "300_epochs": { "succ_x1": 1.00, "succ_x4": 0.10, "clip099_x4": 0.99 },
+          "500_epochs": { "succ_x1": 1.00, "succ_x4": 0.10, "clip099_x4": 0.99 }
+        }
+      },
+      "supporting_details": [
+        "clip099: fraction of rollout steps with max action magnitude > 0.99",
+        "checkpoint selection by OOD robustness, not training reward"
+      ]
+    },
+    {
+      "id": "C1.4",
+      "claim": "PICA injects computationally observable physical signals into policy learning without tactile or force feedback",
+      "category": "method_claim",
+      "confidence": "high",
+      "location": {
+        "section": "3.2",
+        "text": "PICA (Physically Informed Contact-Aware) training mechanism"
+      },
+      "evidence": {
+        "type": "method_description",
+        "detail": "PICA augments PPO with contact-aware reward terms, causal-window auxiliary supervision, damping randomization, and temporal contact-response modeling"
+      },
+      "supporting_details": [
+        "Reward: r_task + r_dist + r_act + r_time + r_detach + r_success + r_bound + r_contact",
+        "Auxiliary: 4-target contact response prediction (object motion, palm distance, detachment, tracking stress)",
+        "Damping randomization during training",
+        "GLA temporal encoder for contact-history features"
+      ]
+    },
+    {
+      "id": "C2.1",
+      "claim": "DragMesh-2 achieves stronger robustness under contact-load variation than compared methods",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Figure 2, Table 2"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "PICA attains the highest mean success in all six mode × damping settings across 7 GAPartNet objects",
+        "comparative_table": {
+          "columns": ["Method", "×1 Det", "×2 Det", "×4 Det", "×1 Stoch", "×2 Stoch", "×4 Stoch"],
+          "rows": [
+            ["Traj. tracking", "1.00", "0.71", "0.71", "—", "—", "—"],
+            ["Parallel-Jaw", "0.14", "0.14", "0.14", "—", "—", "—"],
+            ["State-only PPO", "0.58", "0.44", "0.27", "0.44", "0.35", "0.26"],
+            ["Flat-history PPO", "0.43", "0.36", "0.32", "0.34", "0.19", "0.21"],
+            ["GRU-PPO", "0.51", "0.33", "0.30", "0.44", "0.27", "0.28"],
+            ["Transformer-PPO", "0.35", "0.23", "0.09", "0.25", "0.11", "0.04"],
+            ["PICA (Ours)", "0.89", "0.80", "0.56", "0.82", "0.72", "0.43"]
+          ]
+        }
+      },
+      "supporting_details": [
+        "7 objects from GAPartNet",
+        "20 episodes per (method, object, damping, mode) cell",
+        "Damping conditions: ×1 (nominal), ×2 (mild), ×4 (OOD)"
+      ]
+    },
+    {
+      "id": "C2.2",
+      "claim": "PICA retains the highest absolute success under strong damping",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 2",
+        "text": "0.56 deterministic at ×4 versus 0.27 for state-only PPO and 0.09 for Transformer-PPO"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "At ×4 deterministic: PICA=0.56, State-only PPO=0.27, Transformer-PPO=0.09; PICA is >2x the next best learned method"
+      },
+      "supporting_details": [
+        "All learned methods compared under identical conditions",
+        "20 episodes per cell"
+      ]
+    },
+    {
+      "id": "C2.3",
+      "claim": "Richer temporal encoders alone do not close the gap to PICA",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 2",
+        "text": "GRU (0.30), Transformer (0.09), and all lag PICA by at least 0.13 at ×4"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "At ×4 deterministic: GRU-PPO=0.30, Transformer-PPO=0.09, GLA-only=0.36 vs PICA=0.56"
+      },
+      "supporting_details": [
+        "Transformer-PPO actually performs worst — richer architecture alone not sufficient",
+        "Gap: PICA ≥ GRU+0.26, ≥ Transformer+0.47 at ×4"
+      ]
+    },
+    {
+      "id": "C2.4",
+      "claim": "The win is the combination of physical signals with temporal contact-response modeling, not the temporal encoder by itself",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 3",
+        "text": "w/o PICA (GLA only): 0.65→0.36; w/o GLA (PICA only): 0.75→0.43; Full PICA: 0.89→0.56"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Ablation study isolating physical signals vs temporal encoder. Full model exceeds either component by ≥0.13 at ×4",
+        "ablation_table": {
+          "columns": ["Method", "×1 Det", "×2 Det", "×4 Det", "×1 Stoch", "×2 Stoch", "×4 Stoch"],
+          "rows": [
+            ["w/o PICA (GLA only)", "0.65", "0.56", "0.36", "0.68", "0.64", "0.35"],
+            ["w/o GLA (PICA only)", "0.75", "0.71", "0.43", "0.77", "0.57", "0.36"],
+            ["PICA (full)", "0.89", "0.80", "0.56", "0.82", "0.72", "0.43"]
+          ]
+        }
+      },
+      "supporting_details": [
+        "Physical signals contribute more under nominal damping",
+        "Temporal encoder helps more under stochastic mid-damping",
+        "Components are complementary, not redundant"
+      ]
+    },
+    {
+      "id": "C2.5",
+      "claim": "Loss of contact at OOD damping is due to saturated action, not policy failure to track the desired motion",
+      "category": "analytical_claim",
+      "confidence": "medium",
+      "location": {
+        "section": "4, Table 4",
+        "text": "clip099 climbs toward 1.0 as strong-damping success collapses"
+      },
+      "evidence": {
+        "type": "correlational",
+        "detail": "clip099 (action saturation proxy) increases from 0.90 to 0.99 as ×4 success drops from 0.55 to 0.10 across training epochs"
+      },
+      "supporting_details": [
+        "clip099: max action magnitude > 0.99",
+        "detach_proxy: additional contact diagnostic"
+      ]
+    },
+    {
+      "id": "C3.1",
+      "claim": "Physical signals contribute more under nominal damping, temporal encoder helps more under stochastic mid-damping",
+      "category": "analytical_claim",
+      "confidence": "medium",
+      "location": {
+        "section": "4, Table 3 (Ablation Analysis)",
+        "text": "The components help along different axes"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "w/o GLA at ×1: 0.75 > w/o PICA at ×1: 0.65 (physical signals dominate at nominal); w/o PICA under stochastic mid-damping shows relative improvement"
+      },
+      "supporting_details": [
+        "Based on ablation study in Appendix C.8",
+        "Claimed finding from ablation comparison"
+      ]
+    },
+    {
+      "id": "C3.2",
+      "claim": "PICA components are complementary rather than redundant",
+      "category": "analytical_claim",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 3",
+        "text": "Full model exceeds either component by ≥0.13 at ×4"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Full PICA (0.56 at ×4) > max(w/o PICA=0.36, w/o GLA=0.43) by 0.13"
+      },
+      "supporting_details": [
+        "Held across all damping levels and execution modes"
+      ]
+    },
+    {
+      "id": "C3.3",
+      "claim": "No single policy dominates every object instance",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 2 (per-object results)",
+        "text": "per-object results remain heterogeneous, so no single policy dominates every instance"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Per-object results vary substantially; PICA fails on some objects even at ×1 (e.g., 45661 StorageFurniture door: 0.85 at ×1)"
+      },
+      "supporting_details": [
+        "7 objects from GAPartNet",
+        "Different categories: StorageFurniture, Dishwasher, Microwave, etc."
+      ]
+    },
+    {
+      "id": "C3.4",
+      "claim": "A parallel-jaw primitive cannot substitute for dexterous contact control even with GT part pose",
+      "category": "experimental_finding",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 2",
+        "text": "Parallel-jaw only 0.14 mean success across all objects and dampings"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "GT-part-pose parallel-jaw succeeds on only 1/7 objects (0.14 mean), damping-invariant"
+      },
+      "supporting_details": [
+        "Non-learned baseline with ground-truth part pose information",
+        "Succeeds only on the simplest geometry instance"
+      ]
+    },
+    {
+      "id": "C3.5",
+      "claim": "Extended fine-tuning and damping-range expansion do not yield stable additional OOD gains",
+      "category": "experimental_finding",
+      "confidence": "medium",
+      "location": {
+        "section": "Appendix C.4, C.5",
+        "text": "Robustness under strong contact load requires richer contact interfaces rather than longer optimization"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "Appendix reports extended fine-tuning and wider damping distribution both fail to improve OOD robustness meaningfully"
+      },
+      "supporting_details": [
+        "Detailed in Appendix C.4 (Limits of Extended Fine-Tuning)",
+        "Appendix C.5 (Limits of Damping-Distribution Expansion)"
+      ]
+    },
+    {
+      "id": "C4.1",
+      "claim": "Longer training buys nominal success by driving the policy into a saturated, low-robustness regime",
+      "category": "analytical_claim",
+      "confidence": "high",
+      "location": {
+        "section": "4, Table 4",
+        "text": "Longer training therefore buys nominal success by driving the policy into a saturated, low-robustness regime"
+      },
+      "evidence": {
+        "type": "empirical",
+        "detail": "From 150 to 500 epochs: ×1 success: 0.90→1.00; ×4 success: 0.55→0.10; clip099: 0.90→0.99"
+      },
+      "supporting_details": [
+        "Directly motivates reporting OOD damping and saturation metrics",
+        "Motivates checkpoint selection by OOD robustness rather than training reward"
+      ]
+    },
+    {
+      "id": "C4.2",
+      "claim": "Nominal success does not guarantee stable contact behavior",
+      "category": "thesis_claim",
+      "confidence": "high",
+      "location": {
+        "section": "Abstract, Section 1, Section 4",
+        "text": "Success under nominal dynamics does not necessarily imply stable contact behavior"
+      },
+      "evidence": {
+        "type": "synthesis",
+        "detail": "This is a central thesis of the paper, supported by multiple experiments including the training-length study and OOD damping evaluation"
+      },
+      "supporting_details": [
+        "Supported by C1.3 (table 4) and C2.2 (×4 performance)"
+      ]
+    },
+    {
+      "id": "C4.3",
+      "claim": "The dataset contains 277 trajectories over 7 GAPartNet categories",
+      "category": "method_claim",
+      "confidence": "high",
+      "location": {
+        "section": "3.3, Table 1"
+      },
+      "evidence": {
+        "type": "factual",
+        "detail": "277 heuristic trajectories across categories: StorageFurniture (256), TrashCan (7), Dishwasher (5), Refrigerator (4), Oven (3), Microwave (1), TableObject (1)"
+      },
+      "supporting_details": [
+        "Generated heuristicially from GAPartNet geometry, without learning",
+        "Four phases: approach → grasp → drag → release"
+      ]
+    },
+    {
+      "id": "C4.4",
+      "claim": "The dataset is generated heuristicially, without learning, directly from GAPartNet geometry",
+      "category": "method_claim",
+      "confidence": "high",
+      "location": {
+        "section": "3.3, Appendix B",
+        "text": "The dataset is generated heuristicially, without learning, directly from GAPartNet geometry"
+      },
+      "evidence": {
+        "type": "method_description",
+        "detail": "Geometry-guided procedure reads part, handle, and joint-mobility annotations with an SMPL-X hand model and emits phased interaction trajectory"
+      },
+      "supporting_details": [
+        "Uses geometric heuristics (not learning)",
+        "Provides expert grasp state initialization, motion-scale normalization, and tracking reference"
+      ]
+    }
+  ],
+  "claims_by_category": {
+    "system_design": ["C1.1", "C1.4"],
+    "method_claim": ["C1.4", "C4.3", "C4.4"],
+    "experimental_finding": ["C1.2", "C1.3", "C2.1", "C2.2", "C2.3", "C2.4", "C3.3", "C3.4", "C3.5"],
+    "analytical_claim": ["C2.5", "C3.1", "C3.2", "C4.1"],
+    "thesis_claim": ["C4.2"]
+  },
+  "evidence_types_used": {
+    "formalization": ["C1.1"],
+    "empirical": ["C1.2", "C1.3", "C2.1", "C2.2", "C2.3", "C2.4", "C3.1", "C3.2", "C3.3", "C3.4", "C3.5", "C4.1"],
+    "method_description": ["C1.4", "C4.4"],
+    "correlational": ["C2.5"],
+    "factual": ["C4.3"],
+    "synthesis": ["C4.2"]
+  }
+}

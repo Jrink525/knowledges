@@ -1,0 +1,149 @@
+{
+  "artifact_name": "LegalHalluLens Deep Read",
+  "artifact_type": "traceability_manifest",
+  "source_paper": "LegalHalluLens: Typed Hallucination Auditing and Calibrated Multi-Agent Debate for Trustworthy Legal AI",
+  "arxiv_id": "2606.18021",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim_text": "LLMs exhibit ~52% aggregate hallucination rate on legal contract extraction",
+      "evidence": [
+        {"source": "report.md", "section": "1. Problem Statement", "location": "§1"},
+        {"source": "report.md", "section": "5. LegalHalluLens Framework Overview", "location": "Abstract"}
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "claim_text": "Aggregate metrics conceal typed failure ordering and are insufficient for deployment decisions",
+      "evidence": [
+        {"source": "report.md", "section": "13. Results: Aggregate Rates Cannot Support Deployment Decisions", "location": "§6.1, Table 1"}
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "claim_text": "Failure ordering {numeric, obligation} ≫ factual ≥ temporal holds consistently across 4 architecturally diverse models",
+      "evidence": [
+        {"source": "report.md", "section": "14. Results: The Typed Failure Ordering Is Consistent and Large", "location": "§6.2, Table 2"}
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "claim_text": "Within-model typed gap spans 38–41 percentage points across all tested models",
+      "evidence": [
+        {"source": "report.md", "section": "14. Results: The Typed Failure Ordering Is Consistent and Large", "location": "§6.2, Table 2 (Gap column: 38.0–40.6)"}
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "claim_text": "Two models with matched ~52% aggregate Hal_TP can carry opposite Risk Direction Index values",
+      "evidence": [
+        {"source": "report.md", "section": "15. Results: The Compliance Direction Problem", "location": "§6.3, Table 3"}
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "claim_text": "RDI for gpt-5.2 is +0.161 (invention-heavy); RDI for qwen3-32b is −0.202 (omission-heavy); 95% CIs do not overlap",
+      "evidence": [
+        {"source": "report.md", "section": "15. Results: The Compliance Direction Problem", "location": "§6.3, Table 3"}
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "claim_text": "Scope errors dominate 62–71% of all content contradictions across all models",
+      "evidence": [
+        {"source": "report.md", "section": "15. Results: The Compliance Direction Problem", "location": "§6.3, Fig 2"}
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "claim_text": "The typed debate pipeline reduces fabricated detections by 45% (524 → 287) on the matched subset",
+      "evidence": [
+        {"source": "report.md", "section": "16. Results: Calibrated Mitigation (Experiment 2)", "location": "§7.2, Table 4"}
+      ]
+    },
+    {
+      "claim_id": "C9",
+      "claim_text": "The debate pipeline moves gemma-4-26B-A4B from last place (Score 5.2) to first (Score 2.4) in composite score",
+      "evidence": [
+        {"source": "report.md", "section": "16. Results: Calibrated Mitigation (Experiment 2)", "location": "§7.2, Table 4"}
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim_text": "Per-type ΔFAR gains match the ordering predicted by Experiment 1: obligation > factual > numeric > temporal",
+      "evidence": [
+        {"source": "report.md", "section": "17. Per-Type Gains Track the Diagnosis", "location": "§7.2, Fig 4"}
+      ]
+    },
+    {
+      "claim_id": "C11",
+      "claim_text": "Obligation RDI shifts from −0.078 (omission-heavy) to −0.014 (near-balanced) after applying typed debate",
+      "evidence": [
+        {"source": "report.md", "section": "18. Direction Correction (RDI Shift)", "location": "§7.2, Fig 5"}
+      ]
+    },
+    {
+      "claim_id": "C12",
+      "claim_text": "The benchmark evaluates 249,252 clause-level instances across 510 contracts × 3 runs × 4 models",
+      "evidence": [
+        {"source": "report.md", "section": "12. Experimental Scale", "location": "§5.4"}
+      ]
+    },
+    {
+      "claim_id": "C13",
+      "claim_text": "gemma-4-26B-A4B (4B active parameters) matches or exceeds commercial APIs, ranking #1 under 4 of 5 weighting schemes",
+      "evidence": [
+        {"source": "report.md", "section": "16. Results: Calibrated Mitigation (Experiment 2)", "location": "§7.2, Table 4; App. E.3"}
+      ]
+    },
+    {
+      "claim_id": "C14",
+      "claim_text": "Content contradictions barely changed (642 → 641, −0.2%) — the pipeline filters fabrications, not content errors",
+      "evidence": [
+        {"source": "report.md", "section": "16. Results: Calibrated Mitigation (Experiment 2)", "location": "§7.2"}
+      ]
+    },
+    {
+      "claim_id": "C15",
+      "claim_text": "llama-3.3-70b achieves only 12.1% numeric JEq — fewer than 1 in 8 numeric clauses correctly extracted with correct content",
+      "evidence": [
+        {"source": "report.md", "section": "14. Results: The Typed Failure Ordering Is Consistent and Large", "location": "§6.2"}
+      ]
+    },
+    {
+      "claim_id": "C16",
+      "claim_text": "The debate pipeline uses a state machine with six agent roles: Skeptic, Supporter, Re-extractor, Arbiter, Verifier, Judge",
+      "evidence": [
+        {"source": "report.md", "section": "8. Method: Typed Debate Pipeline", "location": "§4.3"}
+      ]
+    },
+    {
+      "claim_id": "C17",
+      "claim_text": "Typed Skeptic challenges are derived from per-category failure modes identified in Experiment 1, not from general-purpose heuristics",
+      "evidence": [
+        {"source": "report.md", "section": "8. Method: Typed Debate Pipeline", "location": "§4.3"}
+      ]
+    },
+    {
+      "claim_id": "C18",
+      "claim_text": "CUAD v1.0 provides 510 commercial contracts with 41 expert-annotated clause types as a complete oracle",
+      "evidence": [
+        {"source": "report.md", "section": "9. Dataset and Oracle", "location": "§5.1"}
+      ]
+    },
+    {
+      "claim_id": "C19",
+      "claim_text": "Missing rows (0.2–1.9%) are contract-correlated rather than random — 5 contracts fail across all 3 qwen3-32b runs",
+      "evidence": [
+        {"source": "report.md", "section": "12. Experimental Scale", "location": "§5.4; App. E.4"}
+      ]
+    },
+    {
+      "claim_id": "C20",
+      "claim_text": "Per-run standard deviations are small relative to the typed gap (max 0.6 pp on Hal_TP), confirming stability",
+      "evidence": [
+        {"source": "report.md", "section": "14. Results: The Typed Failure Ordering Is Consistent and Large", "location": "App. E.1"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "manifest_version": "1.0",
+  "paper_id": "2606.15133",
+  "paper_title": "DragMesh-2: Physically Plausible Dexterous Hand-Object Interaction with Articulated Objects",
+  "direction_board": [
+    {
+      "rank": 1,
+      "direction": "Force/Tactile-Augmented PICA",
+      "description": "Add wrist force-torque sensing or tactile fingertips to the PICA pipeline. Compare the same architecture with vs. without force feedback to establish whether PICA's proxies are a substitute or complement for direct force sensing. The paper identifies action saturation as a key failure mode under strong damping — force feedback would allow the policy to regulate grip force directly rather than push to actuator boundaries.",
+      "rationale": "The paper identifies this as the primary limitation. Without this experiment, the 'robustness without force feedback' claim is only validated in simulation. A real robot experiment with force-torque sensing would be the most impactful immediate follow-up.",
+      "minimum_viable_experiment": {
+        "setup": "Add 6-axis F/T sensor at wrist to same Isaac Gym simulation. Compare PICA (no force) vs PICA+force (force in observation) vs PICA+force+force-reward across ×1, ×2, ×4 damping.",
+        "expected_outcome": "Force feedback should improve ×4 success by reducing action saturation (clip099). If PICA+force matches or exceeds PICA at ×4 without increased clip099, force feedback is a substitute. If PICA+force significantly exceeds PICA's ceiling, they are complementary.",
+        "key_metric": "×4 deterministic success, clip099 at ×4, detach_proxy at ×4"
+      }
+    },
+    {
+      "rank": 2,
+      "direction": "Sim-to-Real Transfer with Physical Hardware",
+      "description": "Validate the PICA-trained policy on a physical robotic hand (e.g., Allegro Hand, LEAP Hand, or Shadow Hand) interacting with real articulated objects (cabinet doors, drawers). Introduce real damping variation through lubrication, surface materials, or handle modifications.",
+      "rationale": "The paper has zero real-world quantitative validation. The hardware example is purely qualitative. This is the most important credibility gap. Real-world contact loads differ from simulated damping in important ways (friction anisotropy, stiction, non-linear compliance).",
+      "minimum_viable_experiment": {
+        "setup": "Train PICA in simulation on a single cabinet door. Deploy zero-shot on physical hardware with the same object. Vary surface friction (taped handle, lubricated hinge) and measure success rate over 10+ trials per condition.",
+        "expected_outcome": "Some sim-to-real drop is expected. The question is whether PICA's robustness to damping variation in sim transfers to physical friction/hinge variation in reality. A success rate >50% at the hardest condition would be promising.",
+        "key_metric": "Sim-to-real success rate, action saturation (joint commands), contact maintenance duration"
+      }
+    },
+    {
+      "rank": 3,
+      "direction": "Multi-Dimensional Contact-Load Robustness",
+      "description": "Extend evaluation beyond damping to include friction coefficient variation, surface compliance, handle geometry perturbation, joint stiction/jamming, and manufacturing tolerances. Current work varies only one dynamics parameter.",
+      "rationale": "Real-world robustness requires handling multi-dimensional variation. A ×4 damping success of 0.56 may not generalize to ×1 damping + 2× friction + worn hinge. This is the most important generalization question after sim-to-real.",
+      "minimum_viable_experiment": {
+        "setup": "Define a 4-dimensional contact-load space (damping ∈ [×1,×4], friction ∈ [0.3, 1.0], compliance ∈ [stiff, soft], stiction ∈ [none, some]). Train PICA on all four dims simultaneously. Evaluate held-out combinations.",
+        "expected_outcome": "PICA should show better generalization across multiple dims than flat-history PPO. The GLA encoder should encode multi-dimensional contact state. Key finding: which dimensions interact?",
+        "key_metric": "Success rate at each held-out combination, action saturation, contact failure modes"
+      }
+    },
+    {
+      "rank": 4,
+      "direction": "Whole-Body Humanoid Loco-Manipulation",
+      "description": "Integrate the PICA-trained hand policy with a whole-body humanoid controller. Use the heuristic dataset as a motion-scale prior for coordinated locomotion + articulated-object interaction (e.g., walking to a cabinet, opening it, retrieving an object).",
+      "rationale": "The paper identifies this as a concrete next step. The dataset contains full hand–object motion clips extending beyond the hand alone. Floating-hand manipulation is a significant abstraction from real humanoid use cases.",
+      "minimum_viable_experiment": {
+        "setup": "Mount the PICA hand controller on a simulated humanoid (e.g., H1 or Digit). Add a whole-body controller (e.g., Model Predictive Control for locomotion). Task: walk to cabinet, open door to 90°, walk away. Compare floating-hand baseline vs whole-body integration.",
+        "expected_outcome": "Whole-body coupling should succeed but with higher failure rate than floating hand (balance constraints). The key insight is whether PICA's contact robustness survives when the hand reference frame moves.",
+        "key_metric": "Task success, balance maintenance, hand–object contact duration, whole-body coordination cost"
+      }
+    },
+    {
+      "rank": 5,
+      "direction": "Torque/Impedance Control Action Interface",
+      "description": "Replace position-increment action with torque or impedance control. The paper identifies position-increment action saturation as a key failure mode. Torque control would naturally avoid the 'push to joint limits' problem.",
+      "rationale": "The position-increment interface is a design choice that creates the saturation failure mode. Torque control may inherently produce more robust contact through passive compliance. This would test whether PICA's contributions are interface-independent.",
+      "minimum_viable_experiment": {
+        "setup": "Reimplement PICA with torque-control action space (joint torques instead of PD position increments). Compare success rates and action distribution at ×1 and ×4 damping. Check if torque-based PICA achieves higher success or lower clip099 at ×4.",
+        "expected_outcome": "Torque control should reduce action saturation naturally. PICA's auxiliary signals may be less necessary with torque control, or they may still be needed for contact-proxy information. This disentangles PICA's contributions.",
+        "key_metric": "×4 success, action magnitude distribution, contact maintenance duration"
+      }
+    },
+    {
+      "rank": 6,
+      "direction": "Zero-Shot Generalization to Novel Objects",
+      "description": "Train PICA on a subset of GAPartNet objects and test zero-shot on held-out categories (e.g., train on StorageFurniture, test on Dishwasher). Current evaluation is per-object but all objects are seen during training.",
+      "rationale": "Generalization to unseen articulated objects is the practical requirement. Handle geometry, mass distribution, and joint range vary significantly. The paper's dataset is heavily dominated by StorageFurniture (256/277).",
+      "minimum_viable_experiment": {
+        "setup": "Leave-one-category-out cross-validation. Train on 6 categories, test on the held-out 7th. Measure success across ×1, ×2, ×4 damping. Compare PICA vs state-only PPO vs GRU-PPO for zero-shot generalization.",
+        "expected_outcome": "Significant drop expected, especially on geometrically different categories. PICA's contact-proxy signals should generalize better than task-progress-only baselines because contact maintenance is geometry-invariant while optimal progress is geometry-dependent.",
+        "key_metric": "Zero-shot success rate, contact-proxy diagnostics, per-category breakdown"
+      }
+    },
+    {
+      "rank": 7,
+      "direction": "Make clip099 a Loss Term, Not Just a Diagnostic",
+      "description": "Currently clip099 is reported as a diagnostic but not directly minimized. Formulate action saturation as an explicit constrained optimization objective (Lagrangian or penalty method).",
+      "rationale": "The paper gives clip099 diagnostic power but doesn't treat it as a training signal. The finding that longer training makes clip099 worse suggests the optimization landscape has a basin of attraction toward saturation. Explicitly penalizing saturation could prevent this.",
+      "minimum_viable_experiment": {
+        "setup": "Add an explicit saturation penalty to PICA: clip_loss = λ * mean(max(0, |a_i| - 0.99)) for all action dimensions. Sweep λ ∈ {0, 0.01, 0.1, 1.0}. Compare to PICA without clip loss at ×4.",
+        "expected_outcome": "With appropriate λ, clip099 should decrease and ×4 success should increase. If the trade-off is real, there should be a Pareto frontier. If clip099 reduction doesn't help success, saturation is a symptom not a cause.",
+        "key_metric": "clip099, ×4 success, trade-off curve"
+      }
+    }
+  ],
+  "analysis_notes": {
+    "gap_density": "high",
+    "key_unaddressed_questions": [
+      "Does PICA transfer to real hardware?",
+      "How does PICA compare with the same architecture + tactile feedback?",
+      "Is robustness to damping representative of robustness to real contact-load variations?",
+      "Can PICA handle multi-dimensional dynamics shifts simultaneously?",
+      "Does the floating-hand assumption limit real-world applicability?"
+    ],
+    "most_direct_next_work": "Sim-to-real transfer + force feedback comparison (directions 1-2) — these directly validate the paper's core claims in real-world settings.",
+    "highest_risk_direction": "Whole-body humanoid loco-manipulation (direction 4) — high complexity, many confounding factors, but highest impact if successful.",
+    "lowest_effort_high_impact": "Make clip099 a loss term (direction 7) — can be done in the same codebase with minimal changes, addresses a finding the paper itself identifies."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "paper": {
+    "title": "ImageWAM: Do World Action Models Really Need Video Generation, or Just Image Editing?",
+    "arxivId": "2606.19531"
+  },
+  "problem_reconstruction": {
+    "original_problem": "Video-generation-based World Action Models (WAMs) predict dense future video tokens to bridge visual world modeling and robot control, but this approach is expensive, allocates capacity to action-irrelevant details, and propagates errors from inaccurate future video predictions.",
+    "reconstructed_problem": "For instruction-conditioned robot manipulation, the essential signal is not a photorealistic future video trajectory, but an instruction-grounded understanding of task-relevant visual change — from current observation to desired state. The core research question is whether we can directly model this change signal (via image editing) rather than the full video distribution.",
+    "reconstruction_rationale": "The original framing treats video generation as the only viable bridge between visual world models and robot control. The reconstruction reframes the problem: video generation is a means, not the end. The end is understanding 'what should change, where it should change, and how the instruction specifies the change.' Image editing directly optimizes for this objective."
+  },
+  "tri_pass_notes": {
+    "first_pass_title_abstract_intro": {
+      "core_question": "Do world action models really need video generation, or just image editing?",
+      "key_claim": "Image editing provides a better-matched prior than video generation for instruction-conditioned robot manipulation.",
+      "method_preview": "Repurpose pretrained image editing models; use their intermediate KV caches (not decoded images) as world-action context for a flow-matching action expert.",
+      "punchline": "1/6 FLOPs, 1/4 latency of video WAMs, with better or comparable task success rates."
+    },
+    "second_pass_method_experiments": {
+      "method_summary": "Image editing backbone (OmniGen2/FLUX.2/Ovis-U1) produces editing caches (KV pairs from denoising timestep). Flow-matching action expert conditioned on these caches generates action chunks. Joint training: L = L_img + L_act. Inference: single editing forward step → cache → action denoising.",
+      "key_novelty": "Using editing intermediate representations (KV caches) as world-action context without decoding images. Multi-modal token integration (MoT) for joint attention over language, visual, and action tokens.",
+      "experimental_design": "3 simulators (LIBERO, LIBERO-Plus, RoboTwin 2.0) + real-world (4 dual-arm tasks). 3 backbone variants. Compared against VLA baselines (π₀, π₀.₅, OpenVLA, GR00T N1) and WAM baselines (FastWAM, Motus, LingBot-VA).",
+      "reproducibility": "Architecture details (Section 5), training hyperparameters (Tables 8-10), and code link provided."
+    },
+    "third_pass_figures_tables_limitations": {
+      "supported_claims": {
+        "robust_evidence": ["C4: Outperforms VLAs (+30 pts on RoboTwin)", "C5: Matches competitive WAMs", "C6: 1/6 FLOPs, 1/4 latency", "C7: Best real-world performance", "C11: Robust to domain shift (+31.6 pts on LIBERO-Plus)"],
+        "moderate_evidence": ["C2: Theoretical insight, limited direct ablation", "C8: Attention analysis is qualitative", "C9: Comparison with BagelVLA is informative but not perfectly controlled"],
+        "weak_evidence": ["C10: Claimed but limited dedicated ablation"]
+      },
+      "limitations": [
+        "Single endpoint frame discards temporal information between current and target state",
+        "Attention analysis is qualitative (Figure 4) — no quantitative attribution metric",
+        "Comparison limited to FastWAM among video WAMs (not UniPi, SuSIE, etc.)",
+        "Real-world evaluation: 100 demos/task, 50 trials — modest scale",
+        "Performance bounded by underlying editing model quality",
+        "'World model' terminology subtle — predicts one future frame, not dynamics"
+      ]
+    }
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Inference cost of video generation",
+      "module": "Editing KV cache extraction (Section 3.4) — single editing forward pass produces cache without decoding",
+      "success_metric": "9.72 TFLOPs vs 63.65 TFLOPs (6.55× reduction)",
+      "failure_mode": "Cache size still grows with backbone size; may still be prohibitive for very large models"
+    },
+    {
+      "challenge": "Irrelevant visual details in video prediction",
+      "module": "Editing prior focuses on instruction-grounded change (Section 2, Section 3.2)",
+      "success_metric": "Better task performance with less computation",
+      "failure_mode": "For tasks requiring temporal fine-grained tracking, single endpoint may miss intermediate changes"
+    },
+    {
+      "challenge": "Error propagation from inaccurate future video",
+      "module": "No decoded video — editing caches encode transformation without full frame synthesis (Section 3.4)",
+      "success_metric": "No video artifacts to mislead action predictor (Figure 5 comparison)",
+      "failure_mode": "Editing cache may still encode incorrect transformation if editing model fails"
+    },
+    {
+      "challenge": "Instruction grounding for action prediction",
+      "module": "Language conditioning via LLM + editing cross-attention (Section 3.2, MoT)",
+      "success_metric": "Strong performance on instruction-conditioned tasks (LIBERO Goal: 98.8%)",
+      "failure_mode": "Complex, multi-step or spatially ambiguous instructions may challenge editing grounding"
+    },
+    {
+      "challenge": "Real-time robot control latency",
+      "module": "Optimization: torch.compile, static CUDA graphs, prefix-only attention (Section 6)",
+      "success_metric": "69ms with Action Static Graph compilation (4.38× speedup)",
+      "failure_mode": "Compilation overhead on first inference; may not help for all hardware/configurations"
+    },
+    {
+      "challenge": "Generalization to distribution shift",
+      "module": "Editing cache focuses on change regions rather than fixed visual features (Section 4.2)",
+      "success_metric": "LIBERO-Plus: 83.1% vs FastWAM 51.5% (Camera: 80.8% vs 16.4%)",
+      "failure_mode": "Extreme shifts (completely novel objects, lighting) not tested"
+    }
+  ],
+  "methods_comparison": {
+    "image_editing_vs_video_generation": {
+      "image_editing_pros": [
+        "Directly models instruction-conditioned change (what changes, where, how)",
+        "1/6 FLOPs, 1/4 latency",
+        "No video artifact error propagation",
+        "Better OOD generalization (LIBERO-Plus: 83.1% vs 51.5%)"
+      ],
+      "video_generation_pros": [
+        "Captures full temporal dynamics",
+        "May be better for tasks requiring precise timing/coordination",
+        "Trained on more diverse data (videos vs image-text pairs)"
+      ],
+      "when_image_editing_wins": "Instruction-conditioned manipulation in well-defined scenes where change is localized",
+      "when_video_generation_wins": "Tasks requiring fine-grained temporal reasoning, dynamic environments, egomotion-heavy scenarios"
+    }
+  }
+}

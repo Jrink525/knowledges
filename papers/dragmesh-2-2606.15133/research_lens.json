@@ -1,0 +1,70 @@
+{
+  "manifest_version": "1.0",
+  "paper_id": "2606.15133",
+  "paper_title": "DragMesh-2: Physically Plausible Dexterous Hand-Object Interaction with Articulated Objects",
+  "problem_reconstruction": {
+    "surface_problem": "How to make a dexterous hand interact with articulated objects (doors, drawers) where the target part moves only through physical hand–handle contact, without directly controlling the object joint.",
+    "latent_problem": "How to learn policies that produce stable contact behaviors under varying dynamics conditions when the only supervision signal is task success, the contact state is unobserved (no tactile/force feedback), and the policy naturally exploits dynamics shortcuts that fail under distribution shift.",
+    "deep_problem": "Contact-rich dexterous manipulation is inherently a partially-observed control problem where the unobserved latent variable is the physical impedance of the hand–object system. Standard RL collapses this to a point estimate via overfitting to nominal dynamics. The real question is: can we make the policy discover 'contact competence' as an internal representation — the ability to maintain stable, adaptive engagement across a range of physical conditions — without providing direct force measurements?"
+  },
+  "tri_pass_notes": {
+    "first_pass_skimming": {
+      "what": "DragMesh-1 → DragMesh-2 extends from object-centric generation to hand-driven interaction. PICA adds contact-aware rewards + temporal encoding. Uses SMPL-X hand on GAPartNet objects. Key ablation: nominal success masks collapse.",
+      "surprising": "Strong damping (×4) collapses from 0.55 to 0.10 as nominal rises — the opposite of what RL practitioners expect from longer training.",
+      "target_sections": ["Method (3.2 PICA)", "Results (Table 2, 3, 4)", "Limitations"]
+    },
+    "second_pass_structured": {
+      "core_method": "PICA = PPO + contact-aware rewards + causal-window auxiliary head + GLA temporal encoder + damping randomization",
+      "key_mechanism": "Auxiliary head predicts 4 contact-response targets (object displacement, max palm distance, binary detachment, max tracking stress) from temporal features — this forces the policy to maintain a latent model of contact state",
+      "critical_experiment": "Table 4: Training-length ablation shows longer training monotonically improves nominal (×1) success but monotonically degrades OOD (×4) success. clip099 rises to 0.99. This is the paper's strongest empirical contribution.",
+      "weakest_link": "No real-world experiments. Simulation-only with damping as the only variation. Floating hand without arm or body."
+    },
+    "third_pass_reconstruction": {
+      "hidden_architecture_choice": "Position-increment action space (PD target increments). This choice makes action saturation a natural failure mode — the policy can push joint limits without constraint. A torque-control interface might behave differently.",
+      "missing_comparison": "What if we add force/tactile feedback to the same PPO pipeline? The paper claims PICA works without it, but never tests what performance gain force feedback would provide — this would calibrate whether PICA is a substitute or a complement.",
+      "evaluation_lacuna": "Only damping varies. Real articulated objects also vary in friction, surface compliance, handle geometry, lubrication, jamming, and manufacturing tolerances. Single-dimension OOD is weak evidence for 'robustness'."
+    }
+  },
+  "challenge_module_map": {
+    "core_challenge": "Articulated motion must emerge through unobserved contact dynamics without direct force feedback",
+    "sub_challenges": {
+      "C1": {
+        "name": "No direct actuation",
+        "description": "Object joint has no action channel; policy controls only the hand",
+        "module": "Contact-Driven Task Formulation (Section 3.1)",
+        "solution": "RL with hand-only action space; object joint moves through physics simulation"
+      },
+      "C2": {
+        "name": "Unobserved contact state",
+        "description": "Policy cannot perceive force, torque, tactile signals — only kinematic information",
+        "module": "PICA Reward + Auxiliary Supervision (Section 3.2)",
+        "solution": "Contact-proxy signals (palm distance, detachment risk, tracking stress) injected into reward and auxiliary loss"
+      },
+      "C3": {
+        "name": "Action saturation under stress",
+        "description": "Under high damping, policy pushes position-increment actions to joint limits",
+        "module": "Action-bound regularization (r_bound) + clip099 diagnostics",
+        "solution": "Separate action-bound regularization terms alongside task reward; Lagrangian-style separation"
+      },
+      "C4": {
+        "name": "Nominal-success overfitting",
+        "description": "Policies overfit nominal dynamics; longer training worsens the problem",
+        "module": "Evaluation protocol (Section 4) + Table 4 analysis",
+        "solution": "Report OOD damping + saturation metrics; select checkpoints by OOD robustness"
+      },
+      "C5": {
+        "name": "Temporal modeling of contact dynamics",
+        "description": "Contact states evolve over time; single-frame observation is insufficient",
+        "module": "GLA temporal encoder + causal-window auxiliary head",
+        "solution": "Short-horizon interaction history processed by GLA encoder; auxiliary head predicts contact response targets"
+      },
+      "C6": {
+        "name": "Dataset and initialization",
+        "description": "RL requires expert grasp state and motion scale for each object",
+        "module": "Heuristic reference trajectory dataset (Section 3.3, Appendix B)",
+        "solution": "Geometry-guided heuristic generation: approach → grasp → drag → release"
+      }
+    }
+  },
+  "reconstruction_synthesis": "DragMesh-2's central contribution reframes articulated-object manipulation from a task-completion problem to a contact-competence problem. The paper shows that nominal success is not merely an incomplete metric — it is actively misleading, because the optimization pressures that improve nominal success (longer training, higher returns) can drive the policy into a saturated regime that is less robust. PICA is a practical engineering solution: observable physical proxies (palm distance, tracking error, detachment) serve as stand-ins for unmeasured force signals. The GLA temporal encoder provides the memory needed to integrate these proxies over time. The ablation confirms the two components are complementary. However, the 'physical plausibility' claim is demonstrated only in simulation with damping as the sole variation, and the floating-hand setup limits claims about whole-body or real-world applicability."
+}

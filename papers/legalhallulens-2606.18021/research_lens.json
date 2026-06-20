@@ -1,0 +1,60 @@
+{
+  "artifact_name": "LegalHalluLens Research Lens",
+  "paper_id": "2606.18021",
+  "problem_equation": "Legal AI trust deficit = (aggregate hallucination_rate_hides_typed_failure_ordering) × (undifferentiated_error_direction) × (uncalibrated_mitigation). LegalHalluLens decomposes this into: typed_hallucination_profile + risk_direction_index + typed_calibrated_debate.",
+  "tri_pass_notes": {
+    "first_pass": "The paper addresses the problem that aggregate hallucination metrics (e.g., ~52%) for legal AI systems conceal critical structural information: which claim types fail most and in which direction. The authors propose LegalHalluLens with three components: (1) typed hallucination profiles stratified across 4 claim categories (numeric, temporal, obligation/entitlement, factual), (2) Risk Direction Index (RDI) capturing omission-vs-invention bias as a signed scalar, and (3) a typed multi-agent debate pipeline calibrated to both failure magnitudes and directions. The core empirical claim is a consistent ~40 pp gap between obligation/numeric and temporal claims across 4 diverse models on 249,252 clause-level instances, and that two systems with matched 52% rates can carry opposite RDIs.",
+    "second_pass": "The method is clean and well-grounded. The typed profile methodology (partitioning by claim category, computing within-model gap) is straightforward but reveals a strikingly consistent pattern across 4 architecturally diverse models. RDI is a simple metric derived from judge labels already produced, making it practical for deployment. The debate pipeline design is sophisticated with six agent roles and asymmetric gates, and the calibration of Skeptic challenges and gates against the measured failure profile distinguishes this work from generic multi-agent debate. Key methodological concerns: (a) the evaluation judge is a single LLM (gemini-2.5-flash) — judge bias cannot be ruled out; (b) Experiment 2 is a single run with one backbone on a 120-contract subset; (c) numerical and factual categories have small n (5 and 3 clause types respectively), though the central claim rests on obligation (n=27) vs temporal (n=6) contrast.",
+    "third_pass": "The paper makes a genuine contribution: the typed gap is large (38–41 pp), consistent, and practically significant for legal deployment decisions. RDI introduces a useful directional signal, though scope errors compressing 62–71% of contradictions limits its magnitude. The calibrated debate pipeline demonstrates that diagnostic profiles can directly inform intervention design, with per-type gain ordering predicted in advance and confirmed empirically. The 45% fabrication reduction with a 4B-parameter model matching commercial APIs is practically meaningful. However, the paper's central weakness is that content contradictions remain essentially untouched (−0.2%), consistent with prior work showing LLMs cannot self-correct reasoning. The 58.6% best-configuration contradiction rate means human oversight remains essential. The paper is honest about its limitations (single judge, single run, CUAD-only, small n for some categories)."
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Aggregate hallucination rates conceal which claim types fail most",
+      "module": "Typed Hallucination Profiles (§4.1)",
+      "how_addressed": "Partitions outputs by 4 claim categories (numeric, temporal, obligation, factual) and computes per-category Hal_TP. Defines within-model typed gap = max − min across types."
+    },
+    {
+      "challenge": "No deployment-comparable signal for omission vs. invention bias",
+      "module": "Risk Direction Index (§4.2)",
+      "how_addressed": "Operationalizes directional bias as a single signed scalar RDI = (p_extra − p_missing) / 100, derived from judge mismatch_type labels already produced. Positive = invents, negative = omits."
+    },
+    {
+      "challenge": "Generic multi-agent debate does not target specific failure modes",
+      "module": "Typed Debate Pipeline (§4.3)",
+      "how_addressed": "Six-role pipeline with Skeptic challenges derived from per-type failure profile; asymmetric Add/Del gates encoding measured FAR vs FRR profile; re-extract node for structural errors."
+    },
+    {
+      "challenge": "Small open models cannot match commercial API performance on legal extraction",
+      "module": "Typed Debate Pipeline applied to gemma-4-26B-A4B (§7)",
+      "how_addressed": "4B active parameter model achieves rank 1 of 6 under 4/5 weighting schemes after typed debate, matching and exceeding commercial APIs at substantially lower inference cost."
+    },
+    {
+      "challenge": "Evaluating content quality without human annotation at scale",
+      "module": "External Evaluation Judge (§5.3)",
+      "how_addressed": "Single LLM judge (gemini-2.5-flash, temperature=0) applies strict 5-criterion rubric to score extractions against CUAD ground truth, returning supported/contradicted verdict and mismatch_type."
+    },
+    {
+      "challenge": "Pretraining priors override explicit extraction instructions",
+      "module": "Typed Profiles + Typed Skeptic Challenges (§4.1, §4.3)",
+      "how_addressed": "Diagnosis surfaces the prior-substitution failure mode (e.g., numeric threshold values); Skeptic then asks 'Is this value verbatim or a common prior assumption?'"
+    }
+  ],
+  "key_design_decisions": [
+    {
+      "decision": "Use Hal_TP (conditional on detection) for Experiment 1, Hal_Gen (including fabrications) for Experiment 2",
+      "rationale": "Hal_TP isolates content quality within correct detections; Hal_Gen penalizes fabrications, making it the appropriate metric for a mitigation pipeline that targets fabrication reduction."
+    },
+    {
+      "decision": "Hold out gemma-4-26B-A4B from Experiment 1 benchmark to keep mitigation study separate",
+      "rationale": "Prevents data leakage; the model is selected as the worst baseline on the matched subset so any improvement is attributable to the intervention."
+    },
+    {
+      "decision": "Asymmetric Addition and Deletion gates",
+      "rationale": "Addition gate (absent→present) requires both Verifier and debate consensus, blocking fabricated additions. Deletion gate (present→absent) blocked when Verifier confirms presence, preventing over-conservative removal of real findings. This asymmetry encodes the measured FAR >> FRR risk profile."
+    },
+    {
+      "decision": "Re-extract node instead of debating structural extraction errors",
+      "rationale": "When the wrong clause is extracted, debating an answer that cannot be repaired is futile. Re-extraction from source is more efficient for structural errors."
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "paper": {
+    "title": "ImageWAM: Do World Action Models Really Need Video Generation, or Just Image Editing?",
+    "arxivId": "2606.19531"
+  },
+  "research_directions": [
+    {
+      "rank": 1,
+      "direction": "Multi-step closed-loop editing rollouts with temporal consistency",
+      "seed_span": "Extending ImageWAM to iteratively predict the next endpoint frame as the observation changes, enabling closed-loop re-planning",
+      "motivation": "Current ImageWAM predicts a single endpoint frame t+H+1 from current observation. For long-horizon tasks, or when the action chunk fails, re-planning requires re-running the entire pipeline. An iterative editing approach would maintain temporal coherence while keeping the efficiency advantage.",
+      "key_questions": [
+        "How to maintain editing consistency across multiple rollouts?",
+        "When to trigger re-planning vs. continue execution?",
+        "How does error accumulate over multiple editing steps?"
+      ],
+      "expected_impact": "Enables truly closed-loop world-action reasoning with temporal awareness",
+      "difficulty": "hard",
+      "possible_start": "Add lightweight temporal module (e.g., temporal attention or state-space model) on top of editing caches from consecutive timesteps"
+    },
+    {
+      "rank": 2,
+      "direction": "Quantitative analysis of editing cache information content",
+      "seed_span": "Developing quantitative metrics for what information editing caches encode",
+      "motivation": "Current attention analysis is qualitative (Figure 4). Understanding precisely what information is in the editing caches — and how it relates to action prediction — would enable principled improvements to the architecture.",
+      "key_questions": [
+        "What is the mutual information between editing cache and optimal action?",
+        "Which layers contribute most to action-relevant features?",
+        "Can we intervene on caches to probe causal relationships?"
+      ],
+      "expected_impact": "Principled understanding of why editing works, enabling better cache design",
+      "difficulty": "medium",
+      "possible_start": "Apply probing classifiers, activation patching, or representational similarity analysis on editing caches at different denoising timesteps"
+    },
+    {
+      "rank": 3,
+      "direction": "Video editing as a middle ground between image editing and full video generation",
+      "seed_span": "Exploring video editing (edit a video clip rather than a single image) for WAMs",
+      "motivation": "Image editing captures a single transformation; full video generation captures all dynamics. Video editing — editing a short clip — could capture task-relevant temporal changes (e.g., object moving to a target) without full scene modeling overhead.",
+      "key_questions": [
+        "Can video editing models provide better temporal information than single-frame editing?",
+        "What is the efficiency-cost tradeoff (video editing vs image editing vs video generation)?",
+        "Which tasks particularly benefit from temporal change modeling?"
+      ],
+      "expected_impact": "Bridges the gap between efficiency (image editing) and temporal awareness (video generation)",
+      "difficulty": "hard",
+      "possible_start": "Adapt existing video editing models (e.g., vid2vid, InstructVideo) using the same cache-extraction approach"
+    },
+    {
+      "rank": 4,
+      "direction": "Scaling laws for editing-based WAMs",
+      "seed_span": "Systematic study of how editing backbone scaling affects policy performance",
+      "motivation": "Initial evidence (Table 7) shows FLUX.2 9B (+2.1 pts over 4B). Understanding the scaling behavior — does editing pretraining benefit more from scale than standard vision backbones? — would guide investment in model development.",
+      "key_questions": [
+        "Does editing backbone scale better than video generation backbone for policy learning?",
+        "What is the marginal return of adding parameters to the editing model vs. the action expert?",
+        "At what scale does editing pretraining saturate for robot policy tasks?"
+      ],
+      "expected_impact": "Resource allocation guidance for WAM development",
+      "difficulty": "medium",
+      "possible_start": "Train editing models at multiple scales (e.g., 0.5B, 1B, 3B, 7B) and measure policy performance"
+    },
+    {
+      "rank": 5,
+      "direction": "Combining editing-based reasoning with 3D scene representations",
+      "seed_span": "Integrating image editing with 3D representations for tasks requiring explicit geometric reasoning",
+      "motivation": "Current ImageWAM operates in 2D image space. Many manipulation tasks require 3D reasoning (spatial relationships, grasping orientation, collision avoidance). Combining editing features with 3D representations (point clouds, NeRF, 3D Gaussians) could enable geometrically grounded action prediction.",
+      "key_questions": [
+        "Can editing caches provide useful 3D-aware features?",
+        "How to fuse 2D editing features with 3D representations?",
+        "Does 3D grounding particularly help geometrically challenging tasks?"
+      ],
+      "expected_impact": "Enables geometrically precise manipulation from editing-based reasoning",
+      "difficulty": "hard",
+      "possible_start": "Add 3D positional encodings to the action expert's cross-attention with editing caches"
+    },
+    {
+      "rank": 6,
+      "direction": "Goal-conditioned exploration using editing models as intrinsic reward",
+      "seed_span": "Using the editing model's ability to predict task-relevant visual changes as a reward signal for RL exploration",
+      "motivation": "Image editing models encode 'what should change under instruction.' This change signal could serve as a dense reward for reinforcement learning — rewarding transitions that move the scene toward an instruction-consistent target state.",
+      "key_questions": [
+        "Can editing-based change detection serve as a task-agnostic exploration bonus?",
+        "How to handle false positives (spurious changes not related to the task)?",
+        "Does editing-based reward scale to complex, long-horizon tasks?"
+      ],
+      "expected_impact": "Enables RL agents to learn from editing-defined task progress without hand-crafted rewards",
+      "difficulty": "hard",
+      "possible_start": "Use editing cache similarity (current vs. target) as reward signal in a simple manipulation environment"
+    },
+    {
+      "rank": 7,
+      "direction": "Cross-embodiment generalization of editing-based WAMs",
+      "seed_span": "Applying ImageWAM to different robot platforms and embodiments beyond dual-arm",
+      "motivation": "Current validation is on dual-arm platform (Dobot XTrainer). Testing on single-arm, mobile manipulators, and humanoids would assess generality. The editing-based representation should be embodiment-agnostic since it models scene change rather than robot-specific dynamics.",
+      "key_questions": [
+        "Does the editing representation transfer across embodiments without fine-tuning?",
+        "What domain gap exists between simulator-trained and real-world-embodied editing models?",
+        "Can a single editing WAM serve multiple embodiments?"
+      ],
+      "expected_impact": "Demonstrates generality of editing-based world-action modeling across platforms",
+      "difficulty": "medium",
+      "possible_start": "Evaluate pretrained ImageWAM on standard single-arm benchmarks (e.g., MetaWorld, Franka Kitchen)"
+    },
+    {
+      "rank": 8,
+      "direction": "Causal intervention analysis: isolating editing cache contributions",
+      "seed_span": "Developing intervention-based methods to understand which cache components drive action predictions",
+      "motivation": "Current understanding of 'editing caches encode transformation information' is based on attention visualization. Causal intervention (e.g., ablating specific cache components, perturbing cache values, swapping caches across different task conditions) would provide stronger evidence and reveal failure modes.",
+      "key_questions": [
+        "Which layers' KV caches are most critical for action prediction?",
+        "Can we compress editing caches with minimal performance loss?",
+        "What happens when editing cache encodes wrong transformation?"
+      ],
+      "expected_impact": "Principled guidance for cache design and compression",
+      "difficulty": "medium",
+      "possible_start": "Apply attention knockout, representational perturbation, or cache resampling experiments"
+    },
+    {
+      "rank": 9,
+      "direction": "Instruction ambiguity handling through multi-modal editing conditioning",
+      "seed_span": "Robust handling of ambiguous or underspecified natural language instructions in editing-based policy",
+      "motivation": "Image editing models assume unambiguous instructions. Real-world robot instructions can be underspecified ('clean up') or ambiguous ('move it there'). The editing backbone must handle this ambiguity and the action expert must still produce reasonable behavior.",
+      "key_questions": [
+        "How does instruction ambiguity affect editing cache quality?",
+        "Can we detect when the editing model is producing uncertain transformations?",
+        "Should the policy act conservatively under instruction ambiguity?"
+      ],
+      "expected_impact": "More robust real-world deployment with diverse natural language instructions",
+      "difficulty": "hard",
+      "possible_start": "Add uncertainty quantification to editing cache; test with systematically varied instruction specificity"
+    },
+    {
+      "rank": 10,
+      "direction": "Training-free adaptation of editing models for new robot tasks",
+      "seed_span": "Adapting ImageWAM to new tasks without fine-tuning, using in-context editing capabilities",
+      "motivation": "Current ImageWAM requires task-specific fine-tuning. Advanced image editing models can perform zero-shot or in-context editing from examples. This capability could be leveraged for fast task adaptation without gradient updates.",
+      "key_questions": [
+        "Can in-context editing (providing example edits) serve as task specification?",
+        "How far can we push zero-shot action prediction from editing priors?",
+        "What is the minimal demonstration set needed for new tasks?"
+      ],
+      "expected_impact": "Enables rapid task acquisition without per-task training",
+      "difficulty": "hard",
+      "possible_start": "Evaluate ImageWAM with frozen editing backbone on novel tasks using in-context examples"
+    }
+  ],
+  "meta_analysis": {
+    "dominant_theme": "Understanding and extending editing-based representations for world-action modeling",
+    "methodological_gap": "Quantitative understanding of what editing caches encode and how to best leverage them",
+    "applications_gap": "Cross-embodiment and long-horizon closed-loop control",
+    "theoretical_gap": "Formal characterization of when image editing beats video generation for WAMs — what task properties favor each approach?"
+  }
+}
