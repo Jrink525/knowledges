@@ -17,9 +17,11 @@
   - `ai-tools/career/agent-loop-architecture.md`
   - `ai-tools/career/agentic-code-review-addy-osmani.md`
   - `ai-tools/career/claude-code-learn-any-field.md`
+  - `ai-tools/career/dan-koe-fix-your-life.md`
   - `ai-tools/career/dont-outsource-the-learning.md`
   - `ai-tools/career/forward-deployed-engineering-101.md`
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
+  - `ai-tools/career/from-prompting-agents-to-loop-engineering.md`
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/loop-engineering-memory.md`
@@ -42,6 +44,7 @@
   - `ai-tools/enterprise/agentic-search-context-engineering.md`
   - `ai-tools/enterprise/ai-trillion-dollar-opportunity-context-graphs.md`
   - `ai-tools/enterprise/enterprise-context-layer-prukalpa.md`
+  - `ai-tools/enterprise/strategy-june-2026-cost-control-ai-access-mosaic-modeling.md`
 
 ### ai-tools/harness/ (`ai-tools/harness`)
   - `ai-tools/harness/10-claude-code-agents-pipeline.md`
@@ -60,6 +63,7 @@
   - `ai-tools/harness/become-ai-engineer-2026-roadmap-rahul.md`
   - `ai-tools/harness/build-your-own-agent-harness-iii.md`
   - `ai-tools/harness/build-your-own-mcp-server.md`
+  - `ai-tools/harness/claude-code-steering-skills-hooks-rules-subagents.md`
   - `ai-tools/harness/claude-code-tool-architecture.md`
   - `ai-tools/harness/cloud-agent-infrastructure-creao-peter-pang.md`
   - `ai-tools/harness/design-agent-loop-guide.md`
@@ -74,6 +78,7 @@
   - `ai-tools/harness/loop-engineering-addy-osmani.md`
   - `ai-tools/harness/mattpocock-skills-workbook.md`
   - `ai-tools/harness/mcp-core-architecture-explained.md`
+  - `ai-tools/harness/mcp-enterprise-managed-auth.md`
   - `ai-tools/harness/oz-multi-harness-agent-orchestration.md`
   - `ai-tools/harness/quarkus-langchain4j-mcp-hybrid-agents.md`
   - `ai-tools/harness/rag-pipeline-10m-docs-google-l5.md`
@@ -143,6 +148,7 @@
 
 ### ai-tools/patterns/ (`ai-tools/patterns`)
   - `ai-tools/patterns/building-multi-agent-workflows-guide.md`
+  - `ai-tools/patterns/leopardracer-build-ai-workflows.md`
   - `ai-tools/patterns/spring-ai-todowritetool-agent-planning.md`
 
 ### ai-tools/tooling/ (`ai-tools/tooling`)
@@ -299,11 +305,20 @@
 ### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
   - `papers/dive-into-claude-code-2604.14228/report.md`
 
+### papers/dragmesh-2-2606.15133/ (`papers/dragmesh-2-2606.15133`)
+  - `papers/dragmesh-2-2606.15133/report.md`
+
 ### papers/end-of-code-review-2606.13175/ (`papers/end-of-code-review-2606.13175`)
   - `papers/end-of-code-review-2606.13175/report.md`
 
 ### papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/ (`papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605`)
   - `papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/report.md`
+
+### papers/imagewam-2606.19531/ (`papers/imagewam-2606.19531`)
+  - `papers/imagewam-2606.19531/report.md`
+
+### papers/legalhallulens-2606.18021/ (`papers/legalhallulens-2606.18021`)
+  - `papers/legalhallulens-2606.18021/report.md`
 
 ### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
   - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
@@ -319,7 +334,7 @@
 
 ---
 
-总计 **246** 篇知识文档
+总计 **255** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -331,5 +346,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-19 16:05 UTC]_
+_[自动生成于 2026-06-20 16:08 UTC]_
 
