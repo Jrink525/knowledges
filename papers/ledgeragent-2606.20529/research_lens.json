@@ -1,0 +1,33 @@
+{
+  "paper_id": "2606.20529",
+  "title": "LedgerAgent: Structured State for Policy-Adherent Tool-Calling Agents",
+  "research_equation": "Tool-calling agents in customer-service domains need to: (1) maintain task states across multi-turn interactions, (2) call environment tools correctly, and (3) obey domain-specific policies. Standard prompt-based agents fail because task states are implicit in the transcript — the model must reconstruct relevant state from an ever-growing context at each decision point. LedgerAgent solves this by making observed state explicit through a deterministic typed ledger and pre-action policy gate, without additional LLM calls.",
+  "input_focus": [
+    "Conversation history (user messages, agent responses)",
+    "Tool schemas and available APIs",
+    "Domain policy text (natural language)",
+    "Tool return values (JSON-structured)",
+    "(Ledger-specific) Tool path map for routing returns to canonical paths",
+    "(Ledger-specific) Executable predicates Π for policy gate"
+  ],
+  "output_deliverable": [
+    "Task-completion action sequence (conversation + tool calls) that is policy-adherent",
+    "Each environment-changing tool call is checked by the policy gate before execution",
+    "Deterministic gate outcomes: allow / revise / block",
+    "Observe-not-assure ledger state L that reflects only what has been read from the environment"
+  ],
+  "challenge_module_map": [
+    ["State grounding failure (right records but stale/missing state at decision time)", "Schema-anchored typed ledger L: store successful read-tool returns under canonical paths; re-inject into prompt at each turn"],
+    ["Policy violation despite correct tool syntax", "Policy gate: evaluate proposed write calls against executable predicates Π over ledger L before execution"],
+    ["No additional LLM cost for state management", "Deterministic ledger updates (JSON parsing), rendering (string formatting), and gate checks (predicate evaluation) — no extra LLM calls"],
+    ["State inconsistency from unobserved changes", "Observe-not-assume rule: after write, agent must re-read; ledger only updates from successful read-tool returns"],
+    ["Multi-trial inconsistency (different outcomes on same task)", "Explicit state in prompt reduces variance; pass^4 improvements confirm consistency gains"],
+    ["Manual policy encoding burden", "28 domain-level predicates over ledger fields cover ownership, entity-state, argument grounding, payment consistency, loop prevention"],
+    ["User pressure for policy-violating actions", "Gate's block verdict intercepts before execution; revise provides corrective feedback"]
+  ],
+  "tri_pass_notes": {
+    "first_pass": "LedgerAgent addresses state grounding failures in policy-adherent tool-calling agents. It stores observed task state in a typed ledger and checks environment-changing calls against a policy gate before execution. Evaluated on τ²-Bench and τ-Trait (4 domains, 298 tasks, 6 models). Key results: consistent pass^k improvements, largest gains at higher k (consistency metrics), zero extra LLM calls.",
+    "second_pass": "Method: Two deterministic components wrap the base model. (1) Ledger L: typed dictionary P→V, updated only from successful read-tool returns via domain-level path maps. No LLM involvement in updates. Deterministically rendered into prompt before each model call. (2) Policy Gate: evaluates writes against 28 executable predicates (Airline 10, Retail 12, Telecom 6). Three outcomes: allow (execute), revise (drop + feedback), block (refuse). Gate is verifier-only; model still handles planning, argument construction, missing-data fetching. Algorithm has cost invariance: one LLM gen per turn. Observability: observe-not-assume rule keeps ledger grounded. Experiments: 298 tasks total. Six backbone models: GPT-5.2, GPT-4.1, Kimi K2.5, GLM-5, MiniMax M2.5, Qwen3-30B. Four trials per task. IRMA comparison shows Ledger better on both pass^1 and pass^4 with zero token overhead. Error analysis: 70.3% missed actions, 20.4% wrong arguments across domains. Telecom 98.7% missed actions.",
+    "third_pass": "Deep analysis: The ledger approach works because it decomposes the tool-calling problem into (a) state tracking (which is deterministic, structural, verifiable) and (b) action planning (which is probabilistic, semantic, LLM-driven). This separation of concerns is the key insight. Traditional methods entangle these — the LLM must both track state and plan actions simultaneously from the same growing context. However, several concerns remain: (1) The manual overhead of creating tool path maps and predicates per domain is significant — not automatic policy induction. (2) The ledger only contains observed state, not inferred or certified state. After writes, success depends on agent issuing re-reads. (3) Telecom show pass^4 regression for some backbones (Kimi K2.5: 71.9→64.0; GLM-5: 50.9→62.3 is actually improvement), suggesting dual-control environments have complex failure patterns not fully addressed. (4) Telehealth lacks predicates entirely (0 gates), so the improvement there comes purely from typed ledger rendering — interesting ablation result. (5) The paper doesn't analyze ledger size impact on prompt length or cost. (6) Compare with MemGPT/storage-augmented methods is missing. (7) 28 total predicates is small — each domain likely has limited coverage. Strengths: thorough error analysis, honest about limitations, clean ablation of ledger vs. gate. The method is immediately practical for structured API domains."
+  }
+}

@@ -1,0 +1,279 @@
+{
+  "paper_id": "2606.16827",
+  "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "No-resource languages for which LLMs have seen virtually no training data remain largely unstudied.",
+      "section": "Abstract / I",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Abstract",
+          "quote": "In contrast, no-resource languages for which LLMs have seen virtually no training data remain largely unstudied."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section I (Introduction)",
+          "quote": "little attention has been paid to no-resource programming languages, i.e., languages that fall outside the pre-training distribution of LLMs."
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "claim_text": "Further pre-training gives the largest performance gains for no-resource languages in RQ2, but applying it directly to instruction-tuned models harms their ability to follow instructions.",
+      "section": "Abstract / III",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Abstract",
+          "quote": "While further pre-training gives the largest performance gains for no-resource languages, applying it directly to instruction-tuned models harms their ability to follow instructions."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section III (RQ2)",
+          "quote": "pre-training is the most promising technique since, differently from fine-tuning, allows to exploit 'all' little data available for the no-resource language, achieving the strongest boost in performance among all experimented techniques."
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.3",
+      "claim_text": "Weight diff transfer (instruction transferring) significantly improves code generation capabilities in no-resource settings, allowing companies to cheaply deploy specialized instruct models without instruction fine-tuning cost.",
+      "section": "Abstract / IV",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Abstract",
+          "quote": "start from a base model, further pre-training it on the target language, and then inject instruction-following capabilities via weight diff transfer from an instruction model. Such an approach significantly improves code generation capabilities in no-resource settings."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section IV (RQ3)",
+          "quote": "Instruction transferring yields a significant improvement over the base model further pre-trained on the no-resource language, with pass@1 scores increasing by up to 33%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.1",
+      "claim_text": "Gleam and MoonBit have at least one order of magnitude fewer GitHub repositories than the least popular low-resource language (Racket).",
+      "section": "II-A1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section II-A1, Table I",
+          "quote": "MoonBit (no-resource) 400, Gleam (no-resource) 2,900, Racket (low-resource) 22,200"
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section II-A1",
+          "quote": "they have at least one order of magnitude less GitHub repositories as compared to the least popular low-resource language (Racket)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.2",
+      "claim_text": "Before March 2024 (cutoff for 4 of 6 LLMs), only 560 Gleam and 7 MoonBit GitHub repositories existed.",
+      "section": "II-A1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section II-A1",
+          "quote": "before March 2024 only 560 Gleam and 7 MoonBit GitHub repositories existed. This is a relevant date since, as we will explain later, it is the latest cutoff date for four of the LLMs considered in our study"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "On McEval-Hard (most challenging benchmark), LLMs achieve 59-89% pass@1 for high-resource, 27-84% for low-resource, and 0-1% for no-resource languages.",
+      "section": "III (RQ1)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section I",
+          "quote": "The four models achieve pass@1 scores being in the range of ~59-89% for high-resource languages, 27-84% for low-resource, and 0-1% for no-resource."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "All studied LLMs exhibit high performance when evaluated on high-resource programming languages. The pass@1 obtained for these languages ranges between 59% and 97%"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "claim_text": "Low-resource language performance is not solely determined by their popularity (number of GitHub repositories).",
+      "section": "III (RQ1)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "the distribution of results in Table IV demonstrates that the performance of low-resource languages is not solely determined by their popularity. For instance, LLMs consistently perform better on Lua than on R, although the former has a smaller number of GitHub repositories compared to the latter"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.3",
+      "claim_text": "The vast majority of failures on no-resource languages are due to syntactic errors (~2/3 for best model GPT-4o, up to 90% for o3-mini on Gleam).",
+      "section": "III (RQ1)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "in Gleam and MoonBit the vast majority of failures are due to syntactic errors, indicating that LLMs struggle with the basic syntax of these languages. For instance, for the best-performing model on these languages (i.e., GPT-4o), roughly two-thirds of the failures are syntactic. This proportion is even higher for other models (e.g., up to 90% for o3-mini on Gleam)."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.4",
+      "claim_text": "In high- and low-resource languages, syntactic errors represent a minority of failures (typically below 10%), except Java (~30%).",
+      "section": "III (RQ1)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "in the high- and low-resource languages, syntactic errors represent a minority of the failures (typically below 10%), suggesting that LLMs generally possess a solid knowledge of their syntax. A notable exception is Java, which consistently exhibits a higher fraction of syntactic failures (~30%)."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "Few-shot prompting is slightly more effective than RAG for no-resource languages (7/12 cases Gleam, 8/12 MoonBit).",
+      "section": "III (RQ2)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "few-shot is slightly more effective than RAG. Indeed, in 7 out of 12 cases for Gleam and 8 out of 12 for MoonBit, few-shot outperforms RAG in terms of pass@1"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.2",
+      "claim_text": "Fine-tuning is superior to in-context learning for the same models on no-resource languages.",
+      "section": "III (RQ2)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "given the same models, fine-tuning is superior to in-context learning. Also, fine-tuned open models are competitive with commercial ones used with few-shot or RAG."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.3",
+      "claim_text": "For the same architecture (Qwen 2.5 Coder 32B), further pre-training outperforms fine-tuning on all benchmarks and languages.",
+      "section": "III (RQ2)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "On all benchmarks and for both languages, the pre-trained base model is superior to the fine-tuned instruct model. The gap in performance is major in all cases."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "For Gleam: on HumanEval, 32.99 (pre-trained) vs 24.74 (fine-tuned); on MBPP, 47.35 vs 34.03; and on McEval-Hard, 12.47 vs 3.04."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.4",
+      "claim_text": "Pre-training benefits from larger available data (28.3M Gleam tokens) vs fine-tuning (3.6M Gleam tokens) because it can use code files and documentation, not just functions with docstrings.",
+      "section": "III (RQ2)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section III",
+          "quote": "when pre-training, the entire code files as well as any source of language documentation can be used for teaching the language to the model. Instead, fine-tuning requires the building of natural language descriptions of the code to implement paired with a corresponding code implementation."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section II-A4, Table III",
+          "quote": "Pre-training Gleam 28.3M total tokens, MoonBit 13.7M; Fine-tuning Gleam 3.6M, MoonBit 0.5M"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.5",
+      "claim_text": "Instruction transferring yields significant improvement over pre-training (avg +12% pass@1), with OR ranging from 1.21 to 10.95.",
+      "section": "IV (RQ3)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section IV",
+          "quote": "Instruction transferring yields a significant improvement over the base model further pre-trained on the no-resource language, with pass@1 scores increasing by up to 33% (Gleam, HumanEval, Qwen 3), and an average increase across benchmarks, models and languages of 12%."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section IV",
+          "quote": "All improvements are statistically significant (adjusted p-value < 0.05, McNemar test), with an OR ranging between 1.21 and 10.95."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.6",
+      "claim_text": "Qwen 3 8B with instruction transferring outperforms Qwen 3 32B Instruct in any configuration (fine-tuned or in-context learning).",
+      "section": "IV (RQ3)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section IV",
+          "quote": "Qwen 3 8B Base complemented with instruction transferring consistently outperforms Qwen 3 32B Instruct, whatever technique is applied on it."
+        },
+        {
+          "source": "paper.pdf",
+          "location": "Section IV",
+          "quote": "up to +28% (measured in absolute terms) increments in pass@1 scores over the fine-tuned version of Qwen 3 32B Instruct (Gleam, HumanEval), with an average increase of 12% across all benchmarks and languages."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.7",
+      "claim_text": "Instruction transferring generalizes across different model sizes (8B vs 32B), types (code-specialized vs general-purpose), and with/without reasoning capabilities.",
+      "section": "IV (RQ3)",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section IV",
+          "quote": "This boost is observed across different languages, benchmarks, and models. More importantly, it generalizes to models having different sizes (8B vs 32B), being general-purpose (Qwen 3) or specialized on code (Qwen 2.5 Coder), and with or without reasoning capabilities (Qwen 3 vs Qwen 2.5 Coder)."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "Only 4% of translated prompts and 0.6% of tests in the benchmarks had quality issues after manual validation.",
+      "section": "V-C",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section V-C",
+          "quote": "14 prompts (4%) and two tests (0.6%) presenting issues"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "claim_text": "The fine-tuning datasets have high quality across three dimensions (content adequacy, conciseness, fluency) with median scores of 5/5.",
+      "section": "V-C",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section V-C",
+          "quote": "the median both overall as well as for each individual evaluator, is always 5, with average values never going below 4.3"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.1",
+      "claim_text": "Approximately 340 man-hours were spent creating the benchmarks for the no-resource languages.",
+      "section": "VII",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section VII",
+          "quote": "This required a total of ~340 man hours."
+        }
+      ]
+    }
+  ]
+}

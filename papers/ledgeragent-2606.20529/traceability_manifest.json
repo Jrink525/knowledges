@@ -1,0 +1,210 @@
+{
+  "paper_id": "2606.20529",
+  "title": "LedgerAgent: Structured State for Policy-Adherent Tool-Calling Agents",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "Standard agents have two common failure modes: (1) agents may retrieve the right facts but later ground decisions in stale, missing, or incorrect information; (2) syntactically valid tool calls may still violate domain policies that depend on the current task state.",
+      "section": "1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 1, Introduction",
+          "quote": "This design makes state management implicit, creating two common failure modes. An agent may retrieve the right facts but later ground its decision in stale, missing, or incorrect information; and a syntactically valid tool call may still violate a domain policy that depends on the current task state."
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "claim_text": "LedgerAgent is an inference-time method that adds an explicit state representation with two deterministic components: a schema-anchored ledger projecting successful tool returns into a typed dictionary, and a policy gate checking environment-changing calls before execution.",
+      "section": "1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 1, Introduction",
+          "quote": "We introduce LedgerAgent, an inference-time method that adds an explicit state representation in the agent loop. It has two deterministic components. First, it maintains a schema-anchored ledger which projects successful tool returns into a compact typed dictionary keyed by canonical paths. Second, LedgerAgent applies a policy gate before environment-changing tool calls are executed."
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.3",
+      "claim_text": "LedgerAgent improves pass^k across customer-service domains and backbone models, with largest gains at higher values of k.",
+      "section": "1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 1, Introduction",
+          "quote": "We evaluate LedgerAgent across four customer-service domains from τ²-bench and τ-Trait, using a mixed panel of open- and closed-weight models. LedgerAgent improves pass^k on majority of the domain-model pair we evaluated. The gains are largest at higher values of k."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "The ledger is a typed dictionary L: P → V, where P is the set of canonical schema paths and V is the set of tool-returned values.",
+      "section": "3.1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.1, Ledger State and Updates",
+          "quote": "Formally, the ledger is a typed dictionary L: P → V, where P is the set of canonical schema paths and V is the set of tool-returned values."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "claim_text": "The ledger updates only from successful read-tool returns. Failed tools and write-tool returns do not update states.",
+      "section": "3.1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.1, Ledger State and Updates",
+          "quote": "The ledger updates only from successful read-tool returns. ... Failed tools and write-tool returns do not update states. After a successful write, the agent must issue a read call to observe the new state. This observe-not-assume rule keeps the ledger grounded in the external system."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.3",
+      "claim_text": "Before each model call, LedgerAgent adds the full ledger block to the prompt, generated deterministically from L, listing every record that has been observed through read tools.",
+      "section": "3.2",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.2, Ledger-Grounded Generation",
+          "quote": "Before each model call, LedgerAgent adds the full ledger block to the prompt. The block is generated deterministically from L and lists every record that has actually been observed through read tools."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.4",
+      "claim_text": "The policy gate returns one of three outcomes: allow (execute unchanged), revise (remove call and give violated predicate), or block (refuse the action).",
+      "section": "3.3",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.3, Policy Gate",
+          "quote": "It evaluates the proposed call against executable predicates Π over the current ledger L and returns one of three outcomes: allow: execute the call unchanged. revise: remove the call and give the model the violated predicate. block: block the call and refuse the requested action."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.5",
+      "claim_text": "The gate is only a verifier. It does not choose tools, repair arguments, fetch missing records, or plan a new trajectory.",
+      "section": "3.3",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.3, Policy Gate",
+          "quote": "The gate is only a verifier. It does not choose tools, repair arguments, fetch missing records, or plan a new trajectory. The model still handles task progress; the gate only checks whether a proposed action is consistent with the observed ledger state and encoded policy."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.6",
+      "claim_text": "28 deterministic gate predicates in total: 10 for airline, 12 for retail, 6 for telecom, and none for telehealth.",
+      "section": "3.3",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.3, Policy Gate",
+          "quote": "In the reported experiments, the policy layer contains 28 deterministic gate predicates in total: 10 for airline, 12 for retail, 6 for telecom, and none for telehealth."
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.7",
+      "claim_text": "LedgerAgent keeps one base-model generation per turn. Ledger updates, rendering, and policy checks do not introduce an additional LLM call.",
+      "section": "3.4",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 3.4, Agent Loop",
+          "quote": "LedgerAgent keeps one base-model generation per turn. Algorithm 1 highlights the cost invariant in the default configuration: ledger updates, ledger rendering, and policy checks wrap the base model call, but they do not introduce an additional LLM call."
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "Evaluation covers four domains: Airline (50 tasks), Retail (114 tasks), Telecom (114 tasks, dual-control), Telehealth (20 tasks) from τ²-Bench and τ-Trait.",
+      "section": "4.1",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 4.1, Table 1",
+          "quote": "Table 1 lists the four domains. Airline and retail focus on grounding writes in retrieved records. Telecom tests dual-control behavior... Telehealth comes from τ-Trait."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "With Kimi-K2.5 backbone, Ledger improves over FC by 3.4 points in average pass^1 and 5.6 points in average pass^4.",
+      "section": "5",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 5, Cross-Model Generalization",
+          "quote": "With Kimi-K2.5 as the backbone, Ledger improves over FC by 3.4 points in average pass^1 and 5.6 points in average pass^4."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "claim_text": "With GLM-5 backbone, Ledger achieves gains of 4.7 points in average pass^1 and 7.6 points in average pass^4.",
+      "section": "5",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 5, Cross-Model Generalization",
+          "quote": "The same trend holds for GLM-5 and MiniMax M2.5: Ledger achieves gains of 4.7 and 7.3 points in average pass^1, respectively, and 7.6 and 8.3 points in average pass^4, respectively."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.3",
+      "claim_text": "Ledger outperforms the FC baseline by 12.2 and 15.5 points in average pass^1 when using GPT-4.1 and GPT-5.2 respectively.",
+      "section": "5",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 5, Cross-Model Generalization",
+          "quote": "Ledger outperforms the FC baseline by 12.2 and 15.5 points in average pass^1 when using GPT-4.1 and GPT-5.2, respectively, as the backbone of the tool-calling agent."
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.4",
+      "claim_text": "Ledger outperforms IRMA by 3.7 points in pass^1 and 7.4 points in pass^4 without introducing token overhead.",
+      "section": "5",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 5, Comparison with IRMA, Table 3",
+          "quote": "Ledger outperforms IRMA by 3.7 points in pass^1 and 7.4 points in pass^4... without introducing additional token overhead, whereas IRMA incurs more than 50% token overhead."
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.1",
+      "claim_text": "Missed required actions (70.3%) and wrong action arguments (20.4%) account for 90.7% of all failures under Ledger.",
+      "section": "6",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 6, Error Analysis",
+          "quote": "missed required actions and wrong action arguments account for 90.7% of all failures, with missed required actions representing 70.3% and wrong action arguments representing 20.4%."
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.2",
+      "claim_text": "Telecom failures are almost entirely dominated by missed actions (98.7%). Retail failures are 69.9% missed actions. Airline has the most diverse failure profile.",
+      "section": "6",
+      "evidence": [
+        {
+          "source": "paper.pdf",
+          "location": "Section 6, Error Analysis",
+          "quote": "Telecom failures are almost entirely dominated by missed actions, which account for 98.7% of failures... Retail failures are primarily missed actions, accounting for 69.9% of failures... Airline has the most diverse failure profile, with missed actions accounting for 47.7% of failures and wrong arguments for 33.9%."
+        }
+      ]
+    }
+  ]
+}

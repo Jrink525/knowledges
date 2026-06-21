@@ -1,0 +1,33 @@
+{
+  "paper_id": "2606.16827",
+  "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "research_equation": "How can LLMs be specialized for code generation in no-resource programming languages (languages with virtually no training data), given that traditional in-context learning, fine-tuning, and pre-training each have limitations?",
+  "input_focus": [
+    "Two no-resource languages: Gleam (~2,900 GitHub repos) and MoonBit (~400 GitHub repos)",
+    "Three benchmarks: HumanEval (154 tasks), MBPP (355 tasks), McEval-Hard (227 tasks) — all translated to 9 languages",
+    "Six LLMs: GPT-4o, o3-mini, Qwen 2.5 Coder 32B (Base/Instruct), Qwen 3 8B Base, Qwen 3 32B Instruct",
+    "Limited available training data: 28.3M Gleam tokens / 13.7M MoonBit tokens for pre-training; 3.6M / 0.5M for fine-tuning",
+    "Techniques: zero-shot, few-shot (5-shot), RAG, manual prompting, fine-tuning, further pre-training, weight diff transfer"
+  ],
+  "output_deliverable": [
+    "NoResourceCode benchmark suite: three code generation benchmarks (HumanEval, MBPP, McEval-Hard) translated to Gleam and MoonBit, publicly released",
+    "Empirical characterization of the performance gap across high-, low-, and no-resource languages",
+    "Systematic comparison of prompt-based and training-based specialization techniques",
+    "Validated methodology for instruction transferring (weight diff) from instruct to pre-trained base models",
+    "Evidence that instruction transferring with 8B models can outperform 4× larger fine-tuned models"
+  ],
+  "challenge_module_map": [
+    ["No publicly available benchmarks for no-resource languages", "Build and release NoResourceCode benchmarks (HumanEval, MBPP, McEval-Hard in Gleam and MoonBit)"],
+    ["Near-zero LLM performance on no-resource languages (0-1% pass@1 on McEval-Hard)", "RQ1 empirical study establishes baselines"],
+    ["Limited training data for no-resource languages", "Few-shot and RAG in-context learning techniques"],
+    ["Fine-tuning limited by scarce function-docstring pairs", "Further pre-training using all available code + documentation files (10× more data)"],
+    ["Pre-trained base models lack instruction-following capabilities", "Weight diff transfer from instruct model (Δ_w = M_i - M_b, added to M_bk)"],
+    ["Syntactic errors dominate in no-resource settings (~2/3 of failures)", "Training-based approaches reduce syntactic errors to <20%"],
+    ["Closed commercial LLMs (GPT-4o, o3-mini) cannot be fine-tuned", "In-context learning + open models with fine-tuning/pre-training provide alternatives"]
+  ],
+  "tri_pass_notes": {
+    "first_pass": "The paper addresses an underexplored problem: code generation in languages where LLMs have effectively zero training data. It builds three benchmarks for two representative no-resource languages (Gleam, MoonBit), establishes baselines showing near-zero performance, and tests multiple specialization strategies. The key novelty is applying weight diff transfer from instruct models to further pre-trained base models, achieving significant improvements over all alternatives. Results show 8B models with weight transfer outperform 32B fine-tuned models.",
+    "second_pass": "Methodology is rigorous: 264,960+ generations, statistical testing with McNemar + BH correction, data quality validation with human annotators, and multi-faceted evaluation across 3 benchmarks × 9 languages × 6 LLMs. The weight diff approach is clearly justified by demonstrating that (a) pre-training works best but loses instruction following, and (b) directly adding the instruct-model diff recovers instruction abilities. The small-model-surprising-large finding (8B + diff > 32B fine-tuned) has strong practical implications. Limitation: only Qwen architecture tested for weight transfer due to open-weight requirement.",
+    "third_pass": "The work can be reframed as solving a trilemma: (1) in-context learning is weak for hard tasks; (2) fine-tuning is data-limited; (3) pre-training loses instruction following. The weight diff approach elegantly sidesteps all three. This pattern may generalize beyond code to other niche domains with scarce data. The ~340 man-hours for benchmark creation is a scalability concern. A hidden assumption is that weight diff transfer works because the base and instruct models share identical architecture — this restricts the approach to open-weight model families. The paper's industrial narrative (companies with proprietary languages) is compelling but the benchmarks are function-level, not real-world issue-resolution tasks."
+  }
+}

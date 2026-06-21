@@ -1,0 +1,83 @@
+{
+  "paper_id": "2606.20529",
+  "title": "LedgerAgent: Structured State for Policy-Adherent Tool-Calling Agents",
+  "seeds": [
+    {
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "The paper does not analyze how ledger size impacts prompt length, token cost, or model attention. As tasks grow to 20+ turns, the ledger block could become very large. No analysis on where the tipping point is.",
+      "hidden_assumption_or_gap": "The assumption that adding a deterministic ledger block to the prompt is always beneficial or at least not harmful at scale. No analysis of ledger block size vs. model performance.",
+      "research_question": "How does the size of the Ledger's rendered block affect downstream task performance, and at what point does an expanding ledger degrade rather than improve the model's ability to act?",
+      "hypothesis": "There exists an optimal ledger size window: too small provides insufficient context, too large creates attention dilution and exceeds effective context window. The degradation pattern may be U-shaped.",
+      "minimum_viable_experiment": "Systematically vary the number of observed records in the ledger (0, 1, 5, 10, 20, 50 records) on a controlled task set, measuring pass^1 and pass^4. Analyze attention patterns to determine when the model stops referencing ledger entries.",
+      "negative_result_interpretation": "If no degradation is observed even at 50+ records, then the ledger structure (stable paths + values) is efficient enough to scale. This would actually strengthen the paper's claims.",
+      "killer_objection": "In practice, the ledger per task may never exceed 10-15 records (limited by domain API structure), making this analysis irrelevant for the claimed use case.",
+      "killer_result": "Showing a clear U-curve where pass^1 drops by >10% when ledger exceeds 20 records, establishing a practical upper bound for the method."
+    },
+    {
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "The observe-not-assume rule requires that after a write, the agent must issue a read call to observe the new state. If the agent doesn't re-read (e.g., assumes success, or fails to issue the read), the ledger shows stale state.",
+      "hidden_assumption_or_gap": "The method assumes agents will reliably issue re-read calls after successful writes. Error analysis shows 'missed required actions' is 70.3% of failures — many of these could be missing re-read calls.",
+      "research_question": "Can the policy gate automatically trigger state-verification reads after writes, rather than relying on the model to issue them, to close the observe-not-assume loop deterministically?",
+      "hypothesis": "An auto-verification mechanism that automatically executes a 're-read' tool call after every successful write (without waiting for the LLM to decide to do so) will eliminate a significant portion of the 70.3% 'missed action' failures by ensuring the ledger always reflects post-write state.",
+      "minimum_viable_experiment": "Modify the gate to auto-append a re-read call after any allowed write that modifies state the policy depends on. Compare to base LedgerAgent on write-heavy tasks (Retail, Telecom).",
+      "negative_result_interpretation": "If auto-verification doesn't reduce missed actions, then the problem is not re-reading but rather model failure to continue the trajectory after state change.",
+      "killer_objection": "Auto-verification may introduce unnecessary reads for tasks where the state change is not needed for future decisions, wasting tokens and time.",
+      "killer_result": "Auto-verification reduces missed-action failures by 15-20% on Telecom/Retail write-heavy tasks, establishing a clear incremental improvement path."
+    },
+    {
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "The paper acknowledges that predicates must be manually defined per domain (28 total), and 'a developer defines the read-tool path map and encodes recurring policy clauses as executable predicates.'",
+      "hidden_assumption_or_gap": "Scalable adoption requires automatic induction of policy predicates from natural language policy documents, not manual coding. The paper provides no path from natural-language policy to executable predicate.",
+      "research_question": "Can we automatically compile natural-language domain policies into the type-safe executable predicates that LedgerAgent's gate requires, with high precision and recall?",
+      "hypothesis": "An LLM-based compiler that extracts policy rules from natural-language documents and maps them to ledger field predicates can achieve >85% correct predicate generation with human-in-the-loop verification, dramatically reducing the adoption barrier.",
+      "minimum_viable_experiment": "Collect all 4 domain policy documents from τ²-Bench. Use an LLM to propose predicate implementations for each domain. Compare auto-generated predicates against the paper's 28 hand-written predicates on the full benchmark in terms of coverage and false positive/negative rate.",
+      "negative_result_interpretation": "If auto-generated predicates have >30% false-positive or false-negative rate, then manual encoding is still needed, but the LLM can serve as a 'predicate suggestion' tool that reduces developer effort.",
+      "killer_objection": "Domain policies are often ambiguous, context-dependent, or implicit — natural-language-to-code generation for compliance predicates is essentially an unsolved problem in the general case.",
+      "killer_result": "Demonstrating 85%+ correct predicate generation on one unseen domain (e.g., banking or insurance) from a 10-page policy document would be highly compelling."
+    },
+    {
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "The paper uses pass^4 as a consistency metric but only runs 4 trials. For stochastic LLM agents with temperature 0, failing 1 out of 4 trials shouldn't happen, but does — implying non-determinism beyond sampling (e.g., tokenizer, batch order, timing).",
+      "hidden_assumption_or_gap": "4 trials is insufficient to characterize the full failure distribution. The paper's use of pass^4 as a 'consistency' measure conflates systematic failures with rare stochastic failures.",
+      "research_question": "What is the true failure distribution of LedgerAgent across a larger number of trials (e.g., 20+), and how does the pass^k curve reveal the nature of remaining failures (systematic vs. stochastic)?",
+      "hypothesis": "With 20+ trials, the pass-factorized curve will reveal that some failures are near-deterministic (the model always fails on certain task types) while others are stochastic (model nearly solves the task but makes rare mistakes). The current 4-trial design cannot distinguish these.",
+      "minimum_viable_experiment": "Run 20 trials on a subset of 10-20 tasks from Retail and Airline (the largest failure diversity). Fit a model to the pass^k curve. Decompose failures into 'hard' (always fail) and 'brittle' (sometimes fail) categories.",
+      "negative_result_interpretation": "If pass^4 is essentially the same as pass^20 adjusted for sampling noise, then 4 trials is adequate. But if significant new failures appear only after 10+ trials, current reporting overstates consistency.",
+      "killer_objection": "Running 20 trials on 6 models × 4 domains is expensive. The value gained may not justify the cost.",
+      "killer_result": "Showing that 20-trial pass^20 is >90% of pass^4 for LedgerAgent but <60% for FC on the same tasks would strongly reinforce the consistency claim."
+    },
+    {
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "The paper evaluates only structured customer-service APIs (reservations, orders, telecom accounts, telehealth records). The limitations section states 'less direct for tasks where the relevant state is primarily unstructured, visual, latent, or unavailable through read tools.'",
+      "hidden_assumption_or_gap": "The ledger/predicate framework may generalize to non-API domains if the 'paths' and 'values' are abstracted differently. Web navigation, file system operations, or database query agents face similar state tracking issues but with different observation structures.",
+      "research_question": "Can the LedgerAgent framework (typed dictionary + deterministic gate) be adapted to web navigation tasks where state is observed through DOM elements rather than structured API returns?",
+      "hypothesis": "By mapping DOM element states to typed ledger paths (e.g., page.url → string, form.field.value → union type), the same ledger+gate architecture can reduce policy violations in web agents, particularly for financial or administrative tasks with explicit rules.",
+      "minimum_viable_experiment": "Implement a DOM-to-ledger mapping for 10 WebArena tasks with clear policies (e.g., 'don't submit form without agreeing to terms'). Compare standard web agent vs. LedgerAgent on task completion and policy adherence.",
+      "negative_result_interpretation": "If DOM-based state is too noisy or partial for reliable ledger entries, the method may need structured observation extraction (e.g., using vision models to extract key-value pairs from web pages).",
+      "killer_objection": "Web state is fundamentally less structured than API responses. The 'typed dictionary' model may not capture the richness and ambiguity of visible web content.",
+      "killer_result": "A LedgerAgent variant achieving 15%+ improvement over the standard web agent baseline on policy-critical WebArena tasks would demonstrate real cross-domain value."
+    },
+    {
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "The Revise example in Appendix C is a single turn: model refunds to Mastercard, gate says 'refund must go to original payment.' But the user previously said 'I want refund to my credit card.' The gate correctly catches the policy violation even though the user explicitly requested it.",
+      "hidden_assumption_or_gap": "The gate allows the user to override the gate's revise by instructing the agent differently. If the user has been misinformed or is adversarial, the gate can be bypassed. The paper doesn't address adversarial user scenarios.",
+      "research_question": "How does LedgerAgent behave under adversarial user pressure where users actively try to get policy-violating actions executed, and what gate enhancements could prevent adversarial override?",
+      "hypothesis": "A 'sticky policy' gate that remembers previously rejected writes from the same user and enforces consistent policy across the interaction would block adversarial attempts that exploit the revise-reattempt loop.",
+      "minimum_viable_experiment": "Create adversarial user behavior test cases (user repeatedly asks for policy-violating action with different justifications) and test whether the current gate allows eventual bypass. Then implement a 'violation history' blacklist on the gate.",
+      "negative_result_interpretation": "If the current gate already blocks all adversarial attempts (because predicates are code-precise and don't change), then no enhancement is needed, confirming the method's robustness.",
+      "killer_objection": "Adversarial user scenarios are outside the scope of customer-service agents (usually cooperative), and the paper already demonstrates the gate resists user pressure in the Appendix B example.",
+      "killer_result": "Showing that a multi-turn adversarial loop can eventually bypass the current gate, and that the 'sticky policy' enhancement blocks it, would provide a clear improvement trajectory."
+    },
+    {
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "The paper compares only with IRMA as an agentic context-engineering method. It does not compare with memory-based approaches like MemGPT, which also maintains structured state across LLM turns through virtual context management.",
+      "hidden_assumption_or_gap": "There is an unexplored intersection between MemGPT's virtual context management and LedgerAgent's typed ledger. MemGPT manages what's in/out of context; Ledger manages how state within context is structured. They could be complementary.",
+      "research_question": "Can LedgerAgent's typed ledger be naturally integrated into a MemGPT-style hierarchical memory system, where the ledger is the 'working memory' layer and MemGPT's archival/recall handles long-term state?",
+      "hypothesis": "A hybrid system (LedgerAgent for structured working state + MemGPT for archival long-term memory) will outperform either system alone on tasks that require both structured policy adherence AND long-term information retrieval across sessions.",
+      "minimum_viable_experiment": "Implement the ledger as MemGPT's working memory context. On a modified τ²-Bench with extended dialogue length (20+ turns per task), compare MemGPT, LedgerAgent, and hybrid Ledger+MemGPT on pass^1 and pass^4.",
+      "negative_result_interpretation": "If the hybrid doesn't outperform LedgerAgent alone on extended dialogues, then MemGPT's context management may not add value for structured API tasks within a single session.",
+      "killer_objection": "MemGPT is designed for open-ended conversations with recall, not for short structured tasks. The addition may add overhead without benefit.",
+      "killer_result": "Showing 20%+ improvement on long-dialogue tasks where the ledger alone degrades due to context window limits would demonstrate a clear synergy."
+    }
+  ]
+}

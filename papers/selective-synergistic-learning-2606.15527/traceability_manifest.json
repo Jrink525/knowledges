@@ -1,0 +1,207 @@
+{
+  "paper_id": "2606.15527",
+  "title": "Selective Synergistic Learning for Video Object-Centric Learning",
+  "authors": ["WonJun Moon", "Jae-Pil Heo"],
+  "claims": [
+    {
+      "claim_id": "C2.1",
+      "claim_text": "The encoder's attention maps and decoder's object maps exhibit distinct inductive biases—the encoder produces spatially sharp yet noisy assignments while the decoder yields smooth but blurry object boundaries—leading to persistent misalignment.",
+      "section": "1",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 1", "quote": "The encoder, often built upon high-capacity vision backbones, produces spatially sharp yet noisy assignments, exhibiting high-frequency sensitivity. In contrast, the decoder, typically implemented as a lightweight MLP, imposes a low-frequency spatial prior, yielding smooth and temporally coherent but blurry object boundaries."}
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "Dense alignment inadvertently propagates the inherent weaknesses of each module, such as noisy encoder predictions and blurred decoder boundaries.",
+      "section": "1",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 1", "quote": "This indiscriminate alignment inadvertently propagates the inherent weaknesses of each module, such as noisy encoder predictions and blurred decoder boundaries."}
+      ]
+    },
+    {
+      "claim_id": "C3.2",
+      "claim_text": "Selective alignment principle: mutual supervision should occur only where each branch provides reliable cues, preventing error propagation.",
+      "section": "3.1",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 3.1", "quote": "We propose a selective alignment principle: mutual supervision should be applied only where each branch is structurally reliable."}
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "When the number of slots exceeds actual objects in a scene, prior methods (SlotContrast, SRL) suffer severe performance degradation, while SSync maintains consistent performance.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 7", "quote": "When prior approaches are trained with varying slot counts (S∈{7,11,15}), the performance deteriorates significantly at S=15, indicating severe sensitivity to slot over-parameterization. In contrast, SSync maintains consistent performance across all configurations."}
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "Local consistency analysis from encoder attention maps successfully identifies boundary regions, while decoder object maps identify coherent interior regions.",
+      "section": "3.2",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 3.2", "quote": "Boundary regions are characterized by local disagreement while still maintaining semantic grounding. Since encoder attention assignments are typically sharper, we detect boundary candidates from A."}
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "claim_text": "Transitive pseudo-label merging (connected components-based) outperforms pairwise merging for consolidating redundant slots.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 8(b)", "quote": "Whereas ours constructs a connectivity graph over redundant slots and merges all slots within a connected component simultaneously, pairwise merging combines only the most similar slot pair whose IoU exceeds τ_merge. Results suggest that over-fragmented objects are often distributed across multiple slots, requiring global consolidation rather than pairwise agglomeration."}
+      ]
+    },
+    {
+      "claim_id": "C5.3",
+      "claim_text": "Transitive merging provides more effective redundancy mitigation than SRL's slot regularization method.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 8(c)", "quote": "Empirical results demonstrate that transitive merging provides a more effective remedy for over-fragmentation, while eliminating the need for heuristic scheduling of regularization phases."}
+      ]
+    },
+    {
+      "claim_id": "C5.4",
+      "claim_text": "MSE objective is preferred over cross-entropy due to scale compatibility with reconstruction loss and bounded gradients for robustness to imperfect pseudo-labels.",
+      "section": "3.4",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 3.4", "quote": "We adopt an MSE objective rather than cross-entropy, as its scale compatibility with the reconstruction loss enables stable joint optimization without loss reweighting, and its bounded gradients improve robustness to imperfect pseudo-labels during early training."}
+      ]
+    },
+    {
+      "claim_id": "C5.5",
+      "claim_text": "Hard pseudo-labels outperform soft supervision targets for SSync because soft targets retain uncertainty and propagate structural ambiguity.",
+      "section": "16",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Appendix 16", "quote": "Our default formulation outperforms all alternatives. This shows that using soft distributions as targets inherently retains uncertainty, which can propagate structural ambiguity between modules."}
+      ]
+    },
+    {
+      "claim_id": "C6.1",
+      "claim_text": "SSync eliminates auxiliary projectors used by SRL, operating directly on the native output space and introducing no additional parameters.",
+      "section": "7",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 13", "quote": "Unlike SRL, which introduces two additional MLP projectors to map encoder and decoder features into the embedding space for contrastive learning, SSync operates directly on the native output space."}
+      ]
+    },
+    {
+      "claim_id": "C6.2",
+      "claim_text": "SSync reduces computational complexity from quadratic O((T·H·W)²) to linear O(T·H·W) time.",
+      "section": "3.1",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 13", "quote": "SRL relies on a ternary contrastive loss that computes dense similarities across all spatio-temporal patches, resulting in quadratic complexity. In contrast, SSync applies a selective MSE objective only to reliable regions, reducing the complexity to linear time."}
+      ]
+    },
+    {
+      "claim_id": "C8.1",
+      "claim_text": "SSync achieves state-of-the-art on MOVi-C: 79.4 FG-ARI and 39.5 mBO.",
+      "section": "4.2",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 2", "quote": "SSync achieves 79.4±0.6 FG-ARI and 39.5±0.1 mBO on MOVi-C, the best results across all methods."}
+      ]
+    },
+    {
+      "claim_id": "C8.2",
+      "claim_text": "SSync achieves state-of-the-art on MOVi-E: 84.0 FG-ARI and 34.8 mBO.",
+      "section": "4.2",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 2", "quote": "SSync achieves 84.0±0.9 FG-ARI and 34.8±1.9 mBO on MOVi-E."}
+      ]
+    },
+    {
+      "claim_id": "C8.3",
+      "claim_text": "SSync substantially outperforms SRL on image-level COCO2017 benchmark (47.9 FG-ARI vs 42.8).",
+      "section": "4.2",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 4", "quote": "SSync attains an ARI of 47.9 and mBO of 33.1 on real-world COCO2017, substantially outperforming SRL."}
+      ]
+    },
+    {
+      "claim_id": "C9.1",
+      "claim_text": "SSync reduces memory usage by approximately 60% compared to SRL, enabling training on longer sequences where SRL encounters out-of-memory errors.",
+      "section": "4.2",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 5", "quote": "At batch size 32 per GPU (T=4), SRL requires 70GB while SSync uses only 27GB, reducing memory usage by roughly 60%. SRL already encounters OOM at larger temporal lengths or batch sizes on our GPU, whereas SSync remains feasible."}
+      ]
+    },
+    {
+      "claim_id": "C10.1",
+      "claim_text": "Boundary and interior supervision are complementary: combining them yields substantially larger improvements (77.1 FG-ARI, 38.0 mBO) than each individually (72.9 and 71.4 FG-ARI).",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 6", "quote": "When both selective alignment losses are combined, performance increases substantially to 77.1 FG-ARI and 38.0 mBO, demonstrating that boundary calibration and interior denoising are complementary."}
+      ]
+    },
+    {
+      "claim_id": "C10.2",
+      "claim_text": "SSync maintains consistent performance across varying slot counts (S=7,11,15), unlike SlotContrast and SRL which deteriorate significantly at S=15.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 7", "quote": "SSync maintains consistent performance across all configurations. This stability is driven by our transitive pseudo-label merging."}
+      ]
+    },
+    {
+      "claim_id": "C11.1",
+      "claim_text": "SSync achieves FCC8=8.79 (approaching GT=6.27), substantially lower than SRL's 21.03 and SlotContrast's 33.20, indicating effective denoising.",
+      "section": "10",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 14", "quote": "SSync substantially lowers fragmentation (FCC8: 8.793), approaching the ground-truth structure (6.268). This pronounced reduction indicates that selective interior denoising effectively suppresses noisy slot assignments."}
+      ]
+    },
+    {
+      "claim_id": "C11.2",
+      "claim_text": "The selective synergistic mechanism transforms the encoder-decoder mismatch into mutual improvement: decoder outside leakage decreases from 93.96 to 71.03, encoder FCC from 41.48 to 8.90.",
+      "section": "11",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 16", "quote": "Collectively, these metrics confirm that the selective synergistic mechanism transforms a potential mismatch between the two modules into mutual improvement."}
+      ]
+    },
+    {
+      "claim_id": "C12.1",
+      "claim_text": "SSync's learned representations improve downstream object dynamics prediction across all VOCL benchmarks compared to previous methods.",
+      "section": "12",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 18", "quote": "SSync achieves consistent improvements across all datasets compared to previous methods. Notably, while prior models struggle with dynamics prediction on MOVi-E due to the prevalence of small objects, SSync excels in modeling fine-grained dynamics."}
+      ]
+    },
+    {
+      "claim_id": "C13.1",
+      "claim_text": "SSync's core hyperparameters (n_bd, n_nbd, λ_SSync, warmup ratio) are robust within reasonable ranges, requiring minimal dataset-specific tuning.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 9", "quote": "Performance remains stable across a reasonable range of values. SSync's robustness and its minimal requirement for dataset-specific tuning."}
+      ]
+    },
+    {
+      "claim_id": "C16.1",
+      "claim_text": "Transitive merging in all variants outperforms pairwise merging and SRL's slot regularization.",
+      "section": "4.3",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 8", "quote": "Transitive merging provides a more effective remedy for over-fragmentation."}
+      ]
+    },
+    {
+      "claim_id": "C17.1",
+      "claim_text": "The proposed local-consistency-based selection outperforms standard morphological erosion and entropy-based selection variants.",
+      "section": "15",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Table 21", "quote": "Our straightforward design consistently outperforms these entropy-based alternatives. Standard erosion yields reasonable performance, our enhanced selection method achieves more significant gains."}
+      ]
+    },
+    {
+      "claim_id": "C18.1",
+      "claim_text": "Large-scale objects with high intra-object appearance variance can still be fragmented across multiple slots despite transitive merging.",
+      "section": "18",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 18", "quote": "Despite transitive pseudo-label merging, SSync can still assign these semantically related parts to different slots, indicating that spatio-temporal overlap alone may be insufficient when intra-object appearance variance is high."}
+      ]
+    },
+    {
+      "claim_id": "C18.2",
+      "claim_text": "Early-frame under-fragmentation occurs when motion cues are insufficient to distinguish objects initially sharing similar spatial trajectories.",
+      "section": "18",
+      "evidence": [
+        {"source": "paper.pdf", "location": "Section 18", "quote": "Two small objects emerge from a similar direction and remain covered by one slot until their motion trajectories diverge; only after they separate spatially does the model consistently allocate distinct identities."}
+      ]
+    }
+  ]
+}

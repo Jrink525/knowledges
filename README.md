@@ -18,6 +18,7 @@
   - `ai-tools/career/agentic-code-review-addy-osmani.md`
   - `ai-tools/career/claude-code-learn-any-field.md`
   - `ai-tools/career/dan-koe-fix-your-life.md`
+  - `ai-tools/career/dklineii-ai-morning-brief.md`
   - `ai-tools/career/dont-outsource-the-learning.md`
   - `ai-tools/career/forward-deployed-engineering-101.md`
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
@@ -25,6 +26,7 @@
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/loop-engineering-memory.md`
+  - `ai-tools/career/mvanhorn-wtf-is-a-loop-part1.md`
   - `ai-tools/career/my-thoughts-on-loop-engineering.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
   - `ai-tools/career/the-art-of-loop-engineering.md`
@@ -149,6 +151,7 @@
 ### ai-tools/patterns/ (`ai-tools/patterns`)
   - `ai-tools/patterns/building-multi-agent-workflows-guide.md`
   - `ai-tools/patterns/leopardracer-build-ai-workflows.md`
+  - `ai-tools/patterns/mvanhorn-15-loops-part2.md`
   - `ai-tools/patterns/spring-ai-todowritetool-agent-planning.md`
 
 ### ai-tools/tooling/ (`ai-tools/tooling`)
@@ -191,6 +194,7 @@
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
   - `ai-tools/tooling/loop-engineering-roadmap.md`
+  - `ai-tools/tooling/loops-explained.md`
   - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
   - `ai-tools/tooling/most-people-use-10-percent-of-claude-25-steps.md`
   - `ai-tools/tooling/npx-skills-add-flow.md`
@@ -266,6 +270,7 @@
   - `programming/go/netty-websocket-springboot-practical-guide.md`
 
 ### programming/java/ (`programming/java`)
+  - `programming/java/addyosmani-how-modern-browsers-work.md`
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
   - `programming/java/java-comparator-deep-dive.md`
@@ -276,6 +281,7 @@
   - `programming/java/java-pooling-high-concurrency.md`
   - `programming/java/jvm-tuning-and-profiling-complete-guide.md`
   - `programming/java/leetcode-complete-dsa-pattern-sheet.md`
+  - `programming/java/maven-tutorial.md`
   - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
   - `programming/java/spring-controller-return-types-complete-guide.md`
   - `programming/java/spring-event-comprehensive-guide.md`
@@ -314,14 +320,26 @@
 ### papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/ (`papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605`)
   - `papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/report.md`
 
+### papers/how-ai-agents-reshape-knowledge-work-2606.07489/ (`papers/how-ai-agents-reshape-knowledge-work-2606.07489`)
+  - `papers/how-ai-agents-reshape-knowledge-work-2606.07489/report.md`
+
 ### papers/imagewam-2606.19531/ (`papers/imagewam-2606.19531`)
   - `papers/imagewam-2606.19531/report.md`
+
+### papers/ledgeragent-2606.20529/ (`papers/ledgeragent-2606.20529`)
+  - `papers/ledgeragent-2606.20529/report.md`
 
 ### papers/legalhallulens-2606.18021/ (`papers/legalhallulens-2606.18021`)
   - `papers/legalhallulens-2606.18021/report.md`
 
+### papers/no-resource-no-benchmarks-no-problem-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-2606.16827`)
+  - `papers/no-resource-no-benchmarks-no-problem-2606.16827/report.md`
+
 ### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
   - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
+
+### papers/selective-synergistic-learning-2606.15527/ (`papers/selective-synergistic-learning-2606.15527`)
+  - `papers/selective-synergistic-learning-2606.15527/report.md`
 
 ### papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/ (`papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236`)
   - `papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md`
@@ -334,7 +352,7 @@
 
 ---
 
-总计 **255** 篇知识文档
+总计 **265** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -346,5 +364,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-20 16:08 UTC]_
+_[自动生成于 2026-06-21 16:12 UTC]_
 

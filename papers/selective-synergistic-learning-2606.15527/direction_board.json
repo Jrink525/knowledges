@@ -1,0 +1,116 @@
+{
+  "paper_id": "2606.15527",
+  "title": "Selective Synergistic Learning for Video Object-Centric Learning",
+  "seeds": [
+    {
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "Claim C17.1: Local consistency (LC)-based selection outperforms morphological erosion and entropy-based methods. But LC assumes patch neighborhoods are informative for reliability—this fails at thin structures (e.g., bicycle spokes, poles) where boundary patches occupy most of the object area, leaving few 'interior' patches.",
+      "hidden_assumption_or_gap": "Local consistency analysis assumes a clear separation between boundary and interior regions based on 8-neighborhood agreement. For thin or highly articulated objects, this clean separation may not exist—most patches are boundaries.",
+      "research_question": "How can selective alignment work for thin/articulated objects where boundary regions dominate and few interior patches provide reliable decoder cues?",
+      "hypothesis": "A scale-aware boundary detection mechanism that adapts to object aspect ratio and thickness would improve performance on thin/articulated objects compared to the fixed fixed-size neighborhood approach.",
+      "minimum_viable_experiment": "Create a synthetic dataset with varying object thicknesses (from chunky to thin). Compare SSync's LC-based selection against a scale-adaptive variant where neighborhood size (N_sp kernel) is learned per-patch or adapted based on local structure tensor analysis.",
+      "negative_result_interpretation": "If scale-adaptive selection doesn't help thin objects, the bottleneck for these cases may be the decoder itself (its low-frequency prior inherently cannot represent thin structures), and architectural changes to the decoder would be needed rather than improved selection.",
+      "killer_objection": "Thin objects may appear rarely in VOCL benchmarks, making this a niche issue with limited practical impact. The standard benchmarks (MOVi-C, MOVi-E) mostly contain chunky objects.",
+      "killer_result": "If thin-object FG-ARI improves by >5 points while thick-object performance stays within ±1 point, this direction is compelling."
+    },
+    {
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "Claim C18.2: Early-frame under-fragmentation occurs because motion cues in early frames are insufficient to distinguish objects entering from similar spatial locations. SSync has no mechanism to incorporate future context.",
+      "hidden_assumption_or_gap": "The slot attention processes frames causally (left-to-right). There's no mechanism for looking ahead or revising past assignments based on future information—this is an architectural constraint, not a failure of SSync itself.",
+      "research_question": "Can bidirectional temporal modeling (e.g., using future frames during slot refinement) mitigate early-frame under-fragmentation without breaking the real-time processing constraint?",
+      "hypothesis": "A lightweight backward refinement pass (e.g., processing frames in reverse after the forward pass, or a small Transformer over slot sequences) can consolidate undersegmented early-frame slots once motion evidence accumulates in later frames.",
+      "minimum_viable_experiment": "Implement a two-pass slot refinement: (1) standard forward pass, (2) learned backward pass where later-frame slot assignments inform early-frame identity disambiguation. Evaluate on MOVi-C with specific focus on frames 1-6 (early quarter) FG-ARI vs standard SSync.",
+      "negative_result_interpretation": "If backward refinement doesn't help, the issue may be that slot assignment ambiguity in early frames is irreducible even with future information—the model genuinely doesn't know which object is which before motion separation occurs. This would suggest evaluation on early frames is inherently unfair.",
+      "killer_objection": "Sliding window approaches already provide limited future context implicitly. A full bidirectional model doubles compute and breaks the streaming-friendly design of slot attention.",
+      "killer_result": "If early-frame FG-ARI improves by >3 points with <20% additional compute, bidirectional modeling is worth pursuing."
+    },
+    {
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "Claim C8.1 and Tab.2: SSync achieves SOTA mBO on YTVIS (38.7) but not FG-ARI (42.6 vs SlotCurri 44.8). The paper attributes this to sparse GT annotations. This suggests a mismatch between evaluation proxy (FG-ARI) and actual decomposition quality.",
+      "hidden_assumption_or_gap": "FG-ARI assumes GT annotations capture all relevant objects. YTVIS only annotates salient foreground objects sparsely. SSync's stronger background decomposition (qualitatively shown) may be 'penalized' by FG-ARI since background regions are treated as misclustered foreground.",
+      "research_question": "Is SSync's decomposition quality actually better despite lower FG-ARI on real-world videos, and what metric would properly capture this?",
+      "hypothesis": "SSync produces more complete scene decomposition (including background and non-salient objects) that current foreground-centric metrics like FG-ARI fail to reward. A metric combining FG-ARI with background consistency (BG-ARI) and recall of unannotated objects would better capture SSync's advantage.",
+      "minimum_viable_experiment": "(1) Annotate background regions and secondary objects in a subset of YTVIS frames. (2) Compute FG-ARI + BG-ARI + per-frame recall of unannotated objects. (3) Compare SSync vs SlotCurri vs SRL on this richer evaluation.",
+      "negative_result_interpretation": "If SSync doesn't show meaningful advantage even with richer metrics, its YTVIS results are genuinely worse, and the FG-ARI gap reflects real quality issues rather than metric bias.",
+      "killer_objection": "Adding background metrics may not change the ranking; the community has strong inertia around FG-ARI as the primary metric.",
+      "killer_result": "If SSync achieves >5% better recall of unannotated objects at equal FG-ARI, the metric mismatch is confirmed and SSync's real-world value is higher than FG-ARI suggests."
+    },
+    {
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "Claim C9.1 and Tab.5: Memory comparison between SRL and SSync is thorough, but no training time comparison is provided. SSync's extra steps (consistency computation, graph building for merging) have unknown overhead.",
+      "hidden_assumption_or_gap": "The paper implies 'linear complexity = faster', but per-iteration wall-clock time may be higher for SSync due to Python-level computations (IoU, adjacency checks) vs SRL's all-GPU contrastive loss.",
+      "research_question": "What is SSync's actual training time overhead per iteration compared to SRL and baseline SlotContrast?",
+      "hypothesis": "SSync's per-iteration time is X% longer than SlotContrast baseline but still faster than SRL because SRL's quadratic memory causes frequent swapping/computation at lower effective batch sizes.",
+      "minimum_viable_experiment": "Profile training on MOVi-C with identical hardware: (a) baseline SlotContrast, (b) SRL, (c) SSync. Report: iterations/sec, total training time, peak GPU memory, GPU utilization %. Include breakdown of SSync's extra operations (consistency → merging → loss).",
+      "negative_result_interpretation": "If SSync is significantly slower per iteration than SRL (e.g., >30%), the practical advantage of linear complexity is partially offset by Python overhead, suggesting a CUDA-native implementation of the selection and merging steps is needed.",
+      "killer_objection": "Even if SSync is slower per iteration, the ability to use larger batch sizes and longer sequences (where SRL OOMs) provides net benefit for high-resolution/long-video scenarios.",
+      "killer_result": "If SSync achieves ≥2× faster convergence (iterations-to-target-performance) despite similar per-iteration time, the complexity advantage is confirmed."
+    },
+    {
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "Claim C18.1 and Fig.8: Cargo truck with different cabin/container textures is fragmented despite transitive merging. This is only shown qualitatively on one example. A systematic characterization of this failure mode is missing.",
+      "hidden_assumption_or_gap": "Transitive merging's IoU threshold (τ_merge) is fixed per dataset. For objects with high internal appearance variation, the spatio-temporal activation overlap between parts may fall below the threshold by a small margin, causing fragmentation that could be fixed by adaptive thresholding.",
+      "research_question": "Can an adaptive merging threshold (based on per-object appearance consistency) outperform the fixed threshold approach for handling intra-object appearance variation?",
+      "hypothesis": "Objects with high intra-object appearance variance have bimodal activation patterns (each 'part' activates different patches strongly), leading to lower inter-part IoU. An appearance-aware scaling factor that relaxes τ_merge when two slots have complementary spatial coverage (low overlap + low total activation entropy) would merge them correctly.",
+      "minimum_viable_experiment": "Collect 50 MOVi-C/YTVIS clips containing objects with high appearance variation (textured objects, vehicles with different parts). Compute IoU histograms for: (a) correct slot pairs (same object), (b) incorrect slot pairs (different objects). Design a learned or heuristic adaptive threshold. Compare adaptive vs. fixed threshold on this curated set.",
+      "negative_result_interpretation": "If adaptive thresholding causes more false merges (incorrectly merging different objects) than it fixes, the issue is not threshold-related but a fundamental limitation of slot attention's capacity to represent heterogeneous objects.",
+      "killer_objection": "A slot is designed to capture one object. If an object's parts look completely different (cabin vs. container), maybe treating them as separate slots is correct for reconstruction quality, and the 'correct' grouping is a semantic judgment that unsupervised methods shouldn't be expected to make.",
+      "killer_result": "If adaptive thresholding improves part-level merging by >10% while maintaining <1% false merge rate, this is a meaningful improvement."
+    },
+    {
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "The paper compares against SlotContrast (CVPR'25), SRL (ICLR'26), and SlotCurri (CVPR'26). SlotCurri achieves higher FG-ARI on YTVIS (44.8 vs 42.6) but lower mBO (35.5 vs 38.7). No qualitative comparison between SSync and SlotCurri is provided.",
+      "hidden_assumption_or_gap": "SlotCurri's curriculum learning approach (progressively increasing slot assignment difficulty) may handle video-specific challenges (temporal smoothness, occlusion) differently from SSync's selective alignment. The two methods address different failure modes and could potentially be combined.",
+      "research_question": "Can SSync's selective alignment be combined with SlotCurri's curriculum learning to achieve the best of both—high FG-ARI (from SlotCurri) and high mBO (from SSync)?",
+      "hypothesis": "SlotCurri's curriculum (starting with easy frames, gradually increasing difficulty) provides better initialization for SSync's alignment, while SSync refines boundaries and interiors better. Combined: SlotCurri's warm-up + SSync's selective alignment post warm-up = best of both.",
+      "minimum_viable_experiment": "Implement SlotCurri+SSync: use SlotCurri's curriculum scheduling as the base training strategy, then apply SSync's selective alignment losses after curriculum warm-up. Evaluate on all 3 benchmarks. Compare against both standalone methods.",
+      "negative_result_interpretation": "If combined method achieves FG-ARI and mBO that are weighted averages (not exceeding the max in each metric), the methods address overlapping issues and combining them provides diminishing returns.",
+      "killer_objection": "Adding SSync onto SlotCurri may double the loss complexity and hyperparameters, reducing the practical 'plug-and-play' advantage.",
+      "killer_result": "If combined method achieves FG-ARI > 45 and mBO > 39 on YTVIS simultaneously (beating both in both metrics), combination is clearly valuable."
+    },
+    {
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "C8.3 and Tab.4: SSync achieves 47.9 FG-ARI on COCO2017 (image-level), substantially outperforming SRL (42.8). However, SSync's design uses spatio-temporal neighborhoods (including temporal adjacency) which doesn't apply to single-image scenarios.",
+      "hidden_assumption_or_gap": "SSync's image-level performance uses the same spatio-temporal formulation, but with T=1 the temporal adjacency in N(t,p) is dropped. This suggests the method's effectiveness on images comes purely from spatial boundary/interior selection, raising the question: how much does the temporal component contribute?",
+      "research_question": "How much of SSync's video performance comes from temporal vs. purely spatial selection mechanisms?",
+      "hypothesis": "The temporal component contributes modestly—spatial boundary selection already captures most of the benefit because encoder-decoder misalignment is primarily a spatial phenomenon. But temporal consistency helps in cases of fast motion (temporal boundaries) and flickering noise.",
+      "minimum_viable_experiment": "Ablate SSync on MOVi-C with: (a) full spatio-temporal neighborhood, (b) spatial-only neighborhood (drop temporal adjacencies), (c) temporal-only adjacency (drop spatial). Compare FG-ARI and mBO to isolate each component's contribution.",
+      "negative_result_interpretation": "If spatial-only achieves >90% of full SSync's performance, the temporal component is marginal and SSync could be simplified to spatial-only for most use cases. If temporal is crucial (>5% gap), the spatio-temporal formulation is validated.",
+      "killer_objection": "Spoken video is inherently temporal; removing time negates the entire point of VOCL. The ablation would only be informative for understanding SSync's internal mechanism, not for practical deployment.",
+      "killer_result": "If spatial-only achieves <2% gap from full SSync, the temporal adjacency can be removed for simplicity, making SSync directly applicable to image tasks without modification."
+    },
+    {
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "The paper uses MSE loss for selective alignment (Eq. 13-14) over cross-entropy, citing scale compatibility and bounded gradients. However, pseudo-labeling literature predominantly uses cross-entropy. MSE on probabilities may have vanishing gradients near 0/1 for confident predictions.",
+      "hidden_assumption_or_gap": "MSE works because the pseudo-labels are one-hot (binary targets) and the predictions are probabilities. MSE has bounded gradient (gradient ∝ prediction - target, range [-1,1]), while CE gradient grows with prediction confidence (gradient ∝ -1/(1-conf) for wrong predictions). This means MSE treats all errors equally while CE penalizes confident wrong predictions more.",
+      "research_question": "Is MSE's bounded gradient actually beneficial for pseudo-label training in this asymmetric distillation setting, or would a gradient-clipped CE be equally effective while better aligned with the classification nature of the task?",
+      "hypothesis": "A gradient-clipped cross-entropy (max gradient magnitude = 1) would combine the theoretical advantages of CE (proper scoring rule, consistent with probabilistic interpretation) with the stability benefits of MSE, potentially outperforming both.",
+      "minimum_viable_experiment": "Compare on MOVi-C: (1) MSE (current), (2) standard CE, (3) CE with gradient clipping at various thresholds (0.5, 1.0, 2.0), (4) symmetric KL divergence. Log gradient magnitudes during training to understand the dynamics.",
+      "negative_result_interpretation": "If gradient-clipped CE matches MSE performance, the key design choice is gradient management rather than MSE vs CE. If CE fails badly (diverges), MSE's bounded gradients are indeed crucial.",
+      "killer_objection": "The paper already provides strong empirical evidence that MSE works well. This is an academic question about understanding 'why' rather than improving performance—worth exploring for theoretical insight but unlikely to yield practical gains.",
+      "killer_result": "If gradient-clipped CE achieves >1% FG-ARI improvement over MSE while being more principled, it's worth adopting."
+    },
+    {
+      "seed_type": "negative_result",
+      "trigger_evidence_summary": "Table 22: 'Reversed SSync' (encoder → interior, decoder → boundary) achieves FG-ARI=67.6, far below baseline (69.0), confirming that the asymmetry direction matters critically. This is the paper's strongest negative result.",
+      "hidden_assumption_or_gap": "The reversed experiment confirms encoder boundary / decoder interior is the correct direction. But it also raises the question: is the decoder object map actually better at interior regions, or is the encoder attention map simply worse at interior regions?",
+      "research_question": "Why does the encoder attention map produce such poor interior representations? Is it inherent to the slot attention mechanism, or can the encoder be trained to produce good interior representations through architectural changes?",
+      "hypothesis": "The encoder's noisy interior assignments stem from the dot-product attention mechanism itself—since query-key dot products are unbounded and slot keys are shared across all patches, small activation differences get amplified by softmax, creating 'winner-take-all' noise. A slot attention variant with bounded activation (e.g., sigmoid-based gating instead of softmax) might produce cleaner interior maps directly.",
+      "minimum_viable_experiment": "Replace softmax in slot attention with a gumbel-sigmoid or noise-tempered softmax that reduces winner-take-all behavior. Evaluate whether the encoder's interior assignments improve (measured by FCC), potentially reducing the need for decoder-based interior denoising in SSync.",
+      "negative_result_interpretation": "If softmax alternatives still produce noisy interiors, the noise may be fundamental to competitive slot assignment and the decoder-interior / encoder-boundary asymmetry is irreducible—validating SSync's core assumption.",
+      "killer_objection": "Replacing softmax would break the probabilistic interpretation of slot assignments and may affect convergence of the slot attention mechanism itself.",
+      "killer_result": "If a bounded-attention variant reduces encoder FCC by >50% (from ~41 to <20 at 30% training), the asymmetry is partially reducible and future work could simplify or eliminate the denoising component."
+    },
+    {
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "Tab.20: Quantile-based thresholding (e.g., top 30% quantile) slightly outperforms the default mean-based threshold for transitive merging. The paper dismisses quantile as 'dataset-dependent' and sticks with mean-based for generalization, but doesn't test cross-dataset generalization of optimal quantile.",
+      "hidden_assumption_or_gap": "The assumption that 'mean activation is more generalizable than fixed quantile' is untested. If optimal quantile is actually consistent across datasets, this argument fails, and SSync is leaving performance on the table by using mean-based thresholding.",
+      "research_question": "Does the optimal quantile for activation thresholding in transitive merging generalize across datasets, or is it truly dataset-specific?",
+      "hypothesis": "The optimal quantile is correlated with the average object size/number ratio across datasets. MOVi-C (few large objects) vs MOVi-E (many small objects) should have different optimal quantiles because activation distributions differ fundamentally.",
+      "minimum_viable_experiment": "Compute activation value distributions for MOVi-C, MOVi-E, YTVIS. For each, find the optimal quantile. Cross-test each dataset's optimal quantile on the other datasets. Report cross-performance. Also test: can a simple heuristic (e.g., quantile = f(average object area)) predict the optimal threshold?",
+      "negative_result_interpretation": "If cross-dataset optimal quantile transfer shows <1% FG-ARI degradation, mean-based is unnecessarily conservative and SSync could adopt quantile-based with dataset-agnostic default (e.g., 30%).",
+      "killer_objection": "The maximum gain from quantile tuning is only ~0.8 FG-ARI (80.2 vs 79.4). The performance delta may be within variance, making this a non-issue.",
+      "killer_result": "If a simple heuristic (e.g., quantile = max(0.1, min(0.5, average_object_area_fraction))) achieves equal or better cross-dataset performance than mean-based, this resolves the tension."
+    }
+  ]
+}

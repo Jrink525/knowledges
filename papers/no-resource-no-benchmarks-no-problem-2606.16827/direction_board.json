@@ -1,0 +1,72 @@
+{
+  "paper_id": "2606.16827",
+  "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "seeds": [
+    {
+      "seed_type": "cross_architecture_transfer",
+      "trigger_evidence_summary": "Weight diff transfer (instruction transferring) was only tested on Qwen architectures (Qwen 2.5 Coder 32B, Qwen 3 8B) because the technique requires open-weight models where both base and instruct versions are available with identical architectures.",
+      "hidden_assumption_or_gap": "The paper assumes the base and instruct models must share identical architecture. This limits applicability to the open-weight ecosystem. In practice, companies may use a closed LLM (e.g., GPT-4) as their instruct model but want to transfer capabilities to a different open model.",
+      "research_question": "Can weight diff transfer work across different model architectures or model families, using distillation or projection layers instead of direct weight addition?",
+      "hypothesis": "Cross-architecture instruction transfer is possible via learned projection mappings that align the weight spaces of different model families, enabling knowledge transfer from closed to open models.",
+      "minimum_viable_experiment": "Take Qwen 2.5 Coder 32B Instruct (teacher) and a Llama 3.1 8B Base (student with different architecture). Learn a linear projection to map teacher weight deltas to student architecture. Compare against direct fine-tuning on the student.",
+      "negative_result_interpretation": "If cross-architecture transfer fails, it suggests weight diff relies on precise architectural symmetry and the delta encodes architecture-specific features. This would confirm that the approach is fundamentally limited to model families with published base + instruct pairs.",
+      "killer_objection": "Weight spaces of different architectures are not isomorphic; adding projections creates a separate training step that may cost as much as instruction fine-tuning, defeating the 'cheap' premise of the approach.",
+      "killer_result": "The projected-transfer approach achieves <50% of direct fine-tuning performance while requiring 70% of the compute — insufficient ROI to justify over fine-tuning."
+    },
+    {
+      "seed_type": "constrained_decoding",
+      "trigger_evidence_summary": "Syntactic errors dominate failures for no-resource languages (~2/3 of failures). Even with instruction transferring, the 8B model showed +241.6% more syntactic errors on MoonBit. The paper lists constrained decoding as untested future work.",
+      "hidden_assumption_or_gap": "The paper treats syntactic errors as a problem that training-based approaches naturally solve (by exposing the model to syntax). But for no-resource languages, grammar-constrained decoding could be a cheaper, more reliable alternative to reduce syntax errors without additional training.",
+      "research_question": "Can grammar-constrained decoding (e.g., using tree-sitter or grammar-defined autoregressive constraints) eliminate syntactic errors in no-resource code generation, and how does this affect pass@1?",
+      "hypothesis": "Grammar-constrained decoding can eliminate >95% of syntactic errors in no-resource languages, boosting pass@1 by 5-15% absolute, with higher gains for smaller models.",
+      "minimum_viable_experiment": "Implement grammar constraints using tree-sitter grammars for Gleam and MoonBit (or write minimal grammars). Compare constrained vs unconstrained decoding on the NoResourceCode benchmarks using pre-trained + instruction-transferred models.",
+      "negative_result_interpretation": "If constrained decoding shows minimal gain, it suggests that (a) many syntactic errors are not straightforward grammar violations but formatting/import issues, or (b) the constraint overhead reduces search space so aggressively that correct solutions are pruned.",
+      "killer_objection": "No-resource languages may not have production-ready tree-sitter grammars available, and writing a grammar is expert work that defeats the 'automated' premise.",
+      "killer_result": "Constrained decoding reduces syntax errors by only 10-20% because most 'syntactic' errors are actually semantic issues (wrong types, wrong function calls) that constraint-based approaches cannot catch."
+    },
+    {
+      "seed_type": "synthetic_data_generation",
+      "trigger_evidence_summary": "The paper found that fine-tuning is limited by scarce function-docstring pairs (3.6M Gleam tokens vs 28.3M for pre-training). The instruction transferring approach recovered instruction following but the model still lacks training on task-specific pairs.",
+      "hidden_assumption_or_gap": "The paper treats the limited fine-tuning data as a fixed constraint. However, recent work in code generation (e.g., CodeBERT-based synthetic data, Self-Instruct) shows that LLMs can generate their own training data. This could dramatically expand the fine-tuning dataset.",
+      "research_question": "Can synthetic data generation (using the pre-trained model itself or a high-resource teacher) produce effective fine-tuning data for no-resource code generation, closing the gap between pre-training and instruction-tuned performance?",
+      "hypothesis": "A combined approach (pre-training + synthetic fine-tuning data) matches or exceeds instruction transferring performance, with the added benefit of the model being explicitly trained on the task distribution rather than relying on weight interpolation.",
+      "minimum_viable_experiment": "After pre-training a base model on the no-resource language, use the pre-trained (non-instruct) model to generate natural-language-to-code pairs by extracting functions and formatting them as instruction-response pairs. Filter by quality (test execution), then fine-tune the pre-trained model on this synthetic data.",
+      "negative_result_interpretation": "If synthetic data fine-tuning underperforms weight diff transfer, it suggests that generated data quality is too low (hallucinated APIs, incorrect task specifications) and the weight diff approach's advantage is precisely its avoidance of data quality issues.",
+      "killer_objection": "The pre-trained model generates code in the no-resource language, but its instruction-following is weak (it's a base model), so the synthetic instruction-response pairs may have poor instruction alignment.",
+      "killer_result": "Synthetic fine-tuning degrades performance compared to pre-training alone because the model learns from its own errors, amplifying syntactic and semantic mistakes."
+    },
+    {
+      "seed_type": "learning_to_learn_transfer",
+      "trigger_evidence_summary": "Instruction transferring boosts performance significantly (avg +12% pass@1), and the improvement is larger on Gleam than MoonBit. The paper hypothesizes this is because MoonBit pre-training already achieved high gains, leaving less room for improvement.",
+      "hidden_assumption_or_gap": "The paper does not explore whether the weight diff technique can be applied iteratively or meta-learned. If a small base model with diff outperforms a 4× larger fine-tuned model, can we chain multiple transfers (e.g., from multiple instruct models) or learn which transfer directions are most effective?",
+      "research_question": "Can we meta-learn an optimal weight diff transfer function across multiple instruct models, enabling better generalization to unforeseen no-resource languages?",
+      "hypothesis": "A meta-learned aggregation of weight diffs from multiple instruct models (diverse in sizes, architectures, training objectives) produces a superior transfer function that outperforms any single-model diff on unseen languages.",
+      "minimum_viable_experiment": "Collect weight diffs from 5+ instruct models (Qwen, Llama, CodeLlama, DeepSeek Coder, etc.) all derived from the same base architecture. Learn an aggregation (weighted average or learned projection) of these diffs. Apply aggregated diff to a pre-trained model for a held-out no-resource language. Compare against single-model diff.",
+      "negative_result_interpretation": "If aggregated diffs perform worse than the best single-model diff, it suggests instruction-following capabilities are model-specific and averaging dilutes them. This would confirm that the current simple approach is near-optimal.",
+      "killer_objection": "Finding multiple instruct models built on the exact same base architecture with the same model dimensions is extremely rare in practice, making cross-model meta-learning infeasible.",
+      "killer_result": "All available instruct models on the same architecture show near-identical weight diffs (cosine similarity >0.99), making aggregation meaningless."
+    },
+    {
+      "seed_type": "real_world_scalability",
+      "trigger_evidence_summary": "The benchmark creation required ~340 man-hours. The paper acknowledges 'the significant manual effort required to build the benchmarks' and states that generalization may be limited by 'the inherent difficulty in creating comprehensive benchmarks for other programming languages.'",
+      "hidden_assumption_or_gap": "The paper assumes manual benchmark translation is the only viable approach. This may not scale to the dozens of niche/domain-specific languages that exist in industry.",
+      "research_question": "Can we automatically generate code generation benchmarks for any programming language, given only a language specification (e.g., grammar, documentation, or a small code corpus)?",
+      "hypothesis": "An automated pipeline using: (1) an LLM to extract function signatures from language documentation, (2) randomized test generation from types/specifications, and (3) self-consistency filtering can produce valid benchmarks at <1% of the manual cost with comparable quality.",
+      "minimum_viable_experiment": "Build an automated benchmark generation pipeline for a held-out no-resource language (e.g., Roc or Vale). Generate 50+ coding tasks. Evaluate quality through: (a) manual inspection of 20%, (b) test coverage metrics, (c) comparison against a manually constructed subset. Measure cost in compute rather than man-hours.",
+      "negative_result_interpretation": "If automated benchmarks have >20% error rate (defective tests, ambiguous prompts, unsolvable tasks), it confirms that high-quality benchmark creation inherently requires expert human judgment, limiting scalability.",
+      "killer_objection": "The hardest part of benchmark creation is writing correct test suites, not the prompt. Automated test generation for untyped or type-inferred languages (like Gleam/Elixir family) is an open problem.",
+      "killer_result": "Automated benchmarks achieve 80% quality with 5% cost, but the 20% errors systematically favor certain model behaviors (overfitting to patterns in the generation pipeline), invalidating the benchmark as a fair evaluation tool."
+    },
+    {
+      "seed_type": "instruction_following_measurement",
+      "trigger_evidence_summary": "The paper infers instruction-following recovery from pass@1 improvement on instruction-type benchmarks (HumanEval, MBPP). However, pass@1 on these benchmarks also depends on language knowledge, not purely instruction following.",
+      "hidden_assumption_or_gap": "pass@1 is a proxy measure for instruction-following capability. The paper never directly measures whether the instruction-transferred model actually follows instructions better, or just has better combined language knowledge + task understanding.",
+      "research_question": "How much of the instruction transferring gain is attributable to improved instruction following vs. better language understanding or task completion?",
+      "hypothesis": "The majority of improvement from instruction transferring comes from better instruction following (prompt understanding, output format compliance), not from improved language knowledge. This can be isolated by testing on tasks where the prompt format varies systematically.",
+      "minimum_viable_experiment": "Design a controlled experiment with: (a) standard HumanEval prompts, (b) paraphrased prompts with same intent, (c) adversarial prompts with changed type signatures but same natural language. Compare PT vs Diff models. If Diff model is more robust to prompt variation, instruction following is the dominant mechanism.",
+      "negative_result_interpretation": "If the Diff model shows similar robustness to prompt variation as the PT model, most improvement comes from better task completion (semantic reasoning), not instruction following. This would suggest weight diff works through a different mechanism than hypothesized.",
+      "killer_objection": "It's impossible to fully disentangle instruction following from language understanding because prompt comprehension is inherently part of both.",
+      "killer_result": "The Diff model shows only 3% improvement on prompt variation tests vs PT model, suggesting minimal instruction-following improvement — the boost comes from better code generation quality instead."
+    }
+  ]
+}
