@@ -1,0 +1,38 @@
+{
+  "paper_id": "2606.07489",
+  "paper_title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
+  "lens": {
+    "original_problem": "The core question in the economics of AI is how it reshapes knowledge work. Prior work has documented productivity gains from AI assistants (copilots, chatbots) in controlled experiments, but has not examined how fully autonomous AI agents (which execute tasks end-to-end with minimal human intervention) change work in real-world, field settings across a broad spectrum of knowledge work.",
+    "reconstructed_problem": "Rather than asking 'does AI make workers faster?', the paper reframes the question as: 'How does the shift in cost structure — from human-in-the-loop per-step costs to fixed delegation + autonomous execution — change what work users attempt, how they spend their attention, and the scope of tasks they can feasibly complete?' This reframing shifts from a productivity lens (speed on existing tasks) to an economic lens (task-selection frontier, surplus, and work recomposition).",
+    "key_insights": [
+      "Autonomy is not just about speed — it changes the type of follow-up work users do (from operational to supervisory).",
+      "Scope expansion may be more economically consequential than productivity gains.",
+      "The binding constraint on what knowledge workers attempt is execution capacity, not information access.",
+      "Democratization of cross-occupational work: agents lower boundary-spanning costs.",
+      "Task composability increases: users bundle multiple previously-separate activities into single agent requests."
+    ],
+    "lens_bias": {
+      "strengths": [
+        "Large-scale real-world field data (not lab experiment)",
+        "Methodologically rigorous: matched-pair natural experiments, triple-validated estimates",
+        "Theory-driven with formal mathematical framework",
+        "Covers broad spectrum of knowledge work beyond coding"
+      ],
+      "limitations": [
+        "Early-adopter bias (3-month window, power users, paying subscribers)",
+        "Perplexity ecosystem only — no external tool/activity observation",
+        "Matched-pair design only captures tasks with Search analogues (likely simpler tasks)",
+        "LLM-based classifications introduce unquantified measurement error",
+        "No firm-level or labor-market outcome data"
+      ]
+    },
+    "critical_questions": [
+      "Do the scope effects persist as Computer usage matures and new users onboard?",
+      "How much of the efficiency gain is attributable to Computer vs. the specific task decomposition strategy it follows?",
+      "Does the reduction in coordination costs at the individual level lead to different organizational structures?",
+      "What is the elasticity of task demand — do users generate more tasks, or just different tasks?",
+      "How do the results generalize to other agent platforms (OpenAI, Claude Code, etc.)?",
+      "What is the quality-adjusted value of Computer+Human output compared to Search+Human?"
+    ]
+  }
+}

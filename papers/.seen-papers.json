@@ -1,1 +1,10 @@
-{"ids": ["2606.18021", "2606.19531", "2606.15133", "2606.19605", "2606.20521", "2606.19704", "2606.19980", "2606.16122", "2606.19334", "2606.16429"], "updated": "2026-06-19"}
+{"ids": ["2606.20529", "2606.15527", "2606.16827", "2606.19830", "2606.16817", "2606.19602", "2606.15760", "2606.20517", "2604.13416", "2606.20404",
+  {
+    "id": "2606.07489",
+    "title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
+    "authors": "Jeremy Yang, Jerry Ma et al.",
+    "url": "https://arxiv.org/abs/2606.07489",
+    "deep_read_date": "2026-06-21",
+    "artifacts_path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/"
+  }
+], "updated": "2026-06-19"}

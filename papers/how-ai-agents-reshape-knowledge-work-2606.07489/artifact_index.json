@@ -1,0 +1,36 @@
+{
+  "paper_id": "2606.07489",
+  "paper_title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
+  "artifacts": [
+    {
+      "path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/report.md",
+      "description": "主报告：中文深度解读，包含论文概览、概念框架、四个实证主题（采用/自主性/效率/范围）、讨论与启示、文献对比、方法论亮点。",
+      "type": "report",
+      "language": "zh-CN"
+    },
+    {
+      "path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/traceability_manifest.json",
+      "description": "声明-证据链清单：15 条核心声明，每条标注证据来源、置信度（high/medium）和论文位置。",
+      "type": "traceability",
+      "claims_count": 15
+    },
+    {
+      "path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/research_lens.json",
+      "description": "研究透镜：原始问题重构、关键洞察、透镜偏差分析（优势与局限）、批判性追问。",
+      "type": "research_lens"
+    },
+    {
+      "path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/direction_board.json",
+      "description": "研究方向种子排名：9 个未来研究方向，按预估影响力降序排列，每个含研究问题、动机、方法提示。",
+      "type": "direction_board",
+      "seeds_count": 9
+    },
+    {
+      "path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/artifact_index.json",
+      "description": "本清单文件。",
+      "type": "index"
+    }
+  ],
+  "generated_at": "2026-06-21T04:50:00Z",
+  "source_paper": "https://arxiv.org/pdf/2606.07489"
+}

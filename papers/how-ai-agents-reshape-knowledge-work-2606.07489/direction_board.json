@@ -1,0 +1,79 @@
+{
+  "paper_id": "2606.07489",
+  "paper_title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
+  "seed_rankings": [
+    {
+      "rank": 1,
+      "seed_name": "From Execution to Supervision: How Agent Delegation Changes User Attention Allocation",
+      "seed_question": "When autonomous agents take over execution, how do users reallocate their cognitive resources? Do they invest saved time in more strategic thinking, more tasks, or leisure?",
+      "motivation": "The paper shows follow-up queries shift from drill-down to verification/extension, but doesn't trace user time budgets across the full workday or week. This is the natural next step from the 'autonomy → scope' chain.",
+      "method_hint": "Diary studies, time-tracking, or browser-log analysis of dual-product users over longer windows (months, not hours)",
+      "estimated_impact": "high"
+    },
+    {
+      "rank": 2,
+      "seed_name": "Cross-Occupation Knowledge Work: Do Autonomous Agents Flatten Skill Hierarchies?",
+      "seed_question": "Does access to autonomous agents reduce the returns to deep specialization? Do junior workers use agents to mimic senior-level output, and does this compress the experience wage premium?",
+      "motivation": "The paper finds 9pp increase in cross-occupation work. If agents lower boundaries enough, this could reshape labor market stratification — a finding with major policy implications.",
+      "method_hint": "Natural experiment from staggered Computer rollout; difference-in-differences on task complexity and output quality by worker seniority",
+      "estimated_impact": "high"
+    },
+    {
+      "rank": 3,
+      "seed_name": "The Task Elasticity of Autonomous Agents: Do Efficiency Gains Create New Work or Displace It?",
+      "seed_question": "When agents reduce task cost by 94%, do users demand more of the same tasks (substitution effect) or branch into qualitatively different work (income effect)? What is the elasticity of task demand?",
+      "motivation": "The paper establishes scope expansion but can't cleanly decompose it into substitution vs. income effects. Understanding this elasticity is crucial for forecasting labor-market impact.",
+      "method_hint": "Quasi-experimental variation in Computer pricing/availability; estimate task demand curves across domains",
+      "estimated_impact": "medium-high"
+    },
+    {
+      "rank": 4,
+      "seed_name": "Organizational Implications of Agent-Mediated Work: Bundling, Teams, and Coordination Costs",
+      "seed_question": "If individuals can now span multiple occupational boundaries using agents, do teams get smaller? Do organizational hierarchies flatten? How does the firm's optimal task allocation change?",
+      "motivation": "The paper's discussion suggests coordination costs may fall, but provides no organizational data. This bridges micro-level task analysis to meso-level organizational economics.",
+      "method_hint": "Firm-level case studies or administrative data from companies adopting Computer-like agents; team composition and reporting structure before/after",
+      "estimated_impact": "medium-high"
+    },
+    {
+      "rank": 5,
+      "seed_name": "Quality-Adjusted Value of Autonomous Agent Output: Beyond Self-Reported Satisfaction",
+      "seed_question": "Computer achieves 55% lower dissatisfaction, but what is the objective quality of agent output? How does it compare to human output in accuracy, creativity, and business impact?",
+      "motivation": "The paper only measures user dissatisfaction (a proxy) rather than objective output quality. Without quality metrics, the welfare implications remain incomplete.",
+      "method_hint": "Blind A/B evaluation of Computer vs. human output by domain experts; randomized controlled trial on business outcomes",
+      "estimated_impact": "medium"
+    },
+    {
+      "rank": 6,
+      "seed_name": "Generalizing Beyond Perplexity: Cross-Platform Agent Usage Analysis",
+      "seed_question": "Do the autonomy/efficiency/scope findings replicate on other agent platforms (OpenAI Operator, Claude Code, Gemini agents)? Or are they specific to Computer's architecture and user base?",
+      "motivation": "The paper uses only Perplexity data. External validity is uncertain given platform differences in autonomy, context integration, and user demographics.",
+      "method_hint": "Replicate matched-pair design on anonymized logs from multiple agent providers; meta-analysis of findings",
+      "estimated_impact": "medium"
+    },
+    {
+      "rank": 7,
+      "seed_name": "The Learning Curve of Autonomous Agent Delegation: How Users Become Effective Supervisors",
+      "seed_question": "How does the quality of agent output improve with user experience in specifying objectives and reviewing outputs? Is there a 'delegation skill' that users must develop?",
+      "motivation": "The paper's conceptual framework treats fixed delegation cost as constant, but in practice, users likely learn to delegate more efficiently over time. Understanding this learning curve has product design implications.",
+      "method_hint": "Longitudinal analysis of user behavior: does delegation cost (query length, revisions) decrease over time? Does dissatisfaction decrease with experience?",
+      "estimated_impact": "medium"
+    },
+    {
+      "rank": 8,
+      "seed_name": "The Jagged Frontier of Agents: Where Does Autonomous Execution Fail?",
+      "seed_question": "Just as Dell'Acqua et al. found a 'jagged frontier' for GPT-4 where performance drops outside capability bounds, what tasks are systematically worse under agent execution vs. human effort?",
+      "motivation": "The paper focuses on cases where Computer succeeds (matched sessions with 'do' tool invocations). Understanding failure modes is equally important for deploying agents safely and efficiently.",
+      "method_hint": "Analyze high-dissatisfaction Computer sessions from the matched sample; characterize tasks where Computer underperforms Search",
+      "estimated_impact": "medium"
+    },
+    {
+      "rank": 9,
+      "seed_name": "Equilibrium Effects: How Agent Adoption Changes Labor Market Task Prices",
+      "seed_question": "As more workers adopt autonomous agents, how do equilibrium task prices and wages adjust? Does the value of human-only work increase or decrease?",
+      "motivation": "The paper studies partial equilibrium (individual worker effects). General equilibrium effects through price/wage adjustments could significantly alter welfare implications.",
+      "method_hint": "General equilibrium model calibrated to Computer adoption trajectory and estimated cost savings; simulate wage effects across occupation clusters",
+      "estimated_impact": "medium"
+    }
+  ],
+  "analysis_date": "2026-06-21"
+}

@@ -1,0 +1,112 @@
+{
+  "paper_id": "2606.07489",
+  "paper_title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
+  "claims": [
+    {
+      "id": "claim-1",
+      "claim": "Computer performs 26 minutes of autonomous work per user session versus 33 seconds for Search (48× ratio).",
+      "evidence": "Section 6: 10,000 matched session pairs with near-identical initial queries (cosine similarity > 0.99). Computer sessions require ≥1 'do' tool invocation. Machine work measured as tool call duration.",
+      "confidence": "high",
+      "location": "Section 6, Abstract"
+    },
+    {
+      "id": "claim-2",
+      "claim": "Computer shifts follow-up queries from manual directives toward verification and extension.",
+      "evidence": "Section 6: 1,000 matched multi-turn session pairs classified into 10-category taxonomy. Extensions: Computer 14.2% vs Search 12.5%; drill-down: Computer 22.0% vs Search 23.4%.",
+      "confidence": "high",
+      "location": "Section 6.1"
+    },
+    {
+      "id": "claim-3",
+      "claim": "Computer reduces medium-to-high dissatisfaction by 55% compared to Search.",
+      "evidence": "Section 6.2: Next-turn dissatisfaction signal scoring on 4-level scale. Mid+high: Computer 1.3% vs Search 2.9% (55% reduction). Any dissatisfaction: Computer 10.8% vs Search 16.6%.",
+      "confidence": "high",
+      "location": "Section 6.2, Table 2"
+    },
+    {
+      "id": "claim-4",
+      "claim": "Computer+Human reduces task completion time from 269 to 36 minutes (87% reduction).",
+      "evidence": "Section 7.2: Tool-based estimate across 10,000 matched pairs. Per-tool human-equivalent minutes summed per domain. LLM-based estimate cross-validated (227→36 min, 84% savings). User interviews report ~10× speedup median.",
+      "confidence": "high",
+      "location": "Section 7.2, Table 5, Figure 6"
+    },
+    {
+      "id": "claim-5",
+      "claim": "Computer+Human reduces total cost by 94% compared to Search+Human.",
+      "evidence": "Section 7.2: Tool-based cost estimate = human time × BLS OEWS domain-specific wage + model cost. Overall 94% cost reduction (16× cheaper). LLM-based estimate: 93%. Largest domain: Programming 96%.",
+      "confidence": "high",
+      "location": "Section 7.2, Table 5"
+    },
+    {
+      "id": "claim-6",
+      "claim": "Breakeven analysis: a Search-aided human must complete all manual steps in under 20 minutes to match Computer+Human cost.",
+      "evidence": "Section 7.2: Solving Search+Human cost = Computer+Human cost yields breakeven threshold of 14-24 minutes across domains (median 18 min).",
+      "confidence": "high",
+      "location": "Section 7.2"
+    },
+    {
+      "id": "claim-7",
+      "claim": "Computer queries more often cross occupational boundaries than Search queries from the same users (average gap 9pp).",
+      "evidence": "Section 8.1: 8,000 dual-product users across 8 occupation clusters. Each user's primary occupation inferred from pre-Computer Search behavior. Cross-occupation share: Computer 55% vs Search 46% average. Pattern holds in all 8 clusters.",
+      "confidence": "high",
+      "location": "Section 8.1, Figure 7, Figure 8"
+    },
+    {
+      "id": "claim-8",
+      "claim": "Computer queries are more cognitively complex: 71% abstract non-routine tasks (vs 53%), 76% higher-order Bloom cognition (vs 55%).",
+      "evidence": "Section 8.2: LLM classification of 10,000 queries from 5,000 dual-product users. Abstract non-routine: Computer 71% vs Search 53% (+18pp). Higher-order Bloom (Analyze+): Computer 76% vs Search 55% (+21pp). Create-level: Computer 50% vs Search 26% (+24pp).",
+      "confidence": "medium",
+      "location": "Section 8.2.1"
+    },
+    {
+      "id": "claim-9",
+      "claim": "Computer queries draw on broader expertise: 2.40 vs 1.74 O*NET Knowledge domains (+38%).",
+      "evidence": "Section 8.2.2: LLM classification into O*NET Knowledge taxonomy. 3+ domains: Computer 51% vs Search 17% (3×). Top gains in Design (+22pp), Mathematics (+20pp), Administration and Management (+18pp).",
+      "confidence": "medium",
+      "location": "Section 8.2.2, Figure 10, Figure 11"
+    },
+    {
+      "id": "claim-10",
+      "claim": "Computer bundles more subtasks into single queries, with gaps widening at finer O*NET granularity.",
+      "evidence": "Section 8.2.3: GWA (+32%), IWA (+40%), DWA (+59%), TS (+60%). 63% of Computer queries engage 3+ GWAs vs 36% of Search. Computer gains concentrate in production-oriented groupings.",
+      "confidence": "medium",
+      "location": "Section 8.2.3, Figure 12, Table 7"
+    },
+    {
+      "id": "claim-11",
+      "claim": "23% of Computer queries involve task statements never seen in Search from the same users.",
+      "evidence": "Section 8.2.4: At strictest threshold (0 Search occurrences), 23% of Computer queries engaging ≥1 TS involve a Computer-only TS. At moderate thresholds, share rises to 40%+. Unlocked queries concentrate in software development, documentation, data visualization.",
+      "confidence": "medium",
+      "location": "Section 8.2.4, Figure 13"
+    },
+    {
+      "id": "claim-12",
+      "claim": "Unlocked Computer queries are systematically more complex than other Computer queries.",
+      "evidence": "Section 8.2.4, Table 8: 864 unlocked queries (≥1 Computer-only TS at θ=0) vs other Computer queries. Higher-order cognition (Bloom Analyze+): higher. Abstract non-routine: higher. More Knowledge domains, more GWAs/IWAs/DWAs/TSs.",
+      "confidence": "medium",
+      "location": "Section 8.2.4, Table 8"
+    },
+    {
+      "id": "claim-13",
+      "claim": "Computer grew rapidly: cumulative queries reached 84× first-week total over 3 months.",
+      "evidence": "Section 5: Full universe of Computer and Search queries Feb 27–May 27, 2026. Growth computed as cumulative query count / first-week cumulative query count.",
+      "confidence": "high",
+      "location": "Section 5"
+    },
+    {
+      "id": "claim-14",
+      "claim": "Agents have higher fixed delegation cost but lower marginal execution cost per step than conversational assistants.",
+      "evidence": "Section 7.2: Fixed cost proxy (query chars): Computer sessions ~26% longer at median. Marginal cost: $0.16/step (Computer+Human) vs $2.05/step (Search+Human) — 13× gap. Time: 1.1 min/step vs 4.7 min/step. Regression shows wedge widens with steps (Table 6).",
+      "confidence": "high",
+      "location": "Section 3, Section 7.2, Table 6"
+    },
+    {
+      "id": "claim-15",
+      "claim": "Research & Analysis (25.8%) and Document & Asset Creation (18.6%) are the largest Computer use-case categories.",
+      "evidence": "Section 5: LLM classification of 100,000 random Computer queries along primary task category and subject-matter domain dimensions.",
+      "confidence": "medium",
+      "location": "Section 5"
+    }
+  ],
+  "methodology_notes": "Claims marked 'high' confidence rely on large-sample matched-pair analysis (N=10,000) or full-universe data. Claims marked 'medium' confidence rely on LLM-based classification of a 5,000-10,000 query sample, which introduces measurement error. The authors note that classification-based gaps are large enough that noise alone is unlikely to drive results."
+}
