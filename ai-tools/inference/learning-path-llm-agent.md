@@ -76,18 +76,19 @@
 
 | 框架 | 特点 | 适用场景 |
 |------|------|---------|
-| [Pydantic AI](https://ai.pydantic.dev/)（简称 Pi） | 类型安全，Pydantic Schema 定义 Agent 行为。跟 Java 类型系统思维完全合拍 | **推荐优先学**。自动编码、结构化输出 |
+| [Pydantic AI](https://ai.pydantic.dev/) | Python 框架，类型安全，Pydantic Schema 定义 Agent 行为。跟 Java 类型系统思维完全合拍 | **推荐优先学**。自动编码、结构化输出 |
+| [Pi](https://pi.dev) | TypeScript 编码 Agent 框架。最小化 harness，15+ 模型供应商，树形会话历史，上下文工程（AGENTS.md/SYSTEM.md），4 种模式（交互/JSON/RPC/SDK） | TypeScript 生态。自动化编码、自定义 Agent |
 | [Spring AI](https://docs.spring.io/spring-ai/reference/) | Java 生态，DI/Template 模式。支持 OpenAI、Ollama 等 | 已有 Spring 基础，1 小时上手 |
 | [Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk) | MCP + Tool-Use 原生支持 | 搭高级 Agent（投研、多步推理）|
 | [LangGraph](https://langchain-ai.github.io/langgraph/) | 图状态机编排 Agent 多步流程 | 复杂工作流（投研流水线、自动 PR review）|
 
 ---
 
-#### Pydantic AI（Pi 框架）详解
+#### Pydantic AI 详解
 
 > 官网：<https://ai.pydantic.dev/>  |  Python 框架 | 与 Pydantic（数据验证库）同一团队 | 最强类型安全
 
-**为什么推荐你从 Pi 入手？**
+**为什么推荐你从 Pydantic AI 入手？**
 - 你有 Java 工程背景，Pydantic 的 Schema 定义类比 Java 的 POJO + JSR-303 校验，思维契合
 - 所有 Agent 输入/输出都用 Pydantic Model 定义，IDE 自动补全 + 类型检查
 - 天然支持 Ollama、OpenAI、Claude、Google 等多种 LLM 后端
@@ -176,7 +177,7 @@ async def research_pipeline(company: str):
     return report.data
 ```
 
-**Pi 框架学习路径：**
+**Pydantic AI 学习路径：**
 1. 官网 Quickstart（10分钟）
 2. 定义带 result_type 的结构化 Agent（理解类型驱动）
 3. 添加 tool（理解 Tool-Use 模式）
@@ -240,9 +241,9 @@ agent = Agent(
           集成：自己微调的模型 + Agent 框架 + Spring AI → 完整应用
 ```
 
-**最短路**：Karpathy GPT 视频 (1 天) → Unsloth 微调 (1 天) → **Pydantic AI（Pi）搭 Agent** (2 天) → Spring AI 集成 (1 天) → 第 1 周跑起来 MVP。
+**最短路**：Karpathy GPT 视频 (1 天) → Unsloth 微调 (1 天) → **Pydantic AI 搭 Agent** (2 天) → Spring AI 集成 (1 天) → 第 1 周跑起来 MVP。
 
-> Pi 框架的 Type-Safe 思维跟你的 Java 背景天然合拍，建议作为 Agent 入口框架优先练手。
+> Pydantic AI 的 Type-Safe 思维跟你的 Java 背景天然合拍，建议作为 Agent 入口框架优先练手。
 
 ---
 

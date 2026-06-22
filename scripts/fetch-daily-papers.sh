@@ -17,11 +17,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 
 # 配置
-MAX_PAPERS="${2:-10}"
+MAX_PAPERS="${2:-20}"
 DATE="${1:-$(date -u -d '-1 day' '+%Y-%m-%d')}"
 OUTPUT_FILE="${WORKSPACE_DIR}/papers/today-hf-papers.json"
 STATE_FILE="${WORKSPACE_DIR}/papers/.seen-papers.json"
-HF_API="https://huggingface.co/api/daily_papers"
+HF_API="https://huggingface.co/api/daily_papers?limit=100"
 ARXIV_API="https://export.arxiv.org/api/query"
 
 # 临时文件
@@ -33,14 +33,11 @@ trap 'rm -f "$TMP_RAW" "$TMP_ARXIV" "$TMP_PY"' EXIT
 log() { echo "[$(date '+%H:%M:%S')] $*" >&2; }
 
 # ---------- 1. Fetch from HF ----------
-log "Fetching daily papers from HF API (date=$DATE)..."
-if ! curl -sf --max-time 30 "$HF_API?date=$DATE" > "$TMP_RAW" 2>/dev/null; then
-  log "WARNING: HF API failed with date, trying without..."
-  curl -sf --max-time 30 "$HF_API" > "$TMP_RAW" 2>/dev/null || {
-    log "ERROR: HF API unreachable"
-    echo '[]'
-    exit 1
-  }
+log "Fetching papers from HF API (limit=100)..."
+if ! curl -sf --max-time 30 "$HF_API" > "$TMP_RAW" 2>/dev/null; then
+  log "ERROR: HF API unreachable"
+  echo '[]'
+  exit 1
 fi
 
 # Parse arXiv IDs
