@@ -24,11 +24,13 @@
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
   - `ai-tools/career/from-prompting-agents-to-loop-engineering.md`
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
+  - `ai-tools/career/industry-job-search-notes-alisa.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/loop-engineering-memory.md`
   - `ai-tools/career/mvanhorn-wtf-is-a-loop-part1.md`
   - `ai-tools/career/my-thoughts-on-loop-engineering.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
+  - `ai-tools/career/state-of-agent-engineering-2026.md`
   - `ai-tools/career/the-art-of-loop-engineering.md`
   - `ai-tools/career/top-10-agent-skills-bibryam.md`
   - `ai-tools/career/why-senior-developers-fail-to-communicate-their-expertise.md`
@@ -101,6 +103,7 @@
 ### ai-tools/inference/ (`ai-tools/inference`)
   - `ai-tools/inference/20-ai-concepts-2026-rahul.md`
   - `ai-tools/inference/anthropic-prompting-101-workshop.md`
+  - `ai-tools/inference/binary-quantization-rag-32x.md`
   - `ai-tools/inference/bootiful-spring-ai-josh-long-springio-2026.md`
   - `ai-tools/inference/build-your-own-llm-from-scratch.md`
   - `ai-tools/inference/claude-code-complete-setup-guide.md`
@@ -140,6 +143,7 @@
   - `ai-tools/inference/structured-output-grpo.md`
   - `ai-tools/inference/voice-agent-full-guide.md`
   - `ai-tools/inference/voice-agent-memory-harder-than-you-think.md`
+  - `ai-tools/inference/youre-doing-rag-wrong.md`
   - `ai-tools/inference/zero-to-ai-engineer-14-weeks.md`
 
 ### ai-tools/ml-research/ (`ai-tools/ml-research`)
@@ -286,6 +290,9 @@
   - `programming/java/spring-controller-return-types-complete-guide.md`
   - `programming/java/spring-event-comprehensive-guide.md`
 
+### programming/javascript/ (`programming/javascript`)
+  - `programming/javascript/js-async-stream-ordering-complete-guide.md`
+
 ### infrastructure/ (`基础设施 & 网络`)
   - `infrastructure/fastjson-deserialization-workbook.md`
   - `infrastructure/how-to-fix-entire-life-in-1-day-dan-koe.md`
@@ -298,6 +305,7 @@
 ### papers/ (`论文笔记`)
   - `papers/README.md`
   - `papers/daily-report-2026-06-19.md`
+  - `papers/daily-report-2026-06-21.md`
 
 ### papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/ (`papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629`)
   - `papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md`
@@ -307,6 +315,9 @@
 
 ### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
   - `papers/coding-agents-misalignment-2605.29442/report.md`
+
+### papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/ (`papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053`)
+  - `papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/report.md`
 
 ### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
   - `papers/dive-into-claude-code-2604.14228/report.md`
@@ -335,6 +346,9 @@
 ### papers/no-resource-no-benchmarks-no-problem-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-2606.16827`)
   - `papers/no-resource-no-benchmarks-no-problem-2606.16827/report.md`
 
+### papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827`)
+  - `papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/report.md`
+
 ### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
   - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
 
@@ -352,7 +366,7 @@
 
 ---
 
-总计 **265** 篇知识文档
+总计 **273** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -364,5 +378,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-21 16:12 UTC]_
+_[自动生成于 2026-06-22 16:12 UTC]_
 
