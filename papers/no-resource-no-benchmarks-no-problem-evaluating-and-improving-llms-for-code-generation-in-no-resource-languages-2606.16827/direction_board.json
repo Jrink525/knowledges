@@ -1,0 +1,111 @@
+{
+  "paper_id": "2606.16827",
+  "paper_title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "research_seeds": [
+    {
+      "rank": 1,
+      "seed_name": "Constrained Decoding for No-Resource Languages",
+      "problem": "Pre-training + instruction transferring still leaves syntactic errors (especially for smaller models).",
+      "hypothesis": "Enforcing the formal grammar of the target language at inference time via constrained decoding (e.g., XGrammar) could eliminate syntactic errors entirely, providing a complementary boost to training-based approaches.",
+      "minimum_viable_experiment": "Apply XGrammar on Qwen 2.5 Coder 32B Base pre-trained on Gleam; compare against current best (instruction transferring) on McEval-Hard. Expected: syntactic errors eliminated → semantic correctness becomes the only failure mode.",
+      "expected_difficulty": "Medium",
+      "expected_impact": "High — directly addresses the primary failure mode for no-resource languages",
+      "key_references": ["XGrammar [Dong et al. 2025]", "This paper's error analysis (§III)"]
+    },
+    {
+      "rank": 2,
+      "seed_name": "Cross-Language Transfer via Syntax Tree Similarity",
+      "problem": "The paper notes Lua's similarity to Python helps performance, but no systematic measure is applied.",
+      "hypothesis": "A syntax-tree overlap metric between a no-resource language and known languages predicts how quickly/well LLMs can adapt. This could inform language selection for deployment and data augmentation strategies.",
+      "minimum_viable_experiment": "Compute AST overlap (e.g., tree-edit distance weighted by node type frequency) between Gleam/MoonBit and Python/Java/Rust. Correlate with per-language performance gains from pre-training. Augment Gleam data with Rust examples.",
+      "expected_difficulty": "Medium",
+      "expected_impact": "Medium — improves understanding and may guide data augmentation",
+      "key_references": ["This paper's Lua vs. R observation (§III)", "Chen et al. [9] on language similarity transfer"]
+    },
+    {
+      "rank": 3,
+      "seed_name": "Beyond Function-Level: Real-World Task Benchmarks for No-Resource Languages",
+      "problem": "Current benchmarks are function-level translations from high-resource languages. Real-world usage involves debugging, refactoring, and change-request-level tasks.",
+      "hypothesis": "The performance gap between no-resource and high-resource languages widens further on real-world tasks, or conversely, the benefit of pre-training is larger because real tasks exercise more language features.",
+      "minimum_viable_experiment": "Collect 50-100 real GitHub issues from Gleam/MoonBit repositories, create natural language specifications, and evaluate LLMs with instruction transferring vs. zero-shot on 'implement this feature' or 'fix this bug' tasks.",
+      "expected_difficulty": "High (requires substantial manual effort)",
+      "expected_impact": "High — validates real-world applicability; could establish a new benchmark standard",
+      "key_references": ["SWE-bench [Jimenez et al. 2024]", "This paper's future work section"]
+    },
+    {
+      "rank": 4,
+      "seed_name": "Synthetic Data Generation for No-Resource Languages via DSL-to-General Translation",
+      "problem": "Limited data (~13-28M tokens) constrains pre-training effectiveness.",
+      "hypothesis": "If a no-resource language can be modeled as a DSL (domain-specific language), a model-to-text transformation from a semantically compatible high-resource language could generate synthetic training data (inspired by ModelMate).",
+      "minimum_viable_experiment": "Define a semantic mapping from Python common patterns to Gleam patterns. Use GPT-4o to generate synthetic Gleam code from Python equivalents. Validate syntactically and add to pre-training corpus. Measure incremental improvement.",
+      "expected_difficulty": "High",
+      "expected_impact": "Medium-High — could substantially increase training data",
+      "key_references": ["ModelMate [Costa et al. 2024]", "MultiPL-T [Cassano et al. 2024]"]
+    },
+    {
+      "rank": 5,
+      "seed_name": "Weight Diff Transfer Across Model Architectures",
+      "problem": "Current approach requires an instruct and base model with the same architecture and size. This limits applicability.",
+      "hypothesis": "Using representation alignment (e.g., CCA on hidden states) or LoRA adapters, instruction following capabilities might be transferable across different model architectures.",
+      "minimum_viable_experiment": "Train a small probe on the weight diff representation space; attempt to generate architecture-agnostic instruction-following vectors. Test on models from different families (e.g., apply Qwen diff to Llama).",
+      "expected_difficulty": "Very High",
+      "expected_impact": "Very High — would dramatically expand the technique's applicability",
+      "key_references": ["This paper's instruction transferring (§IV)", "LoRA [Hu et al. 2022]"]
+    },
+    {
+      "rank": 6,
+      "seed_name": "Long-Term Tracking: The No-Resource Gap Over LLM Generations",
+      "problem": "As LLMs evolve and incorporate more training data, the 'no-resource' status may shift. It's unclear how persistent the gap is.",
+      "hypothesis": "The gap between high-resource and no-resource languages narrows with each LLM generation, but the narrowing rate depends on architectural advances (e.g., reasoning models may generalize better).",
+      "minimum_viable_experiment": "Repeat the zero-shot evaluation (RQ1) on each new LLM generation (GPT-5, Qwen 4, etc.) using the same benchmarks. Track the ratio: pass@1(no-resource) / pass@1(high-resource) over time.",
+      "expected_difficulty": "Low (just run existing benchmarks on new models)",
+      "expected_impact": "Medium — valuable for practitioners deciding when to invest in custom solutions vs. waiting for general LLM improvement",
+      "key_references": ["This paper's full RQ1 methodology"]
+    },
+    {
+      "rank": 7,
+      "seed_name": "Instruction Transferring Without a Base-Instruct Pair",
+      "problem": "Many models don't have both base and instruct versions publicly available.",
+      "hypothesis": "Instruction following capabilities can be distilled into a pre-trained model using synthetic instruction-following data, without requiring the exact Mi - Mb weight diff.",
+      "minimum_viable_experiment": "Generate synthetic instruction-following pairs using GPT-4o for Gleam code generation. Fine-tune the pre-trained base model on this synthetic data. Compare against weight diff transfer.",
+      "expected_difficulty": "Medium",
+      "expected_impact": "High — removes the strict requirement of matched base/instruct model pairs",
+      "key_references": ["This paper's §IV limitation discussion"]
+    },
+    {
+      "rank": 8,
+      "seed_name": "Multi-Language Pre-Training: Can Learning One No-Resource Language Help Another?",
+      "problem": "Each no-resource language is studied in isolation. Languages share programming concepts (loops, recursion, pattern matching).",
+      "hypothesis": "Pre-training on multiple no-resource languages simultaneously creates positive transfer — shared concepts reinforce each other, improving performance on each individual language beyond single-language pre-training.",
+      "minimum_viable_experiment": "Pre-train Qwen 2.5 Coder 32B Base on both Gleam and MoonBit data simultaneously. Compare pass@1 against models pre-trained on each language separately.",
+      "expected_difficulty": "Medium",
+      "expected_impact": "Medium — could inform deployment strategy for companies with multiple proprietary languages"
+    },
+    {
+      "rank": 9,
+      "seed_name": "Active Learning for No-Resource Language Benchmark Construction",
+      "problem": "Manual benchmark translation cost 340 man-hours. Scaling to more languages is prohibitive.",
+      "hypothesis": "An active learning pipeline can identify the most informative coding tasks for translation, reducing human effort while maintaining benchmark coverage of language features.",
+      "minimum_viable_experiment": "Build an active learning algorithm that: (1) analyzes language features needed for each coding task; (2) selects minimal task subset covering all features; (3) prioritizes tasks most likely to reveal LLM weaknesses. Validate against full HumanEval translation.",
+      "expected_difficulty": "Medium-High",
+      "expected_impact": "Medium — could enable scaling to many more no-resource languages"
+    },
+    {
+      "rank": 10,
+      "seed_name": "The AI-Friendly Language Design Principle",
+      "problem": "MoonBit outperforms Gleam in most settings, with the paper attributing this partly to 'AI-friendly design.' No systematic definition exists.",
+      "hypothesis": "Certain language design choices (consistent syntax, minimal keywords, unambiguous parsing, Python-like comprehensibility) correlate with LLM code generation performance. This could inform how organizations design their proprietary languages.",
+      "minimum_viable_experiment": "Survey 10-20 programming language features, rate them on 'AI-friendliness' criteria (consistent grammar, low ambiguity, common patterns with high-resource languages). Correlate with zero-shot pass@1 across all 9 languages in this paper.",
+      "expected_difficulty": "Medium",
+      "expected_impact": "High — actionable guidance for language designers in industry"
+    }
+  ],
+  "metadata": {
+    "total_seeds": 10,
+    "sweep_ranges": {
+      "difficulty": "Low to Very High",
+      "impact": "Medium to Very High",
+      "time_horizon": "Weeks (constrained decoding) to Years (cross-architecture transfer)"
+    }
+  }
+}

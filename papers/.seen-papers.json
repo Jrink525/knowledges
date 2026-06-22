@@ -1,10 +1,26 @@
-{"ids": ["2606.20529", "2606.15527", "2606.16827", "2606.19830", "2606.16817", "2606.19602", "2606.15760", "2606.20517", "2604.13416", "2606.20404",
+[
   {
-    "id": "2606.07489",
-    "title": "How AI Agents Reshape Knowledge Work: Autonomy, Efficiency, and Scope",
-    "authors": "Jeremy Yang, Jerry Ma et al.",
-    "url": "https://arxiv.org/abs/2606.07489",
+    "id": "2606.17053",
+    "title": "Context-Aware RL for Agentic and Multimodal LLMs",
+    "authors": "auto-fetched",
+    "url": "https://arxiv.org/abs/2606.17053",
     "deep_read_date": "2026-06-21",
-    "artifacts_path": "papers/how-ai-agents-reshape-knowledge-work-2606.07489/"
+    "artifacts_path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/"
+  },
+  {
+    "id": "2606.19704",
+    "title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+    "authors": "auto-fetched",
+    "url": "https://arxiv.org/abs/2606.19704",
+    "deep_read_date": "2026-06-21",
+    "artifacts_path": "papers/beyond-static-leaderboards-predictive-validity-for-the-evaluation-of-llm-agents-2606.19704/"
+  },
+  {
+    "id": "2606.16827",
+    "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+    "authors": "auto-fetched",
+    "url": "https://arxiv.org/abs/2606.16827",
+    "deep_read_date": "2026-06-21",
+    "artifacts_path": "papers/no-resource-no-benchmarks-no-problem?-evaluating-and-improving-llms-for-code-gen-2606.16827/"
   }
-], "updated": "2026-06-19"}
+]

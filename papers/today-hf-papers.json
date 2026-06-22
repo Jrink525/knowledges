@@ -1,37 +1,36 @@
 [
   {
-    "id": "2606.20529",
-    "arxiv_id": "2606.20529",
-    "title": "LedgerAgent: Structured State for Policy-Adherent Tool-Calling Agents",
-    "summary": "Policy-adherent tool-calling agents in customer-service domains must maintain task states across turns while calling tools and obeying domain policies. Task states consist of relevant facts, identifiers, constraints, and conditions observed through user interaction and tool calls. In standard agents, task states are not represented separately. Observations, tool returns, and policy instructions are placed in the prompt, leaving agents to reconstruct the relevant states from the prompt each time they decide what to do next. This design makes state management implicit, creating two common failure modes. An agent may retrieve the right facts but later ground its decision in stale, missing, or incorrect information; and a syntactically valid tool call may still violate a domain policy that depends on the current task state. We introduce LedgerAgent, an inference-time method for tool-calling agents that maintains observed task states in a separate ledger and renders the states into the prompt. The ledger is also used to check state-dependent policy constraints before environment-changing tool calls are executed, blocking policy violations. Across four customer-service domains and a mixed panel of open- and closed-weight models, LedgerAgent improves average passk over a standard prompt-based tool-calling approach, with the largest gains under stricter multi-trial consistency metrics.",
-    "ai_summary": "LEDGERAGENT is a method for customer service agents that maintains task states in a separate ledger to improve policy adherence and state management during tool calling.",
+    "id": "2606.17053",
+    "arxiv_id": "2606.17053",
+    "title": "Context-Aware RL for Agentic and Multimodal LLMs",
+    "summary": "Large language models (LLMs) often fail when answering requires identifying a small but decisive piece of evidence within a long or complex context, such as a single line in a tool trace or a subtle detail in an image. We propose ContextRL, a context-aware reinforcement learning (RL) method that improves long-horizon reasoning and multimodal performance through an indirect auxiliary objective. Instead of supervising only the final answer, ContextRL presents the model with a query, an answer, and two highly similar contexts, and rewards it for selecting the context that supports the query--answer pair, thereby encouraging fine-grained grounding. We construct contrastive context data in two domains: for coding agents, trajectories serve as contexts, yielding 1k pairs built via condition filtering; for multimodal reasoning, images serve as contexts, yielding 7K pairs built via generative editing and similarity search. ContextRL achieves average gains of +2.2% over standard GRPO on 5 long-horizon benchmarks, and +1.8% across 12 diverse visual question answering benchmarks. To disentangle the effect of the proposed objective from that of additional data, we compare against data-augmentation baselines that repurpose the same contrastive contexts as standard query--context--answer examples. These baselines provide little to no improvement, showing that the gains arise from the proposed context-selection objective rather than from the contrastive data alone.",
+    "ai_summary": "ContextRL enhances long-horizon reasoning and multimodal performance through reinforcement learning that rewards context selection for supporting query-answer pairs, achieving improvements over standard methods on diverse benchmarks.",
     "arxiv_categories": [
-      "cs.AI",
-      "cs.CL"
+      "cs.CL",
+      "cs.CV"
     ],
-    "score": 16,
+    "score": 9,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.20529",
-    "pdf_url": "https://arxiv.org/pdf/2606.20529",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.20529"
+    "arxiv_url": "https://arxiv.org/abs/2606.17053",
+    "pdf_url": "https://arxiv.org/pdf/2606.17053",
+    "github_url": "https://github.com/xupy2003/ContextAwareRL",
+    "hf_discussion": "https://huggingface.co/papers/2606.17053"
   },
   {
-    "id": "2606.15527",
-    "arxiv_id": "2606.15527",
-    "title": "Selective Synergistic Learning for Video Object-Centric Learning",
-    "summary": "Typical video object-centric learning (VOCL) approaches employ slot-based frameworks that rely on reconstruction-driven encoder-decoder architectures, where learning is mediated by two spatial maps: attention maps from the encoder and object maps from the decoder. As these two distinct maps exhibit different properties, a recent dense alignment strategy attempted to reconcile this discrepancy by enforcing agreement across all spatio-temporal patches via contrastive learning. However, this indiscriminate alignment inadvertently propagates the inherent weaknesses of each module, such as noisy encoder predictions and blurred decoder boundaries. Moreover, computing dense similarities across all pairs incurs a computational cost quadratic in the total number of spatio-temporal patches, severely limiting scalability. Motivated by this, we propose Selective Synergistic Learning (SSync). Instead of exhaustive patch-to-patch alignment, SSync prevents error propagation by selectively distilling only the most reliable cues: leveraging the encoder strictly for boundary refinement and the decoder for interior denoising. This is realized via a pseudo-labeling with linear complexity, eliminating the need for quadratic spatial comparisons. Also, to prevent the reinforcement of architectural biases like slot redundancy, we introduce a transitive pseudo-label merging that consolidates overlapping slots based on spatio-temporal activation consistency. Extensive studies demonstrate that SSync improves decomposition quality and serves as a versatile, plug-and-play module while also exhibiting exceptional robustness to slot configurations. Code is available at github.com/wjun0830/SSync.",
-    "ai_summary": "Selective Synergistic Learning (SSync) addresses limitations in video object-centric learning by selectively distilling reliable cues through pseudo-labeling and transitive merging to improve object decomposition quality and robustness.",
+    "id": "2606.19704",
+    "arxiv_id": "2606.19704",
+    "title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
+    "summary": "Agent benchmarks are growing fast, but no single benchmark touches more than four or five of the dimensions that deployment exposes. This paper aggregates the largest coordinated deep-dive of one MCP-based industrial-agent benchmark to date: fourteen parallel implementation studies covering new asset classes (including a multi-modal visual extension), alternative orchestrations, retrieval strategies, reasoning modes, infrastructure optimizations, and evaluation-methodology probes. Consolidating those studies with seven prior agent benchmarks, we argue that aggregate-score leaderboards systematically underspecify deployed-agent evaluation. Rankings derived from aggregate scores do not transfer to out-of-distribution settings; recent public-to-hidden competition retrospectives provide direct empirical evidence of this rank instability. We propose ranking configurations by predictive validity, the correlation between in-sample and out-of-sample rank, rather than in-sample mean, and report a twelve-tier measurement apparatus that exposes the deployment-relevant dimensions HELM and its agent-era successors collapse. The position is operationalized through three falsifiable out-of-distribution criteria with explicit thresholds; existing evidence partly supports it but is too thin to confirm. We close with a pre-registered pilot design and a field-level vision for what the next generation of agentic benchmarks should report.",
+    "ai_summary": "Aggregate-score leaderboards in agent benchmarks fail to capture deployment-relevant dimensions and show rank instability, necessitating new evaluation frameworks based on predictive validity and out-of-distribution criteria.",
     "arxiv_categories": [
-      "cs.CV",
       "cs.AI"
     ],
-    "score": 16,
+    "score": 8,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.15527",
-    "pdf_url": "https://arxiv.org/pdf/2606.15527",
-    "github_url": "https://github.com/wjun0830/SSync",
-    "hf_discussion": "https://huggingface.co/papers/2606.15527"
+    "arxiv_url": "https://arxiv.org/abs/2606.19704",
+    "pdf_url": "https://arxiv.org/pdf/2606.19704",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.19704"
   },
   {
     "id": "2606.16827",
@@ -42,7 +41,7 @@
     "arxiv_categories": [
       "cs.SE"
     ],
-    "score": 16,
+    "score": 6,
     "upvotes": 0,
     "arxiv_url": "https://arxiv.org/abs/2606.16827",
     "pdf_url": "https://arxiv.org/pdf/2606.16827",
@@ -50,38 +49,36 @@
     "hf_discussion": "https://huggingface.co/papers/2606.16827"
   },
   {
-    "id": "2606.19830",
-    "arxiv_id": "2606.19830",
-    "title": "JAMER: Project-Level Code Framework Dataset and Benchmark on Professional Game Engines",
-    "summary": "Current AI-driven game development has made substantial progress in asset generation, gameplay design, and web-based game coding, yet project-level code engineering on professional game engines remains largely unexplored due to the absence of large-scale datasets and deterministic evaluation methods. We present JamSet and JamBench, the first project-level game code framework dataset and benchmark built on a professional game engine. Our key insight is that Game Jam competitions, community events where developers build complete games under tight time constraints, yield thousands of open-source projects suitable for this purpose. Building on the Godot engine's text-based format and headless execution mode, we design a deterministic verification pipeline from file integrity to runtime behavior collection, distilling 8,133 verified projects from over 240,000 repositories. Of these, 300 manually verified projects form JamBench; the rest constitute JamSet. JamBench defines theme-driven generation and code completion tasks, evaluated through a pipeline combining compilation pass rates, Structural Completeness Score (SCS), and Behavioral Alignment Score (BAS). Evaluation of 9 frontier models reveals a capability cliff as project scale increases, with runtime pass rates dropping from 80.4% on small projects to 5.7% on large ones (Task2a). Code Agents improve compilation rates yet yield no gains in runtime behavioral quality, indicating that the bottleneck lies in architectural design rather than syntactic correctness. Experiments validate JamSet as effective training data. All data and code are publicly available.",
-    "ai_summary": "Game development frameworks and benchmarks were created using data from game jam competitions to evaluate code generation and project-level programming capabilities.",
+    "id": "2606.20515",
+    "arxiv_id": "2606.20515",
+    "title": "S-Agent: Spatial Tool-Use Elicits Reasoning for Spatial Intelligence",
+    "summary": "Real-world spatial intelligence requires reasoning over a continuous and evolving 3D world, yet existing VLMs and tool-augmented agents largely remain tied to static, stateless inference from isolated visual observations. We introduce \\textsc{S-Agent}, a spatial tool-use agentic paradigm for understanding and reasoning over continuous multi-view images and videos. By formulating spatial reasoning as spatio-temporal evidence accumulation rather than isolated frame-level prediction, S-Agent reshapes spatial perception into scene-centric understanding beyond frame-centric recognition. Specifically, S-Agent casts the VLM as a semantic planner that decides what evidence is needed, while a hierarchy of spatial tools and experts grounds objects in 2D, lifts them into 3D geometric evidence, and aggregates this evidence into high-level spatial knowledge (e.g., counting, measurement, orientation, and relative position). Additionally, a temporal memory mechanism, including Scene Memory for maintaining the evolving scene state and Agent Memory for accumulating reasoning context, enables evidence integration across frames and reasoning steps. Comprehensive experiments on multi-view and video spatial reasoning benchmarks show that S-Agent consistently improves both open-source and closed-source VLMs in a training-free manner. Beyond inference-time augmentation, supervised fine-tuning (SFT) on S-Agent-generated spatial trajectories S-300K yields S-Agent-8B, a compact spatial agent that significantly surpasses similar-scale baselines (e.g., Qwen3-VL-8B) and performs comparably to advanced closed-source models (e.g., GPT-5.4 and Gemini 3).",
+    "ai_summary": "S-Agent is a spatial reasoning framework that enhances visual language models with temporal memory and hierarchical spatial tools to enable continuous 3D world understanding from multi-view imagery.",
     "arxiv_categories": [
-      "cs.SE",
-      "cs.CL"
+      "cs.CV"
     ],
-    "score": 13,
+    "score": 6,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19830",
-    "pdf_url": "https://arxiv.org/pdf/2606.19830",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.19830"
+    "arxiv_url": "https://arxiv.org/abs/2606.20515",
+    "pdf_url": "https://arxiv.org/pdf/2606.20515",
+    "github_url": "https://github.com/Ropedia/S-Agent",
+    "hf_discussion": "https://huggingface.co/papers/2606.20515"
   },
   {
-    "id": "2606.16817",
-    "arxiv_id": "2606.16817",
-    "title": "Understanding the Behaviors of Environment-aware Information Retrieval",
-    "summary": "Recent retrieval-augmented generation (RAG) approaches have demonstrated strong capability in handling complex queries, yet current research overlooks a critical challenge: different retrievers require fundamentally different query formulation strategies for optimal performance. In this work, we present the first systematic analysis of how LLMs can learn to adapt their query formulation strategies for different retrievers via reinforcement learning (RL). Our empirical study reveals that RL effectively teaches an LLM to tailor its queries to specific retriever characteristics. We discover that different retrievers exhibit surprisingly distinct optimal query styles (e.g., descriptive vs. question-like), suggesting strategies learned for one retriever ineffective for another. We further show that performance can be enhanced by incorporating retriever-specific human guidance and by scaling model size. To facilitate learning over multi-retrieval-step trajectories, we introduce a branching-based rollout technique that improves training stability. Our work provides the first empirical evidence and actionable insights for building truly retriever-aware RAG systems. Code and resources are available at https://github.com/LCO-Embedding/Envs-aware-Information-Retrieval.",
-    "ai_summary": "Large language models can be trained via reinforcement learning to adapt query formulation strategies for different retrievers, with distinct optimal query styles and improved performance through retriever-specific guidance and model scaling.",
+    "id": "2606.19980",
+    "arxiv_id": "2606.19980",
+    "title": "ENPIRE: Agentic Robot Policy Self-Improvement in the Real World",
+    "summary": "Achieving dexterous robotic manipulation in the real world heavily relies on human supervision and algorithm engineering, which becomes a central bottleneck in the pursuit of general physical intelligence. Although emerging coding agents can generate code to automate algorithm search, their successes remain largely confined in digital environments. We conjecture that the missing abstraction to automate robotics research is a repeatable feedback loop for real-world policy improvement: reset the scene, execute a policy, verify the outcome, and refine the next iteration. To bridge this gap, we introduce ENPIRE, a harness framework for coding agents that instantiates this physical feedback routine with four core modules: an Environment module (EN) for automatic reset and verification, a Policy Improvement module (PI) that launches policy refinement, a Rollout module (R) to evaluate policies with one or multiple physical robots operating in parallel, and an Evolution module (E) in which coding agents analyze logs, consult literature, improve training infrastructure and algorithm code to address failure modes. This closed-loop system transforms real-world manipulation learning into a controllable optimization procedure, minimizing human effort while allowing fair ablations across training recipe and agent variants. Powered by ENPIRE, frontier coding agents can autonomously train a policy to achieve a 99% success rate on challenging, dexterous manipulation tasks, such as organizing a pin box, fastening a zip tie, and tool use, a process that further accelerates when we dispatch an agent team on a robot fleet. Our results suggest a practical and scalable path toward deploying coding agents to autonomously advancing robotics in the physical world.",
+    "ai_summary": "ENPIRE framework enables autonomous robotics research through a closed-loop system that automates policy improvement via environment feedback, policy refinement, and evolutionary code optimization.",
     "arxiv_categories": [
-      "cs.CL",
-      "cs.IR"
+      "cs.AI"
     ],
-    "score": 12,
+    "score": 6,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.16817",
-    "pdf_url": "https://arxiv.org/pdf/2606.16817",
-    "github_url": "https://github.com/LCO-Embedding/Envs-aware-Information-Retrieval",
-    "hf_discussion": "https://huggingface.co/papers/2606.16817"
+    "arxiv_url": "https://arxiv.org/abs/2606.19980",
+    "pdf_url": "https://arxiv.org/pdf/2606.19980",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.19980"
   },
   {
     "id": "2606.19602",
@@ -92,29 +89,12 @@
     "arxiv_categories": [
       "cs.AI"
     ],
-    "score": 12,
+    "score": 5,
     "upvotes": 0,
     "arxiv_url": "https://arxiv.org/abs/2606.19602",
     "pdf_url": "https://arxiv.org/pdf/2606.19602",
     "github_url": "",
     "hf_discussion": "https://huggingface.co/papers/2606.19602"
-  },
-  {
-    "id": "2606.15760",
-    "arxiv_id": "2606.15760",
-    "title": "The Data Manifold under the Microscope",
-    "summary": "A significant gap exists between theory and practice in deep learning. Generalization and approximation error bounds are often derived for simplified models or are too loose to be informative. Many rely on the manifold hypothesis and on geometric regularity such as intrinsic dimension, curvature, and reach. Progress requires insight into data-manifold geometry and suitable benchmarks, yet existing options are polarized: analytic manifolds with known geometry but limited applicability, or real-world datasets where geometry is only coarsely estimable. We introduce a benchmarking framework for studying data geometry. We repurpose and extend dSprites and COIL-20 with additional transformation dimensions and dense, axis-aligned sampling, and pair them with finite-difference estimators that recover curvature, reach, and volume at near-ground-truth accuracy in a regime where general-purpose estimators are unreliable or difficult to deploy. The framework is intended as a controlled testbed, useful as a calibration environment for geometric estimators and a sandbox for probing theoretical assumptions. To illustrate its use, we present two application studies, namely assessing the scaling behavior of the bounds of Genovese et al. and Fefferman et al., and tracking the layer-wise geometry of a β-VAE, highlighting the behavior of current bounds and the value of controlled benchmarks for guiding and validating future theory.\n  A reference implementation is available at https://github.com/koulakis/manifold-microscope.",
-    "ai_summary": "A benchmarking framework is introduced to study data-manifold geometry by extending dSprites and COIL-20 datasets with additional transformation dimensions and dense sampling, enabling accurate estimation of curvature, reach, and volume for theoretical analysis and validation.",
-    "arxiv_categories": [
-      "cs.LG",
-      "stat.ML"
-    ],
-    "score": 11,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.15760",
-    "pdf_url": "https://arxiv.org/pdf/2606.15760",
-    "github_url": "https://github.com/koulakis/manifold-microscope",
-    "hf_discussion": "https://huggingface.co/papers/2606.15760"
   },
   {
     "id": "2606.20517",
@@ -126,7 +106,7 @@
       "cs.AI",
       "cs.PL"
     ],
-    "score": 10,
+    "score": 5,
     "upvotes": 0,
     "arxiv_url": "https://arxiv.org/abs/2606.20517",
     "pdf_url": "https://arxiv.org/pdf/2606.20517",
@@ -134,36 +114,56 @@
     "hf_discussion": "https://huggingface.co/papers/2606.20517"
   },
   {
-    "id": "2604.13416",
-    "arxiv_id": "2604.13416",
-    "title": "DF3DV-1K: A Large-Scale Dataset and Benchmark for Distractor-Free Novel View Synthesis",
-    "summary": "Advances in radiance fields have enabled photorealistic novel view synthesis. In several domains, large-scale real-world datasets have been developed to support comprehensive benchmarking and to facilitate progress beyond scene-specific reconstruction. However, for distractor-free radiance fields, a large-scale dataset with clean and cluttered images per scene remains lacking, limiting the development. To address this gap, we introduce DF3DV-1K, a large-scale real-world dataset comprising 1,048 scenes, each providing clean and cluttered image sets for benchmarking. In total, the dataset contains 89,924 images captured using consumer cameras to mimic casual capture, spanning 128 distractor types and 161 scene themes across indoor and outdoor environments. A curated subset of 41 scenes, DF3DV-41, is systematically designed to evaluate the robustness of distractor-free radiance field methods under challenging scenarios. Using DF3DV-1K, we benchmark nine recent distractor-free radiance field methods and 3D Gaussian Splatting, identifying the most robust methods and the most challenging scenarios. Beyond benchmarking, we demonstrate an application of DF3DV-1K by fine-tuning a diffusion-based 2D enhancer to improve radiance field methods, achieving average improvements of 0.96 dB PSNR and 0.057 LPIPS on the held-out set (e.g., DF3DV-41) and the On-the-go dataset. We hope DF3DV-1K facilitates the development of distractor-free vision and promotes progress beyond scene-specific approaches. The dataset and leaderboard are available at https://johnnylu305.github.io/df3dv1k_web/.",
-    "ai_summary": "A large-scale real-world dataset called DF3DV-1K is introduced to address the lack of clean and cluttered image sets for distractor-free radiance field research, containing 1,048 scenes with 89,924 images across 128 distractor types and 161 scene themes, along with a curated subset DF3DV-41 for robustness evaluation, and demonstrates improved performance when used to fine-tune a diffusion-based 2D enhancer for radiance field methods.",
+    "id": "2606.19605",
+    "arxiv_id": "2606.19605",
+    "title": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
+    "summary": "Multi-step LLM pipelines fail through interactions among retrieval, reasoning, and formatting steps, so prompt-only optimization can miss bottlenecks in the chain. We present FAPO (Fully Autonomous Prompt Optimization), a framework that lets Claude Code optimize an LLM pipeline inside a standardized codebase. FAPO evaluates a pipeline, inspects intermediate steps, diagnoses failures, proposes scoped changes, and validates variants repeatedly to optimize against a score function. It first tries prompt edits and, only when prompt optimization appears insufficient, changes chain structure within the permitted scope when attribution identifies a structural bottleneck. Across six benchmarks and three task models, FAPO beats the baseline GEPA in 15 of 18 model-benchmark comparisons. In 11 model-benchmark comparisons, FAPO wins with non-overlapping mean pm trial-standard-deviation ranges, and the mean FAPO-GEPA gain is +14.1 pp. In the six HoVer and IFBench comparisons where prompt-first search escalated to structural changes, FAPO wins all six with a mean gain of +33.8 pp. FAPO also improves performance on security tasks: on CTIBench-RCM, a security CVE-to-CWE task, prompt-only FAPO lifts test accuracy by +4.0 pp on GPT-5, +7.1 pp on Foundation-Sec-8B-Instruct, and +2.0 pp on Foundation-Sec-8B-Reasoning. These results position FAPO as a state-of-the-art pipeline optimization technique for both general-purpose and security-focused tasks.",
+    "ai_summary": "FAPO optimizes LLM pipelines by combining prompt editing with structural changes, demonstrating superior performance across multiple benchmarks and security tasks.",
     "arxiv_categories": [
-      "cs.CV",
+      "cs.SE",
       "cs.AI"
     ],
-    "score": 10,
+    "score": 5,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2604.13416",
-    "pdf_url": "https://arxiv.org/pdf/2604.13416",
-    "github_url": "https://github.com/johnnylu305/DF3DV",
-    "hf_discussion": "https://huggingface.co/papers/2604.13416"
+    "arxiv_url": "https://arxiv.org/abs/2606.19605",
+    "pdf_url": "https://arxiv.org/pdf/2606.19605",
+    "github_url": "https://github.com/cisco-foundation-ai/fully-automated-prompt-optimization",
+    "hf_discussion": "https://huggingface.co/papers/2606.19605"
   },
   {
-    "id": "2606.20404",
-    "arxiv_id": "2606.20404",
-    "title": "FlowBender: Feedback-Aware Training for Self-Correcting Conditional Flows",
-    "summary": "Conditional diffusion and flow models routinely fail to satisfy the very constraints that define their task. For instance, a depth-conditioned model often produces images whose re-extracted depth disagrees with the input, even though the forward operator--the depth predictor defining the constraint--is available during both training and inference. Existing approaches generally fall into two categories: supervised models that treat the conditioning signal as a static cue and ignore alignment information at inference, and guidance-based methods that consult it through hand-tuned linear updates, typically trading fidelity to the condition against the plausibility of the generated sample. We argue that the fundamental gap in both paradigms is that the model is never trained to utilize its own alignment error. We introduce FlowBender, a closed-loop framework that treats this error as a first-class input, training the network to learn a correction policy conditioned on inference-time feedback. At each step, an unguided look-ahead pass estimates the clean signal, a task-specific deviation is computed via the forward operator, and a refinement pass consumes this signal to produce a corrected velocity. We propose several variants of FlowBender, including a gradient-based formulation for differentiable operators and a zero-order variant for non-differentiable settings such as JPEG compression. For efficient sampling, we introduce a prior-step shortcut that enables closed-loop correction at a minimal additional computational cost. Across image-to-image translation, restoration, and 3D mesh texturing, FlowBender consistently outperforms standard supervised baselines, alignment-loss-augmented training, and state-of-the-art inference-time guidance, improving fidelity and plausibility simultaneously rather than trading them against each other. Project page: https://flow-bender.github.io/",
-    "ai_summary": "FlowBender is a closed-loop framework that addresses constraint satisfaction in diffusion and flow models by training networks to correct alignment errors using inference-time feedback, outperforming traditional supervised and guidance-based approaches across multiple tasks.",
+    "id": "2606.18021",
+    "arxiv_id": "2606.18021",
+    "title": "LegalHalluLens: Typed Hallucination Auditing and Calibrated Multi-Agent Debate for Trustworthy Legal AI",
+    "summary": "AI systems deployed in legal workflows hallucinate at rates that aggregate metrics report at ~52%, but this average conceals where errors concentrate and in which direction they run, leaving compliance officers without an actionable signal for trustworthy deployment. We present LegalHalluLens, an auditing framework with three components: typed hallucination profiles across four legally-motivated claim categories (numeric, temporal, obligation/entitlement, factual) over CUAD (Hendrycks et al., 2021); a Risk Direction Index (RDI) that reduces omission-versus-invention bias to a single deployment-comparable scalar; and a typed debate pipeline calibrated to both magnitudes and directions. Across 510 contracts and 249,252 clause-level instances we measure a within-model gap of approximately 38-40 pp between obligation/numeric and temporal claims that aggregate reporting hides, and show that two systems with matched 52% rates can carry opposite RDIs. The debate pipeline reduces fabricated detections by 45% with per-category gains tracking the diagnosis, matching commercial APIs with a substantially smaller backbone (4B active parameters). Typed profiles and RDI surface failure modes that aggregate metrics hide; we further show these diagnostics serve as calibration inputs for multi-agent debate pipelines, where Skeptic challenges and asymmetric gates targeted at measured failure modes outperform generically-tuned debate. The framework supports direction-aware procurement, accountability, and agent design for legal AI deployed in the wild.",
+    "ai_summary": "LegalHalluLens audits AI systems in legal workflows by identifying specific error patterns and directional biases in hallucinations across different claim types, enabling more reliable deployment through targeted diagnostic and mitigation approaches.",
     "arxiv_categories": [
-      "cs.CV"
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "cs.MA"
     ],
-    "score": 10,
+    "score": 4,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.20404",
-    "pdf_url": "https://arxiv.org/pdf/2606.20404",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.20404"
+    "arxiv_url": "https://arxiv.org/abs/2606.18021",
+    "pdf_url": "https://arxiv.org/pdf/2606.18021",
+    "github_url": "https://github.com/lalitdv9/LegalHallulens",
+    "hf_discussion": "https://huggingface.co/papers/2606.18021"
+  },
+  {
+    "id": "2606.19419",
+    "arxiv_id": "2606.19419",
+    "title": "Playful Agentic Robot Learning",
+    "summary": "Current agentic robot systems can write executable Code-as-Policy programs, observe feedback, and revise behavior across multiple attempts, but they remain largely task-driven: reusable skills are acquired only after explicit instructions. We study Playful Agentic Robot Learning, where an embodied coding agent uses self-directed play as a continual skill-learning stage before downstream tasks arrive. We introduce RATs, Robotics Agent Teams designed for play-time skill acquisition. During play, RATs proposes novel yet learnable exploratory tasks, plans and executes robot-code policies, verifies intermediate progress, diagnoses failures, retries with dense, step-level feedback, and distills successful executions into a persistent code skill library. At test time, the agent reuses relevant skills from this frozen library to help solve new tasks. Experiments in LIBERO-PRO and MolmoSpaces show that play-learned skills improve held-out downstream tasks over no-play and random-play baselines, with 20.6 and 17.0 percentage-point gains over CaP-Agent0 on LIBERO-PRO and MolmoSpaces, respectively. Moreover, the learned skills can be plugged into other inference-time Code-as-Policy agents by simply retrieving them into the context, improving RoboSuite and real-world transfer by 8.9 and 8.8 points, respectively, without finetuning the underlying model.",
+    "ai_summary": "Embodied robots learn reusable skills through self-directed play and exploration, then apply these skills to improve performance on downstream tasks without additional training.",
+    "arxiv_categories": [
+      "cs.RO",
+      "cs.AI"
+    ],
+    "score": 4,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19419",
+    "pdf_url": "https://arxiv.org/pdf/2606.19419",
+    "github_url": "https://github.com/Playful-RATs/rats",
+    "hf_discussion": "https://huggingface.co/papers/2606.19419"
   }
 ]

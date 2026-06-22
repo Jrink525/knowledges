@@ -1,0 +1,37 @@
+{
+  "paper_id": "2606.17053",
+  "paper_title": "Context-Aware RL for Agentic and Multimodal LLMs",
+  "research_equation": "Context Unawareness (LLMs cannot ground predictions in available evidence) + Contrastive Context Pairs (agent trajectories or images) + Context-Selection Loss as auxiliary RL objective → Improved context grounding across both agentic and multimodal settings, measurable via OOD transfer benchmarks",
+  "tri_pass_notes": {
+    "what": "LLMs frequently fail to use available context evidence when generating answers. Authors propose ContextRL, which adds an explicit context-selection auxiliary objective to standard GRPO post-training, training the model to distinguish between a supporting context and a minimally-different confounder given a query-answer pair.",
+    "how": "1) Build contrastive context pairs via cascade filtering (agentic: 1k trajectory pairs from 66k) and generative editing + similarity retrieval (multimodal: 7k image pairs). 2) Define a logit-level contrastive loss ℒCA that widens the margin between positive and negative context logits, with clipping to prevent large margins from dominating. 3) Jointly optimize ℒ = ℒGRPO + λℒCA, where λ balances the two objectives. 4) The auxiliary signal is computed by teacher forcing (no rollout needed for ℒCA) and the GRPO clipping + KL regularization keep the policy stable.",
+    "why": "Standard outcome-only RL (GRPO) only rewards correct answers, providing no signal about whether the answer is grounded in the provided context. The context-awareness loss provides a dense, process-level signal that directly supervises context grounding without disrupting the policy distribution (unlike DA-SFT which causes catastrophic forgetting). The method is modality-agnostic and works the same way for agent trajectories and images."
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Context unawareness: models produce correct-looking answers without grounding in available evidence",
+      "module": "Contrastive context probe (Section 1)",
+      "key_idea": "200+200 contrastive pairs with a two-choice selection task reveals a 40-point gap between proprietary and open-source models, quantifying the extent of the problem"
+    },
+    {
+      "challenge": "Constructing high-quality contrastive context pairs that are hard enough to provide useful training signal",
+      "module": "Agentic contrastive pair pipeline (Section 2.1)",
+      "key_idea": "Cascade filtering: same repo → same file → same function → related issues + patch masking + GPT-5.4 verification. Only 1.5% of 66k trajectories survive for agentic setting."
+    },
+    {
+      "challenge": "Constructing contrastive image pairs across diverse visual domains (charts, geometry, science, natural images)",
+      "module": "Multimodal contrastive pair pipeline (Section 2.2)",
+      "key_idea": "Two-pronged strategy: generative editing (Nano Banana 2, ~700 pairs from 2k, 65% rejection) for natural images + similarity retrieval (Qwen3-VL-Embedding, threshold α=0.85, 6,300 pairs from 200k+) for structured images"
+    },
+    {
+      "challenge": "Integrating context-selection signal into RL without destabilizing the policy",
+      "module": "Context-awareness loss ℒCA + joint optimization (Section 2.3)",
+      "key_idea": "Teacher-forced logit contrast: no rollout needed; margin clipping (c=5.0) prevents large gradients from dominating; joint optimization with GRPO provides both answer-correctness and context-grounding signals"
+    },
+    {
+      "challenge": "Verifying that gains come from the objective rather than from the data itself",
+      "module": "Data augmentation baselines comparison (Section 5)",
+      "key_idea": "DA-SFT (collapses agentic policy, 0% resolve rate on Qwen3-8B) and DA-RL (no improvement over RL baseline) are compared against ContextRL, showing the objective is key"
+    }
+  ]
+}

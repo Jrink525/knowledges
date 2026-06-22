@@ -1,0 +1,34 @@
+{
+  "paper_id": "2606.17053",
+  "paper_title": "Context-Aware RL for Agentic and Multimodal LLMs",
+  "artifacts": [
+    {
+      "path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/report.md",
+      "description": "主报告：中文深度解读",
+      "type": "report",
+      "language": "zh-CN"
+    },
+    {
+      "path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/traceability_manifest.json",
+      "description": "声明-证据链清单",
+      "type": "traceability"
+    },
+    {
+      "path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/research_lens.json",
+      "description": "研究透镜：问题重构与批判性追问",
+      "type": "research_lens"
+    },
+    {
+      "path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/direction_board.json",
+      "description": "研究方向种子排名",
+      "type": "direction_board"
+    },
+    {
+      "path": "papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/artifact_index.json",
+      "description": "本清单文件",
+      "type": "index"
+    }
+  ],
+  "generated_at": "2026-06-21T17:30:00Z",
+  "source_paper": "https://arxiv.org/abs/2606.17053"
+}

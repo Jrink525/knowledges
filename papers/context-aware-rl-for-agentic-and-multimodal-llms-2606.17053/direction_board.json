@@ -1,0 +1,83 @@
+{
+  "paper_id": "2606.17053",
+  "paper_title": "Context-Aware RL for Agentic and Multimodal LLMs",
+  "seeds": [
+    {
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "C5.3: On NIAH and LongBench v2, standard outcome-based GRPO regresses relative to the base model, suggesting that outcome-only RL can actually hurt context grounding on certain OOD tasks by optimizing for answer shortcuts.",
+      "hidden_assumption_or_gap": "The assumption that outcome-based RL automatically improves context grounding is violated: RL on final answers can worsen context utilization on long-context OOD tasks, even when it improves in-distribution performance.",
+      "research_question": "Can an RL method that directly penalizes regression on context-grounding metrics (e.g., adding an anti-regression term for context selection accuracy alongside the standard GRPO objective) achieve more robust OOD generalization?",
+      "hypothesis": "Adding a regularization term that explicitly prevents the trained policy from regressing below the base model's context selection accuracy would improve OOD robustness and eliminate the regression pattern observed on NIAH.",
+      "minimum_viable_experiment": "Take Klear-AgentForge-8B, train three variants: (1) standard GRPO, (2) ContextRL as in paper, (3) ContextRL + an anti-regression KL penalty that keeps context selection accuracy above base model's initial level. Compare on NIAH and LongBench v2 OOD metrics. If variant (3) closes the remaining gap between ID and OOD performance, the hypothesis is supported.",
+      "negative_result_interpretation": "If anti-regression KL penalty hurts ID performance without helping OOD, context-grounding regression may be an irreducible side effect of RL optimization for verifiable rewards in certain distribution shifts.",
+      "killer_objection": "The anti-regression penalty might constrain the policy too tightly, preventing the beneficial exploration that leads to context-grounding improvements in ContextRL.",
+      "killer_result": "Even a small improvement (e.g., +1% on NIAH over ContextRL) without ID regression would make this practically valuable for production systems."
+    },
+    {
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "C5.2: Klear-AgentForge-8B with ContextRL outperforms 4× larger models on SWE-Bench, but both base models are <10B parameters. The paper explicitly lists this as a limitation (Section G).",
+      "hidden_assumption_or_gap": "Whether ContextRL's benefits scale to larger models (30B+, 70B+) is unknown. The interaction between context-awareness loss and the emergent behavior of larger models might be qualitatively different.",
+      "research_question": "Does the relative benefit of ContextRL (over standard GRPO) increase, decrease, or stay constant as model scale increases from 7B to 70B parameters?",
+      "hypothesis": "ContextRL provides diminishing relative returns at larger scales because larger models already have better inherent context selection capability (as evidenced by GPT-5.4 and Claude Opus 4.7 achieving ~90% on the probe in Figure 2).",
+      "minimum_viable_experiment": "Apply ContextRL to a 70B model (e.g., Qwen3-72B or Llama 4 70B) on the multimodal setting with 2-3 representative benchmarks (MathVista, MMMU-Pro, ScienceQA). Compare the absolute and relative gains against the same model's GRPO baseline. This can be done with limited compute by reducing training steps or data proportion.",
+      "negative_result_interpretation": "If relative gains increase with scale, ContextRL may address a fundamental limitation of RL post-training that becomes more severe with larger models.",
+      "killer_objection": "70B+ RL training is extremely expensive (4× H200 for ~200h), making this experiment cost-prohibitive for many groups. A proxy experiment using LoRA fine-tuning on the context-selection probe alone would be cheaper but less conclusive.",
+      "killer_result": "Even maintaining similar relative gains (+1.5%+_ on 70B models) would demonstrate generality. Showing diminishing returns would guide practitioners to prioritize other methods."
+    },
+    {
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "C5.7: DA-SFT achieves 85-93% selection accuracy on held-out test set but causes catastrophic policy collapse in the agentic setting (0% resolve rate on Qwen3-8B).",
+      "hidden_assumption_or_gap": "The mechanism by which SFT on short selection examples disrupts the long-horizon interaction policy is not fully analyzed. The paper attributes it to 'distribution shift', but the specific nature of this shift (e.g., output length distribution, attention patterns, tool-call format) is unknown.",
+      "research_question": "What specific aspects of the policy distribution are disrupted by SFT on contrastive context selection data? Can we isolate and fix the disruption mechanism while retaining the context selection capability?",
+      "hypothesis": "SFT on short-answer selection examples shifts the model's output distribution toward short, single-token responses, breaking the multi-turn reasoning pattern. This can be mitigated by interleaving selection training with long-form generation training (e.g., alternating SFT batches).",
+      "minimum_viable_experiment": "1) Analyze output length, token-type distribution, and attention entropy before/after DA-SFT on Klear-AgentForge-8B. 2) Train a 'Mixed-SFT' variant where contrastive selection SFT is interleaved 1:1 with long-form code generation SFT. 3) Compare with DA-SFT and ContextRL on SWE-Bench Lite. If Mixed-SFT partially recovers performance (e.g., >15% vs DA-SFT's 1.3%), the disruption mechanism is understood and the mitigation direction validated.",
+      "negative_result_interpretation": "If Mixed-SFT still fails to recover performance, the disruption mechanism is more subtle (e.g., representation-level collapse rather than distributional shift) and requires analysis methods like probing or activation patching.",
+      "killer_objection": "Mixed-SFT may simply overfit to the combined distribution without transferring the context selection skill effectively.",
+      "killer_result": "Even partial recovery (10%+ resolve rate) would open a research direction for combining selection and generation training in a principled way."
+    },
+    {
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "C6.2: Increasing contrastive data proportion from 15% to 50% causes broad performance degradation, suggesting excessive contrastive data harms reasoning.",
+      "hidden_assumption_or_gap": "The 15% optimal proportion was found empirically but no theoretical reason is given. The interaction between contrastive data quality versus quantity is unexplored.",
+      "research_question": "Can active selection of the hardest contrastive pairs (where the margin is smallest) achieve the same or better results with fewer than 7k pairs, potentially reducing the data construction bottleneck?",
+      "hypothesis": "Training on only the hardest 25% of contrastive pairs (those where the model's initial margin |Δ| is below a threshold) achieves comparable end-task gains to training on all 7k pairs, because easy pairs provide little learning signal.",
+      "minimum_viable_experiment": "On Qwen2.5-VL-7B, run the context-selection probe on all 7k pairs before training. Sort by |Δ| and train ContextRL with only the hardest 25% (1,750 pairs). Compare against full 7k ContextRL and standard GRPO on 3-4 representative multimodal benchmarks (MathVista, ScienceQA, MMMU-Pro, BLINK).",
+      "negative_result_interpretation": "If the hardest 25% underperforms the full set, it suggests that easy pairs also play a role (e.g., preventing overfitting or stabilizing representations).",
+      "killer_objection": "Computing initial margins for all 7k pairs may be as expensive as training on all of them, negating the efficiency gain.",
+      "killer_result": "If 25% hard-pair selection achieves >90% of full-set gains, this significantly reduces the data construction bottleneck (from 7k pairs to ~1.75k)."
+    },
+    {
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "C5.3: ContextRL generalizes to OOD benchmarks including long-context QA (LongBench v2) and targeted retrieval (NIAH), despite being trained only on agentic coding trajectories.",
+      "hidden_assumption_or_gap": "The OOD generalization suggests context grounding transfers across domains, but the paper only tests transfer from agentic coding to other text-based tasks. Whether the multimodal training also transfers to non-visual tasks, or whether agentic training transfers to multimodal tasks, is unknown.",
+      "research_question": "Does context grounding learned through ContextRL in one modality (e.g., agentic coding trajectories) transfer to improve performance in a different modality (e.g., visual question answering)?",
+      "hypothesis": "The context-awareness loss teaches a general 'evidence discrimination' skill that is not modality-specific. Therefore, training only on agentic trajectory pairs should also improve multimodal performance, and vice versa.",
+      "minimum_viable_experiment": "1) Train Qwen3-8B with ContextRL using ONLY the 1k agentic trajectory pairs (no multimodal data). Evaluate on 3 multimodal benchmarks (e.g., BLINK, V*, MMMU-Pro). 2) Train Qwen2.5-VL-7B with ContextRL using ONLY the 7k multimodal image pairs. Evaluate on SWE-Bench Lite (text-only). If cross-modal transfer shows positive gains (>0), the grounding skill is truly modality-agnostic.",
+      "negative_result_interpretation": "If no cross-modal transfer occurs, context grounding is modality-specific and generalization is driven by architectural commonalities rather than a unified grounding skill.",
+      "killer_objection": "The text-only OOD tasks (LongBench, NIAH) do test context grounding, and gains there already suggest some generality. The cross-modal test may be confounded by different base model architectures and training data distributions.",
+      "killer_result": "Positive cross-modal transfer would strongly support the paper's claim that context grounding is a general cognitive skill, and suggest that contrastive data from ANY domain can improve ANY context-sensitive task."
+    },
+    {
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "The paper (Section A.3) addresses the concern that positive/negative context discrimination might exploit construction artifacts rather than genuine content understanding. Three arguments are given: (1) verifiers are explicit artifact filters, (2) pairs are hard by construction, (3) OOD transfer and DA-SFT comparison rule out artifact exploitation.",
+      "hidden_assumption_or_gap": "While the artifact concern is addressed via OOD transfer and DA-SFT comparison, a direct probe-level analysis of what the learned representation captures has not been conducted.",
+      "research_question": "Does the context-awareness loss change the model's internal representations to encode specific 'context-support' features (e.g., attention to the key region), or does it merely sharpen the logit-level discrimination at the output head?",
+      "hypothesis": "ContextRL modifies the model's attention patterns to allocate more weight to evidence-relevant regions of the context, detectable via attention map analysis and probing.",
+      "minimum_viable_experiment": "Compare attention patterns and hidden representations of Qwen3-8B before and after ContextRL training on a held-out set of contrastive pairs. 1) Compute attention entropy and attention-to-key-region fraction for each layer. 2) Train linear probes to predict which context is positive from hidden states. If ContextRL increases attention to key regions and probe accuracy increases in middle layers, the hypothesis is supported.",
+      "negative_result_interpretation": "If no changes in attention or hidden representations are detected beyond the output logits, ContextRL may be primarily a 'logit-level shortcut' rather than genuinely improving content-level grounding.",
+      "killer_objection": "LLM internal representations are notoriously hard to interpret; null results may reflect analysis difficulty rather than absence of genuine grounding changes.",
+      "killer_result": "Clear evidence of attention redistribution toward evidence-relevant regions would strongly validate the mechanism and address the artifact concern definitively."
+    },
+    {
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "The concurrent work ContextRL (Lu et al., 2026) is cited but distinguished: it feeds reference solutions as extra context to the reward model for process verification, while this paper makes context the object of an auxiliary selection task for the policy.",
+      "hidden_assumption_or_gap": "The two ContextRL methods might be complementary: combining them could yield further improvements. This is unexplored in the current paper.",
+      "research_question": "Can the two ContextRL approaches be combined? Specifically, does adding the concurrent ContextRL's context-augmented reward verification to this paper's context-selection auxiliary loss produce additive gains?",
+      "hypothesis": "The methods address different bottlenecks: this paper's ContextRL improves the policy's own context grounding, while the concurrent ContextRL improves the reward model's ability to verify grounded reasoning. They are complementary and combining them yields 2× the gain of either alone.",
+      "minimum_viable_experiment": "On Qwen2.5-VL-7B, compare four configurations on MathVista and ScienceQA: (1) standard GRPO (baseline), (2) this paper's ContextRL only, (3) concurrent ContextRL only (reward model receives reference solution as extra context), (4) combined (both context-selection loss + context-augmented reward). If (4) > (2) + (3), the methods are synergistic.",
+      "negative_result_interpretation": "If combined results are no better than the better of the two alone, the methods share similar bottlenecks or interfere with each other.",
+      "killer_objection": "Implementing the concurrent ContextRL's reward model modification requires access to reference solutions, which may not be available at evaluation time.",
+      "killer_result": "Even modest additivity (e.g., +0.5% over the better individual method) would encourage a unified 'full-context-aware RL' framework."
+    }
+  ]
+}

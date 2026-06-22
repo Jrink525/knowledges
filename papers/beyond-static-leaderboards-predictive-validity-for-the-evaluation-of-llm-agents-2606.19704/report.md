@@ -1,267 +1,310 @@
 # Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents
 
-**论文标题:** Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents  
-**作者:** Dhaval C. Patel et al. (55+ authors, IBM Research and Columbia University)  
-**来源:** arXiv:2606.19704 [cs.AI], 2026  
-**DOI:** 10.48550/arXiv.2606.19704  
-**Slug:** beyond-static-leaderboards
+## Paper Information
+
+| Field | Value |
+|-------|-------|
+| **Title** | Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents |
+| **Authors** | Dhaval C. Patel, Kaoutar El Maghraoui, and 55+ co-authors |
+| **Venue** | arXiv preprint, submitted 18 Jun 2026 |
+| **arXiv ID** | 2606.19704 |
+| **Domain** | cs.AI (Artificial Intelligence) |
+| **Pages** | 17 pages, 2 tables, 5 figures |
+| **License** | CC BY 4.0 |
+| **Slug** | beyond-static-leaderboards-predictive-validity-for-the-evaluation-of-llm-agents |
 
 ---
 
-## 1. 问题：静态 Leaderboard 的破产
+## 1. Abstract
 
-### 1.1 问题的引入
-
-The evaluation of LLM agents has outgrown its leaderboards. Agents today plan, call tools, reuse artifacts across turns, and coordinate with other agents, yet they are ranked by a small number of aggregate scores inherited from single-shot benchmarks.
-
-这篇论文的核心洞察非常简洁但犀利：当 agent 的能力维度从单轮问答扩展到规划、工具调用、多轮工件复用、多 agent 协调时，继承自单轮 benchmark 的 aggregate-score leaderboard 已经完全无法反映部署行为。
-
-### 1.2 CODS-2025 的冲击波
-
-最有力度的实证来自 CODS-2025 的 149 支队伍 agent 竞赛（Patel et al., 2026）：
-
-| Track | n | Public–Hidden Spearman ρ | 解读 |
-|---|---|---|---|
-| Execution | 13 | −0.13 (p=0.71) | **统计上不可区分于零**——公开榜排名与隐藏榜排名完全无关 |
-| Planning | 20 | 0.69 (CI≈[0.35,0.87]) | 上界落在论文提出的证伪阈值（ρ=0.85） |
-
-一个公开榜排名与隐藏排名 Spearman 为负数的竞赛——这意味着如果 operator 按照公开榜推荐的前三名去部署，**几乎可以肯定选错**。这就是 ``rank instability`` 最直接、最残酷的证据。
-
-## 2. 三个结构性批判
-
-论文的立场建立在三个对 aggregate-score leaderboard 的结构性批判之上。
-
-### 2.1 C1: Aggregate Scores Collapse Orthogonal Dimensions (维度坍缩)
-
-> A Pass1 score of 0.75 can be achieved by many qualitatively different configurations. Aggregate scores treat these as equivalent; deployment treats them as not.
-
-三个具体案例：
-
-- **Per-rubric reasoning sensitivity** (C3.1): Reasoning-on vs. off 在总 rubic 均分上相似，但在 clarity 维度相差 31 个百分点，而 data-retrieval 和 agent-sequence 维度不受影响(Li et al., 2026c)。
-- **Multi-turn artifact reuse** (C3.2): Plan-Execute 和 Supervisor-Specialist 在单轮 Pass1 上相似，但 2-5 轮延迟相差 4.2×——一个在单轮 benchmark 中完全不可见的维度(Li et al., 2026b)。
-- **Retrieval-strategy trade-off** (C3.3): 单轮 RAG 50-68% 准确率 vs. 多跳 agentic retrieval ~90% 准确率，但伴随 4.5-10× 的 token 膨胀(Li et al., 2026a)。
-
-**关键推论**: 没有一种配置在所有这些维度上同时胜出。aggregate score 让 operator 以为选项等价，但部署选择恰恰需要在这些 trade-off 中决策。
-
-### 2.2 C2: LLM-as-Judge Measurement is Reflexive (裁判反身性)
-
-> Most leaderboards depend on LLM-as-judge scoring, which is itself a measurement instrument with model-specific biases. The leaderboard risks measuring its own judge as much as the systems it evaluates.
-
-三项证据：
-
-- **Condition Insight (C4.1)**: CAR (Condition Agreement Rate) 从 0.68 上升到 0.91——是 prompt 设计而非 backbone 模型的改善(O'Donncha et al., 2026)。
-- **ARE/Gaia2 verifier (C4.2)**: DAG oracle 达到 0.99 precision、0.95 recall（无需 LLM 评判）(Froger et al., 2025)。
-- **PHMForge (C4.3)**: LLM-as-judge 的 inter-rater reliability 仅有 Krippendorff α=0.61，远低于人类-human 范围 0.74-0.82(Feng et al., 2026)。
-
-**核心论点**: 没有 judge-independent component 的 leaderboard 没有锚点来检测 judge drift。
-
-### 2.3 C3: Out-of-Distribution Behavior is the Deployment Question (OOD 才是部署问题)
-
-> Deployed systems do not encounter the training set or the leaderboard set.
-
-引用经典链：Ethayarajh & Jurafsky (2020) 指出 leaderboard ranks 只"偶然"反映用户效用函数；Dehghani et al. (2021) 的 ``benchmark lottery``；Recht et al. (2019) 的 ImageNet 结果。Exgentic 的跨 benchmark rank 相关性在 0.32-0.85 之间(Bandel et al., 2026)——"current architectures do not achieve robust generalization but instead optimize for specific task distributions."
-
-## 3. 综合：十二层测量体系
-
-### 3.1 七层核心测量 (T1-T7)
-
-由七个现有 benchmark 综合而来的核心层：
-
-| Tier | 名称 | 代表指标 | 来源 |
-|---|---|---|---|
-| T1 | Success | Pass1, Passk, DAG-Pass | AssetOpsBench, ARE/Gaia2 |
-| T2 | Tool-Call Hygiene | tool-name validity, schema compliance, execution success | MCP-Bench |
-| T3 | Planning Quality | ROUGE decomposition, Node/Edge F1, chain-order NED | TaskBench, MCP-Bench |
-| T4 | Capability Axes | 7 axes: execution, search, adaptability, time, ambiguity, agent-to-agent, noise | ARE/Gaia2 |
-| T5 | Cost & Efficiency | $/scenario, step count, latency, budget-scaling curves | MCP-Universe, Gaia2 |
-| T6 | Failure Modes | 14 MAST failure modes, distractor robustness, recovery rate | AssetOpsBench |
-| T7 | Integrity & Reproducibility | multi-run variance, prompt-shuffle averaging, judge–human agreement | MCP-Bench |
-
-### 3.2 五层部署扩展测量 (T8-T12)
-
-来自 14 组实现研究的部署扩展层：
-
-| Tier | 名称 | 关键维度 | 来源研究 |
-|---|---|---|---|
-| T8 | Deployment Infrastructure | latency decomposition, MCP-stdio overhead, cross-domain transfer | G7 Battery |
-| T9 | Multi-Turn Dialog | cross-turn artifact reuse, per-turn cost dynamics | G5 Multi-Turn |
-| T10 | Reasoning Mode | per-phase reasoning cost, adaptive routing precision/recall | G21 Profiling |
-| T11 | Knowledge Augmentation | retrieval recall, multi-hop depth, embedding-index quality | G3 Skills+KP |
-| T12 | Evidence Grounding & Verification | judge-independent governance, CAR, DAG oracle violations | Condition Insight, ARE/Gaia2 |
-
-**关键洞察**: 没有任何一个现有 benchmark 覆盖超过 4-5 层；T8-T12 在几乎所有已有 benchmark 中完全缺失。
-
-## 4. 预测效度作为排序标准
-
-### 4.1 核心公式
-
-> The right ranking criterion is predictive validity: the correlation between in-sample rank and out-of-sample rank, not in-sample mean.
-
-$$PV(c) = α·Ȳ_c - β·σ_{Y_c,OOD} - γ·IQR(Y_c)$$
-
-其中：
-- Ȳ_c = in-sample mean（传统 leaderboard 用这个就够了，但不够）
-- σ_{Y_c,OOD} = 跨 OOD 准则的 rank 标准差（惩罚不稳定配置）
-- IQR(Y_c) = per-scenario score 的 IQR（惩罚方差大的配置）
-- α, β, γ 通过 Criterion-A holdout 拟合
-
-### 4.2 三种 OOD 位移操作化
-
-| 准则 | 难度 | 方法 | 通过的意义 | 失败的意义 |
-|---|---|---|---|---|
-| A: Held-Out | 轻度 | 分层随机 split，保持 subset×category 联合分布 | passes are uninformative | failures are damning |
-| B: Cross-Subset | 中度 | 在 k-1 子集上排名，测试第 k 子集；6 subsets → 6×6 稳定性矩阵 | 最接近实际部署——"你在 chiller 上排的名，能推广到 pump 吗？" | 不可转移 |
-| C: Adversarial | 最强 | 四类语义等价扰动：paraphrase, identifier renaming, time-window shifting, distractor injection | 配置真的"解决了任务"而非"记住了模式" | 脆弱 |
-
-### 4.3 证伪条件 (Falsification Thresholds)
-
-论文立场之所以有力量，在于它**明确给出了可以被证伪的条件**：
-
-1. **ρ < 0.85**: In-sample 与 OOD 排名之间的 Spearman 相关性在至少两个 OOD 准则上低于 0.85（否则一般化程度太高，我们的担忧不成立）
-2. **Top-3 离开 top-5**: 在 ≥10% 的 holdout split 中，in-sample top-3 配置离开 OOD top-5
-3. **Mean-vs-OOD-variance ρ_pearson > 0.2**: 高性能配置不成比例地不稳定
-4. **PV top-10 与 mean top-10 的 Jaccard < 0.85**: 否则提出的方法不提供不同的部署指导
-
-**第一条件已部分得到支持**: CODS-2025 执行轨道的公开-隐藏 Spearman ρ=-0.13，远低于 0.85 阈值。
-
-## 5. 汇聚性架构敏感性
-
-### 5.1 十四组实现研究的全景
-
-论文汇聚了在同一 MCP-based benchmark (AssetOpsBench) 上独立开展的 14 组扩展研究，沿六条扩展轴。每组只修改一个架构变量做端到端比较。
-
-**扩展轴与关键发现:**
-
-| 扩展轴 | 组数 | 代表性的关键发现 |
-|---|---|---|
-| Asset Class | G7, G8 | Battery 6× speedup; Transformer 74.28× end-to-end 优化 |
-| Orchestration | G5, G12, G16 | SS 架构 4.2× turn 2-5 加速; MCP vs direct transport 比较 |
-| Knowledge/Retrieval | G3, G9, G14, G20 | RAG 50-68% vs Knowledge Plugin ~90%; QLoRA 消除 82.6% 输入 token |
-| Infrastructure | G5, G7, G27 | MCP-stdio subprocess overhead 是主导延迟地板 |
-| Reasoning Mode | G14, G21 | Reasoning-on 提升 clarity 31pp; 置信门控路由 13%→30.4% 正确率 |
-| Evaluation Methodology | G12, G30 | LLM judge IR α=0.61 vs human 0.74-0.82; substrate 消融从 80.8% 降到 25% |
-
-### 5.2 五个汇聚模式 (Convergence Patterns)
-
-**Pattern A: FMSR/TSFM bottleneck** — G5, G14, G16, G27 各自从不同角度定位到同一个瓶颈（TSFM 工具调用时间是主导 wall-clock 占比）。
-
-**Pattern B: Prompt-versus-weight tool knowledge** — G3, G14, G20, G21 从四个不同方向（retrieval, gating, fine-tuning, reasoning）"覆盖"同一个 trade-off 前沿。
-
-**Pattern C: MCP transport overhead** — G7, G9, G12, G27 各自独立测量 MCP-stdio 子进程开销是主导每调用延迟。
-
-**Pattern D: Caching trustworthiness** — G3, G9, G16, G27 都加了 cache，但只有 G9 发现了参数碰撞导致的 F1 上限 0.64——"caching helps" 和 "caching is safe" 是不同的论断。
-
-**Pattern E: Scenario authoring as binding constraint** — G7, G8, G12, G30 都遇到原本 141 场景的语料大小限制。
-
-> Convergence is the strongest evidence we offer for the synthesis; not new experiments, but convergent architectural sensitivity across many.
-
-## 6. PHMForge：一个深入案例
-
-PHMForge 是 14 组研究中最深入的一个(Feng et al., 2026)。它有几点特别值得注意：
-
-- **99 个 SME 撰写的预测场景**，跨越 8 个工业资产类，通过 39 个算法接地 MCP 工具服务
-- 唯一使用 ReAct 和 Claude Code（而非 plan-execute）的研究组
-- 最强配置 80.8% pass@1，但三个消融实验比标题数字更有信息量：
-  - MCP 工具 → text-RAG：RUL pass-all-3 从 100% 降到 20%（5/5 → 1/5）
-  - Cross-equipment transfer：从 bearings 84.1% → motors 42.7%（41 点差距）
-  - Withholding domain tools：从 80.8% → 25%
-- **Orchestration errors dominate failures**，作者原话："stronger at calling tools than at planning when to call them"
-
-## 7. 对 Leaderboard 设计的启示
-
-### Proposal 1: 声明配置而非仅声明模型
-
-Submissions should declare: Architecture, Reasoning Mode, Retrieval Strategy, Prompt-Constraint Level, Verifier Type. 每个都是非空轴，conflating across them produces misleading rankings.
-
-SmartGridBench 的实证支持：2400 trajectory 实验中，transport（direct vs. MCP）和 orchestration（PE vs. Verified PE vs. Self-Ask）独立变化，MCP 标准化增加延迟但不增加质量，而 orchestration 单变量提高 12.3pp pass rate。
-
-### Proposal 2: 分层展示
-
-Layer 1: PV rank headline table → Layer 2: Cost-Pareto plot → Layer 3: Per-tier drill-down panels → Layer 4: Significance and confidence intervals
-
-### Proposal 3: 必需提交要素
-
-Multi-run variance, hardware disclosure, declared tier coverage, raw trajectories. 社区需要两个公共构件：一个共享的 rule pipeline 做 judge-independent verification，以及一个 adversarial-perturbation suite 用于 Criterion C。
-
-## 8. 四个现场级建议
-
-1. **Declare configurations, not just models** — 提交架构、推理模式、检索策略、prompt-constraint 级别、验证器类型
-2. **Rank by transfer, not by mean** — 报告至少一个 OOD 准则的 PV 分数；in-sample mean 只是众多列中的一列
-3. **Require a judge-independent anchor** — 每个 leaderboard 至少应有一个轨迹级确定性验证器（rule pipeline, DAG oracle 等）
-4. **Adopt persistent, non-stdio infrastructure** — 14 组中有 3 组独立识别 MCP-stdio 开销为主导延迟地板
-
-> These four moves do not require a new benchmark; they require a different relationship between leaderboards and the deployments they advise.
-
-## 9. 局限性与自知之明
-
-论文对自身的局限异常坦诚：
-
-| 局限 | 具体内容 |
-|---|---|
-| **Predictive validity 未经验证** | 指定了实验框架但没有运行它。论文是综合与立场，不是实证发现 |
-| **领域特异性** | 所有证据来自工业资产运维，特别是 AssetOpsBench。十二层体系对其他 MCP 域的泛化性未知 |
-| **层级正交性未经验证** | "roughly orthogonal" 只是工作假设 |
-| **工业部署效度缺口** | 所有 PV 准则仍在 AssetOpsBench 内部，没有与实际部署结果的数据关联 |
-| **14 个研究的认识论地位** | 这些是未发表的实现报告，不是同行评审论文 |
-
-## 10. 立场与未来议程
-
-### 10.1 PV Score 的预注册实验设计
-
-论文提出了一个具体的预注册实验：
-
-- **low-power finding (ρ>0.95)**: 修正 down：AssetOpsBench 在 i.i.d. holdout 下高度稳定
-- **middle finding (0.65 < ρ < 0.95)**: 按计划进行完整研究
-- **strong finding (ρ < 0.65)**: 立场如此强有力以至于可以用减少范围的实验来达成
-
-### 10.2 四个未来方向集群
-
-Appendix F 汇聚了 14 个研究的 forward-looking suggestions，形成四个集群：
-
-- **Cluster I: Adaptive meta-router** — 5 组共同呼吁学习型路由器替代静态管道
-- **Cluster II: Persistent non-stdio MCP servers** — 3 组各自指出 stdio 延迟地板
-- **Cluster III: Cross-model and cross-asset generalization** — 4 组呼吁拓展模型与资产类
-- **Cluster IV: Scenario-corpus expansion** — 4 组呼吁突破 141 场景限制
-
-> The aggregate of these four clusters is exactly the position-paper thesis.
+Agent benchmarks are growing fast, but no single benchmark touches more than four or five of the dimensions that deployment exposes. This paper aggregates the largest coordinated deep-dive of one MCP-based industrial-agent benchmark to date: fourteen parallel implementation studies covering new asset classes (including a multi-modal visual extension), alternative orchestrations, retrieval strategies, reasoning modes, infrastructure optimizations, and evaluation-methodology probes. Consolidating those studies with seven prior agent benchmarks, the authors argue that aggregate-score leaderboards systematically underspecify deployed-agent evaluation. Rankings derived from aggregate scores do not transfer to out-of-distribution settings; recent public-to-hidden competition retrospectives provide direct empirical evidence of this rank instability. The paper proposes ranking configurations by **predictive validity** — the correlation between in-sample and out-of-sample rank, rather than in-sample mean — and reports a **twelve-tier measurement apparatus** that exposes the deployment-relevant dimensions HELM and its agent-era successors collapse. The position is operationalized through three falsifiable out-of-distribution criteria with explicit thresholds. The paper closes with a pre-registered pilot design and a field-level vision for what the next generation of agentic benchmarks should report.
 
 ---
 
-## 声明索引 (Claim Index)
+## 2. Problem Definition and Motivation
 
-| 编号 | 声明 | 证据 | 章节 |
-|---|---|---|---|
-| C1.1 | Aggregate-score leaderboards underspecify deployed-agent evaluation | CODS-2025 ρ=-0.13 (execution) and ρ=0.69 (planning) | §1 |
-| C2.1 | Aggregate scores collapse orthogonal dimensions | Three concrete cases: reasoning sensitivity 31pp, multi-turn 4.2× latency, RAG vs KP trade-off | §2.1 |
-| C2.2 | LLM-as-judge measurement is reflexive | CAR 0.68→0.91 from prompt alone; Krippendorff α=0.61 vs human 0.74-0.82 | §2.2 |
-| C2.3 | OOD behavior is the deployment question, not in-sample mean | Exgentic cross-benchmark ρ=0.32-0.85; CODS-2025 gap | §2.3 |
-| C3.1 | No single benchmark covers >5 of 12 tiers | Figure 2: Coverage analysis across 9 source benchmarks | §3 |
-| C4.1 | Three OOD criteria operationalize the predictive validity concept | Criteria A (held-out), B (cross-subset), C (adversarial) | §4.1 |
-| C4.2 | Four falsification thresholds specify when position is refuted | ρ<0.85, top-3 departure, mean-OOD variance correlation, Jaccard <0.85 | §4.3 |
-| C5.1 | 14 implementation studies converge on same measurement gaps | Five convergence patterns (A-E) across 14 groups | §5, Appendix E |
-| C5.2 | MCP-stdio transport overhead is a dominant latency floor | G7, G9, G12, G27 independently measure this | §5, Appendix E |
-| C5.3 | Judge-independent verification is feasible | ARE/Gaia2 0.99 precision; Condition Insight CAR; PHMForge α=0.61 | §5.3 |
-| C6.1 | Predictive validity score PV(c) combines mean with OOD reliability | PV(c) = αȲ_c - βσ_Y_c,OOD - γIQR(Y_c) | §4.2, Appendix G |
-| C6.2 | Substrate underspecification dominates failure modes | PHMForge: withholding domain tools drops 80.8%→25% | §5.4 |
-| C7.1 | Four field-level recommendations for next-gen agent benchmarks | Declare configs, rank by transfer, require judge anchor, adopt persistent infra | §6, §7 |
+### 2.1 The Core Problem
 
----
+The evaluation of LLM agents has outgrown its leaderboards. Agents today plan, call tools, reuse artifacts across turns, and coordinate with other agents, yet they are ranked by a small number of aggregate scores inherited from single-shot benchmarks. The result is **rank instability**: rankings derived from aggregate scores do not predict what an operator would observe in deployment.
 
-## 词汇表
+### 2.2 The CODS-2025 Competition Data Point
 
-| 术语 | 定义 |
-|---|---|
-| Predictive Validity | In-sample rank 与 out-of-sample rank 的相关性，而非 in-sample mean |
-| Rank Instability | 不同分布设置下 leaderboard 排名不一致 |
-| MCP | Model Context Protocol — 模型工具调用协议 |
-| PV Score | Predictive Validity Score: α·mean - β·OOD_std - γ·IQR |
-| OOD Criterion | Out-of-Distribution 位移操作化：holdout, cross-subset, adversarial |
-| Falsification Threshold | 立场被认为不成立的具体条件集 |
-| CAR | Condition Agreement Rate — LLM 分类与 rule-based pipeline 比对 |
-| ARE/Gaia2 | Agent 轨迹级验证，使用 human-annotated oracle DAGs |
-| PHMForge | Prognostics Health Management Benchmark，99 个 SME 场景，8 个资产类 |
-| T1-T12 | 十二层测量体系的每层 |
+In the 149-team CODS-2025 AssetOpsBench competition (Patel et al., 2026), the Spearman correlation between public-leaderboard rankings and hidden-evaluation rankings was:
+- **Execution track**: ρ = −0.13 (n=13, p=0.71, statistically indistinguishable from zero)
+- **Planning track**: ρ = 0.69 (n=20, robustly positive, but the upper 95% confidence bound falls at the falsification threshold)
+
+With n=13, the 95% bootstrap CI on the execution correlation spans roughly [−0.64, +0.45]. The planning track's mean private scores still fall 11.3 points below public, and public scores saturate (8 unique values across 20 teams).
+
+### 2.3 Two Streams of Prior Work
+
+**Stream 1 — Wave of agent benchmarks**: SWE-Bench (Jimenez et al., 2024), τ-Bench (Yao et al., 2024), ARE/Gaia2 (Froger et al., 2025), MCP-Universe (Luo et al., 2025), MCP-Bench (Wang et al., 2026), AssetOpsBench (Patel et al., 2025), Exgentic (Bandel et al., 2026). Each surfaces a different facet of trajectory-level evaluation but still ranks configurations by aggregate score.
+
+**Stream 2 — NLP critique of single-score ranking**: Ethayarajh and Jurafsky (2020), Bowman and Dahl (2021), Raji et al. (2021) questioning single-score ranking; HELM (Liang et al., 2022) and Dynabench (Kiela et al., 2021) as multi-dimensional frameworks; Ribeiro et al. (2020) for behavioral testing. HELM broadens dimensions for single-shot models, but agents introduce orthogonal axes (orchestration, multi-turn artifact reuse, tool-call hygiene, judge-independent verification) that HELM does not score.
 
 ---
 
-*Deep-read generated: 2026-06-19 | Paper: arXiv:2606.19704 | Slug: beyond-static-leaderboards*
+## 3. Position Statement
+
+> **Position:** Aggregate-score leaderboards systematically underspecify the dimensions on which deployed LLM agents are evaluated. The field would benefit from a multi-tier measurement apparatus ranked by predictive validity rather than in-sample mean.
+
+### Three Supporting Claims
+
+| Claim | Summary |
+|-------|---------|
+| **C1** | Existing benchmarks measure overlapping subsets of a larger measurement space; their findings, taken together, suggest the larger space is non-redundant. |
+| **C2** | Within a single industrial domain, parallel implementations by independent teams converge on evaluation dimensions that no single benchmark surfaces. |
+| **C3** | Predictive validity (how in-sample rankings forecast out-of-sample rankings) is a more useful ranking criterion than in-sample mean for deployment decisions. |
+
+---
+
+## 4. Three Structural Critiques of Aggregate-Score Leaderboards
+
+### 4.1 Aggregate Scores Collapse Orthogonal Dimensions (Section 2.1)
+
+A Pass1 score of 0.75 can be achieved by qualitatively different configurations:
+- Reasoning-heavy and cost-expensive
+- Retrieval-rich and latency-bound
+- Tool-hygiene-fragile but artifact-reuse-efficient
+
+**Three concrete cases:**
+
+| Case | Finding | Source |
+|------|---------|--------|
+| Per-rubric reasoning sensitivity | Reasoning-on vs. reasoning-off score similarly on overall rubric mean but differ by **31 pp on clarity-specific scoring**; data-retrieval and agent-sequence dimensions unchanged | Li et al., 2026c |
+| Multi-turn artifact reuse | Plan-Execute and Supervisor-Specialist score similarly on single-turn Pass1 but differ by **4.2× on turn-2-to-5 latency** due to cross-turn artifact reuse | Li et al., 2026b |
+| Retrieval-strategy trade-off | Single-pass RAG: 50–68% accuracy vs. agentic multi-hop: ~90% accuracy with **4.5×–10× token inflation** | Li et al., 2026a |
+
+### 4.2 LLM-as-Judge Measurement is Reflexive (Section 2.2)
+
+Most leaderboards depend on LLM-as-judge scoring (Zheng et al., 2023), which has model-specific biases. As judge models evolve, ranking shifts; as judge prompts are adjusted, scores move.
+
+**Three evidence points:**
+1. **Condition Insight**: CAR moves from 0.68 to 0.91 under constrained-prompting design — a 20pp improvement attributable to prompting, not backbone-model choice (O'Donncha et al., 2026)
+2. **ARE/Gaia2 DAG oracle**: 0.99 precision and 0.95 recall against 450 hand-labeled trajectories — judge-independent verification is feasible (Froger et al., 2025)
+3. **PHMForge**: LLM-as-judge inter-rater reliability reaches only Krippendorff α=0.61, well below human-human range α∈[0.74, 0.82] on the same sample (Feng et al., 2026)
+
+### 4.3 Out-of-Distribution Behavior is the Deployment Question (Section 2.3)
+
+Deployed systems encounter three types of scenarios:
+- Distributionally similar to held-out cases
+- Distributionally distinct (cross-domain transfer)
+- Adversarially perturbed by user phrasing
+
+In-sample mean predicts none of these directly. Exgentic observed cross-benchmark rank correlations of 0.32–0.85 across six heterogeneous benchmarks (Bandel et al., 2026), concluding that "current architectures do not achieve robust generalization but instead optimize for specific task distributions."
+
+---
+
+## 5. The Synthesis: Twelve-Tier Measurement Apparatus (Section 3)
+
+The twelve tiers are consolidated from seven source benchmarks plus fourteen parallel implementation studies. No single prior benchmark reports more than four or five tiers.
+
+### Core Capability Tiers (T1–T7)
+
+| Tier | Dimension | Source | Representative Metric |
+|------|-----------|--------|----------------------|
+| T1 | Success | AssetOpsBench, ARE/Gaia2 | Pass1, Passk, DAG-Pass |
+| T2 | Tool-Call Hygiene | MCP-Bench | Tool-name validity, schema compliance, execution success, dependency-order correctness |
+| T3 | Planning Quality | MCP-Bench, TaskBench | ROUGE on decomposition, Node/Edge F1, chain-order NED |
+| T4 | Capability Axes | ARE/Gaia2, TaskBench | 7 axes: execution, search, adaptability, time, ambiguity, agent-to-agent, noise |
+| T5 | Cost & Efficiency | MCP-Universe, Gaia2 | $/scenario, step count, latency, budget-scaling curves |
+| T6 | Failure Modes | AssetOpsBench | 14 MAST failure modes + emergent clusters, distractor robustness, recovery rate |
+| T7 | Integrity & Reproducibility | MCP-Bench | Multi-run variance, prompt-shuffle averaging, validation/test split, judge–human IAA |
+
+### Deployment Extension Tiers (T8–T12)
+
+| Tier | Dimension | Source | Representative Metric |
+|------|-----------|--------|----------------------|
+| T8 | Deployment Infrastructure | G7 Battery extension | Latency decomposition, MCP-stdio overhead, subprocess-spawn count, cross-domain transfer |
+| T9 | Multi-Turn Dialog | G5 Multi-Turn study | Cross-turn artifact reuse, per-turn cost dynamics, context-bloat trade-offs, dialog-level Pass1 |
+| T10 | Reasoning Mode | G21 Profiling | Per-phase reasoning cost, per-rubric reasoning sensitivity, adaptive routing P/R |
+| T11 | Knowledge Augmentation | G3 Skills+KP | Retrieval recall, multi-hop depth, embedding-index quality, skill-marketplace coverage |
+| T12 | Evidence Grounding & Verification | Condition Insight, ARE/Gaia2 | Condition Agreement Rate (CAR), hard/causality/timing violations, Unsupported Claim Rate |
+
+---
+
+## 6. Predictive Validity as Ranking Criterion (Section 4)
+
+### 6.1 The Predictive Validity Score
+
+A composite ranking score combining mean performance with out-of-sample reliability:
+
+```
+PV(c) = α·Ȳ_c − β·σ_{Y_c,OOD} − γ·IQR(Y_c)
+```
+
+Where:
+- Ȳ_c = in-sample mean
+- σ_{Y_c,OOD} = cross-OOD-criterion standard deviation of rank position
+- IQR(Y_c) = interquartile range of per-scenario scores
+- α, β, γ = weights fit on Criterion-A holdouts to maximize Spearman correlation between PV rank and Criterion-B/C ranks
+
+### 6.2 Three Operationalizations of OOD Shift
+
+| Criterion | Shift Type | Description | Interpretation |
+|-----------|-----------|-------------|----------------|
+| **A: Held-Out Scenarios** | Mild | Stratified random split of benchmark preserving joint distribution | Weakest test; passes uninformative, failures damning |
+| **B: Cross-Subset Transfer** | Moderate | Rank on k−1 subsets, test on held-out; 6×6 rank-stability matrix for AssetOpsBench's 6 subsets | Most realistic: "you ranked agents on chillers; will ranking transfer to hydraulic pumps?" |
+| **C: Adversarial Perturbation** | Strongest | Four perturbation classes: paraphrase, identifier renaming, time-window shifting, distractor injection | "A configuration that genuinely solved the task should perform equivalently across base and perturbed versions" |
+
+### 6.3 Falsification Conditions (Section 4.3)
+
+For the position to be considered well-supported:
+
+| Condition | Threshold | Current Status |
+|-----------|-----------|----------------|
+| F1: In-sample vs OOD Spearman ρ | < 0.85 across ≥2 OOD criteria | Partially supported: execution-track ρ=−0.13 (Patel et al., 2026) |
+| F2: Top-3 in-sample leave top-5 OOD | ≥10% of holdout splits | Not yet tested |
+| F3: Mean-vs-OOD-variance ρ_Pearson | > 0.2 | Not yet tested |
+| F4: PV-top-10 vs mean-top-10 Jaccard | < 0.85 | Not yet tested |
+
+The paper commits to publishing the position as refuted if these conditions fail under controlled experiment.
+
+---
+
+## 7. Convergent Architectural Sensitivity (Section 5)
+
+### 7.1 Study Overview
+
+Fourteen parallel implementation studies extending one MCP-based benchmark (AssetOpsBench) along six axes. The headline improvements are summarized in Figure 3 and range from ~1.26× (reasoning-on) to ~3500× (disk cache for predict-only).
+
+### 7.2 Key Findings (Body Cases)
+
+**Case 1 — Reasoning mode (G21, Li et al., 2026c):**
+- Reasoning-on raised total latency by 21.5% (15.08s → 18.32s), planning latency by 41.9%
+- Clarity improved 31pp (61% → 92%), hallucination dropped 7pp (12% → 5%)
+- Data retrieval and agent-sequence correctness: unchanged
+
+**Case 2 — Knowledge augmentation (G3, Li et al., 2026a):**
+- RAG: 50–68% rubric accuracy at 8.9–20s end-to-end
+- Knowledge Plugin: ~90% at 114–146s with 4.5×–10× token inflation
+- Cross-model split: Granite-3-8B reached 60% at 91s on the same pipeline
+
+**Case 3 — Judge-independent governance:**
+- Condition Insight: CAR 0.68 → 0.91 under constrained prompting (prompt-level, not backbone-model gain)
+- ARE/Gaia2 DAG oracle: 0.99 precision, 0.95 recall against 450 hand-labeled trajectories
+- PHMForge: LLM-as-judge Krippendorff α=0.61 vs human-human α∈[0.74, 0.82]
+
+**Case 4 — Substrate underspecification (G30, Feng et al., 2026):**
+- Replacing MCP with text-RAG collapsed RUL pass-all-3 from 100% to 20%
+- Cross-equipment transfer: 84.1% (bearings) → 42.7% (motors), a 41-point gap
+- Operator-style fuzzy queries: 80.6% → 48.6% (McNemar p=0.002)
+- Withholding domain tools: 80.8% → 25%
+
+### 7.3 Appendix A: Additional Cases
+
+| Case | Key Finding |
+|------|------------|
+| Multi-turn artifact reuse (G5) | SS architecture: tool-time 47.3% → 26.3%, planning 0.559 → 0.791, schema-failure rate −68.7%, turns 2–5 ran 4.2× faster than turn 1 |
+| QLoRA tool internalization (G20) | AT-F1 0.65 vs 0.47; tokens reduced 82.6%; catastrophic forgetting: Gemma retained 79.8% MCQ, Qwen3 retained 61.3% |
+| Confidence-gated routing (G14) | Overall correct 13.0% → 30.4%, hallucination 93.5% → 35.6%, agent-sequence 6.5% → 88.9% at θ=0.8 |
+| Asset class — Battery (G7) | 6× end-to-end speedup; 8/11 scenarios at 7.4s vs 44.6s baseline |
+| Asset class — Transformer (G8) | 8× speedup; quality preserved (74.2±1.9 vs 73.8±3.0) |
+| Temporal semantic cache (G9) | 3.48× overall speedup; F1 ceiling 0.64 due to parameter-collision false positives |
+| Visual inspection extension (G23) | AWQ W4A16 + domain calibration: pass 0.48 → 0.82 with 1.99× latency reduction; FP8-KV caused 0/44 response collapse on Qwen |
+
+### 7.4 Five Convergence Patterns (Appendix E)
+
+| Pattern | Description | Teams |
+|---------|-------------|-------|
+| A: Plan-execute bottleneck localization | Independent teams localize same bottleneck to FMSR or TSFM | G5, G14, G16, G27 |
+| B: Prompt-versus-weight tool knowledge | Four groups improve by adding "more thinking" along distinct axes | G3, G14, G20, G21 |
+| C: MCP transport overhead | MCP-stdio subprocess overhead as dominant per-call latency floor | G7, G9, G12, G27 |
+| D: Caching trustworthiness | Only G9 surfaces parameter-collision F1 ceiling as structural failure mode | G3, G9, G16, G27 |
+| E: Scenario authoring as binding constraint | 141-scenario corpus is too small for serious extension work | G7, G8, G12, G30 |
+
+---
+
+## 8. Implications for Leaderboard Design (Section 6)
+
+### Three Proposals
+
+**Proposal 1: Declared configuration columns.** Beyond Model and Pass1, submissions should declare: Architecture, Reasoning Mode, Retrieval Strategy, Prompt-Constraint Level, and Verifier Type. The SmartGridBench study provides direct empirical motivation: in a 2,420-trajectory experiment, MCP standardization adds latency without quality gain, while orchestration changes alone raise pass rate from 43.2% to 55.5%.
+
+**Proposal 2: Layered presentation.** Four layers: (L1) headline PV rank table, (L2) cost-Pareto plot, (L3) drill-down panels per tier, (L4) significance and confidence intervals.
+
+**Proposal 3: Required submission elements.** Multi-run variance, hardware disclosure, declared tier coverage, raw trajectories. Two community artifacts needed: shared rule pipeline for judge-independent verification, adversarial perturbation suite for Criterion C.
+
+### 6.2 Alternative Views
+
+1. **"Aggregate scores are sufficient for model comparison."** The paper's claim is narrower — rankings derived from aggregate scores do not transfer.
+2. **"Predictive validity reproduces the problem."** No — predictive validity is reported across three OOD criteria with explicit thresholds and bootstrap CIs.
+3. **"HELM and Dynabench already address multi-dimensionality."** They address it for single-shot models; agents introduce trajectory- and orchestration-level axes.
+
+---
+
+## 9. Summary and Outlook (Section 7)
+
+### Field-Level Recommendations
+
+1. **Declare configurations, not just models** — Submission fields for architecture, reasoning mode, retrieval strategy, prompt-constraint level, verifier type
+2. **Rank by transfer, not by mean** — Report predictive-validity scores across at least one OOD criterion
+3. **Require a judge-independent anchor** — At least one trajectory-level deterministic verifier
+4. **Adopt persistent, non-stdio infrastructure** — MCP-stdio overhead conflated with reasoning ability
+
+### Four Forward-Looking Suggestion Clusters (Appendix F)
+
+| Cluster | Recommendation | Supporting Groups |
+|---------|---------------|-------------------|
+| I | Adaptive and learned routing (meta-router as first-class abstraction) | G3, G9, G14, G16, G21 |
+| II | Persistent, non-stdio MCP servers | G7, G9, G27 |
+| III | Cross-model and cross-asset generalization | G8, G14, G16, G19 |
+| IV | Scenario-corpus expansion beyond 141 scenarios | G8, G12, G20, G30 |
+
+---
+
+## 10. Limitations
+
+1. **Empirical validation is future work** — The position is supported by convergent architectural-sensitivity evidence, not a controlled randomized trial
+2. **Domain specificity** — All evidence from industrial asset operations and maintenance (AssetOpsBench); generalization to other MCP-based domains is open
+3. **Tier independence asserted, not tested** — Twelve-tier orthogonality is a working hypothesis
+4. **Industrial deployment validity gap** — No data linking framework rankings to real deployed-system outcomes (operator override rate, incident reduction, false-alarm rate)
+5. **Implementation-study epistemic status** — The fourteen studies are unpublished implementation reports, not peer-reviewed publications
+
+---
+
+## 11. Claim Index
+
+| ID | Claim | Section | Evidence Source |
+|----|-------|---------|-----------------|
+| C1.1 | Aggregate-score leaderboards collapse orthogonal deployment-relevant dimensions | §2.1 | Pass1=0.75 achievable by qualitatively different configurations |
+| C1.2 | Reasoning-on vs reasoning-off differ by 31pp on clarity scoring while overall mean hides it | §2.1 | Li et al., 2026c |
+| C1.3 | Plan-Execute vs Supervisor-Specialist differ by 4.2× on turn-2-to-5 latency | §2.1 | Li et al., 2026b |
+| C1.4 | Single-pass RAG vs multi-hop retrieval show 50-68% vs ~90% accuracy with 4.5-10× token inflation | §2.1 | Li et al., 2026a |
+| C2.1 | LLM-as-judge measurement is reflexive and model-specific | §2.2 | Zheng et al., 2023 |
+| C2.2 | CAR moves from 0.68 to 0.91 under constrained prompting — prompt-level gain, not backbone gain | §2.2 | O'Donncha et al., 2026 |
+| C2.3 | ARE/Gaia2 DAG oracle achieves 0.99 precision and 0.95 recall | §2.2 | Froger et al., 2025 |
+| C2.4 | PHMForge: LLM-as-judge inter-rater reliability α=0.61 vs human α∈[0.74,0.82] | §2.2 | Feng et al., 2026 |
+| C3.1 | CODS-2025 execution-track public-hidden Spearman ρ=−0.13 (n=13, p=0.71) | §2.3 | Patel et al., 2026 |
+| C3.2 | CODS-2025 planning-track public-hidden Spearman ρ=0.69 (n=20) | §2.3 | Patel et al., 2026 |
+| C3.3 | Exgentic cross-benchmark rank correlations span 0.32–0.85 | §2.3 | Bandel et al., 2026 |
+| C4.1 | No single prior benchmark reports more than 4-5 of the 12 tiers | §3 | Benchmark×tier coverage matrix (Figure 2) |
+| C4.2 | The 12 tiers are non-redundant measurement dimensions | §3 | Consolidated from 7 benchmarks + 14 studies |
+| C5.1 | Reasoning-on raises latency 21.5%, clarity +31pp, hallucination −7pp | §5.1 | Li et al., 2026c |
+| C5.2 | Knowledge Plugin achieves ~90% accuracy at 114-146s vs RAG 50-68% at 8.9-20s | §5.2 | Li et al., 2026a |
+| C5.3 | MCP tool execution → text-RAG collapses RUL pass-all-3 from 100% to 20% | §5.4 | Feng et al., 2026 |
+| C5.4 | Cross-equipment transfer drops pass rate from 84.1% to 42.7% | §5.4 | Feng et al., 2026 |
+| C5.5 | Frontier LLMs are "stronger at calling tools than at planning when to call them" | §5.4 | Feng et al., 2026 |
+| C6.1 | MCP-stdio subprocess overhead is a dominant per-call latency floor identified by 4 independent teams | Appendix E | G7, G9, G12, G27 |
+| C6.2 | Scenario-corpus size (141 scenarios) is the binding constraint on extension work | Appendix E | G7, G8, G12, G30 |
+| C6.3 | The base architecture is under-designed, not near-optimal (5 convergence patterns) | Appendix E | All 14 studies |
+
+---
+
+## 12. Ethical Considerations
+
+This paper makes no use of human-subjects data, PII, or sensitive deployed-system traces. The implementation studies use publicly released AssetOpsBench data (Apache-2.0) and synthetic or public industrial data (NASA PCOE Li-ion cycling data). The paper flags a potential downside: predictive-validity measurements are more expensive than aggregate scoring and could concentrate evaluation capacity in well-resourced institutions. The recommendation is to maintain reference adversarial-perturbation suites and reference rule pipelines as community artifacts.
+
+---
+
+## 13. Pre-Registered Pilot Design
+
+The proposed pilot study:
+- **Sample size**: 80 configurations, 120 scenarios, ~1,200 perturbed observations
+- **Statistical power**: 80 paired ranks can distinguish ρ=0.85 vs ρ=0.95 at α=0.01 with power >0.9
+- **Decision rule**: If pilot holdout Spearman > 0.95 → revise central claim downward (rankings are stable); if 0.65-0.95 → proceed with full study; if < 0.65 → claim so strongly supported that reduced scope suffices
+
+---
+
+## 14. The Big Picture
+
+This paper is a **position paper grounded in synthesis**, not new controlled experiments. Its central contribution is introducing **predictive validity** as a ranking criterion for LLM agent evaluation, operationalized through three falsifiable OOD criteria and a twelve-tier measurement apparatus. The evidence base is the largest coordinated extension of one agent benchmark to date: fourteen studies, ~6,000 judged trajectories, six extension axes. The paper's value lies in providing a concrete, falsifiable alternative to the aggregate-score paradigm that dominates current leaderboard practice.

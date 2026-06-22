@@ -1,0 +1,34 @@
+{
+  "paper_id": "2606.16827",
+  "paper_title": "No Resource, No Benchmarks, No Problem: Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "artifacts": [
+    {
+      "path": "papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/report.md",
+      "description": "主报告：中文深度解读",
+      "type": "report",
+      "language": "zh-CN"
+    },
+    {
+      "path": "papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/traceability_manifest.json",
+      "description": "声明-证据链清单",
+      "type": "traceability"
+    },
+    {
+      "path": "papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/research_lens.json",
+      "description": "研究透镜：问题重构与批判性追问",
+      "type": "research_lens"
+    },
+    {
+      "path": "papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/direction_board.json",
+      "description": "研究方向种子排名",
+      "type": "direction_board"
+    },
+    {
+      "path": "papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/artifact_index.json",
+      "description": "本清单文件",
+      "type": "index"
+    }
+  ],
+  "generated_at": "2026-06-21T17:30:00Z",
+  "source_paper": "https://arxiv.org/abs/2606.16827"
+}

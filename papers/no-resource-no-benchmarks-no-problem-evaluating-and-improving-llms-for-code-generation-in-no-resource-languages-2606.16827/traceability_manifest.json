@@ -1,0 +1,208 @@
+{
+  "paper_id": "2606.16827",
+  "paper_title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "manifest_version": "1.0.0",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim_text": "LLMs achieve 0-1% pass@1 on no-resource languages for hard tasks (McEval-Hard)",
+      "location": {
+        "section": "I. Introduction",
+        "sentence": "0-1% for no-resource"
+      },
+      "evidence": [
+        {
+          "source": "Table IV",
+          "description": "All four LLMs (GPT-4o, o3-mini, Qwen 2.5 Coder 32B, Qwen 3 32B) scoring 0-1% on Gleam and MoonBit for McEval-Hard",
+          "confidence": "high",
+          "details": {
+            "GPT-4o_Gleam": 0.97,
+            "GPT-4o_MoonBit": 0.88,
+            "o3-mini_Gleam": 0.18,
+            "o3-mini_MoonBit": 1.10,
+            "Qwen25Coder_Gleam": 0.40,
+            "Qwen25Coder_MoonBit": 0.88,
+            "Qwen3_Gleam": 0.44,
+            "Qwen3_MoonBit": 0.88
+          }
+        },
+        {
+          "source": "Section III, RQ1 Answer",
+          "description": "Synthesis: 'close to 0% for hard coding tasks (McEval-Hard)'",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "claim_text": "Syntactic errors dominate in no-resource failures (~2/3 of cases)",
+      "location": {
+        "section": "III. RQ1 Results",
+        "sentence": "roughly two-thirds of the failures are syntactic"
+      },
+      "evidence": [
+        {
+          "source": "Section III, GPT-4o analysis",
+          "description": "GPT-4o on Gleam/MoonBit: ~2/3 failures syntactic",
+          "confidence": "high"
+        },
+        {
+          "source": "Section III, o3-mini analysis",
+          "description": "o3-mini on Gleam: up to 90% syntactic failures",
+          "confidence": "high"
+        },
+        {
+          "source": "Replication package [49]",
+          "description": "Full error classification table available",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "claim_text": "Low-resource languages no longer as challenging as previously reported; 49/60 cases above 50% pass@1",
+      "location": {
+        "section": "III. RQ1 Results",
+        "sentence": "In 49 out of 60 cases (5 languages × 3 benchmarks × 4 models), pass@1 is above 50%"
+      },
+      "evidence": [
+        {
+          "source": "Table IV",
+          "description": "Detailed per-language, per-model pass@1 for low-resource languages",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "claim_text": "Further pre-training outperforms fine-tuning for no-resource languages",
+      "location": {
+        "section": "III. RQ2 Answer",
+        "sentence": "Pre-training is the most promising technique"
+      },
+      "evidence": [
+        {
+          "source": "Table V comparison",
+          "description": "Qwen 2.5 Coder 32B Base pre-trained vs fine-tuned instruct: Gleam McEval-Hard 12.47 vs 3.04; MoonBit 25.86 vs 10.93",
+          "confidence": "high",
+          "statistical_test": "McNemar, p < 0.05 (Benjamini-Hochberg corrected)",
+          "odds_ratios": "Gleam: 1.89–4.24, MoonBit: 1.43–3.78"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "claim_text": "Pre-training outperforms fine-tuning because it uses more data (all code vs. only paired doc-function)",
+      "location": {
+        "section": "III. RQ2 Results",
+        "sentence": "Indeed, when pre-training, the entire code files...can be used"
+      },
+      "evidence": [
+        {
+          "source": "Table III (referenced in text)",
+          "description": "Pre-training data: 28.3M tokens (Gleam), 13.7M tokens (MoonBit). Fine-tuning data: 3.6M tokens (Gleam), 0.5M tokens (MoonBit)",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "claim_text": "Instruction transferring boosts pass@1 by +12% on average vs. pre-training alone",
+      "location": {
+        "section": "IV. Instruction Transferring",
+        "sentence": "an average increase across benchmarks, models and languages of 12%"
+      },
+      "evidence": [
+        {
+          "source": "Table VI",
+          "description": "Δ values for all 12 model×language×benchmark combinations",
+          "confidence": "high"
+        },
+        {
+          "source": "Section IV, statistical test",
+          "description": "11/12 cases statistically significant (McNemar, p < 0.05), ORs 1.21–10.95",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "claim_text": "Smaller models (8B) + instruction transfer can outperform larger models (32B) fine-tuned",
+      "location": {
+        "section": "IV. Instruction Transferring",
+        "sentence": "instruction transferring applied to smaller models can result in outperforming larger and more expensive models"
+      },
+      "evidence": [
+        {
+          "source": "Table VI vs Table V",
+          "description": "Qwen 3 8B+Diff (Gleam HumanEval: 51.88%) vs Qwen 3 32B fine-tuned (Gleam HumanEval: 23.57%) — up to +28% improvement",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "claim_text": "In-context learning helps but is significantly weaker than training-based approaches",
+      "location": {
+        "section": "III, Answer to RQ2",
+        "sentence": "training-based techniques...are more effective than in-context learning"
+      },
+      "evidence": [
+        {
+          "source": "Table V",
+          "description": "All models: fine-tuning/pre-training pass@1 > 5-shot/RAG pass@1 in all configurations",
+          "confidence": "high"
+        },
+        {
+          "source": "Section III, error analysis",
+          "description": "Few-shot reduces syntactic errors by 15.36%, RAG by 8.94%; fine-tuning/pre-training reduce to <20%",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "claim_id": "C9",
+      "claim_text": "MoonBit shows higher improvement from techniques than Gleam, possibly due to AI-friendly language design",
+      "location": {
+        "section": "III, RQ2 Results",
+        "sentence": "The higher gain on MoonBit than on Gleam can be explained by two factors"
+      },
+      "evidence": [
+        {
+          "source": "Table V, Table VI",
+          "description": "MoonBit consistently shows higher absolute pass@1 and gains from techniques",
+          "confidence": "medium"
+        },
+        {
+          "source": "Fei et al. [17] cited",
+          "description": "MoonBit design paper claims 'AI-driven language design' and 'more flexible retrieval-based prompt augmentation'",
+          "confidence": "medium"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim_text": "Pre-training base models does not harm instruction following when combined with weight diff transfer",
+      "location": {
+        "section": "IV. Instruction Transferring",
+        "sentence": "This results in a model that features all instruction-following capabilities of an instruct model"
+      },
+      "evidence": [
+        {
+          "source": "Table VI (Diff column vs. Table IV instruct zero-shot)",
+          "description": "Instruction-transferred models outperform or match zero-shot instruct models on no-resource languages",
+          "confidence": "medium"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "num_claims": 10,
+    "total_evidence_items": 14,
+    "high_confidence_claims": 6,
+    "medium_confidence_claims": 3,
+    "low_confidence_claims": 0,
+    "source_type": "arXiv HTML (no LaTeX source available)",
+    "extraction_method": "Manual extraction from arXiv HTML full text"
+  }
+}

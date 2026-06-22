@@ -1,0 +1,221 @@
+{
+  "paper_id": "2606.17053",
+  "paper_title": "Context-Aware RL for Agentic and Multimodal LLMs",
+  "claim_index": {
+    "C1.1": {
+      "summary": "开源模型在标准基准上表现出色，但在对比上下文选择测试中接近随机水平，表明强基准性能可能掩盖了上下文 grounding 的失败",
+      "evidence": [
+        {
+          "quote_text": "notably, strong open-source models such as Qwen-3 (VL) 8B and Qwen-3.5 9B perform close to random choice, despite their competitive performance on standard benchmarks",
+          "source": "report.md",
+          "section": "1 Introduction"
+        },
+        {
+          "quote_text": "this simple test reveals a roughly 40-point gap between proprietary models and widely used open-source models",
+          "source": "report.md",
+          "section": "1 Introduction"
+        }
+      ]
+    },
+    "C2.1": {
+      "summary": "通过级联过滤（同一仓库、提交、文件、函数/类、相关但不同问题）可以构建几乎 token 级别相同的对比轨迹对",
+      "evidence": [
+        {
+          "quote_text": "Paired trajectories share the same repository, commit, modified file, and target function or class... the two contexts are therefore nearly identical at the token level",
+          "source": "report.md",
+          "section": "2.1 Agentic Contrastive Context Pairs Construction"
+        },
+        {
+          "quote_text": "only 1k high-quality contrastive trajectory pairs survive, i.e. 1.5% of the 66k source trajectories",
+          "source": "report.md",
+          "section": "2.1 Agentic Contrastive Context Pairs Construction"
+        }
+      ]
+    },
+    "C2.2": {
+      "summary": "生成式编辑和相似度检索可以构建高质量的对比图像对，总计 7k 对",
+      "evidence": [
+        {
+          "quote_text": "This yields approximately 700 high-quality pairs from 2k candidates, a ~65% rejection rate",
+          "source": "report.md",
+          "section": "2.2 Multimodal Contrastive Context Pairs Construction"
+        },
+        {
+          "quote_text": "This yields 6,300 high-quality pairs from over 200k candidates",
+          "source": "report.md",
+          "section": "2.2 Multimodal Contrastive Context Pairs Construction"
+        },
+        {
+          "quote_text": "The final multimodal training set contains 7k contrast image pairs, combining both strategies",
+          "source": "report.md",
+          "section": "2.2 Multimodal Contrastive Context Pairs Construction"
+        }
+      ]
+    },
+    "C3.1": {
+      "summary": "上下文感知损失 ℒCA 是 modality-agnostic 的，统一适用于 agentic 轨迹和图像",
+      "evidence": [
+        {
+          "quote_text": "Importantly, the loss is modality-agnostic and applies uniformly to agent trajectories and images",
+          "source": "report.md",
+          "section": "2.3 Context-Aware Reinforcement Learning"
+        }
+      ]
+    },
+    "C3.2": {
+      "summary": "GRPO 优化正确输出，ℒCA 强制执行输出与其支持上下文之间的对齐，两个目标互补",
+      "evidence": [
+        {
+          "quote_text": "The two objectives are complementary. GRPO optimizes for correct outputs, while ℒCA enforces alignment between outputs and their supporting context",
+          "source": "report.md",
+          "section": "2.3 Context-Aware Reinforcement Learning"
+        }
+      ]
+    },
+    "C5.1": {
+      "summary": "ContextRL 在每个基准和两个基础模型上始终优于 RL baseline",
+      "evidence": [
+        {
+          "quote_text": "ContextRL improves over the RL baseline on every benchmark and for both base models",
+          "source": "report.md",
+          "section": "3.2 Main results"
+        },
+        {
+          "quote_text": "ContextRL achieves average gains of +2.2% over standard GRPO on 5 long-horizon benchmarks",
+          "source": "report.md",
+          "section": "Abstract"
+        }
+      ]
+    },
+    "C5.2": {
+      "summary": "基于 Klear-AgentForge-8B 的 ContextRL 在 SWE-Bench 上大幅优于 4× 更大的 Qwen3-32B 和代码专用 Qwen3-Coder-30B",
+      "evidence": [
+        {
+          "quote_text": "When trained from Klear-AgentForge-8B, ContextRL substantially outperforms Qwen3-32B (4× larger) and the code-specialized Qwen3-Coder-30B on SWE-Bench",
+          "source": "report.md",
+          "section": "3.2 Main results"
+        }
+      ]
+    },
+    "C5.3": {
+      "summary": "在 OOD 长上下文任务上，标准 outcome-based GRPO 退步而 ContextRL 进步",
+      "evidence": [
+        {
+          "quote_text": "On NIAH, standard outcome-based GRPO regresses relative to the base model, whereas ContextRL surpasses the base in both cases",
+          "source": "report.md",
+          "section": "3.2 Main results"
+        },
+        {
+          "quote_text": "This pattern indicates that the learned signal transfers beyond the agentic training domain and captures a more general notion of context grounding",
+          "source": "report.md",
+          "section": "3.2 Main results"
+        }
+      ]
+    },
+    "C5.4": {
+      "summary": "ContextRL 在所有 12 个多模态基准和两个基础模型上全面优于 RL baseline",
+      "evidence": [
+        {
+          "quote_text": "ContextRL achieves the best performance across all sub-categories, surpassing both the RL baseline and strong reference methods like PAPO",
+          "source": "report.md",
+          "section": "4.2 Main Results"
+        },
+        {
+          "quote_text": "ContextRL improves over standard GRPO by +2.0% on Qwen2.5-VL-7B and +1.6% on Qwen3-VL-8B, on average",
+          "source": "report.md",
+          "section": "Abstract"
+        },
+        {
+          "quote_text": "ContextRL improves average performance by +2.0 points on Qwen2.5-VL and +1.6 points on Qwen3-VL, while improving every benchmark individually",
+          "source": "report.md",
+          "section": "5.2 End-Task Performance Comparison"
+        }
+      ]
+    },
+    "C5.5": {
+      "summary": "ContextRL 的改进幅度超过专门为多模态感知设计的方法 PAPO",
+      "evidence": [
+        {
+          "quote_text": "on Qwen2.5-VL, ContextRL improves over the RL baseline by +2.0 on average: more than the +0.8 of PAPO, a method purpose-built for multimodal perception",
+          "source": "report.md",
+          "section": "4.2 Main Results"
+        }
+      ]
+    },
+    "C5.6": {
+      "summary": "增益来自训练目标而非对比数据本身",
+      "evidence": [
+        {
+          "quote_text": "These results show that a single context-selection objective improves both long-horizon reasoning and multimodal understanding, without architectural changes or large-scale human annotation",
+          "source": "report.md",
+          "section": "1 Introduction"
+        },
+        {
+          "quote_text": "These baselines provide little to no improvement, showing that the gains arise from the proposed context-selection objective rather than from the contrastive data alone",
+          "source": "report.md",
+          "section": "Abstract"
+        }
+      ]
+    },
+    "C5.7": {
+      "summary": "DA-SFT 学到上下文选择但损害策略，agentic 下导致灾难性崩溃；DA-RL 与 RL baseline 几乎无差异",
+      "evidence": [
+        {
+          "quote_text": "DA-SFT leads to catastrophic policy collapse: on Klear-AgentForge-8B, performance drops from 28.0 / 21.7 under the RL baseline to 6.4 / 1.3, and on Qwen3-8B the model collapses to 0.00 / 0.00",
+          "source": "report.md",
+          "section": "5.2 End-Task Performance Comparison"
+        },
+        {
+          "quote_text": "DA-RL is nearly indistinguishable from the RL baseline on both models",
+          "source": "report.md",
+          "section": "5.2 End-Task Performance Comparison"
+        }
+      ]
+    },
+    "C5.8": {
+      "summary": "ContextRL 通过 GRPO 的受限更新（重要性比率裁剪 + KL 正则化）和密集辅助信号（ℒCA 在每个实例上直接监督相对偏好）避免 DA-SFT 和 DA-RL 的失败模式",
+      "evidence": [
+        {
+          "quote_text": "The GRPO importance-ratio clipping term clip(ρ_t^(i), 1-ε, 1+ε) and KL regularization keep the policy close to the reference model",
+          "source": "report.md",
+          "section": "5.3 Mechanism Analysis"
+        },
+        {
+          "quote_text": "Unlike DA-RL's sparse {0,1} rewards, ℒCA directly supervises the relative preference between C+ and C- on every example",
+          "source": "report.md",
+          "section": "5.3 Mechanism Analysis"
+        }
+      ]
+    },
+    "C6.1": {
+      "summary": "Agentic 设置中 λ=0.005 达到最佳性能",
+      "evidence": [
+        {
+          "quote_text": "performance peaks at λ=0.005. At λ=0.001, the resolve rate is indistinguishable from the RL baseline... At λ=0.01, the score drops below even the RL baseline",
+          "source": "report.md",
+          "section": "F.1 Agentic Setting"
+        }
+      ]
+    },
+    "C6.2": {
+      "summary": "多模态设置中 15% 对比数据比例达到最佳平衡",
+      "evidence": [
+        {
+          "quote_text": "Increasing the contrastive proportion from 5% to 15% generally improves performance... at 50%, nearly all benchmarks are at or below the 5% level",
+          "source": "report.md",
+          "section": "F.2 Multimodal Setting"
+        }
+      ]
+    },
+    "C6.3": {
+      "summary": "多模态设置中最大响应长度 4096 提供最佳平均性能",
+      "evidence": [
+        {
+          "quote_text": "Max length 4096 offers the best average performance across all benchmarks",
+          "source": "report.md",
+          "section": "F.2 Multimodal Setting"
+        }
+      ]
+    }
+  }
+}

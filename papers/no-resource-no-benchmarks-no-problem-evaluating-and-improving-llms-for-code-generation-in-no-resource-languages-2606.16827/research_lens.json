@@ -1,0 +1,110 @@
+{
+  "paper_id": "2606.16827",
+  "paper_title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+  "research_equation": {
+    "problem": "LLMs cannot generate correct code for no-resource languages (0-1% pass@1 on hard tasks)",
+    "root_cause": "No training data → LLMs don't know the syntax → syntactic errors cause 2/3 of failures",
+    "constraints": "No benchmarks available, minimal training data (<3K repos), commercial tools don't support these languages",
+    "goal": "Enable companies to deploy cost-effective in-house code recommenders for proprietary languages",
+    "equation": "Improvement = f(little_available_data, base_model_architecture, instruct_weight_diff, no_full_instruction_fine-tuning_needed)"
+  },
+  "tri_pass_notes": {
+    "first_pass_title_abstract_intro": {
+      "summary": "Paper tackles code generation for no-resource languages (languages with virtually no training data). Builds 3 benchmarks translated to Gleam and MoonBit. Tests 6 LLMs. Key finding: further pre-training base model + weight diff transfer from instruct model achieves best results (up to 33% pass@1).",
+      "unknown_terms": ["no-resource programming languages", "instruction transferring", "weight diff", "McEval-Hard"],
+      "questions": [
+        "How were the benchmarks validated for correctness?",
+        "Does the approach work for languages very different from any known language?",
+        "What's the computational cost of pre-training + weight diff?"
+      ]
+    },
+    "second_pass_method_and_figures": {
+      "summary": "Nine languages across three resource levels. Three benchmarks (HumanEval, MBPP, McEval-Hard). Six LLMs (4 instruct, 2 base). Translation pipeline: ChatGPT + manual verification. Pre-training on all available code + docs; fine-tuning only on (doc, function) pairs. Weight diff computed between instruct and base models, then added to pre-trained base.",
+      "key_figures_understood": [
+        "Table I: Language resource classification + GitHub repo counts",
+        "Table IV: Zero-shot pass@1 across 9 languages, 4 LLMs, 3 benchmarks — shows clear gradient",
+        "Table V: All 6 LLMs × techniques comparison — shows pre-training > fine-tuning > in-context learning",
+        "Table VI: Pre-training vs instruction transferring — shows +12% average improvement",
+        "Figure 1: Quality scores for fine-tuning datasets — median 5/5"
+      ],
+      "gaps": [
+        "No analysis of how performance correlates with syntactic similarity to high-resource languages",
+        "No experiment with constrained decoding as alternative to training",
+        "Table V doesn't show individual model run variance (only pass@1 estimated from 10 runs)"
+      ]
+    },
+    "third_pass_deep_analysis": {
+      "summary": "Paper's key insight is the pre-train + weight-diff pipeline. This addresses the fundamental trade-off: pre-training teaches language knowledge but loses instruction following; weight diff restores it cheaply. The 8B model beating 32B is particularly striking — suggests the field may be over-investing in scale for niche applications.",
+      "unsupported_claims": ["MoonBit's 'AI-friendly design' claim is from the language authors themselves, not independently verified"],
+      "future_work_connection": "Constrained decoding (e.g., XGrammar) could be combined with pre-training for even better results — prevent syntactic errors at inference time"
+    }
+  },
+  "challenge_module_map": {
+    "no_benchmarks": {
+      "challenge": "No existing benchmarks for no-resource languages (usually proprietary)",
+      "solution_module": "Translation pipeline: ChatGPT generates translations → automated syntax check → manual verification (340 man-hours total)",
+      "evaluation": "Manual validation of 346 tasks: 4% prompt issues, 0.6% test issues — comparable to established benchmarks"
+    },
+    "no_training_data": {
+      "challenge": "Very few public repos (400 MoonBit, 2,900 Gleam with ≥10 stars)",
+      "solution_modules": [
+        {
+          "technique": "Few-shot learning",
+          "data_used": "5 code examples in prompt",
+          "effectiveness": "Modest improvement; best on simpler tasks"
+        },
+        {
+          "technique": "RAG (retrieval-augmented generation)",
+          "data_used": "Relevant documentation retrieved via embeddings",
+          "effectiveness": "Slightly worse than few-shot"
+        },
+        {
+          "technique": "Fine-tuning",
+          "data_used": "3.6M (Gleam) / 0.5M (MoonBit) tokens of (doc, function) pairs",
+          "effectiveness": "Good; beats in-context learning"
+        },
+        {
+          "technique": "Further pre-training",
+          "data_used": "28.3M (Gleam) / 13.7M (MoonBit) tokens — all available code and docs",
+          "effectiveness": "Best; >fine-tuning because uses 8-27× more data"
+        }
+      ]
+    },
+    "no_instruction_following_after_pre_training": {
+      "challenge": "Base models pre-trained on language lack instruction-following capabilities",
+      "solution_module": "Instruction transferring via weight diff: Δw = Mi_weights − Mb_weights → apply to Mbk",
+      "effectiveness": "+12% average improvement over pre-training alone; enables 8B model to beat 32B",
+      "cost": "Negligible (CPU-only computation of weight diff)"
+    },
+    "syntactic_errors": {
+      "challenge": "~2/3 of failures in no-resource languages are syntactic",
+      "solution_module": "Pre-training + instruction transferring reduces syntactic errors to <20% (large model) or shifts to semantic errors with net gain (small model)",
+      "alternative_not_explored": "Constrained decoding (e.g., XGrammar) could enforce grammar at inference time"
+    }
+  },
+  "reconstructed_problem_statement": "Given the practical need for code generation support in proprietary/no-resource programming languages, and given the complete failure of current LLMs on these languages (0-1% pass@1 on hard tasks), how can companies deploy cost-effective, instruction-following code generation assistants for such languages using only the minimal available data (<3K GitHub repos) and without access to proprietary instruction-tuning datasets or expensive compute?",
+  "key_insights": [
+    "The resource hierarchy is not a smooth gradient — there's a discontinuity between low-resource and no-resource (0-1% vs 27-84%).",
+    "Pre-training exploits data more efficiently than fine-tuning by using all code/docs, not just paired examples.",
+    "Weight diff transfer is a 'free lunch' — it adds instruction-following at negligible cost.",
+    "Small models + smart transfer can beat large models + full training — important for resource-constrained companies.",
+    "Syntactic failure is the signature of no-resource languages — fixing this is the key bottleneck.",
+    "MoonBit's AI-friendly design (per its authors) may amplify technique effectiveness — language design and AI supportability may be coupled."
+  ],
+  "methodological_notes": {
+    "strengths": [
+      "Comprehensive: 9 languages × 6 LLMs × 3 benchmarks",
+      "Systematic comparison: same models used across all techniques",
+      "Statistical rigor: McNemar test with Benjamini-Hochberg correction",
+      "Reproducible: all benchmarks, code, and data publicly released",
+      "Practical focus: techniques chosen for real-world company deployment feasibility"
+    ],
+    "limitations": [
+      "Only 2 no-resource languages studied",
+      "Function-level benchmarks only — not real-world tasks like debugging or refactoring",
+      "No hyperparameter tuning performed",
+      "Data contamination cannot be fully ruled out for open models",
+      "Translation pipeline may introduce bias — benchmarks are translations, not native"
+    ]
+  }
+}
