@@ -33,3 +33,6 @@ transcribe.mjs
 package.json
 package-lock.json
 claude-agent-sdk-transcript.txt
+
+# Podcast audio files (large, not tracked in git)
+papers/podcast-*.mp3

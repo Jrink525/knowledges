@@ -24,9 +24,13 @@
   - `ai-tools/career/from-prompt-engineer-to-fullstack-ai-engineer.md`
   - `ai-tools/career/from-prompting-agents-to-loop-engineering.md`
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
+  - `ai-tools/career/hermes-sensei-loop.md`
   - `ai-tools/career/industry-job-search-notes-alisa.md`
   - `ai-tools/career/loop-engineering-2026.md`
+  - `ai-tools/career/loop-engineering-beginners-tutorial.md`
+  - `ai-tools/career/loop-engineering-explained.md`
   - `ai-tools/career/loop-engineering-memory.md`
+  - `ai-tools/career/loop-engineering.md`
   - `ai-tools/career/mvanhorn-wtf-is-a-loop-part1.md`
   - `ai-tools/career/my-thoughts-on-loop-engineering.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
@@ -153,6 +157,7 @@
   - `ai-tools/ml-research/autonomous-long-running-coding-agents.md`
 
 ### ai-tools/patterns/ (`ai-tools/patterns`)
+  - `ai-tools/patterns/15-ai-agent-design-patterns.md`
   - `ai-tools/patterns/building-multi-agent-workflows-guide.md`
   - `ai-tools/patterns/leopardracer-build-ai-workflows.md`
   - `ai-tools/patterns/mvanhorn-15-loops-part2.md`
@@ -197,6 +202,7 @@
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
+  - `ai-tools/tooling/karpathy-knowledge-stack.md`
   - `ai-tools/tooling/loop-engineering-roadmap.md`
   - `ai-tools/tooling/loops-explained.md`
   - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
@@ -210,6 +216,7 @@
   - `ai-tools/tooling/self-improving-loop-kimi-swarm.md`
   - `ai-tools/tooling/shopify-claude-code-setup.md`
   - `ai-tools/tooling/spring-boot-3-generic-base-controller-service-repository.md`
+  - `ai-tools/tooling/survive-ai-mass-replacement-dan-koe.md`
   - `ai-tools/tooling/the-log-is-the-agent.md`
   - `ai-tools/tooling/trading-agent-skills-claude-sdk-zostaff.md`
 
@@ -270,11 +277,15 @@
   - `system-design/spring-events-complete-guide.md`
   - `system-design/top-10-eda-pitfalls-victor-rentea.md`
 
+### programming/devops/ (`programming/devops`)
+  - `programming/devops/git-ignore-not-just-gitignore.md`
+
 ### programming/go/ (`programming/go`)
   - `programming/go/netty-websocket-springboot-practical-guide.md`
 
 ### programming/java/ (`programming/java`)
   - `programming/java/addyosmani-how-modern-browsers-work.md`
+  - `programming/java/http-server-from-scratch.md`
   - `programming/java/java-8-function-complete-guide.md`
   - `programming/java/java-backend-security-concepts.md`
   - `programming/java/java-comparator-deep-dive.md`
@@ -306,6 +317,16 @@
   - `papers/README.md`
   - `papers/daily-report-2026-06-19.md`
   - `papers/daily-report-2026-06-21.md`
+  - `papers/daily-report-2026-06-22.md`
+
+### papers/2606-12629-2606.12629/ (`papers/2606-12629-2606.12629`)
+  - `papers/2606-12629-2606.12629/report.md`
+
+### papers/2606-17182-2606.17182/ (`papers/2606-17182-2606.17182`)
+  - `papers/2606-17182-2606.17182/report.md`
+
+### papers/2606-19236-2606.19236/ (`papers/2606-19236-2606.19236`)
+  - `papers/2606-19236-2606.19236/report.md`
 
 ### papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/ (`papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629`)
   - `papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md`
@@ -366,7 +387,7 @@
 
 ---
 
-总计 **273** 篇知识文档
+总计 **286** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -378,5 +399,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-22 16:12 UTC]_
+_[自动生成于 2026-06-23 16:14 UTC]_
 
