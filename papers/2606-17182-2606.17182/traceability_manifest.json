@@ -1,0 +1,346 @@
+{
+  "paper_id": "2606.17182",
+  "paper_title": "Verified Detection and Prevention of Concurrency Anomalies in Multi-Agent Large Language Model Systems",
+  "artifacts_dir": "papers/2606-17182-2606.17182",
+  "claims": [
+    {
+      "id": "C01",
+      "claim": "Five concurrency anomalies identified and formalized in TLA+ (A1, A2, A3, A4 deferred, A6)",
+      "section": "Section 3 (The Anomaly Catalog)",
+      "evidence_type": "formal_definition_and_model_checking",
+      "evidence": [
+        {
+          "type": "formal_predicate",
+          "detail": "A1 (Stale-Generation): Definition 1 — predicate over history with ∃ agents, cells, times satisfying read-while-write condition",
+          "location": "Section 3.1"
+        },
+        {
+          "type": "formal_predicate",
+          "detail": "A2 (Phantom-Tool): Definition 2 — predicate over tool registry mutations during generation phase",
+          "location": "Section 3.2"
+        },
+        {
+          "type": "formal_predicate",
+          "detail": "A3 (Causal-Cascade): Definition 3 — predicate over predecessor closure with abort flag",
+          "location": "Section 3.3"
+        },
+        {
+          "type": "formal_predicate",
+          "detail": "A6 (Tool-Effect Reordering): Definition 4 — predicate over issuance order vs commit order",
+          "location": "Section 3.5"
+        },
+        {
+          "type": "TLC_witness",
+          "detail": "A1: 5-state counterexample at bounds (3 agents, 2 cells, 8 slots)",
+          "location": "Section 3.1"
+        },
+        {
+          "type": "TLC_witness",
+          "detail": "A2: 4-state counterexample at same bounds",
+          "location": "Section 3.2"
+        },
+        {
+          "type": "TLC_witness",
+          "detail": "A3: 2-operation minimal witness (commit + abort + dependent read)",
+          "location": "Section 3.3"
+        },
+        {
+          "type": "TLC_witness",
+          "detail": "A6: 3-state counterexample at same bounds",
+          "location": "Section 3.5"
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "claim": "A consistency lattice (Boolean lattice over {A1,A2,A3,A6}) with 16 points and a chosen 5-point chain L0-L4",
+      "section": "Section 4",
+      "evidence_type": "formal_definition_and_verification",
+      "evidence": [
+        {
+          "type": "formal_definition",
+          "detail": "Lattice: 2^4 = 16 points, each point = subset of anomalies excluded; order by set inclusion",
+          "location": "Section 4"
+        },
+        {
+          "type": "formal_definition",
+          "detail": "Chosen chain: L0=⊤, L1=-A1, L2=-A1∩A3, L3=-A1∩A3∩A6, L4=-A1∩A2∩A3∩A6",
+          "location": "Section 4.1"
+        },
+        {
+          "type": "TLAPS_check",
+          "detail": "11 theorems in Hierarchy.tla: 4 adjacent containments, 6 transitive soundness, 1 aggregate; 15 obligations, all discharged by definitional unfolding",
+          "location": "Section 4.6"
+        },
+        {
+          "type": "TLC_check",
+          "detail": "A1 structural lower bound proved (A1LowerBound.tla, 28 obligations)",
+          "location": "Section 4.6"
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "claim": "Detector pipelines verified sound and complete in Verus against TLA+ specifications",
+      "section": "Section 4.7",
+      "evidence_type": "mechanized_verification",
+      "evidence": [
+        {
+          "type": "Verus_obligations",
+          "detail": "24 obligations for detector equivalence chain; detect_a1 two-sided equivalence includes triply-nested existential",
+          "file": "lib_detector_equivalence.rs"
+        },
+        {
+          "type": "Verus_obligations",
+          "detail": "soundness and completeness for detect_a2, detect_a3 (cascade residue), detect_a6",
+          "location": "Section 4.7"
+        },
+        {
+          "type": "smoke_test",
+          "detail": "Two-record A3-satisfying history exhibited to confirm spec satisfiability",
+          "location": "Section 4.7"
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "claim": "SSI (serializable snapshot isolation) prevents A1 at no statistically detectable token cost overhead",
+      "section": "Section 5.5, 5.6",
+      "evidence_type": "empirical_measurement",
+      "evidence": [
+        {
+          "type": "real_LLM_baseline",
+          "detail": "SSI eliminates A1 at 100% (edit-review, plan-execute), 97% (triage); 900 sessions across gpt-4o and Claude Sonnet 4.5",
+          "table": "Table IV"
+        },
+        {
+          "type": "cost_analysis",
+          "detail": "Between-session cost comparison: SSI CI overlaps vanilla in every cell; paired design resolves ≤1 token overhead on one workload",
+          "location": "Section 5.6, Finding 1"
+        },
+        {
+          "type": "wall_clock_study",
+          "detail": "Within-model wall-clock (gpt-4o, 270 sessions): SSI overhead at noise floor, single-digit-percent, all CIs overlap vanilla",
+          "location": "Section 5.10"
+        },
+        {
+          "type": "cross_model_replication",
+          "detail": "SSI cost-parity replicated on Claude Sonnet 4.5 (Finding 4)",
+          "location": "Section 5.6, Finding 4"
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "claim": "Pessimistic locking overhead is bounded (1.6x gpt-4o, 2.3x Claude), not order-of-magnitude",
+      "section": "Section 5.6",
+      "evidence_type": "empirical_measurement",
+      "evidence": [
+        {
+          "type": "cost_analysis",
+          "detail": "gpt-4o worst-case 62% overhead (triage, Finding 2); overall worst 1.6x vanilla",
+          "location": "Section 5.6, Finding 3"
+        },
+        {
+          "type": "cost_analysis",
+          "detail": "Claude Sonnet 4.5 worst-case 124% overhead (triage); overall 2.3x vanilla",
+          "location": "Section 5.6, Finding 4"
+        },
+        {
+          "type": "wall_clock_study",
+          "detail": "Pessimistic wall-clock overhead at noise floor on most workloads; max directional in triage but CIs overlap",
+          "location": "Section 5.10"
+        },
+        {
+          "type": "synthetic_baseline",
+          "detail": "Pessimistic locking drops 40.7% of synthetic operations; 100% A1 prevention",
+          "location": "Section 5.4"
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "claim": "Causal-cascade (A3) is prevented by the verified L2 runtime; live agent loop with real LLMs confirms",
+      "section": "Section 5.11",
+      "evidence_type": "mechanized_verification_and_empirical",
+      "evidence": [
+        {
+          "type": "Verus_proof",
+          "detail": "lemma_l2_reachable_no_a3 proves no reachable state admits A3 in L2Runtime",
+          "file": "lib_l2_safety.rs"
+        },
+        {
+          "type": "executable_twin",
+          "detail": "l2_causal.rs: unguarded baseline exhibits A3 at every chain depth; causal runtime exhibits 0%",
+          "location": "Section 5.11"
+        },
+        {
+          "type": "live_LLM_evaluation",
+          "detail": "gpt-4o-mini, claude-haiku-4-5, Llama-3.2: supervisor-driven retraction varied sharply (8-79%), but runtime prevented A3 in 100% of retracted sessions",
+          "location": "Section 5.11"
+        },
+        {
+          "type": "exec_verification",
+          "detail": "lib_l2_exec.rs: 49 obligations, 0 errors, 0 axioms, exec-mode refinement with no added trust base entries",
+          "location": "Section 5.11"
+        }
+      ]
+    },
+    {
+      "id": "C07",
+      "claim": "Tool-effect reordering (A6) exists in LangGraph's ToolNode; commit-order sequencer removes it",
+      "section": "Section 5.12",
+      "evidence_type": "empirical_reproduction_and_Verus",
+      "evidence": [
+        {
+          "type": "empirical_reproduction",
+          "detail": "ToolNode uses asyncio.gather; gpt-4o-mini batched 5-tool pipeline in 61% of turns, reordered in 83% of batched turns",
+          "location": "Section 5.12"
+        },
+        {
+          "type": "framework_issue",
+          "detail": "langchain-ai/langgraphjs issue #861 confirms user requirement for sequential tool execution for stateful tools",
+          "location": "Section 5.12, footnote"
+        },
+        {
+          "type": "Verus_proof",
+          "detail": "Theorem g (lib_l3_sequencer.rs): commit-order sequencer orders effects by issuance time; cor_sequencer_no_a6 eliminates A6",
+          "location": "Section 4.15"
+        },
+        {
+          "type": "empirical_fix",
+          "detail": "Sequenced ToolNode: 0% reordering on every model-emitted batch (rule-of-three CI [0, 0.37])",
+          "location": "Section 5.12"
+        },
+        {
+          "type": "transcript_invisibility",
+          "detail": "gather preserves ToolMessage order by input position — A6 invisible in transcript",
+          "location": "Section 5.12"
+        }
+      ]
+    },
+    {
+      "id": "C08",
+      "claim": "Snapshot-insufficiency observation: a structural snapshot definition does not exclude A1 (A1 ≠ snapshot guarantee)",
+      "section": "Section 4.5",
+      "evidence_type": "formal_counterexample",
+      "evidence": [
+        {
+          "type": "TLC_verified",
+          "detail": "1,934 states, depth 5: history with structural snapshot condition (read at time 0, commit at time 2) yet A1 fires (agent writes at time 1)",
+          "location": "Section 4.5"
+        }
+      ]
+    },
+    {
+      "id": "C09",
+      "claim": "Total: 274 curated distinct verified proof obligations, 0 errors, across all Verus modules",
+      "section": "Section 4.8, Appendix A",
+      "evidence_type": "mechanized_verification_counts",
+      "evidence": [
+        {
+          "type": "per_file_counts",
+          "detail": "24 (detector_equivalence) + 40 (safety theorems) + 84 (refinements) + 9 (concurrent) + 22 (l2_safety) + 27 (l2_exec) + 9 (a4) + 4 (rustbelt) + 6 (l3_safety) + 5 (l3_sequencer) + 5 (l4_safety) + 7 (langgraph) + 8 (occ) + 5 (l3_exec) + 9 (l4_exec) + 7 (lib_langgraph) + 5 (l1_lower_bound) = 274",
+          "location": "Appendix A, Table VI"
+        },
+        {
+          "type": "trust_base",
+          "detail": "2 foundational axioms (string-identifier injectivity, null-sentinel mapping) + 3 RustBelt stubs (lock_is_acquire, drop_is_release, event_seqcst)",
+          "location": "Section 4.8"
+        }
+      ]
+    },
+    {
+      "id": "C10",
+      "claim": "deer-flow silent lost update (issue #3123) is a production instance of A1; reducer fix formalized as a verified L2 refinement",
+      "section": "Section 6.5",
+      "evidence_type": "empirical_reproduction_and_Verus",
+      "evidence": [
+        {
+          "type": "empirical_reproduction",
+          "detail": "Artifact reproduces #3123 on unmodified LangGraph runtime using deer-flow's own reducer; without reducer, 2 seeded todos silently lost",
+          "location": "Section 6.5"
+        },
+        {
+          "type": "Verus_proof",
+          "detail": "lib_langgraph_refinement.rs (7 verified, 0 axioms): additive channel value = initial + concatenation of every payload — no committed contribution ever lost",
+          "location": "Section 6.5"
+        },
+        {
+          "type": "field_data",
+          "detail": "INVALID_CONCURRENT_GRAPH_UPDATE occurs in 34 third-party repositories including widely-starred projects",
+          "location": "Section 6.5"
+        },
+        {
+          "type": "architectural_corroboration",
+          "detail": "Letta: 18/24 concurrent appends silently lost (Section 6.5); AutoGen actor model avoids shared-mutable-state class entirely",
+          "location": "Section 6.5"
+        }
+      ]
+    },
+    {
+      "id": "C11",
+      "claim": "Verus spec–runtime refinement closes gap between abstract safety theorems and deployed Rust code",
+      "section": "Section 4.8",
+      "evidence_type": "mechanized_verification",
+      "evidence": [
+        {
+          "type": "refinement_proofs",
+          "detail": "4 refinement files covering pessimistic-locking (31 obligations), SSI projection (18), SSI version-chain (17), default-SI (18)",
+          "files": [
+            "lib_refinement_pessimistic.rs",
+            "lib_refinement_ssi.rs",
+            "lib_refinement_ssi_chain.rs",
+            "lib_refinement_default_si.rs"
+          ]
+        },
+        {
+          "type": "exec_verification",
+          "detail": "SI validation gate (validate: 5 verified), pessimistic acquisition check (can_acquire: 5 verified), detector (9 verified)",
+          "location": "Section 4.8"
+        },
+        {
+          "type": "axioms",
+          "detail": "axiom_string_to_int_injective and axiom_null_sentinel — both structural encoding properties, not domain claims",
+          "location": "Section 4.8"
+        }
+      ]
+    },
+    {
+      "id": "C12",
+      "claim": "80%+ A1 firing rate in cookbook-derived scenarios on unmodified frameworks (LangGraph RoundRobinGroupChat, AutoGen)",
+      "section": "Section 5.7",
+      "evidence_type": "empirical_measurement",
+      "evidence": [
+        {
+          "type": "cookbook_study",
+          "detail": "6 scenarios from public LangGraph/AutoGen examples; 0/500 A1 for stateless scenarios; 90/100 for typed-shared-state (any-agent); 89/100 (cross-agent)",
+          "location": "Section 5.7"
+        }
+      ]
+    },
+    {
+      "id": "C13",
+      "claim": "Operational materiality of A1 is role-dependent: reviewer diverges 100%, engineer 54.5%, editor 0%",
+      "section": "Section 5.9",
+      "evidence_type": "empirical_measurement",
+      "evidence": [
+        {
+          "type": "controlled_experiment",
+          "detail": "Controlled task: triage priority, 75% materiality (95% CI [68.4%, 80.8%])",
+          "table": "Table V"
+        },
+        {
+          "type": "deployed_trace_reanalysis",
+          "detail": "Reviewer (assess doc): 100% divergence (95% CI [91.8%, 100%]); engineer (resolve): 54.5% [36.4%, 71.9%]; editor (author): 0% [0%, 3.6%]",
+          "table": "Table V"
+        },
+        {
+          "type": "human_coding_validation",
+          "detail": "Blind sample of 60: LLM judge agreed with human on 59/60 (Cohen's κ=0.96, 95% CI [0.90, 1.00])",
+          "location": "Section 5.9"
+        }
+      ]
+    }
+  ]
+}

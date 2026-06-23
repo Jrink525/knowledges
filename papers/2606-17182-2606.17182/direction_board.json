@@ -1,0 +1,152 @@
+{
+  "paper_id": "2606.17182",
+  "paper_title": "Verified Detection and Prevention of Concurrency Anomalies in Multi-Agent Large Language Model Systems",
+  "directions": [
+    {
+      "id": "D01",
+      "rank": 1,
+      "name": "概率浓度界：为随机 LLM 输出建立可验证的概率保障",
+      "score": {
+        "relevance": 9.5,
+        "novelty": 8.5,
+        "feasibility": 5.5
+      },
+      "normative_score": 7.8,
+      "description": "本文明确将概率精炼（probabilistic refinement）列为开放问题（Section 4.13）。确定性检测器只能回答 '这条迹线上是否发生过期读取？'，但无法回答 '重新执行生成时会以概率 p 发散吗？'。作者指出，当前 Verus 发行版缺少实概率论，浓度界（concentration bound）需要 Hoeffding 级保障或 IronFleet 风格的工具链扩展。一个可行的路径是：适配概率关系霍尔逻辑或最弱前期望演算到 Verus 风格的机械验证中。",
+      "why_score": "Relevance: 9.5 — 解决 '确定性假设' 这一核心形式化盲点，直接影响形式保证在实际部署中的适用性。Novelty: 8.5 — 概率精炼与机械验证的结合在 LLM 系统领域尚属前沿。Feasibility: 5.5 — 需要修改 Verus 内核添加概率理论支持，工程量大；或选择新工具链（如 EasyCrypt）。",
+      "key_sources": [
+        "Section 4.13: 'Probabilistic case: a soundness-only screen'",
+        "Section 7.11: 'Probabilistic program verification'",
+        "Gordon et al. 2014: probabilistic relational Hoare logic"
+      ]
+    },
+    {
+      "id": "D02",
+      "rank": 2,
+      "name": "复制感知模型扩展：在复制存储下形式化 A4 (Split-View) 并完善格",
+      "score": {
+        "relevance": 9.0,
+        "novelty": 7.0,
+        "feasibility": 6.5
+      },
+      "normative_score": 7.5,
+      "description": "本文的 A4 处理是单单元、单主模型的 Verus 形式化（Section 4.12）。要在完整复制条件下形式化 A4，需要：扩展操作模型以包含副本标识符、副本同步转换、可见副本集；扩展一致性格为五维（{A1,A2,A3,A4,A6}，32 个格点）；选择新的操作链（A4 可能在不同链序中插在 A1 和 A3 之间或之后）。CRDT 收敛策略和最终一致性进入比现在更复杂的精确范围。",
+      "why_score": "Relevance: 9.0 — 复制是生产多智能体基础设施的核心部署模式。Novelty: 7.0 — 将 A4 纳入现有的 4 异常格是一个自然扩展而非开创性突破。Feasibility: 6.5 — 模型扩展是直接的，但 TLC 验证和精炼证明可能需要几周的工作。",
+      "key_sources": [
+        "Section 3.4: 'A4: Split-View (outside the single-store model)'",
+        "Section 4.12: 'split-view formalization'",
+        "Section 7.7: CRDT and eventual consistency discussion"
+      ]
+    },
+    {
+      "id": "D03",
+      "rank": 3,
+      "name": "生产成本异常率测量：对部署的多智能体系统进行大规模追踪",
+      "score": {
+        "relevance": 8.5,
+        "novelty": 6.5,
+        "feasibility": 8.0
+      },
+      "normative_score": 7.7,
+      "description": "本文的有意设计限制是：异常发生率是工作负载工程的（1-35-100%），而非生产观察的（Section 5.13）。一个必要的实证后续工作是：与生产部署（如 LangGraph 云、AutoGen 服务）合作，在这些运行时植入检测器流水线，收集伦理审查的迹线，并测量 5 种异常的真实流行率。这需要克服：运行时侵入性、迹线规模和成本负担、伦理批准。",
+      "why_score": "Relevance: 8.5 — 没有生产发生率数据，一致性格仍然是理论的。Novelty: 6.5 — 大规模实证测量是描述性的而非创造性的。Feasibility: 8.0 — 检测器流水线已经部署就绪；挑战主要是组织和伦理的，而非技术的。",
+      "key_sources": [
+        "Section 5.13: 'Threats to validity' — prevalence not established",
+        "Section 6.2: 'Limitations' — anomaly prevalence",
+        "Section 5.8: MAST corpus dynamic prevalence measurement (prototype)"
+      ]
+    },
+    {
+      "id": "D04",
+      "rank": 4,
+      "name": "并发语义精确性：从互斥锁信任基到线性化/分离逻辑证明",
+      "score": {
+        "relevance": 8.0,
+        "novelty": 7.5,
+        "feasibility": 5.0
+      },
+      "normative_score": 6.8,
+      "description": "本文的互斥锁提升（Section 4.10）将安全信任基迁移到 'std::sync::Mutex 符合抽象 Acquire/Release 协议'，标记了 3 个 RUSTBELT_OBLIGATION 存根（lock_is_acquire、drop_is_release、event_seqcst）。通往完全证明的路径是 Iris/RustBelt 风格的分离逻辑证明（Section 7.7），这将关闭当前开发的最后残余信任基。GenMC（已使用）为有界场景提供了有限保证；无界的线程级处理需要不同的证明方法论。",
+      "why_score": "Relevance: 8.0 — 关闭互斥锁信任基对真正端到端形式保证至关重要。Novelty: 7.5 — 将 RustBelt 风格证明应用于 LLM 运行时场景是新颖的。Feasibility: 5.0 — Iris/RustBelt 证明需要专用专业知识；尚未在 LLM 系统上下文中完成。",
+      "key_sources": [
+        "Section 4.10: 'Concurrent-semantics lift'",
+        "Section 4.14: 'RustBelt interface specification'",
+        "Section 7.7: 'Concurrent program logics'"
+      ]
+    },
+    {
+      "id": "D05",
+      "rank": 5,
+      "name": "跨提供商和多模型族成本研究扩展",
+      "score": {
+        "relevance": 7.5,
+        "novelty": 5.0,
+        "feasibility": 8.5
+      },
+      "normative_score": 7.0,
+      "description": "SSI 成本平价是在 gpt-4o 和 Claude Sonnet 4.5 上建立的，但 Gemini/Vertex AI、Llama/Mistral 开放权重推理和新兴的低延迟模型不是。成本不对称模式（SSI 几乎免费，悲观开销有界但随模型变化）可能显著因提供商而异，特别是考虑到不同的令牌化密度、定价结构和硬件加速器。扩展到三个以上提供商包括本地开放权重推理是原则性实证后续工作。",
+      "why_score": "Relevance: 7.5 — 成本是运行时选择的关键因素；提供商特异性可能会改变成本效益分析。Novelty: 5.0 — 如有需要，这是一个直接的测量扩展，而非方法创新。Feasibility: 8.5 — 基础设施已经到位；自动化跨提供商的检测器流水线运行是直接的。",
+      "key_sources": [
+        "Section 5.6: 'Cost analysis' — two-provider limitation",
+        "Section 5.6, Finding 4: cross-model replication outcome",
+        "Section 5.10: wall-clock study open-weights replication (Llama-3.2)"
+      ]
+    },
+    {
+      "id": "D06",
+      "rank": 6,
+      "name": "基于操作材料的运行时策略：角色感知中止层",
+      "score": {
+        "relevance": 7.0,
+        "novelty": 8.0,
+        "feasibility": 7.5
+      },
+      "normative_score": 7.5,
+      "description": "Section 5.9 表明 A1 的操作重要性急剧依赖于角色：评论者 100% 分歧，工程师 54.5%，编辑 0%。作者建议一个不可验证的 '建议三元组' 层 (firing, role, P_material)，其中中止策略根据估计的材料性门控。构建和验证这样的角色感知运行时层将是验证核心和部署实用性之间的关键桥梁。",
+      "why_score": "Relevance: 7.0 — 解决 '布尔检测器触发无意义' 的批评。Novelty: 8.0 — 角色感知材料性在验证的运行时策略内是一个新概念。Feasibility: 7.5 — 需要更广泛的角色分类（>4 个角色）和更丰富的材料性数据收集。",
+      "key_sources": [
+        "Section 5.9: 'Operational materiality'",
+        "Table V: role-dependent divergence rates",
+        "Section 5.9: advisory layer design recommendation"
+      ]
+    },
+    {
+      "id": "D07",
+      "rank": 7,
+      "name": "备选格链的经验验证：异常排序对运行时选择的影响",
+      "score": {
+        "relevance": 6.5,
+        "novelty": 7.0,
+        "feasibility": 6.0
+      },
+      "normative_score": 6.5,
+      "description": "当前链 L0→L1(-A1)→L2(-A3)→L3(-A6)→L4(-A2) 是操作选择的（Section 4.2）；24 个备选最大链都是有效的线性扩展。为每个备选链构建参考运行时并测量它们在竞争下的失败模式，将验证链排序是否有一个经验上更优的选择，或者操作排序是否足够。",
+      "why_score": "Relevance: 6.5 — 影响运行时设计指令，但不是核心贡献的当务之急。Novelty: 7.0 — 系统性地比较备选链排序在 LLM 系统语境中是新颖的。Feasibility: 6.0 — 构建和维护 24×5 个运行时变体工作量巨大。",
+      "key_sources": [
+        "Section 4.2: 'One linearization among twenty-four'",
+        "Section 4.4: Figure 1 (Hasse diagram)",
+        "Section 6.2: 'Chosen-chain ordering by construction, not by empirical validation'"
+      ]
+    },
+    {
+      "id": "D08",
+      "rank": 8,
+      "name": "端到端端对端形式保证：从检测器到框架通道到串行化层",
+      "score": {
+        "relevance": 8.0,
+        "novelty": 7.0,
+        "feasibility": 4.0
+      },
+      "normative_score": 6.3,
+      "description": "当前精炼覆盖了检测器（等价性验证）、三个运行时策略（安全定理）和四个具体-抽象状态机（包括 LangGraph 通道 reducer 和 OCC 通道l2 精炼）。缺失的连接包括：LangGraph 完整运行时语义（不仅仅是通道更新）、AutoGen actor 模型、CrewAI 无状态编排、Letta 内存层级。将此扩展为整个部署运行时堆栈的完整端到端精炼将解决 '验证模型而非运行时代码' 的尖锐限制。",
+      "why_score": "Relevance: 8.0 — 覆盖整个堆栈实现真正的端到端保证。Novelty: 7.0 — 将机械验证扩展到 LLM 运行时堆栈的广度是新颖的。Feasibility: 4.0 — 精炼证明是劳力和专家密集型的；每个新框架都需要大量的形式化模型。",
+      "key_sources": [
+        "Section 6.5: LangGraph channel refinement (7 obligations)",
+        "Section 6.5: OCC channel L2 refinement (8 obligations)",
+        "Section 6.4: informal placements of three contemporary runtimes"
+      ]
+    }
+  ],
+  "methodology": "Each direction is scored on three axes (1-10): Relevance to LLM system consistency, Novelty beyond existing literature, Feasibility with current tools/knowledge. Normative score = weighted average (R:0.35, N:0.25, F:0.40). The gap between scores reflects the tension between 'what matters most' (relevance) and 'what is achievable now' (feasibility).",
+  "top_recommendation": "D01 (概率浓度界) 得分最高（7.8），联系最紧密且最具创新性，但可行性挑战使其高风险。D03 (生产发生率测量) 提供了最高的可行影响途径——检测器流水线已就绪，需要组织合作而非理论突破。D06 (角色感知中止) 代表了在验证核心内实用性和新颖性的最佳平衡。"
+}

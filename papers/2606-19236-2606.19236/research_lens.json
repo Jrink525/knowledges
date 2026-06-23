@@ -1,0 +1,149 @@
+{
+  "paper_id": "2606.19236",
+  "paper_title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+  "research_lens": {
+    "problem_reconstruction": {
+      "original_problem": "GRPO-based RLVR training suffers from policy entropy collapse, limiting the number of stable training steps and causing premature convergence.",
+      "reconstructed_problem": "The entropy collapse in GRPO stems from a token-level credit assignment mismatch: GRPO assigns the same trajectory-level advantage Āᵢ to all tokens in a rollout, but the per-token entropy effect decomposes into the product of Āᵢ and a local entropy sensitivity function. Low-surprisal tokens dominate sampling frequency under the current policy, creating a systematic asymmetry where entropy-decreasing updates overwhelm entropy-increasing ones. The true question is not just 'how to slow entropy decay' but 'which tokens drive the collapse and how minimal an intervention can reverse it'.",
+      "key_insight": "The entropy neutrality identity (Theorem 3.4) combined with the near-criticality property (Corollary 3.6) reveals that entropy collapse requires only a tiny weight perturbation to reverse — the system operates near a critical point where W*−1 = O(T⁻¹), meaning a 1-5% reweighting of specific token subsets suffices.",
+      "gap_addressed": "Prior work operated at trajectory or sample granularity with coarse entropy control. STARE provides a principled, theoretically grounded token-level mechanism targeting exactly the entropy-critical tokens."
+    },
+    "methodology_reconstruction": {
+      "core_approach": "First-order gradient analysis of token-level entropy dynamics under GRPO → Mathematical decomposition into four-quadrant advantage-surprisal structure → Identification of critical tokens via batch-internal surprisal quantiles → Token-level advantage reweighting → Closed-loop target-entropy gating for stable regulation.",
+      "methodology_tree": {
+        "root": "GRPO with entropy stabilization",
+        "branch_theory": {
+          "name": "Entropy dynamics analysis",
+          "branches": [
+            {
+              "name": "Token-level entropy gradient (Lemma 2.1)",
+              "detail": "∂H/∂z_v = p_v(s_v − H)"
+            },
+            {
+              "name": "Token-level entropy variation (Theorem 3.1)",
+              "detail": "dH/dh|ₕ₌₀ = −Ā·F(p)"
+            },
+            {
+              "name": "Four-quadrant decomposition (Corollary 3.3)",
+              "detail": "(sign(Ā), 1[s_a < s*]) determines entropy direction"
+            },
+            {
+              "name": "Entropy neutrality (Theorem 3.4)",
+              "detail": "E_{a~p}[F(a)] = 0"
+            },
+            {
+              "name": "Near-criticality (Corollary 3.6)",
+              "detail": "W*−1 = O(T⁻¹)"
+            }
+          ]
+        },
+        "branch_method": {
+          "name": "STARE algorithm",
+          "branches": [
+            {
+              "name": "Token partitioning (Section 4.1)",
+              "detail": "Batch-internal top-P% surprisal quantiles within T⁺ and T⁻"
+            },
+            {
+              "name": "Advantage reweighting (Section 4.2)",
+              "detail": "Variants O1 (single-sided) and C2 (dual-sided)"
+            },
+            {
+              "name": "Closed-loop gating (Section 4.3)",
+              "detail": "g_k = 1[Ĥ_k < H_tgt], targets H_tgt = 0.3"
+            },
+            {
+              "name": "Weight scheduling (Section 4.4)",
+              "detail": "Fixed vs adaptive: W_{k+1} = clip(W_k + α·sgn(H_tgt − Ĥ_k), [1, W_max])"
+            }
+          ]
+        }
+      }
+    },
+    "analytical_framework": {
+      "theoretical_tools": [
+        "Softmax Jacobian: ∂p_v'/∂z_v = p_v'(δ_{v'v} − p_v)",
+        "Entropy gradient w.r.t. logits: ∂H/∂z_v = p_v(s_v − H)",
+        "Entropy sensitivity function: F(p) = p(ln p + H) − S₂ where S₂ = Σ_v p_v²(ln p_v + H)",
+        "GRPO logit update: Δz_v = h·Ā(δ_{va} − p_v)"
+      ],
+      "evaluation_metrics": [
+        "Policy entropy (position-level H = −Σ_v p_v ln p_v = E_p[s])",
+        "AIME24 / AIME25 accuracy (avg@N, N=32)",
+        "AMC23, MATH-500, Minerva Math, OlympiadBench accuracy (avg@N, N=4 for non-AIME)",
+        "Pass@32 for diversity measure",
+        "Response length as exploration proxy",
+        "Full-solve ratio",
+        "Training reward"
+      ],
+      "key_assumptions": [
+        "Unclipped regime analysis (theoretical analysis; practical implementation uses clipping)",
+        "Sufficiently long sequences (T large) and large batch sizes for near-criticality",
+        "Non-uniform, non-degenerate next-token distributions",
+        "On-policy updates with single gradient step per batch",
+        "No KL penalty (β = 0 throughout)"
+      ]
+    },
+    "key_findings": [
+      {
+        "finding": "Entropy collapse in GRPO is caused by a systematic token-level credit assignment mismatch — low-surprisal tokens dominate while high-surprisal entropy-increasing tokens are diluted.",
+        "significance": "Provides the first principled mechanism explanation of entropy collapse, moving beyond empirical observations."
+      },
+      {
+        "finding": "The system exhibits near-criticality: a minimal weight perturbation (W*−1 = O(T⁻¹)) near 1% suffices to flip entropy evolution direction.",
+        "significance": "Explains why previous crude interventions often overshoot — the critical point is very close to identity, and beyond it only magnitude (not direction) changes."
+      },
+      {
+        "finding": "Batch-internal top-10% surprisal quantiles reliably approximate the theoretical critical threshold (consistency 60%→95% over training).",
+        "significance": "Validates a simple, computationally efficient proxy for identifying entropy-critical tokens without per-position threshold computation."
+      },
+      {
+        "finding": "STARE consistently outperforms DAPO by 4-8% on AIME24/25 across 1.5B-32B scales and three task scenarios.",
+        "significance": "Demonstrates that token-level credit rebalancing is more effective than trajectory-level heuristics for entropy management."
+      },
+      {
+        "finding": "STARE sustains over 5000 RL training steps while GRPO-ds saturates around step 1000.",
+        "significance": "Unlocks long-horizon RL potential that was previously capped by entropy collapse."
+      },
+      {
+        "finding": "Reweighted tokens concentrate on self-reflection and uncertainty vocabulary.",
+        "significance": "Suggests that entropy maintenance indirectly promotes beneficial exploratory behaviors (self-correction, re-evaluation)."
+      }
+    ],
+    "limitations": [
+      {
+        "limitation": "Theoretical analysis limited to first-order gradient approximation in the unclipped regime.",
+        "impact": "May not capture higher-order effects and clipping-region dynamics present in actual training."
+      },
+      {
+        "limitation": "Target entropy H_tgt requires manual setting.",
+        "impact": "Adds one hyperparameter; though experiments show robustness to its value within reasonable range."
+      },
+      {
+        "limitation": "Evaluation primarily on mathematical reasoning benchmarks.",
+        "impact": "Generalization to code generation, scientific reasoning, and other domains unverified."
+      },
+      {
+        "limitation": "Maximum model scale tested is 32B.",
+        "impact": "Behavior on larger models (70B+) remains unclear."
+      },
+      {
+        "limitation": "H_tgt = 0.3 may not be universally optimal.",
+        "impact": "Different tasks or domains may require different target entropy levels."
+      },
+      {
+        "limitation": "Static P% = 10% is a fixed hyperparameter.",
+        "impact": "May not be optimal across all training phases and model sizes."
+      }
+    ],
+    "future_directions_suggested": [
+      "Extend theoretical analysis to clipped regime and higher-order effects",
+      "Develop adaptive, threshold-free methods for identifying entropy-critical tokens",
+      "Apply STARE to more diverse domains (code, science, multi-modal)",
+      "Integrate with per-token reward decomposition for finer-grained credit assignment",
+      "Scale to larger models (70B+) and longer training horizons",
+      "Explore dynamic P scheduling during training",
+      "Transfer the four-quadrant analytical framework to other RLHF algorithms (PPO, etc.)"
+    ]
+  }
+}

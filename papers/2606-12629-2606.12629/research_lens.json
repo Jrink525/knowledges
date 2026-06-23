@@ -1,0 +1,121 @@
+{
+  "paper_id": "2606.12629",
+  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "problem_reconstruction": {
+    "original_problem": "如何从Transformer隐藏状态中读取可解释的特征？",
+    "conventional_assumption": "需要稀疏自编码器或探针——即学习一个变换（旋转）来从隐藏状态中解码特征。这隐含假设了标准基不是特征基，特征必须通过有监督或无监督学习才能恢复。",
+    "reconstructed_problem": "标准基自身是否已经足够作为特征基？具体而言：是否可以在不学习任何旋转的情况下，通过直接检查每个维度的符号模式来读取特征？",
+    "research_equation": "对于隐藏状态 h ∈ ℝ^D，特征 f 由维度子集 D_f ⊆ {1,...,D} 中的符号模式 π_f ∈ {+1,-1}^|D_f| 定义，评分函数 s(h) = 1 - Hamming(sign(h|_D_f), π_f)/|D_f|",
+    "key_insight": "将隐藏状态分解为独立二进制寄存器（符号=内容，幅值=置信度）",
+    "paradigm_shift": "从'找正确旋转'到'编目每个维度编码什么'"
+  },
+  "methodology_reconstruction": {
+    "tri_pass_1_what": "提出 Bag of Dims 框架：每个维度是独立通道，符号编码语义内容，幅值编码置信度。特征定义为具有一致符号模式的维度子集。",
+    "tri_pass_2_how": "构建单token类型缓存（每个词汇token过模型一次）→ 计算逐维度AUC（类别内vs完整词汇表的符号分离度）→ 注册AUC≥0.75的维度 → 构建符号原型。评分：符号匹配的Hamming距离。",
+    "tri_pass_3_why": "自注意力在单token输入时无跨token上下文混合，隐藏状态反映'类型身份'而非上下文。符号编码的离散性（+1/-1）意味着可以从标准基直接读取，无需旋转。维度独立性（MI<<0.006 bits）确保每个维度贡献正交信息。",
+    "method_family": "基于字典的可解释性方法（类似SAE但无训练），基于激活的模式匹配（类似探针但无学习权重）",
+    "novelty": "首次证明无需学习的、基于标准基符号模式的特征读取在多种Transformer架构中有效"
+  },
+  "analysis_framework": {
+    "models_covered": [
+      {"name": "Qwen 3.5-4B", "modality": "语言", "D": 2560, "vocab": "~248K"},
+      {"name": "Gemma 3-4B-pt", "modality": "语言", "D": 2560, "vocab": "~262K"},
+      {"name": "Mistral 7B v0.3", "modality": "语言", "D": 4096, "vocab": "~32K"},
+      {"name": "Qwen3-32B", "modality": "语言", "D": 5120, "vocab": "~152K"},
+      {"name": "DINOv2-Base", "modality": "视觉(自监督)", "D": 768, "layers": 12},
+      {"name": "ViT-Base", "modality": "视觉(有监督)", "D": 768, "layers": 12},
+      {"name": "AST", "modality": "音频", "D": 768, "layers": 12}
+    ],
+    "experimental_dimensions": [
+      "符号vs幅值的编码角色（§3.1）",
+      "维度独立性（§3.2）",
+      "零训练特征发现（§3.3）",
+      "上下文泛化（§3.4）",
+      "因果操作（§3.4）",
+      "K/V投影保留（§3.5）",
+      "FFN写入机制（§3.6）",
+      "跨模态普遍性（§3.7）"
+    ],
+    "comparison_baselines": [
+      "完整隐藏状态（full h·W）",
+      "随机符号排列",
+      "训练逻辑回归探针",
+      "MLP（128隐藏单元）",
+      "Gemma Scope 2 SAE",
+      "随机权重控制",
+      "空校准（100个随机锚组）"
+    ],
+    "key_metrics": [
+      "AUC（逐维度和原型级）",
+      "符号匹配准确率",
+      "互信息（bits）",
+      "logit变化（因果翻转）",
+      "top-K预测准确率",
+      "Jaccard相似度"
+    ]
+  },
+  "key_findings": [
+    {
+      "finding": "符号模式本身足以进行下一token预测（60-93% top-5准确率），幅值标识哪些维度承载信号",
+      "strength": "高",
+      "supports_method": true
+    },
+    {
+      "finding": "维度独立性（MI<<0.006 bits）因上下文而增强，非削弱",
+      "strength": "高",
+      "supports_method": true
+    },
+    {
+      "finding": "175个类别可无训练发现，原型AUC 0.97-0.99；探针增益仅+0.018且收敛到轴对齐权重",
+      "strength": "高",
+      "supports_method": true
+    },
+    {
+      "finding": "符号翻转因果抑制概念，联盟为因果单元，概念特异性",
+      "strength": "高",
+      "supports_method": true
+    },
+    {
+      "finding": "轴对齐结构跨语言、视觉、音频Transformer普遍存在",
+      "strength": "高",
+      "supports_method": true
+    },
+    {
+      "finding": "D/V比率控制清晰度：Mistral (0.13) > Qwen3-32B (0.034) > Qwen 3.5-4B/Gemma (0.010)",
+      "strength": "中",
+      "supports_method": false
+    },
+    {
+      "finding": "因果翻转深度依赖——需靠近输出层打补丁",
+      "strength": "中",
+      "supports_method": false
+    }
+  ],
+  "limitations": [
+    {
+      "limitation": "模型规模：仅测试到32B，70B+待验证",
+      "impact": "假设结构在更大规模缩放后保持，但未验证"
+    },
+    {
+      "limitation": "因果翻转深度依赖：深层破坏被后续层重新推导，仅靠近输出层有效",
+      "impact": "不完全的因果控制手段"
+    },
+    {
+      "limitation": "类型原型仅读高幅值稳定维度（58%），42%翻转维度的角色待编目",
+      "impact": "上下文角色特征尚未系统编目"
+    },
+    {
+      "limitation": "D/V比率低时（如Qwen3-32B 0.034）逐维度清晰度受限，多义词检测失效",
+      "impact": "方法在小词汇表模型上更有效"
+    },
+    {
+      "limitation": "175个类别仅为完整特征集的子集",
+      "impact": "总特征数未完全确定"
+    },
+    {
+      "limitation": "非语言模型未做每层扫描，层递进模式未确认",
+      "impact": "跨模态逐层结构理解有限"
+    }
+  ],
+  "generated_at": "2026-06-22T17:21:00Z"
+}

@@ -1,0 +1,228 @@
+{
+  "paper_id": "2606.12629",
+  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim": "标准基（standard basis）足以作为无需训练的特征基——每个维度通过符号编码语义内容，通过幅值编码置信度",
+      "evidence": [
+        {
+          "source": "§1 Introduction",
+          "evidence_text": "Individual dimensions encode semantic content via their signs (+1/-1) and confidence via their magnitudes, functioning as independent binary registers.",
+          "experiment_reference": "§3.1 Sign prediction experiments"
+        },
+        {
+          "source": "§3.1 Table 1",
+          "evidence_text": "Sign-only prediction (sign(h)·W) preserves 60-93% top-5 accuracy across architectures — 800 loudest dims beat all dims",
+          "experiment_reference": "Table 1: Qwen 56.5%→84.0%, Gemma 49.0%→72.0%, Mistral 62.5%→93.0% top-5"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C2",
+      "claim": "纯符号匹配（无LM头）就能达到80-90% top-4096预测准确率",
+      "evidence": [
+        {
+          "source": "§3.1 Table 2",
+          "evidence_text": "Pure Hamming prediction without the LM head achieves 80-90% top-4096 across all architectures with zero learned parameters",
+          "experiment_reference": "Table 2: Qwen 80.5%, Gemma 90.0%, Mistral 81.5% top-4096"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C3",
+      "claim": "维度之间独立——成对互信息 << 0.006 bits",
+      "evidence": [
+        {
+          "source": "§3.2 Table 3",
+          "evidence_text": "Across all models and conditions, mean pairwise MI is below 0.006 bits (maximum possible: 1.0 bit). No pair exceeds 0.1 bits.",
+          "experiment_reference": "Table 3: Qwen type-level 0.0014, Gemma 0.0011, Mistral 0.0051, Qwen3-32B 0.0014 bits"
+        },
+        {
+          "source": "§3.2",
+          "evidence_text": "MLP ablation: an MLP with full cross-dimension capacity (128 hidden units) adds zero AUC over per-dim logistic regression at any training scale",
+          "experiment_reference": "Appendix B Table 21: MLP never outperforms LogReg, gap consistently negative"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C4",
+      "claim": "从单token类型缓存中可无训练发现175个语义类别（逐维度 AUC 0.80，原型 AUC 0.98）",
+      "evidence": [
+        {
+          "source": "§3.3 Table 4",
+          "evidence_text": "All 175 categories exceed null calibration on every model. Per-dim AUC 0.772-0.844, prototype AUC 0.975-0.993",
+          "experiment_reference": "Table 4: Qwen per-dim 0.801→proto 0.980, Gemma 0.772→0.975, Mistral 0.844→0.993, Qwen3-32B 0.792→0.978"
+        },
+        {
+          "source": "§3.3 Table 5",
+          "evidence_text": "Probe comparison: trained logistic regression adds only +0.018 AUC, probe weights 99.9% sign agreement with polarity",
+          "experiment_reference": "Table 5: MLP vs LogReg advantage: -0.001"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C5",
+      "claim": "无监督发现可扩展到1500个特征（100%种子产生有效特征）",
+      "evidence": [
+        {
+          "source": "§3.3 Table 6",
+          "evidence_text": "1500/1500 features found on all four models, mean max-score 0.906, 100% scoring ≥0.80",
+          "experiment_reference": "Table 6: Qwen 1500/1500 (100%), Gemma 1500/1500 (100%), Mistral 1500/1500 (100%), Qwen3-32B 1500/1500 (100%)"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C6",
+      "claim": "类型级原型在上下文中泛化——上下文 AUC 0.72-0.86",
+      "evidence": [
+        {
+          "source": "§3.4",
+          "evidence_text": "Type-level prototypes generalize to tokens in running text. Mean contextual AUC: 0.814 (Qwen), 0.722 (Gemma), 0.856 (Mistral)",
+          "experiment_reference": "25,600 tokens (200 prompts × 128 tokens)"
+        },
+        {
+          "source": "§3.4 Table 7",
+          "evidence_text": "Polysemy test: 77-80% accuracy on 3/4 models (Qwen 79%, Mistral 78%, Gemma 77%)",
+          "experiment_reference": "Table 7: pool AUC 0.738-0.768"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C7",
+      "claim": "因果符号翻转——翻转特征的注册符号在生成过程中抑制其概念（-5到-24 logits），仅当应用靠近输出层时有效",
+      "evidence": [
+        {
+          "source": "§3.4 Table 8",
+          "evidence_text": "Away flip: -10 to -14 (Qwen), -19 to -24 (Gemma), -5 to -7 (Mistral), -5 to -9 (Qwen3-32B). Toward flip: ~0. Disjoint flip: ~0. Random: ~0.",
+          "experiment_reference": "Table 8: causal sign-flip during live forward pass"
+        },
+        {
+          "source": "§3.4",
+          "evidence_text": "Coalition is the causal unit: effect switches on past ~200-500 dimensions and grows with coalition size",
+          "experiment_reference": "Coalition size sweep"
+        },
+        {
+          "source": "§3.4",
+          "evidence_text": "Concept-specific: flipping disjoint coalition leaves target untouched, indistinguishable from random",
+          "experiment_reference": "Table 32: Disjoint ≈ random across all models"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C8",
+      "claim": "特征存活于注意力投影——K/V投影保留轴对齐结构",
+      "evidence": [
+        {
+          "source": "§3.5 Table 9",
+          "evidence_text": "All 175 categories exceed null calibration on both K and V across all four architectures",
+          "experiment_reference": "Table 9: K/V discoverability ranges 33-99% across models"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C9",
+      "claim": "FFN神经元写入轴对齐——Top-200神经元联盟通过多数投票重建99.9%的原型",
+      "evidence": [
+        {
+          "source": "§3.6 Table 12",
+          "evidence_text": "At K=200, 99.9% of Qwen 3.5-4B prototypes exceed 0.70 agreement. Curve logarithmic for every model, climbing monotonically toward ~0.85-0.94",
+          "experiment_reference": "Table 12: K=200 coalition agreement 0.786 (Qwen), 0.845 (Gemma), 0.758 (Mistral), 0.728 (Qwen3-32B)"
+        },
+        {
+          "source": "§3.6 Table 11",
+          "evidence_text": "Random weights never achieve the linkage thresholds that trained models reach",
+          "experiment_reference": "Table 11: Trained vs random: 0/1500 for random on all models"
+        },
+        {
+          "source": "§3.6 Table 13",
+          "evidence_text": "FFN neuron activations themselves are a sign-readable per-dim space: match residual stream within ±0.02 prototype AUC",
+          "experiment_reference": "Table 13: Neuron 0.973-0.994 vs Residual 0.962-0.992"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C10",
+      "claim": "跨模态普遍性——相同结构出现在自监督视觉、有监督视觉和音频Transformer中",
+      "evidence": [
+        {
+          "source": "§3.7 Table 14",
+          "evidence_text": "DINOv2 (self-supervised, no labels): 9/12 ImageNet superclasses detectable. ViT-Base (supervised): 11/12",
+          "experiment_reference": "Table 14: DINOv2 prototype AUC 0.831, ViT-Base 0.977"
+        },
+        {
+          "source": "§3.7 Table 15",
+          "evidence_text": "AST (audio): 50/50 ESC-50 categories exceed AUC 0.70, 47/50 exceed 0.80",
+          "experiment_reference": "Table 15: Train 0.970, Thunderstorm 0.961, etc."
+        },
+        {
+          "source": "§3.7 Table 16",
+          "evidence_text": "Sign-only 1-NN: DINOv2 93.0%, ViT-Base 96.0%, AST 97.0% accuracy",
+          "experiment_reference": "Table 16"
+        },
+        {
+          "source": "§3.7 Table 17",
+          "evidence_text": "Probe ablation: MLP adds max +0.007 AUC over LogReg across modalities",
+          "experiment_reference": "Table 17"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C11",
+      "claim": "叠加假说的耦合是瓶颈压力的函数——真实Transformer不在该压力起作用的状态",
+      "evidence": [
+        {
+          "source": "§5 Discussion",
+          "evidence_text": "Capacity = 3^D - 1 features, effectively infinite for D=2560. Cross-dim MI << 0.006 bits (real) vs 0.05-0.10 (toy bottleneck). As toy bottleneck relaxes, MI drops to 0.005 bits.",
+          "experiment_reference": "Appendix F Tables 27-28: Toy model analysis"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C12",
+      "claim": "发现结构需要训练——随机初始化模型不产生可检测的特征",
+      "evidence": [
+        {
+          "source": "Appendix E Table 26",
+          "evidence_text": "Random-init models: Qwen AUC 0.608 (vs trained 0.801), Gemma 0.603 (vs 0.763), Mistral 0.679 (vs 0.844). Discoverable ≥0.75: 0/175 for Qwen and Gemma, 11/175 for Mistral (all incoherent)",
+          "experiment_reference": "Table 26: Random-init control"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C13",
+      "claim": "D/V比率控制逐维度清晰度——Mistral (0.13) > Qwen3-32B (0.034) > Qwen 3.5-4B/Gemma (0.010)",
+      "evidence": [
+        {
+          "source": "§5 Limitations",
+          "evidence_text": "Mistral (D/V≈0.13) achieves 0.844, Qwen3-32B (0.034) and Qwen 3.5-4B (0.010) reach 0.792-0.801, Gemma (0.010) reaches 0.772",
+          "experiment_reference": "Table 4 and §5"
+        },
+        {
+          "source": "§3.4 Table 7",
+          "evidence_text": "Qwen3-32B polysemy near chance at every layer (AUC 0.60-0.67), linked to low D/V=0.034",
+          "experiment_reference": "Table 7, Appendix G Table 30"
+        }
+      ],
+      "confidence": "medium"
+    }
+  ],
+  "generated_at": "2026-06-22T17:21:00Z",
+  "validation": {
+    "claim_count": 13,
+    "total_evidence_items": 31,
+    "status": "complete"
+  }
+}

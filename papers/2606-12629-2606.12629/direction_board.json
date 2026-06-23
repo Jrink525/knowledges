@@ -1,0 +1,105 @@
+{
+  "paper_id": "2606.12629",
+  "paper_title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+  "directions": [
+    {
+      "id": "D1",
+      "name": "大规模模型验证：Bag of Dims 在 70B+ 模型上的缩放行为",
+      "description": "论文在4-32B模型上验证了Bag of Dims的有效性，但70B+模型（如Llama 3 70B、Qwen 3 72B）未验证。核心研究问题：(1) 维度独立性（MI<<0.006 bits）是否随模型变大保持？(2) D/V比率是否仍是主要控制因素？(3) 1500个无监督特征是否可扩展到更大规模？",
+      "rationale": "随着参数增长，Transformer容量增加，如果逐维度编码结构的必要性减弱，结构可能减弱。这对方法可扩展性至关重要。",
+      "relevance": 9,
+      "novelty": 6,
+      "feasibility": 9,
+      "contact_author": false,
+      "minimal_experiment": "在Llama 3 70B上构建单token类型缓存（~32K词汇），计算逐维度AUC和成对MI，比较与Mistral 7B（D/V≈0.13）的度量。",
+      "requires_code": true,
+      "estimated_effort": "~2小时GPU（构建缓存）"
+    },
+    {
+      "id": "D2",
+      "name": "类型-上下文二分法：低幅值翻转维度的系统编目",
+      "description": "论文发现约42%的维度在上下文中改变符号，这些是低幅值维度。这些维度被认为编码上下文角色（句法、指代、语用），但未系统编目。研究问题：这42%的维度编码什么类型的上下文信息？是否存在类似于类型级特征的可发现结构？该二分法是否在所有模型中存在？",
+      "rationale": "理解42%翻转维度的功能，可能揭示注意力如何携带上下文角色信息。这将使Bag of Dims框架从纯类型级扩展到完全上下文化。",
+      "relevance": 9,
+      "novelty": 8,
+      "feasibility": 7,
+      "contact_author": false,
+      "minimal_experiment": "收集大量上下文（不同句法角色、指代链），对每个维度计算'类型符号→上下文符号'转移矩阵，聚类具有相同转移模式的维度，检查这些聚类是否对应句法功能。",
+      "requires_code": true,
+      "estimated_effort": "~1周（实验设计+数据构建）"
+    },
+    {
+      "id": "D3",
+      "name": "组合容量实验验证：符号模式编码的上限",
+      "description": "论文给出了组合容量公式 Capacity = 3^D - 1。但1500个无监督特征远小于理论容量。研究问题：(1) 符号模式编码的实际容量上限是多少？(2) 当特征数增加时，维度重叠如何发展？(3) 是否观察到容量饱和？",
+      "rationale": "容量声明是论文最反直觉的结论之一：无限容量意味着不需要几何打包。实验验证支持或质疑这一定性。",
+      "relevance": 8,
+      "novelty": 7,
+      "feasibility": 6,
+      "contact_author": false,
+      "minimal_experiment": "系统增加随机种子数进行无监督发现，测量新特征的独特性指标，拟合理想增长曲线。当特征数接近D时，检查重叠模式和信号干扰。",
+      "requires_code": true,
+      "estimated_effort": "~3天（计算密集）"
+    },
+    {
+      "id": "D4",
+      "name": "跨层坐标系统：FFN重写机制的逐层理解",
+      "description": "论文发现跨层Jaccard重叠为0.042（随机水平），表明每层FFN将残差流重写为不同坐标系统。研究问题：(1) FFN重写的机制是什么？(2) 层间坐标变换是否有可学习结构？(3) 深度网络是否需要冗余以允许多次重写？",
+      "rationale": "理解坐标系统的重写对设计更高效网络和更深层可解释性至关重要。",
+      "relevance": 7,
+      "novelty": 9,
+      "feasibility": 5,
+      "contact_author": false,
+      "minimal_experiment": "训练一个'坐标变换'映射（如浅层MLP）将h_L的维度分类映射到h_{L+1}的维度，分析变换是否比随机猜好，变换的秩和稀疏性。",
+      "requires_code": true,
+      "estimated_effort": "~2周"
+    },
+    {
+      "id": "D5",
+      "name": "基于符号的模型编辑：跨模型概念抑制工具",
+      "description": "论文展示了因果符号翻转可抑制概念。研究问题：(1) 是否可构建通用概念抑制工具，作为红队或安全控制机制？(2) 抑制多个概念是否叠加？(3) 对其他任务的影响是什么？(4) 抑制是否在生成过程中持续有效？",
+      "rationale": "如果成功，这提供了极低成本的概念控制方法——无需微调，无需对抗训练。",
+      "relevance": 8,
+      "novelty": 7,
+      "feasibility": 8,
+      "contact_author": false,
+      "minimal_experiment": "在Qwen 3.5-4B和Mistral 7B上构建自动抑制pipeline：给定概念→发现特征→在h_24翻转符号→评估安全基准（如有害内容检测）+通用能力基准。",
+      "requires_code": true,
+      "estimated_effort": "~1周"
+    },
+    {
+      "id": "D6",
+      "name": "Bag of Dims 替换 SAE 在机械可解释性管线中的可行性",
+      "description": "当前可解释性管线严重依赖SAE。如果标准基足够，可以减少训练开销。研究问题：(1) BoD发现的特征在监督特征分离任务上与SAE特征相比如何？(2) BoD特征是否可用于激活指导（activation steering）？(3) 可否构建端到端管线：BoD发现→因果验证→干预？",
+      "rationale": "论文的SAE比较（Table 20）显示符号原型在173/175类别上优于单个SAE特征。延伸这可能改变可解释性方法论。",
+      "relevance": 8,
+      "novelty": 6,
+      "feasibility": 7,
+      "contact_author": false,
+      "minimal_experiment": "在Gemma 3-4B上构建完整BoD管线（1500特征+175类别），与Gemma Scope SAE在特征质量、激活引导效果、电路发现三方面全面比较。",
+      "requires_code": true,
+      "estimated_effort": "~2周"
+    },
+    {
+      "id": "D7",
+      "name": "非监督分类目标的Transformer训练：DINOv2的深层探究",
+      "description": "论文发现DINOv2（自监督）展现9/12超类可检测，弱于ViT-Base（有监督，11/12）。但这是否反映了DINOv2的内在局限？研究问题：(1) DINOv2的符号结构在早期层是否更强？(2) 是否有特定的语义类别DINOv2系统性地弱？(3) 自监督训练的迭代次数如何影响逐维度清晰度？(4) 是否有其他自监督方法（如CLIP、iGPT）展现相同结构？",
+      "rationale": "理解自监督如何塑造符号结构具有重要意义：如果目标是最大化可解释性，自监督可能不需要牺牲表达能力。",
+      "relevance": 6,
+      "novelty": 7,
+      "feasibility": 6,
+      "contact_author": false,
+      "minimal_experiment": "在不同训练阶段检查DINOv2检查点的逐维度AUC（初始化→训练完成），在CLIP视觉编码器上运行相同分析，比较符号结构的时间演化。",
+      "requires_code": true,
+      "estimated_effort": "~1周（计算/数据密集）"
+    }
+  ],
+  "meta_analysis": {
+    "total_directions": 7,
+    "most_relevant": "D1 (大规模验证) 和 D2 (类型-上下文二分法)",
+    "most_novel": "D4 (跨层坐标系统)",
+    "most_feasible": "D1 (大规模验证) 和 D5 (基于符号的模型编辑)",
+    "overall_theme": "Bag of Dims作为无需训练的Transformer可解释性新范式潜力巨大，但需要大规模验证、上下文角色系统编目和实际应用管线开发"
+  },
+  "generated_at": "2026-06-22T17:21:00Z"
+}

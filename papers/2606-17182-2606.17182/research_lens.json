@@ -1,0 +1,71 @@
+{
+  "paper_id": "2606.17182",
+  "paper_title": "Verified Detection and Prevention of Concurrency Anomalies in Multi-Agent Large Language Model Systems",
+  "research_lens": {
+    "problem_reconstruction": {
+      "original_question": "Multi-agent LLM systems share mutable state; what concurrency anomalies arise, how to detect/prevent them, and at what cost?",
+      "restated_as": "Given an operational regime where operation latency is dominated by neural inference rather than memory access, what is the formal landscape of consistency anomalies, and can mechanically verified runtime strategies prevent them with bounded cost?",
+      "why_relevant": "Existing consistency theory (database isolation levels, hardware memory models) assumes bounded operation latency. LLM inference creates a fundamentally different regime — 'read-generate-write' windows of seconds, not microseconds — that invalidates core assumptions of both lock-based and optimistic concurrency control.",
+      "key_assumptions_examined": [
+        "All LLM invocations are deterministic with respect to their inputs (load-bearing assumption for formal verification)",
+        "Shared memory is a single logical store (no replication — A4 deferred)",
+        "Cross-record commit is atomic; within-record tool-effect commit order is not (A6 formalizes this gap)",
+        "No Byzantine or adversarial agents (trace-level writes are genuine commits)",
+        "Cost asymmetry is bounded, not 'cripplingly expensive order-of-magnitude'"
+      ]
+    },
+    "methodology_reconstruction": {
+      "approach": "Three-layer formal-empirical architecture combining TLA+ specification, Verus mechanical verification, and controlled LLM-scale empirical measurement",
+      "layer_1_formal": "TLA+ predicates for 4+1 anomalies (A1, A2, A3, A4 deferred, A6) verified by TLC model checking at small finite bounds (3 agents, 2 cells, 8 slots); TLAPS coherence check (11 theorems, 15 obligations); A1 structural lower bound (28 obligations)",
+      "layer_2_verification": "Verus mechanical verification chain: (a) detector soundness+completeness (24 obligations), (b) three runtime safety theorems (40 obligations), (c) four spec-runtime refinements (84 obligations), (d) concurrent semantics lift (9 + 4 obligations), (e) exec-mode verified runtimes (49+7+9 obligations). Total: 274 curated, 295 full obligations, 0 errors",
+      "layer_3_empirical": "Controlled LLM-scale pilot: 900 sessions (3 workloads × 3 runtimes × 100 sessions) on gpt-4o and Claude Sonnet 4.5, plus synthetic baselines (700 traces), cookbook-derived scenarios (600 sessions), wall-clock within-model study (270+270 sessions), live agent loop (cascade evaluation)",
+      "key_design_choices": [
+        "Boolean lattice (Adya-style) rather than single hierarchy — captures non-totally-ordered relationships among anomalies",
+        "Verus for Rust verification rather than Coq/Isabelle — targets the executable runtime directly",
+        "Empirical cost measurement at LLM scale — tests the qualitative 'order-of-magnitude' intuition against real provider pricing",
+        "Dual-evidence strategy for each anomaly: formal (TLA+ predicate + TLC witness) AND empirical (pilot firing rate + cost)",
+        "Cross-model replication (gpt-4o + Claude Sonnet 4.5 + Llama-3.2 open-weights) — tests whether findings are provider-specific"
+      ]
+    },
+    "analytical_framework": {
+      "core_construct": "Consistency Lattice L = (2^{A}, ⊆) where A = {A1, A2, A3, A6}; each model = subset of anomalies excluded; lattice is Boolean on 4 generators = 16 points",
+      "chosen_mapping": "L0(⊤) → L1(-A1) → L2(-A1-A3) → L3(-A1-A3-A6) → L4(⊥, excludes all four). This is one of 24 maximal chains.",
+      "verification_chain": "TLA+ predicates → Verus detector equivalence (sound+complete) → Verus runtime safety theorems → Verus refinement to deployed Rust → executable exec-mode verified runtimes → empirical cost/liveness measurement",
+      "threat_to_validity_mapping": {
+        "construct_validity": "Are the 5 anomalies exhaustive? Author acknowledges A4 is deferred to replication-aware model; A5 (LongGeneration) subsumed. Coverage is justified by the lattice structure (any new anomaly is a new generator dimension) rather than claimed completeness",
+        "internal_validity": "TLC verification at small bounds (3 agents, 2 cells, 8 slots). Positive witnesses generalize upward; negative checks don't. The 274 Verus obligations use 2 axioms + 3 RustBelt stubs — not 'zero assume' in the strongest sense",
+        "external_validity": "Two LLM providers (gpt-4o, Claude Sonnet 4.5), three workloads. Gemini, Mistral, open-weights cost not measured. Production prevalence not established — the 1-35-100% rates are workload-engineered",
+        "conclusion_validity": "SSI cost-parity claim carefully bounded ('indistinguishable between sessions, not exact zero'). Cross-model cost comparison confounded by tokenization/pricing — only within-model claims made"
+      }
+    },
+    "key_findings": {
+      "finding_1": "A1 (Stale-Generation) exists in two forms — structural (guaranteed by workload design, 100% in edit-review) and empirical (workload-dependent, 1-35%)",
+      "finding_2": "Classical snapshot isolation is insufficient for A1 prevention — the write-skew pattern (Berenson et al., Cahill et al.) manifests in the agent setting as a 3% residual A1 rate from read-only operations that bypass SI validation",
+      "finding_3": "SSI prevents A1 at statistically zero token-cost overhead vs vanilla across both providers — the most cost-effective runtime strategy in low-to-moderate contention regimes",
+      "finding_4": "Pessimistic locking prevents A1 at 100% with bounded overhead (1.6×-2.3×) — challenging the 'orders-of-magnitude' intuition pervasive in the multi-agent LLM literature",
+      "finding_5": "A6 (Tool-Effect Reordering) exists in deployed code (LangGraph's ToolNode asyncio.gather), is invisible in chat transcripts, and is eliminated by a commit-order sequencer",
+      "finding_6": "Causal-cascade (A3) prevention is structural: the verified L2 runtime's cascade-abort discipline guarantees A3-freedom by construction, not by measured reliability",
+      "finding_7": "Operational materiality of A1 is sharply role-dependent: assessor roles diverge 100%, producer roles 0% — suggesting a role-aware advisory layer over verified detectors"
+    },
+    "limitations": {
+      "formal_limitations": [
+        "Single-store model excludes A4 (Split-View); replication-aware extension is deferred",
+        "Deterministic LLM assumption — probabilistic anomaly rate (P[stale read > threshold]) not established",
+        "TLC verification at small finite bounds — no inductive argument generalizing negative results to larger configurations",
+        "Sequential refinement semantics — multi-threaded mutual exclusion discharged as trust base assumption, not proof"
+      ],
+      "empirical_limitations": [
+        "Production anomaly prevalence not established — pilot rates are workload-engineered demonstration of capability, not epidemiological measurement",
+        "Two LLM providers only — Gemini, open-weights families not cost-measured",
+        "Cost measurement uses billed tokens, not wall-clock compute — SSI cost-parity finding reads best-case for SSI's commercial viability",
+        "Wall-clock study uses mock deterministic tools — real-tool latency and cross-call interference not included"
+      ],
+      "scope_limitations": [
+        "No Byzantine/adversarial agent model — hallucinated writes indistinguishable from stale reads at trace level",
+        "Single logical key-value store — message-passing architectures (AutoGen actor model) not directly modeled",
+        "Abort-and-retry cost asymmetry acknowledged but not formalized in the lattice itself",
+        "Chosen-chain ordering by operational reasoning, not empirical validation against deployed runtimes"
+      ]
+    }
+  }
+}

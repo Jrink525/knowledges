@@ -1,134 +1,74 @@
 [
   {
-    "id": "2606.17053",
-    "arxiv_id": "2606.17053",
-    "title": "Context-Aware RL for Agentic and Multimodal LLMs",
-    "summary": "Large language models (LLMs) often fail when answering requires identifying a small but decisive piece of evidence within a long or complex context, such as a single line in a tool trace or a subtle detail in an image. We propose ContextRL, a context-aware reinforcement learning (RL) method that improves long-horizon reasoning and multimodal performance through an indirect auxiliary objective. Instead of supervising only the final answer, ContextRL presents the model with a query, an answer, and two highly similar contexts, and rewards it for selecting the context that supports the query--answer pair, thereby encouraging fine-grained grounding. We construct contrastive context data in two domains: for coding agents, trajectories serve as contexts, yielding 1k pairs built via condition filtering; for multimodal reasoning, images serve as contexts, yielding 7K pairs built via generative editing and similarity search. ContextRL achieves average gains of +2.2% over standard GRPO on 5 long-horizon benchmarks, and +1.8% across 12 diverse visual question answering benchmarks. To disentangle the effect of the proposed objective from that of additional data, we compare against data-augmentation baselines that repurpose the same contrastive contexts as standard query--context--answer examples. These baselines provide little to no improvement, showing that the gains arise from the proposed context-selection objective rather than from the contrastive data alone.",
-    "ai_summary": "ContextRL enhances long-horizon reasoning and multimodal performance through reinforcement learning that rewards context selection for supporting query-answer pairs, achieving improvements over standard methods on diverse benchmarks.",
+    "id": "2606.17182",
+    "arxiv_id": "2606.17182",
+    "title": "Verified Detection and Prevention of Concurrency Anomalies in Multi-Agent Large Language Model Systems",
+    "summary": "Multi-agent LLM systems share state through memory stores, vector indices, and tool registries. We model such sharing as long-running read-generate-write operations under deterministic-generation semantics -- the regime durable-execution engines enforce by deterministic replay -- and formalize four concurrency anomalies in TLA+: stale-generation, phantom-tool, causal-cascade, and tool-effect reordering, structural analogues of classical isolation anomalies, each with a TLC counter-example. The exclusion lattice over these anomalies is trivial; the contribution is the mechanically verified realizability and strict separation of one maximal chain within it, L_0 subsetneq cdots subsetneq L_4, to our knowledge the first machine-checked consistency hierarchy for such runtimes. A development of 274 Verus obligations (zero assume, zero admit; trust base: two structural axioms and a mutex correspondence) proves the detectors sound and complete against the specifications and each runtime its avoidance set. Three deployed Rust runtimes realize L0-L1 (pessimistic locking, serializable snapshot isolation, default-SI), each verified against stale-generation and refined to its state machine; L2-L4 are exec-mode-verified with dependency-free prevention twins (A3, A6, A2: 0/1000 versus 1000/1000), and L2 is run live across three model families (A3 prevented in all 120 retracted sessions). We reproduce a silent lost update in ByteDance's deer-flow, formalizing its fix as a verified L_0 to L_1 refinement, and exhibit tool-effect reordering in LangGraph's ToolNode on unmodified output, removed by an L3 commit-order sequencer. The verified detector, refinements, and realizability artifacts are the contribution; the phenomena and lattice are classical.",
+    "ai_summary": "Multi-agent LLM systems with shared state are analyzed through formal methods identifying concurrency anomalies and establishing a verified consistency hierarchy with mechanized proofs of soundness and completeness.",
     "arxiv_categories": [
-      "cs.CL",
-      "cs.CV"
-    ],
-    "score": 9,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.17053",
-    "pdf_url": "https://arxiv.org/pdf/2606.17053",
-    "github_url": "https://github.com/xupy2003/ContextAwareRL",
-    "hf_discussion": "https://huggingface.co/papers/2606.17053"
-  },
-  {
-    "id": "2606.19704",
-    "arxiv_id": "2606.19704",
-    "title": "Beyond Static Leaderboards: Predictive Validity for the Evaluation of LLM Agents",
-    "summary": "Agent benchmarks are growing fast, but no single benchmark touches more than four or five of the dimensions that deployment exposes. This paper aggregates the largest coordinated deep-dive of one MCP-based industrial-agent benchmark to date: fourteen parallel implementation studies covering new asset classes (including a multi-modal visual extension), alternative orchestrations, retrieval strategies, reasoning modes, infrastructure optimizations, and evaluation-methodology probes. Consolidating those studies with seven prior agent benchmarks, we argue that aggregate-score leaderboards systematically underspecify deployed-agent evaluation. Rankings derived from aggregate scores do not transfer to out-of-distribution settings; recent public-to-hidden competition retrospectives provide direct empirical evidence of this rank instability. We propose ranking configurations by predictive validity, the correlation between in-sample and out-of-sample rank, rather than in-sample mean, and report a twelve-tier measurement apparatus that exposes the deployment-relevant dimensions HELM and its agent-era successors collapse. The position is operationalized through three falsifiable out-of-distribution criteria with explicit thresholds; existing evidence partly supports it but is too thin to confirm. We close with a pre-registered pilot design and a field-level vision for what the next generation of agentic benchmarks should report.",
-    "ai_summary": "Aggregate-score leaderboards in agent benchmarks fail to capture deployment-relevant dimensions and show rank instability, necessitating new evaluation frameworks based on predictive validity and out-of-distribution criteria.",
-    "arxiv_categories": [
-      "cs.AI"
-    ],
-    "score": 8,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19704",
-    "pdf_url": "https://arxiv.org/pdf/2606.19704",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.19704"
-  },
-  {
-    "id": "2606.16827",
-    "arxiv_id": "2606.16827",
-    "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
-    "summary": "Large Language Models (LLMs) have significantly advanced the automation of software engineering tasks. One prominent example is code generation, where an LLM produces code in a specified programming language based on a natural language description. Most research in this area has focused on high-resource languages, such as Python or Java, which benefit from abundant training data. A smaller body of work has explored low-resource languages, which are underrepresented in training corpora. In contrast, no-resource languages for which LLMs have seen virtually no training data remain largely unstudied. These languages often emerge in industry, where organizations develop proprietary or domain-specific languages unsupported by commercial tools like GitHub Copilot. This results in the need for companies to deploy their own in-house code recommenders. To investigate possible solutions in this context, we build and release three code generation benchmarks for no-resource languages, based on two recently proposed programming languages for which very little training data is available. Using these benchmarks, we experiment several solutions to teach LLMs about no-resource languages, including prompt-based techniques as well as pre-training and fine-tuning exploiting the little data available. While further pre-training gives the largest performance gains for no-resource languages, applying it directly to instruction-tuned models harms their ability to follow instructions. To address this, we start from a base model, further pre-training it on the target language, and then inject instruction-following capabilities via weight diff transfer from an instruction model. Such an approach significantly improves code generation capabilities in no-resource settings, allowing companies to cheaply deploy a specialized instruct model without dealing with the computational cost of instruction fine-tuning.",
-    "ai_summary": "Research addresses code generation challenges for no-resource programming languages by developing benchmarks and proposing a method that combines further pre-training with weight difference transfer to create specialized instruction-following models at reduced computational cost.",
-    "arxiv_categories": [
-      "cs.SE"
-    ],
-    "score": 6,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.16827",
-    "pdf_url": "https://arxiv.org/pdf/2606.16827",
-    "github_url": "https://github.com/Devy99/no-resource-pl-study",
-    "hf_discussion": "https://huggingface.co/papers/2606.16827"
-  },
-  {
-    "id": "2606.20515",
-    "arxiv_id": "2606.20515",
-    "title": "S-Agent: Spatial Tool-Use Elicits Reasoning for Spatial Intelligence",
-    "summary": "Real-world spatial intelligence requires reasoning over a continuous and evolving 3D world, yet existing VLMs and tool-augmented agents largely remain tied to static, stateless inference from isolated visual observations. We introduce \\textsc{S-Agent}, a spatial tool-use agentic paradigm for understanding and reasoning over continuous multi-view images and videos. By formulating spatial reasoning as spatio-temporal evidence accumulation rather than isolated frame-level prediction, S-Agent reshapes spatial perception into scene-centric understanding beyond frame-centric recognition. Specifically, S-Agent casts the VLM as a semantic planner that decides what evidence is needed, while a hierarchy of spatial tools and experts grounds objects in 2D, lifts them into 3D geometric evidence, and aggregates this evidence into high-level spatial knowledge (e.g., counting, measurement, orientation, and relative position). Additionally, a temporal memory mechanism, including Scene Memory for maintaining the evolving scene state and Agent Memory for accumulating reasoning context, enables evidence integration across frames and reasoning steps. Comprehensive experiments on multi-view and video spatial reasoning benchmarks show that S-Agent consistently improves both open-source and closed-source VLMs in a training-free manner. Beyond inference-time augmentation, supervised fine-tuning (SFT) on S-Agent-generated spatial trajectories S-300K yields S-Agent-8B, a compact spatial agent that significantly surpasses similar-scale baselines (e.g., Qwen3-VL-8B) and performs comparably to advanced closed-source models (e.g., GPT-5.4 and Gemini 3).",
-    "ai_summary": "S-Agent is a spatial reasoning framework that enhances visual language models with temporal memory and hierarchical spatial tools to enable continuous 3D world understanding from multi-view imagery.",
-    "arxiv_categories": [
-      "cs.CV"
-    ],
-    "score": 6,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.20515",
-    "pdf_url": "https://arxiv.org/pdf/2606.20515",
-    "github_url": "https://github.com/Ropedia/S-Agent",
-    "hf_discussion": "https://huggingface.co/papers/2606.20515"
-  },
-  {
-    "id": "2606.19980",
-    "arxiv_id": "2606.19980",
-    "title": "ENPIRE: Agentic Robot Policy Self-Improvement in the Real World",
-    "summary": "Achieving dexterous robotic manipulation in the real world heavily relies on human supervision and algorithm engineering, which becomes a central bottleneck in the pursuit of general physical intelligence. Although emerging coding agents can generate code to automate algorithm search, their successes remain largely confined in digital environments. We conjecture that the missing abstraction to automate robotics research is a repeatable feedback loop for real-world policy improvement: reset the scene, execute a policy, verify the outcome, and refine the next iteration. To bridge this gap, we introduce ENPIRE, a harness framework for coding agents that instantiates this physical feedback routine with four core modules: an Environment module (EN) for automatic reset and verification, a Policy Improvement module (PI) that launches policy refinement, a Rollout module (R) to evaluate policies with one or multiple physical robots operating in parallel, and an Evolution module (E) in which coding agents analyze logs, consult literature, improve training infrastructure and algorithm code to address failure modes. This closed-loop system transforms real-world manipulation learning into a controllable optimization procedure, minimizing human effort while allowing fair ablations across training recipe and agent variants. Powered by ENPIRE, frontier coding agents can autonomously train a policy to achieve a 99% success rate on challenging, dexterous manipulation tasks, such as organizing a pin box, fastening a zip tie, and tool use, a process that further accelerates when we dispatch an agent team on a robot fleet. Our results suggest a practical and scalable path toward deploying coding agents to autonomously advancing robotics in the physical world.",
-    "ai_summary": "ENPIRE framework enables autonomous robotics research through a closed-loop system that automates policy improvement via environment feedback, policy refinement, and evolutionary code optimization.",
-    "arxiv_categories": [
-      "cs.AI"
-    ],
-    "score": 6,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19980",
-    "pdf_url": "https://arxiv.org/pdf/2606.19980",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.19980"
-  },
-  {
-    "id": "2606.19602",
-    "arxiv_id": "2606.19602",
-    "title": "Configurable Clinical Information Extraction with Agentic RAG: What Works, What Breaks, and Why",
-    "summary": "Patient contexts span hundreds of heterogeneous documents and thousands of structured data points, yet the document-level metadata that AI systems need for retrieval and triage is absent or incomplete. Standard retrieval-augmented generation fails on this data, mishandling temporal reasoning, cross-document dependencies, and missing metadata. We deploy ACIE (Agentic Clinical Information Extraction) at University Medicine Essen: an on-premise agentic RAG pipeline that reasons over complete patient contexts and grounds every answer in source passages for clinician verification. We quantify the metadata gap, trace the architectural decisions it shaped, and evaluate extraction alongside an independent retrospective lymphoma registry study, in which nuclear-medicine physicians verify every extracted value against its cited sources. Across 7,326 judgments, clinicians accepted 96.5\\% of extractions, with per-type acceptance ranging from 80\\% to 99\\%.",
-    "ai_summary": "ACIE, an agentic RAG system deployed in a clinical setting, demonstrates high accuracy in extracting medical information from complex patient contexts, achieving 96.5% acceptance rate by nuclear-medicine physicians across 7,326 judgments.",
-    "arxiv_categories": [
-      "cs.AI"
-    ],
-    "score": 5,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19602",
-    "pdf_url": "https://arxiv.org/pdf/2606.19602",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.19602"
-  },
-  {
-    "id": "2606.20517",
-    "arxiv_id": "2606.20517",
-    "title": "Multi-LCB: Extending LiveCodeBench to Multiple Programming Languages",
-    "summary": "LiveCodeBench (LCB) has recently become a widely adopted benchmark for evaluating large language models (LLMs) on code-generation tasks. By curating competitive programming problems, constantly adding fresh problems to the set, and filtering them by release dates, LCB provides contamination-aware evaluation and offers a holistic view of coding capability. However, LCB remains restricted to Python, leaving open the question of whether LLMs can generalize across the diverse programming languages required in real-world software engineering.\n  We introduce Multi-LCB, a benchmark for evaluating LLMs across twelve programming languages, including Python. Multi-LCB transforms Python tasks from the LCB dataset into equivalent tasks in other languages while preserving LCB's contamination controls and evaluation protocol. Because it is fully compatible with the original LCB format, Multi-LCB will automatically track future LCB updates, enabling systematic assessment of cross-language code generation competence and requiring models to sustain performance well beyond Python.\n  We evaluated 24 LLMs for instruction and reasoning on Multi-LCB, uncovering evidence of Python overfitting, language-specific contamination, and substantial disparities in multilingual performance. Our results establish Multi-LCB as a rigorous new benchmark for multi-programming-language code evaluation, directly addressing LCB's primary limitation and exposing critical gaps in current LLM capabilities.",
-    "ai_summary": "Multi-LCB addresses the limitation of LiveCodeBench by providing a multi-language benchmark for evaluating LLMs across twelve programming languages while maintaining contamination controls and evaluation protocols.",
-    "arxiv_categories": [
-      "cs.AI",
+      "cs.LG",
+      "cs.DC",
+      "cs.LO",
+      "cs.MA",
       "cs.PL"
     ],
-    "score": 5,
+    "score": 24,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.20517",
-    "pdf_url": "https://arxiv.org/pdf/2606.20517",
-    "github_url": "https://github.com/Multi-LCB/Multi-LCB",
-    "hf_discussion": "https://huggingface.co/papers/2606.20517"
+    "arxiv_url": "https://arxiv.org/abs/2606.17182",
+    "pdf_url": "https://arxiv.org/pdf/2606.17182",
+    "github_url": "https://github.com/sajjadanwar0/mac-consistency",
+    "hf_discussion": "https://huggingface.co/papers/2606.17182"
   },
   {
-    "id": "2606.19605",
-    "arxiv_id": "2606.19605",
-    "title": "FAPO: Fully Autonomous Prompt Optimization of Multi-Step LLM Pipelines",
-    "summary": "Multi-step LLM pipelines fail through interactions among retrieval, reasoning, and formatting steps, so prompt-only optimization can miss bottlenecks in the chain. We present FAPO (Fully Autonomous Prompt Optimization), a framework that lets Claude Code optimize an LLM pipeline inside a standardized codebase. FAPO evaluates a pipeline, inspects intermediate steps, diagnoses failures, proposes scoped changes, and validates variants repeatedly to optimize against a score function. It first tries prompt edits and, only when prompt optimization appears insufficient, changes chain structure within the permitted scope when attribution identifies a structural bottleneck. Across six benchmarks and three task models, FAPO beats the baseline GEPA in 15 of 18 model-benchmark comparisons. In 11 model-benchmark comparisons, FAPO wins with non-overlapping mean pm trial-standard-deviation ranges, and the mean FAPO-GEPA gain is +14.1 pp. In the six HoVer and IFBench comparisons where prompt-first search escalated to structural changes, FAPO wins all six with a mean gain of +33.8 pp. FAPO also improves performance on security tasks: on CTIBench-RCM, a security CVE-to-CWE task, prompt-only FAPO lifts test accuracy by +4.0 pp on GPT-5, +7.1 pp on Foundation-Sec-8B-Instruct, and +2.0 pp on Foundation-Sec-8B-Reasoning. These results position FAPO as a state-of-the-art pipeline optimization technique for both general-purpose and security-focused tasks.",
-    "ai_summary": "FAPO optimizes LLM pipelines by combining prompt editing with structural changes, demonstrating superior performance across multiple benchmarks and security tasks.",
+    "id": "2606.12629",
+    "arxiv_id": "2606.12629",
+    "title": "Bag of Dims: Training-Free Mechanistic Interpretability via Dimension-Level Sign Patterns",
+    "summary": "We show the standard basis of transformer hidden states already provides a training-free, architecture-general feature basis. Individual dimensions encode semantic content via their signs (+/-1) and confidence via their magnitudes, acting as independent binary registers; a feature is a subset of dimensions with a consistent sign pattern, read by counting sign agreements with no learned rotation. We validate this Bag of Dims framework across seven models spanning language (Qwen 3.5-4B, Gemma 3-4B, Mistral 7B, Qwen3-32B), vision (DINOv2, ViT-Base), and audio (AST).\n  Signs alone carry predictive content: unit-magnitude sign patterns preserve 60-93% top-5 next-token accuracy through the LM head, and decoder-free Hamming scoring reaches 80-90% top-4096. From a single-token cache (one forward pass per token, no context, no labels), we detect 175 categories at AUC 0.97-0.99 by sign agreement; a trained probe adds only +0.018 AUC and converges to axis-aligned weights. These features are causally operative: they survive the K/V attention projections, trace to the FFN neuron coalitions that write them (random-weight controls never reproduce this), and flipping a feature's signs during the live forward pass suppresses its concept across four language models, magnitude-matched and concept-specific. Dimensions stay independent throughout (pairwise mutual information below 0.006 bits).\n  The structure is not specific to language: the same per-dimension signs appear in self-supervised vision (DINOv2, 9/12 ImageNet superclasses), supervised vision (ViT-Base, 11/12), and audio (AST, 50/50 ESC-50 categories), so it reflects transformer training in general, not the language-modeling objective. The standard basis already suffices for feature reading at one forward pass, no optimization, no GPU-days. The open problem shifts from finding the right rotation to cataloging what each dimension encodes.",
+    "ai_summary": "The standard basis of transformer hidden states serves as a training-free, architecture-general feature representation where individual dimensions encode semantic content through signs and confidence through magnitudes, functioning as independent binary registers without requiring learned rotations or optimization.",
     "arxiv_categories": [
-      "cs.SE",
+      "cs.LG",
       "cs.AI"
     ],
-    "score": 5,
+    "score": 22,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19605",
-    "pdf_url": "https://arxiv.org/pdf/2606.19605",
-    "github_url": "https://github.com/cisco-foundation-ai/fully-automated-prompt-optimization",
-    "hf_discussion": "https://huggingface.co/papers/2606.19605"
+    "arxiv_url": "https://arxiv.org/abs/2606.12629",
+    "pdf_url": "https://arxiv.org/pdf/2606.12629",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.12629"
+  },
+  {
+    "id": "2606.19236",
+    "arxiv_id": "2606.19236",
+    "title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+    "summary": "Reinforcement Learning with Verifiable Rewards algorithms like GRPO have emerged as the dominant post-training paradigm for complex reasoning in LLMs, yet commonly suffer from policy entropy collapse during training. We conduct a first-order gradient analysis of token-level entropy dynamics under GRPO and identify a token-level credit assignment mismatch: the per-token entropy variation decomposes into the product of the trajectory-level advantage and an entropy sensitivity function over the next-token distribution, yielding an advantage-surprisal four-quadrant structure and a near-criticality property. Motivated by it, we propose STARE (Surprisal-guided Token-level Advantage Reweighting for policy Entropy stability), which identifies entropy-critical token subsets via batch-internal surprisal quantiles, selectively reweights their effective advantages, and incorporates a target-entropy closed-loop gate for stable entropy regulation. Across model scales from 1.5B to 32B and three task families (Short CoT, Long CoT, and Multi-Turn Tool Use), STARE sustains stable RL training over thousands of steps while maintaining policy entropy within the target band. On AIME24 and AIME25, STARE outperforms DAPO and other competitive baselines by 4%-8% in average accuracy, with reflection tokens and response length growing in tandem, indicating sustained exploration-exploitation balance that further unlocks RL training potential.Code is available at https://github.com/hp-luo/STARE.",
+    "ai_summary": "GRPO algorithms face policy entropy collapse during training, which STARE addresses through surprisal-guided token-level advantage reweighting and target-entropy regulation to maintain stable reinforcement learning for large language models.",
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ],
+    "score": 21,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19236",
+    "pdf_url": "https://arxiv.org/pdf/2606.19236",
+    "github_url": "https://github.com/hp-luo/STARE",
+    "hf_discussion": "https://huggingface.co/papers/2606.19236"
+  },
+  {
+    "id": "2606.18874",
+    "arxiv_id": "2606.18874",
+    "title": "Externalizing Research Synthesis and Validation in AI Scientists through a Research Harness",
+    "summary": "AI systems can increasingly automate scientific workflows, but the reasoning that links prior evidence, generated ideas, experiments and final claims often remains implicit inside model inference. Here we introduce Xcientist, a research harness that externalizes research synthesis and experimental validation into inspectable, contract-governed processes. Xcientist organizes literature evidence, idea states, implementation plans, ablation records and repair traces as persistent research artifacts, so that generated mechanisms can be grounded, executed, tested and revised without losing their evidential basis. We identify claim drift as a failure mode of automated research, where runnable artifacts no longer support the mechanism originally claimed. Across training-free memory systems, graph-structured traffic forecasting and multi-scale physics-informed neural networks, Xcientist preserves traceable trajectories from problem formulation to mechanism design, validation and bounded revision. These results suggest that AI scientists should be evaluated not only by their final artifacts, but by whether their synthesis and validation processes remain attributable, inspectable and scientifically accountable.",
+    "ai_summary": "Xcientist enables transparent and accountable AI-driven scientific research by creating persistent artifacts that track the complete research process from problem formulation to mechanism validation and revision.",
+    "arxiv_categories": [
+      "cs.AI"
+    ],
+    "score": 21,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.18874",
+    "pdf_url": "https://arxiv.org/pdf/2606.18874",
+    "github_url": "https://github.com/OpenDFM/Xcientist",
+    "hf_discussion": "https://huggingface.co/papers/2606.18874"
   },
   {
     "id": "2606.18021",
@@ -142,7 +82,7 @@
       "cs.LG",
       "cs.MA"
     ],
-    "score": 4,
+    "score": 20,
     "upvotes": 0,
     "arxiv_url": "https://arxiv.org/abs/2606.18021",
     "pdf_url": "https://arxiv.org/pdf/2606.18021",
@@ -150,20 +90,258 @@
     "hf_discussion": "https://huggingface.co/papers/2606.18021"
   },
   {
-    "id": "2606.19419",
-    "arxiv_id": "2606.19419",
-    "title": "Playful Agentic Robot Learning",
-    "summary": "Current agentic robot systems can write executable Code-as-Policy programs, observe feedback, and revise behavior across multiple attempts, but they remain largely task-driven: reusable skills are acquired only after explicit instructions. We study Playful Agentic Robot Learning, where an embodied coding agent uses self-directed play as a continual skill-learning stage before downstream tasks arrive. We introduce RATs, Robotics Agent Teams designed for play-time skill acquisition. During play, RATs proposes novel yet learnable exploratory tasks, plans and executes robot-code policies, verifies intermediate progress, diagnoses failures, retries with dense, step-level feedback, and distills successful executions into a persistent code skill library. At test time, the agent reuses relevant skills from this frozen library to help solve new tasks. Experiments in LIBERO-PRO and MolmoSpaces show that play-learned skills improve held-out downstream tasks over no-play and random-play baselines, with 20.6 and 17.0 percentage-point gains over CaP-Agent0 on LIBERO-PRO and MolmoSpaces, respectively. Moreover, the learned skills can be plugged into other inference-time Code-as-Policy agents by simply retrieving them into the context, improving RoboSuite and real-world transfer by 8.9 and 8.8 points, respectively, without finetuning the underlying model.",
-    "ai_summary": "Embodied robots learn reusable skills through self-directed play and exploration, then apply these skills to improve performance on downstream tasks without additional training.",
+    "id": "2606.17162",
+    "arxiv_id": "2606.17162",
+    "title": "MemSlides: A Hierarchical Memory Driven Agent Framework for Personalized Slide Generation with Multi-turn Local Revision",
+    "summary": "Personalized presentation generation requires more than conditioning on a current prompt or template: agents must preserve stable user preferences across tasks, retain newly introduced preferences and constraints during multi-turn revision, and carry out local edits reliably. We propose MemSlides, a hierarchical memory framework for personalized presentation agents that separates long-term memory from working memory and further divides long-term memory into user profile memory and tool memory. User profile memory stores intent-conditioned profiles for round-0 personalization, working memory carries active preferences and session constraints across revision rounds, and tool memory stores reusable execution experience for reliable localized editing. MemSlides pairs this memory design with scoped slide-local revision, so targeted updates act on the smallest affected region instead of repeatedly regenerating the full deck. In controlled experiments, user profile memory improves persona-alignment judgments on a multi-persona, multi-intent profile bank, tool-memory injection improves closed-loop modify behavior in diagnostic matched-pair settings, and qualitative cases illustrate working memory's ability to carryover preferences. Taken together, these results suggest that effective personalization in presentation authoring depends on separating persistent user profiles, session-level working memory, and reusable execution experience across generation and localized revision.",
+    "ai_summary": "MemSlides presents a hierarchical memory framework for personalized presentation agents that separates long-term user profiles, working memory for session constraints, and tool memory for reusable execution experiences to enable stable personalization and reliable local edits across multi-turn revisions.",
     "arxiv_categories": [
-      "cs.RO",
+      "cs.CL",
+      "cs.HC",
+      "cs.MA"
+    ],
+    "score": 19,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.17162",
+    "pdf_url": "https://arxiv.org/pdf/2606.17162",
+    "github_url": "https://github.com/huohua325/Memslides",
+    "hf_discussion": "https://huggingface.co/papers/2606.17162"
+  },
+  {
+    "id": "2606.06614",
+    "arxiv_id": "2606.06614",
+    "title": "Re-Centering Humans in LLM Personalization",
+    "summary": "Despite growing interest, most evaluations of large language models' (LLMs') personalization abilities have relied on synthetic data. It remains unclear how well current personalization systems work for real users. In this paper, we study the gap in LLM personalization performance when using synthetic versus human data. We collect human conversations (550 conversations) and judgments across three stages of personalization: extracting user attributes from conversations (5,949 judgments), pairing relevant attributes with new prompts (11,919), and incorporating relevant attributes into a personalized response (1,101). Incorporating human data reveals system limitations at each stage. Models struggle to extract attributes from human conversations, disagree with human judgments on relevant attributes, and generate personalized responses that humans judge no better than generic responses (though that LLM judges widely rate as better). We introduce two lightweight training-based interventions that shift automated personalization evaluation closer to human data in our first two stages. However, in our third stage we find that learned reward models achieve only modest correlation with human ratings, suggesting that human-aligned personalization quality judgments are difficult to model directly. Our collected data provides a foundation for studying how models should extract, select, and incorporate user information in ways that humans find useful.",
+    "ai_summary": "Human-centered evaluation reveals significant gaps between synthetic and real-world LLM personalization performance, with models struggling to extract user attributes and generate truly personalized responses that match human quality judgments.",
+    "arxiv_categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.HC"
+    ],
+    "score": 19,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.06614",
+    "pdf_url": "https://arxiv.org/pdf/2606.06614",
+    "github_url": "https://github.com/orange0629/recenter-personalization",
+    "hf_discussion": "https://huggingface.co/papers/2606.06614"
+  },
+  {
+    "id": "2606.18543",
+    "arxiv_id": "2606.18543",
+    "title": "CEO-Bench: Can Agents Play the Long Game?",
+    "summary": "Language model agents are becoming proficient executors at isolated, short-horizon tasks such as software engineering and customer service. Yet real-world challenges require a combination of sophisticated skills that remain largely untested in agents: (1) navigating long horizons amid uncertainty; (2) acquiring information in noisy environments; (3) adapting to a changing world; (4) orchestrating multiple moving parts toward a coherent goal. We introduce CEO-Bench, which evaluates these capabilities together by simulating a representative real-world task: operating a startup for 500 days. An agent manages pricing, marketing, budgeting, and many other aspects of a fictional company through a programmable Python interface, operating in the same environment and facing the same challenges as a human CEO. Success demands analyzing noisy, interconnected business databases, translating signals into sound strategy, and coordinating many decisions with programming. The strongest agents write sophisticated code that simulates customer cohorts to forecast future cash and mines negotiation history to uncover hidden customer preferences. Even so, most state-of-the-art models struggle in this environment. Only Claude Opus 4.8 and GPT-5.5 finish above the $1M starting balance, and neither consistently turns a profit. CEO-Bench takes a first step toward measuring the intelligence required to drive sustained, adaptive progress over time.",
+    "ai_summary": "CEO-Bench evaluates language model agents' ability to manage a simulated startup over 500 days, testing their proficiency in long-term planning, noise handling, adaptability, and multi-task coordination through a Python interface.",
+    "arxiv_categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.SE"
+    ],
+    "score": 19,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.18543",
+    "pdf_url": "https://arxiv.org/pdf/2606.18543",
+    "github_url": "https://github.com/zlab-princeton/ceobench-src",
+    "hf_discussion": "https://huggingface.co/papers/2606.18543"
+  },
+  {
+    "id": "2606.18910",
+    "arxiv_id": "2606.18910",
+    "title": "REVES: REvision and VErification--Augmented Training for Test-Time Scaling",
+    "summary": "Test-time scaling via sequential revision has emerged as a powerful paradigm for enhancing Large Language Model (LLM) reasoning. However, standard post-training methods primarily optimize single-shot objectives, creating a fundamental misalignment with multi-step inference dynamics. While recent work treats this as multi-turn reinforcement learning (RL), conventional approaches optimize over the multi-step trajectories directly, failing to further exploit the high-quality mistakes in intermediate steps that model can learn from correcting them. We propose a two-stage iterative framework that alternates between online data/prompt augmentation and policy optimization. By converting the intermediate steps (``near-miss'' answers) in the successful recovery trajectories into decoupled revision and verification prompts, our approach concentrates training on both effective answer transformation and error identification. This approach enables efficient off-policy data generation and reduces the computational overhead of long-horizon sampling compared to standard multi-turn RL. On LiveCodeBench, using publicly available test cases as feedback, we observe gains of +6.5 points over the RL baseline and +4.0 points over standard multi-turn training. Beyond coding, our approach matches the previously reported SOTA result on circle packing while using the smallest base model (4B) and far fewer rollouts than the much larger evolutionary search systems. Math results under ground-truth verification further confirm improved correction ability. It also generalizes to out-of-distribution constraint-satisfaction puzzles such as n\\_queens and mini\\_sudoku, where correctness is defined entirely by problem constraints. Code is available at https://github.com/yxliu02/REVES.git.",
+    "ai_summary": "A two-stage iterative framework alternates between data augmentation and policy optimization to improve LLM reasoning by leveraging intermediate correction steps, achieving superior performance on coding benchmarks and constraint satisfaction problems.",
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "score": 18,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.18910",
+    "pdf_url": "https://arxiv.org/pdf/2606.18910",
+    "github_url": "https://github.com/yxliu02/REVES",
+    "hf_discussion": "https://huggingface.co/papers/2606.18910"
+  },
+  {
+    "id": "2606.15378",
+    "arxiv_id": "2606.15378",
+    "title": "Rethinking the Role of Efficient Attention in Hybrid Architectures",
+    "summary": "Modern language models increasingly adopt hybrid architectures that combine full attention with efficient attention modules, such as sliding-window attention (SWA) and recurrent sequence mixers. However, how these efficient modules shape model capabilities remains poorly understood. To address this gap, we conduct a systematic analysis across hybrid architectures from three perspectives: scaling behavior, mechanism analysis, and architecture design. First, from a scaling perspective, we find that efficient-attention design primarily affects how fast long-context capability emerges, while different hybrids eventually converge to comparable long-context performance under sufficient training. Second, mechanistically, we show that long-range retrieval is mainly carried by full attention, whereas efficient attention shapes its optimization trajectory. This explains a counter-intuitive phenomenon we call Large-Window Laziness: larger SWA windows can delay the formation of retrieval heads in full-attention layers. Third, guided by this mechanism, we show that applying NoPE to only the full-attention layers of a small-window SWA hybrid substantially improves long-context performance with negligible impact on short-context performance.",
+    "ai_summary": "Hybrid architectures combining full attention with efficient attention modules like sliding-window attention exhibit distinct scaling behaviors and optimization trajectories, with efficient attention primarily affecting the emergence speed of long-context capabilities rather than final performance.",
+    "arxiv_categories": [
+      "cs.CL",
+      "cs.LG"
+    ],
+    "score": 18,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.15378",
+    "pdf_url": "https://arxiv.org/pdf/2606.15378",
+    "github_url": "https://github.com/thunlp/rethinking-hybrid-attention",
+    "hf_discussion": "https://huggingface.co/papers/2606.15378"
+  },
+  {
+    "id": "2606.18322",
+    "arxiv_id": "2606.18322",
+    "title": "SAE Interventions are Unreliable: Post-Intervention Recovery of Suppressed Behavior",
+    "summary": "Sparse Autoencoders (SAEs) decompose residual-stream activations into interpretable features. Recent latent-space defenses increasingly rely on these decompositions, assuming that identified \"unsafe\" SAE features serve as actionable handles for monitoring and intervention. In this paradigm, clamping a specific harmful feature is expected to reliably prevent model misbehavior. However, we show that this success may hide a recoverable failure mode: the clamp may block one visible route to a behavior without eliminating the behavior itself. We formulate this vulnerability as post-intervention recovery, a constrained residual-space optimization problem. Starting from the post-intervention residual state, we optimize residual perturbations to recover the pre-intervention behavior while preserving the post-intervention values of the targeted SAE features. Even under a strong threat model where the intervention remains active throughout optimization and generation, recovery remains possible. To rule out that recovery simply undoes the intervention, we use encoder-orthogonal updates for single-layer interventions and the corresponding feature-map Jacobian in the cross-layer setting. Across TPP, unlearning, IOI, and refusal steering experiments, this stress test reveals recoverable behavior despite successful feature-level intervention. Especially in the safety-critical refusal-steering setting, we achieve a 95.8% recovery rate on valid samples while keeping defended-feature relative drift to 0.131, substantially below suffix-based baselines. A recovery-path attribution analysis further localizes this recovery to the SAE reconstruction residual, the component left unexplained by the SAE. These results expose a gap between feature-level control and behavioral completeness: SAE features can support causal intervention, but controlling them does not guarantee control over the underlying behavior.",
+    "ai_summary": "Sparse Autoencoders' feature-level interventions may appear successful but can be circumvented through residual-space optimization that recovers original behaviors, revealing limitations in using SAE features for complete behavioral control.",
+    "arxiv_categories": [
+      "cs.LG",
       "cs.AI"
     ],
-    "score": 4,
+    "score": 17,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.19419",
-    "pdf_url": "https://arxiv.org/pdf/2606.19419",
-    "github_url": "https://github.com/Playful-RATs/rats",
-    "hf_discussion": "https://huggingface.co/papers/2606.19419"
+    "arxiv_url": "https://arxiv.org/abs/2606.18322",
+    "pdf_url": "https://arxiv.org/pdf/2606.18322",
+    "github_url": "https://github.com/Mingyuee88/sae-post-intervention-recovery",
+    "hf_discussion": "https://huggingface.co/papers/2606.18322"
+  },
+  {
+    "id": "2606.20529",
+    "arxiv_id": "2606.20529",
+    "title": "LedgerAgent: Structured State for Policy-Adherent Tool-Calling Agents",
+    "summary": "Policy-adherent tool-calling agents in customer-service domains must maintain task states across turns while calling tools and obeying domain policies. Task states consist of relevant facts, identifiers, constraints, and conditions observed through user interaction and tool calls. In standard agents, task states are not represented separately. Observations, tool returns, and policy instructions are placed in the prompt, leaving agents to reconstruct the relevant states from the prompt each time they decide what to do next. This design makes state management implicit, creating two common failure modes. An agent may retrieve the right facts but later ground its decision in stale, missing, or incorrect information; and a syntactically valid tool call may still violate a domain policy that depends on the current task state. We introduce LedgerAgent, an inference-time method for tool-calling agents that maintains observed task states in a separate ledger and renders the states into the prompt. The ledger is also used to check state-dependent policy constraints before environment-changing tool calls are executed, blocking policy violations. Across four customer-service domains and a mixed panel of open- and closed-weight models, LedgerAgent improves average passk over a standard prompt-based tool-calling approach, with the largest gains under stricter multi-trial consistency metrics.",
+    "ai_summary": "LEDGERAGENT is a method for customer service agents that maintains task states in a separate ledger to improve policy adherence and state management during tool calling.",
+    "arxiv_categories": [
+      "cs.AI",
+      "cs.CL"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.20529",
+    "pdf_url": "https://arxiv.org/pdf/2606.20529",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.20529"
+  },
+  {
+    "id": "2606.16827",
+    "arxiv_id": "2606.16827",
+    "title": "No Resource, No Benchmarks, No Problem? Evaluating and Improving LLMs for Code Generation in No-Resource Languages",
+    "summary": "Large Language Models (LLMs) have significantly advanced the automation of software engineering tasks. One prominent example is code generation, where an LLM produces code in a specified programming language based on a natural language description. Most research in this area has focused on high-resource languages, such as Python or Java, which benefit from abundant training data. A smaller body of work has explored low-resource languages, which are underrepresented in training corpora. In contrast, no-resource languages for which LLMs have seen virtually no training data remain largely unstudied. These languages often emerge in industry, where organizations develop proprietary or domain-specific languages unsupported by commercial tools like GitHub Copilot. This results in the need for companies to deploy their own in-house code recommenders. To investigate possible solutions in this context, we build and release three code generation benchmarks for no-resource languages, based on two recently proposed programming languages for which very little training data is available. Using these benchmarks, we experiment several solutions to teach LLMs about no-resource languages, including prompt-based techniques as well as pre-training and fine-tuning exploiting the little data available. While further pre-training gives the largest performance gains for no-resource languages, applying it directly to instruction-tuned models harms their ability to follow instructions. To address this, we start from a base model, further pre-training it on the target language, and then inject instruction-following capabilities via weight diff transfer from an instruction model. Such an approach significantly improves code generation capabilities in no-resource settings, allowing companies to cheaply deploy a specialized instruct model without dealing with the computational cost of instruction fine-tuning.",
+    "ai_summary": "Research addresses code generation challenges for no-resource programming languages by developing benchmarks and proposing a method that combines further pre-training with weight difference transfer to create specialized instruction-following models at reduced computational cost.",
+    "arxiv_categories": [
+      "cs.SE"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.16827",
+    "pdf_url": "https://arxiv.org/pdf/2606.16827",
+    "github_url": "https://github.com/Devy99/no-resource-pl-study",
+    "hf_discussion": "https://huggingface.co/papers/2606.16827"
+  },
+  {
+    "id": "2606.15527",
+    "arxiv_id": "2606.15527",
+    "title": "Selective Synergistic Learning for Video Object-Centric Learning",
+    "summary": "Typical video object-centric learning (VOCL) approaches employ slot-based frameworks that rely on reconstruction-driven encoder-decoder architectures, where learning is mediated by two spatial maps: attention maps from the encoder and object maps from the decoder. As these two distinct maps exhibit different properties, a recent dense alignment strategy attempted to reconcile this discrepancy by enforcing agreement across all spatio-temporal patches via contrastive learning. However, this indiscriminate alignment inadvertently propagates the inherent weaknesses of each module, such as noisy encoder predictions and blurred decoder boundaries. Moreover, computing dense similarities across all pairs incurs a computational cost quadratic in the total number of spatio-temporal patches, severely limiting scalability. Motivated by this, we propose Selective Synergistic Learning (SSync). Instead of exhaustive patch-to-patch alignment, SSync prevents error propagation by selectively distilling only the most reliable cues: leveraging the encoder strictly for boundary refinement and the decoder for interior denoising. This is realized via a pseudo-labeling with linear complexity, eliminating the need for quadratic spatial comparisons. Also, to prevent the reinforcement of architectural biases like slot redundancy, we introduce a transitive pseudo-label merging that consolidates overlapping slots based on spatio-temporal activation consistency. Extensive studies demonstrate that SSync improves decomposition quality and serves as a versatile, plug-and-play module while also exhibiting exceptional robustness to slot configurations. Code is available at github.com/wjun0830/SSync.",
+    "ai_summary": "Selective Synergistic Learning (SSync) addresses limitations in video object-centric learning by selectively distilling reliable cues through pseudo-labeling and transitive merging to improve object decomposition quality and robustness.",
+    "arxiv_categories": [
+      "cs.CV",
+      "cs.AI"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.15527",
+    "pdf_url": "https://arxiv.org/pdf/2606.15527",
+    "github_url": "https://github.com/wjun0830/SSync",
+    "hf_discussion": "https://huggingface.co/papers/2606.15527"
+  },
+  {
+    "id": "2606.19808",
+    "arxiv_id": "2606.19808",
+    "title": "Think Again or Think Longer? Selective Verification for Budget-Aware Reasoning",
+    "summary": "Test-time reasoning is increasingly used as a serving-time control knob, but extra reasoning is not uniformly valuable: it can repair failed attempts, waste compute on already-correct answers, or introduce harmful answer changes. We study this as a deployment allocation problem rather than a new-verifier problem. We introduce \\sevra, Selective Verification for Reasoning Allocation, a serving-layer controller that decides whether to preserve a frozen solver's initial answer or invoke active verification. Using a frozen Qwen3-4B solver, we log intervention outcomes and train recoverability-aware gates from serving-visible attempt state. On \\mathfive, selective verification reaches 76.3\\% accuracy, compared with 75.5\\% for always verifying, while reducing post-generation tokens by 26.8\\% and harmful flips from 2.2\\% to 1.0\\%. However, an 8,192-token initial solve reaches 76.0\\% accuracy with 28\\% fewer total model tokens, showing that selective recovery is useful but not the best tested cost frontier. In frozen transfer to \\gsm, the selective policy verifies only 3.0\\% of examples, improves accuracy from 93.4\\% to 94.5\\%, and reduces verification tokens by 91.2\\% relative to always verifying; again, a longer initial solve matches its accuracy with fewer realized tokens. On CommonsenseQA, always-on verification hurts, while Self-Consistency@5 improves accuracy at about five times the realized token cost. The resulting deployment rule is: tune the initial budget first, then use selective recovery when explicit checks, bounded retries, auditability, or regression-risk control matter.",
+    "ai_summary": "Selective verification approaches optimize test-time reasoning by dynamically deciding when to verify answers, achieving better accuracy and efficiency compared to always-verifying or self-consistency methods.",
+    "arxiv_categories": [
+      "cs.AI",
+      "cs.CL"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.19808",
+    "pdf_url": "https://arxiv.org/pdf/2606.19808",
+    "github_url": "https://github.com/Sajib-006/SEVRA",
+    "hf_discussion": "https://huggingface.co/papers/2606.19808"
+  },
+  {
+    "id": "2606.18531",
+    "arxiv_id": "2606.18531",
+    "title": "When Does Trajectory-Level Supervision Permit Efficient Offline Reinforcement Learning?",
+    "summary": "Offline reinforcement learning is typically analyzed under process-level reward supervision, yet many sequential decision datasets\n  record only trajectory-level outcomes. We develop a statistical theory for offline policy optimization from such outcome-level\n  supervision. We first study the canonical setting where the target remains the expected cumulative reward, but each offline trajectory\n  provides only a scalar label whose conditional mean is the cumulative return. We propose OPAC, a pessimistic actor-critic algorithm\n  that learns a latent reward model and optimizes a policy from trajectory-level labels. We prove a high-probability guarantee of order\n  widetilde O(H^2C_{sa(π^star)/n}) and a matching lower bound, characterizing the sharp statistical cost of replacing\n  process-level rewards with one trajectory-level label. We then extend the principle to preference-based feedback, preserving the\n  leading horizon and concentrability dependence up to preference-model constants. Finally, we study generalized outcome-based offline\n  RL, where both the supervision and the objective are trajectory-level quantities induced by a nonlinear aggregation of latent per-step\n  rewards. This problem is not learnable in general: for all-success objectives, any offline learner may require Ω(2^H)\n  trajectories even with deterministic transitions and constant concentrability. We then identify a tractable regime through two\n  structural coefficients, κ_μ(σ) and χ_μ(σ), capturing information loss in outcome aggregation and\n  generalized Bellman updates, under which generalized OPAC achieves polynomial sample complexity. Together, our results delineate when\n  outcome-level supervision enables sample-efficient offline control and when missing process-level rewards create fundamental\n  statistical barriers.",
+    "ai_summary": "Offline reinforcement learning with trajectory-level outcome supervision presents statistical challenges that can be addressed through pessimistic actor-critic methods, though fundamental barriers exist for certain generalized outcome-based problems.",
+    "arxiv_categories": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.18531",
+    "pdf_url": "https://arxiv.org/pdf/2606.18531",
+    "github_url": "",
+    "hf_discussion": "https://huggingface.co/papers/2606.18531"
+  },
+  {
+    "id": "2606.16748",
+    "arxiv_id": "2606.16748",
+    "title": "MyPCBench: A Benchmark for Personally Intelligent Computer-Use Agents",
+    "summary": "Current benchmarks for computer-use agents evaluate models in impersonal environments. This leaves a gap between evaluation and deployment where personal assistants are expected to work across a user's whole digital life, including their context, historical data, and logged-in accounts. This gap is widest on web tasks, where live web evaluations cannot exercise sites that require logging in or personal information, the kind of site a real personal assistant has to drive. We introduce MyPCBench, which tests computer-use agents as personal assistants on a Linux desktop populated with 17 simulated real-world web applications and a full desktop stack, all seeded for one canonical persona, Michael Scott from The Office. We define 184 tasks in this environment, each inspired by a real request drawn from the OpenClaw community, and benchmark six closed and open-weight models with a uniform computer+bash tool surface. We find that the best model, Claude Opus 4.6, fully solves 55.4\\% of the tasks, the only model above 50\\%. Model failures cluster on tasks that span many applications and on long trajectories, where personalization stresses an assistant the most. We release the environment, task set, and agent harness at https://mypcbench.com.",
+    "ai_summary": "MyPCBench evaluates computer-use agents as personal assistants in a simulated Linux desktop environment with real-world web applications, revealing that Claude Opus 4.6 achieves the highest task completion rate of 55.4% while struggles with multi-application tasks and long trajectories.",
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.16748",
+    "pdf_url": "https://arxiv.org/pdf/2606.16748",
+    "github_url": "https://github.com/ljang0/MyPCBench",
+    "hf_discussion": "https://huggingface.co/papers/2606.16748"
+  },
+  {
+    "id": "2606.18967",
+    "arxiv_id": "2606.18967",
+    "title": "EfficientRollout: System-Aware Self-Speculative Decoding for RL Rollouts",
+    "summary": "Reinforcement learning (RL) has become a representative post-training paradigm for LLMs, enabling strong reasoning and agentic capabilities. However, rollout generation remains a dominant latency bottleneck because autoregressive sampling decodes responses sequentially and a small number of long-tailed generations often determine completion time. Speculative decoding (SD) offers a natural way to address this bottleneck, as it is a well-established technique for serving fixed LLMs that reduces latency by rapidly drafting tokens and accepting them through parallel verification while preserving the target-model distribution. However, its practical speedups do not directly carry over to RL rollouts: (i) the evolving target policy makes any fixed drafter increasingly mismatched with the policy's output distribution; and (ii) active batch sizes shrink throughout rollout decoding, shifting decoding from compute-bound to memory-bound regimes where parallel verification can exploit underutilized compute. Therefore, accelerating RL rollouts requires both a drafter that remains effective under long, high-temperature generations from an evolving policy and system-aware use of SD that avoids compute-bound regimes. We present EfficientRollout, a system-aware self-SD framework designed to address this gap for RL rollouts. EfficientRollout induces a quantized drafter from the target model (i.e. self-speculative decoding), keeping it coupled to the evolving policy without separate drafter pretraining or online adaptation. It further coordinates a system-aware SD toggle policy with acceptance-aware draft-length adaptation, enabling speculation only in beneficial regimes while matching the drafting budget to evolving drafter quality. EfficientRollout reduces rollout and end-to-end latency by up to 19.6% and 12.7%, respectively, over an accelerated AR rollout baseline, while preserving final model quality.",
+    "ai_summary": "EfficientRollout is a system-aware self-speculative decoding framework that accelerates reinforcement learning rollouts by adapting drafters to evolving policies and optimizing speculative decoding regimes.",
+    "arxiv_categories": [
+      "cs.LG"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.18967",
+    "pdf_url": "https://arxiv.org/pdf/2606.18967",
+    "github_url": "https://github.com/furiosa-ai/EfficientRollout",
+    "hf_discussion": "https://huggingface.co/papers/2606.18967"
+  },
+  {
+    "id": "2606.16533",
+    "arxiv_id": "2606.16533",
+    "title": "Kairos: A Native World Model Stack for Physical AI",
+    "summary": "World models are transitioning from passive visual generators to foundational, operational infrastructure for Physical AI: they must natively acquire world knowledge from heterogeneous experience, maintain persistent states over long horizons, and execute efficiently within real deployment constraints. We introduce Kairos, a native world model stack designed around these requirements. (1) Kairos learns the world by pioneering a Native Pre-training Paradigm governed by a Cross-Embodiment Data Curriculum, which organizes open-world videos, human behavioral data, and robot interactions into a progressive developmental pathway. (2) Kairos maintains the world by unified world understanding, generation, and prediction within a Native Unified Architecture equipped with Hybrid Linear Temporal Attention, where sliding-window attention captures local dynamics, dilated sliding windows capture mid-range dependencies, and gated linear attention maintains persistent global memory. We establish formal theoretical bounds demonstrating that this temporal factorization strictly limits error accumulation, mathematically guaranteeing state propagation across extended horizons. (3) Kairos runs the world by incorporating a Deployment-Aware System Co-Design to support low-latency rollout generation on server and consumer-grade hardware for real-world observation-action-feedback loops. Experiments on embodied world-model, long-horizon, and action-policy benchmarks show that Kairos achieves top level performance while offering a strong efficiency-capability trade-off. Together, these results position Kairos as a cohesive operational foundation for future self-evolving physical intelligence.",
+    "ai_summary": "Kairos is a world model framework that learns from diverse experiences, maintains persistent states through hybrid temporal attention mechanisms, and operates efficiently across different hardware platforms for physical AI applications.",
+    "arxiv_categories": [
+      "cs.AI",
+      "cs.CV"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.16533",
+    "pdf_url": "https://arxiv.org/pdf/2606.16533",
+    "github_url": "https://github.com/kairos-agi/kairos-sensenova",
+    "hf_discussion": "https://huggingface.co/papers/2606.16533"
+  },
+  {
+    "id": "2606.17168",
+    "arxiv_id": "2606.17168",
+    "title": "RepSelect: Robust LLM Unlearning via Representation Selectivity",
+    "summary": "Making large language models (LLMs) deeply forget specific knowledge and values without sacrificing general capabilities remains a central challenge in unlearning. However, current methods are easily reversed by fine-tuning or few-shot prompting, suggesting their forgetting is only shallow. We identify the root cause. Existing methods target representations shared with both the retain set and the subspace recovered by a fine-tuning attacker, making unlearning both disruptive to general capabilities and easy to reverse. We propose RepSelect (Representation Selectivity), isolates forget-set-specific representations by collapsing top principal components of weight gradients before each update, leaving general capabilities intact while limiting what fine-tuning can recover. We evaluate across two forget categories, biohazardous knowledge and abusive tendencies, and four model families spanning dense and Mixture-of-Experts architectures (Llama 3, Qwen 3.5, Gemma 4 E4B, DeepSeek V2 Lite). Compared to five popular baselines (GradDiff, NPO, SimNPO, RMU, UNDIAL), RepSelect achieves a 4-50x larger reduction in post-relearning answer accuracy than the strongest baseline, and is near-perfectly robust to few-shot prompting attacks. Targeting selective representations is thus an important step towards deep and robust LLM forgetting.",
+    "ai_summary": "RepSelect isolates forget-set-specific representations in LLMs by collapsing top principal components of weight gradients, achieving deeper and more robust unlearning compared to existing methods.",
+    "arxiv_categories": [
+      "cs.CL"
+    ],
+    "score": 16,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.17168",
+    "pdf_url": "https://arxiv.org/pdf/2606.17168",
+    "github_url": "https://github.com/filyp/RepSelect",
+    "hf_discussion": "https://huggingface.co/papers/2606.17168"
   }
 ]

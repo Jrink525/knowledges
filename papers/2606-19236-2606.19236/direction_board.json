@@ -1,0 +1,158 @@
+{
+  "paper_id": "2606.19236",
+  "paper_title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+  "direction_board": {
+    "timestamp": "2026-06-22T17:18:00Z",
+    "research_directions": [
+      {
+        "id": "dir-01",
+        "name": "自适应惊奇度阈值与动态关键令牌选择",
+        "description": "当前 STARE 使用固定的 P=10% 分位数和固定的目标熵 H_tgt=0.3。未来工作可以探索自适应阈值机制——让 P 随训练阶段动态变化（如训练初期更激进，后期更保守），或让 H_tgt 随任务和模型自动调整。进一步，可以完全避免基于分位数的代理，直接利用 F(p)=0 的条件进行计算，尽管需要承担额外的计算开销。",
+        "rationale": "论文的消融实验表明 P 在 5%-20% 范围内都是鲁棒的，但不同训练阶段熵动态可能不同。自适应调度可以在训练初期快速干预以防止坍塌，后期弱化以避免过度干扰。动态阈值可能进一步减少超参数调整成本。",
+        "relevance_score": 9,
+        "novelty_score": 7,
+        "estimated_impact": "减少调参成本，提升跨领域泛化能力",
+        "prerequisites": [
+          "对 F(p) 的快速近似计算方法",
+          "基于训练状态的动态调度策略"
+        ],
+        "related_works": [
+          "STARE 附录 B.7（固定 vs 自适应加权）",
+          "DAPO (Yu et al., 2025) 的动态采样策略"
+        ]
+      },
+      {
+        "id": "dir-02",
+        "name": "扩展到裁剪区域与高阶梯度效应的理论分析",
+        "description": "STARE 的理论分析基于无裁剪区域的一阶梯度近似。实际训练中 GRPO 的裁剪机制会改变梯度方向，且高阶效应可能对熵动态有重要影响。未来工作可以将四象限分析框架扩展到裁剪区域，分析 clip 操作对熵敏感度函数 F 的修正作用，并考虑二阶及以上梯度项的影响。",
+        "rationale": "当前理论虽然在实践中有效，但对裁剪区域的盲区意味着无法完全解释实际训练行为。填补这一空白可以推动更精确的算法设计。同时，从一阶到高阶的扩展是理论自然演化路径。",
+        "relevance_score": 8,
+        "novelty_score": 8,
+        "estimated_impact": "深化对 RLVR 训练动态的理论理解，可能导致新一代算法",
+        "prerequisites": [
+          "裁剪区域中梯度方向的分析工具",
+          "高阶梯度项的计算方法"
+        ],
+        "related_works": [
+          "GRPO (Shao et al., 2024) 的裁剪机制",
+          "DAPO (Yu et al., 2025) clip-higher"
+        ]
+      },
+      {
+        "id": "dir-03",
+        "name": "跨领域泛化：将 STARE 应用于代码生成、科学推理与多模态 RL",
+        "description": "论文的验证集中在数学推理基准，但 STARE 的令牌级熵调控机制是通用的。未来可以在代码生成（如 APPS、CodeContests）、科学推理、多模态推理（如视觉语言任务）等更广泛场景中评估 STARE。特别值得关注的是在代码生成中，探索行为（尝试不同算法路径）对熵的需求可能与数学推理不同。",
+        "rationale": "STARE 的核心洞察——令牌级信用分配不匹配——是在 GRPO 框架下普遍存在的，不限于数学领域。不同领域可能需要不同的目标熵设置和重加权策略，跨领域验证可以揭示 STARE 的通用性和局限性。",
+        "relevance_score": 9,
+        "novelty_score": 6,
+        "estimated_impact": "验证方法的通用性，可能发现领域特定的熵调节策略",
+        "prerequisites": [
+          "多领域 RL 训练基础设施",
+          "各领域适当的评估基准"
+        ],
+        "related_works": [
+          "DeepSeek-R1 (Guo et al., 2025) 代码推理",
+          "Retool (Feng et al., 2025) 工具使用",
+          "Minimax-M1 (Chen et al., 2025a)"
+        ]
+      },
+      {
+        "id": "dir-04",
+        "name": "令牌级精细信用分配：结合逐令牌奖励分解",
+        "description": "当前 STARE 保留 GRPO 的轨迹级优势共享，虽然通过令牌级重加权缓解了信用分配不匹配，但轨迹级优势本身仍是一个粗糙的信号。未来可以将逐令牌奖励分解（如过程奖励模型、步骤级奖励）与 STARE 的令牌级重加权结合，实现真正的细粒度信用分配。",
+        "rationale": "轨迹级优势是 GRPO 的核心限制——它将信用在所有令牌之间平均分摊，不考虑哪个令牌对最终结果贡献更大。结合过程奖励可以为每个令牌提供更准确的信用信号，再叠加 STARE 的惊奇度重加权，可能产生协同效应。",
+        "relevance_score": 8,
+        "novelty_score": 8,
+        "estimated_impact": "可能实现 RLVR 中最精细的令牌级信用分配机制",
+        "prerequisites": [
+          "过程奖励模型或步骤级验证器",
+          "令牌级奖励到优势的转换机制"
+        ],
+        "related_works": [
+          "过程奖励模型 (Uesato et al., 2022)",
+          "Math-Shepherd (Wang et al., 2024)",
+          "80/20 Rule (Wang et al., 2025b)"
+        ]
+      },
+      {
+        "id": "dir-05",
+        "name": "四象限分析框架的泛化：应用于 PPO 及其他 RLHF 算法",
+        "description": "STARE 的四象限分析框架专门针对 GRPO 推导，但其方法论——分解优势与局部熵敏感度的乘积——具有一般性。未来可以将类似分析应用于 PPO（含 value network）、REINFORCE 变体、以及各种 KL 正则化方法，揭示不同算法中熵动态的共性机制和差异。",
+        "rationale": "熵坍塌不是 GRPO 独有的问题，PPO 同样面临。通过四象限分析，可能发现 PPO 中 value network 的引入如何改变令牌级熵动态。这种跨算法比较可能揭示 RLVR 训练中的普遍规律。",
+        "relevance_score": 7,
+        "novelty_score": 9,
+        "estimated_impact": "统一 RLVR 算法的理论框架，推动算法设计进步",
+        "prerequisites": [
+          "各算法的梯度显式公式",
+          "交叉算法比较的实验设计"
+        ],
+        "related_works": [
+          "PPO (Schulman et al., 2017)",
+          "KL-Cov (Cui et al., 2025)",
+          "EAPO (He et al., 2026)"
+        ]
+      },
+      {
+        "id": "dir-06",
+        "name": "大规模模型扩展：70B+ 模型的 STARE 行为研究",
+        "description": "论文验证到 32B 模型，但更大模型（70B、405B 甚至更大）的熵动态可能呈现不同特性。大规模模型的分布通常更清晰（低惊奇度令牌更集中），可能导致熵坍塌更快。同时，大规模模型可能对重加权更敏感或更不敏感。需要有系统的扩展研究。",
+        "rationale": "规模定律在 RL 训练动态中同样适用——随着模型增大，分布特性改变，可能改变临界权重 W* 和熵坍塌速度。大规模模型的训练成本也使得更高效的熵调控方法价值更高。",
+        "relevance_score": 7,
+        "novelty_score": 6,
+        "estimated_impact": "为工业级大规模 RLVR 训练提供实践指导",
+        "prerequisites": [
+          "70B+ 模型的 RL 训练基础设施",
+          "足够的计算资源"
+        ],
+        "related_works": [
+          "DeepSeek-R1 (Guo et al., 2025)",
+          "Qwen3-32B (Team, 2025)"
+        ]
+      },
+      {
+        "id": "dir-07",
+        "name": "熵调控与模型泛化能力的深层关系研究",
+        "description": "STARE 维持熵稳定性主要关注训练稳定性，但其对模型泛化能力的影响值得进一步探索。维持更高熵是否意味着更好的分布外泛化？熵调控是否影响模型的鲁棒性和安全性？是否存在一个最优的熵水平，在不同任务间呈现规律性？",
+        "rationale": "信息论基础表明熵与泛化之间存在关联。维持适当的探索水平可能防止过拟合到训练奖励分布，但也可能引入不稳定因素。阐明这种关系对于安全、可靠地部署 RL 训练模型至关重要。",
+        "relevance_score": 6,
+        "novelty_score": 8,
+        "estimated_impact": "连接 RL 训练动态与泛化理论",
+        "prerequisites": [
+          "分布外泛化评估集",
+          "安全性和鲁棒性测试基准",
+          "信息论分析工具"
+        ],
+        "related_works": [
+          "Reward model overoptimization (Gao et al., 2023)",
+          "Semantic entropy for hallucination detection (Farquhar et al., 2024)"
+        ]
+      }
+    ],
+    "meta_analysis": {
+      "methodology_gaps": [
+        "缺少对裁剪区域和非线性效应的理论分析",
+        "实验范围限于数学推理",
+        "目标熵和分位数比例的人工设定",
+        "最大模型规模 32B 的限制",
+        "一阶近似局限性"
+      ],
+      "emerging_clusters": [
+        {
+          "cluster": "自适应与免调参方法",
+          "directions": ["dir-01", "dir-06"],
+          "focus": "减少超参数依赖，提升自动化程度"
+        },
+        {
+          "cluster": "理论深化与泛化",
+          "directions": ["dir-02", "dir-05", "dir-07"],
+          "focus": "从分析框架扩展走向算法统一理论"
+        },
+        {
+          "cluster": "应用扩展",
+          "directions": ["dir-03", "dir-04"],
+          "focus": "将 STARE 应用到更广泛的场景和更细粒度的信用分配"
+        }
+      ]
+    }
+  }
+}

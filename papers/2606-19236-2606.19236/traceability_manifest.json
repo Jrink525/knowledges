@@ -1,0 +1,248 @@
+{
+  "paper_id": "2606.19236",
+  "paper_title": "STARE: Surprisal-Guided Token-Level Advantage Reweighting for Policy Entropy Stability",
+  "manifest_version": "1.0",
+  "claims": [
+    {
+      "id": "claim-01",
+      "statement": "GRPO-style algorithms commonly suffer from policy entropy collapse: entropy decays rapidly, output diversity vanishes, the policy converges prematurely, and within-group rollouts homogenize.",
+      "evidence": [
+        {
+          "source": "Section 1, Introduction",
+          "quote": "As RL training extends over more optimization steps, however, GRPO-style algorithms commonly suffer from policy entropy collapse: entropy decays rapidly, output diversity vanishes, the policy converges prematurely, and within-group rollouts homogenize, degrading relative advantage estimation and ultimately capping trainable steps.",
+          "type": "textual-claim",
+          "location": "manuscript page 1"
+        },
+        {
+          "source": "Figure 3(a)",
+          "quote": "GRPO-ds exhibits entropy collapse over steps 0-1000, with policy entropy approaching zero.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 3(a)"
+        }
+      ]
+    },
+    {
+      "id": "claim-02",
+      "statement": "The per-token entropy variation decomposes into the product of the trajectory-level advantage and a local entropy sensitivity function F determined by the next-token distribution.",
+      "evidence": [
+        {
+          "source": "Section 3.1, Theorem 3.1",
+          "quote": "In the unclipped regime of GRPO, let Ā denote the advantage at this position, and let h be the step size along the GRPO policy-gradient direction. Then dH/dh|_{h=0} = -Ā·F(p).",
+          "type": "theoretical-derivation",
+          "location": "Section 3.1"
+        },
+        {
+          "source": "Appendix D.4",
+          "quote": "The proof follows by taking the inner product of ∂H/∂z_v (Lemma 2.1) with the GRPO logit update.",
+          "type": "mathematical-proof",
+          "location": "Appendix D.4"
+        }
+      ]
+    },
+    {
+      "id": "claim-03",
+      "statement": "There exists a unique critical surprisal threshold s* that partitions the vocabulary into low-surprisal and high-surprisal regions, yielding a four-quadrant structure determining the sign of entropy change.",
+      "evidence": [
+        {
+          "source": "Section 3.2, Proposition 3.2",
+          "quote": "For any non-uniform, non-degenerate p, there exists a unique p* ∈ (e^{-H}, 1) with s* = -ln p* ∈ (0, H) such that F(p*) = 0.",
+          "type": "theoretical-claim",
+          "location": "Section 3.2"
+        },
+        {
+          "source": "Section 3.2, Corollary 3.3",
+          "quote": "The sign of dH/dh is determined by (sign(Ā), 1[s_a < s*])",
+          "type": "theoretical-claim",
+          "location": "Section 3.2"
+        }
+      ]
+    },
+    {
+      "id": "claim-04",
+      "statement": "Reinforcing low-surprisal tokens (Ā > 0, s_a < s*) reduces entropy, while reinforcing high-surprisal tokens (Ā > 0, s_a > s*) increases it.",
+      "evidence": [
+        {
+          "source": "Section 3.2, Corollary 3.3",
+          "quote": "(i) reinforcing low-surprisal tokens (Ā > 0, s_a < s*) reduces entropy; (ii) reinforcing high-surprisal tokens (Ā > 0, s_a > s*) increases it",
+          "type": "theoretical-claim",
+          "location": "Section 3.2"
+        },
+        {
+          "source": "Figure 9",
+          "quote": "All eight single-polarity and combined operations effectively mitigate entropy collapse and substantially outperform GRPO-ds.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 9 / Table 2"
+        }
+      ]
+    },
+    {
+      "id": "claim-05",
+      "statement": "The entropy neutrality identity holds: E_{a~p}[F(a)] = 0.",
+      "evidence": [
+        {
+          "source": "Section 3.3, Theorem 3.4",
+          "quote": "E_{a~p}[F(a)] = Σ_{v∈V} p_v F(p_v) = 0.",
+          "type": "theoretical-claim",
+          "location": "Section 3.3"
+        },
+        {
+          "source": "Appendix E.6",
+          "quote": "Complete proof is in Appendix E.6.",
+          "type": "mathematical-proof",
+          "location": "Appendix E.6"
+        }
+      ]
+    },
+    {
+      "id": "claim-06",
+      "statement": "A modest token-level weight perturbation suffices to flip the sign of entropy evolution (near-criticality property).",
+      "evidence": [
+        {
+          "source": "Section 3.3, Corollary 3.6",
+          "quote": "W* - 1 = L/G = O(T^{-1}). So beyond the critical threshold, the specific value of W principally controls the magnitude rather than the sign of the per-step entropy shift.",
+          "type": "theoretical-claim",
+          "location": "Section 3.3"
+        },
+        {
+          "source": "Section 5.3, Ablation",
+          "quote": "W = 1.01 already mitigates the entropy decay of GRPO-ds, W ≥ 1.05 yields steady growth, consistent with Corollary 3.6.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3"
+        }
+      ]
+    },
+    {
+      "id": "claim-07",
+      "statement": "STARE selects entropy-critical token subsets via batch-internal surprisal quantiles, selectively reweighting their effective advantages.",
+      "evidence": [
+        {
+          "source": "Section 4.1",
+          "quote": "STARE employs a simple, stable, and theoretically motivated batch-internal surprisal-quantile proxy... the top P% tokens are selected to form the entropy-critical sets.",
+          "type": "algorithmic-claim",
+          "location": "Section 4.1"
+        },
+        {
+          "source": "Section 4.2",
+          "quote": "J_STARE(θ) = (1/N) Σ_{i,t} w_{i,t} · min(r_{i,t}(θ)Ā_i, clip(...)Ā_i)",
+          "type": "algorithmic-formulation",
+          "location": "Section 4.2"
+        }
+      ]
+    },
+    {
+      "id": "claim-08",
+      "statement": "The target-entropy closed-loop gate activates reweighting when batch-averaged entropy drops below H_tgt and reverts to GRPO once entropy recovers.",
+      "evidence": [
+        {
+          "source": "Section 4.3",
+          "quote": "g_k = 1[Ĥ_k < H_tgt]... When Ĥ_k ≥ H_tgt, all weights revert to unity, automatically recovering standard GRPO.",
+          "type": "algorithmic-claim",
+          "location": "Section 4.3"
+        },
+        {
+          "source": "Figure 4(b)",
+          "quote": "With the closed-loop gate (H_tgt=0.3), all W ∈ [1.05, 1.5] steer entropy into the target band with bounded oscillation.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 4"
+        }
+      ]
+    },
+    {
+      "id": "claim-09",
+      "statement": "STARE sustains stable RL training over thousands of steps while maintaining policy entropy within the target band.",
+      "evidence": [
+        {
+          "source": "Section 5.3, Figure 3(a)",
+          "quote": "STARE stabilizes entropy near H_tgt = 0.3 via token-level reweighting and closed-loop gating.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 3(a)"
+        },
+        {
+          "source": "Section 5.2, Table 1",
+          "quote": "STARE-O1 attains an average accuracy of 54.4%, outperforming STEER (49.1%, +5.3%) and GRPO-ds (49.1%, +5.3%).",
+          "type": "experimental-evidence",
+          "location": "Table 1"
+        }
+      ]
+    },
+    {
+      "id": "claim-10",
+      "statement": "STARE outperforms DAPO and other competitive baselines by 4%-8% in average accuracy on AIME24 and AIME25.",
+      "evidence": [
+        {
+          "source": "Section 5.2, Table 1",
+          "quote": "STARE improves over GRPO-ds by 4%-8% in average accuracy on AIME24 and AIME25.",
+          "type": "experimental-evidence",
+          "location": "Table 1, Section 5.2"
+        },
+        {
+          "source": "Section 5.2",
+          "quote": "STARE-O1 attains 44.2% and 23.8% on AIME24 and AIME25, corresponding to improvements of roughly 10% and 7% over DAPO.",
+          "type": "quantitative-result",
+          "location": "Section 5.2"
+        }
+      ]
+    },
+    {
+      "id": "claim-11",
+      "statement": "Reflection tokens and response length grow in tandem with STARE, indicating sustained exploration-exploitation balance.",
+      "evidence": [
+        {
+          "source": "Section 5.3, Figure 10",
+          "quote": "Reweighted tokens concentrate on uncertainty and self-correction vocabulary, such as 'should be', 'but', 'instead', and 'verification'.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 10"
+        },
+        {
+          "source": "Figure 13 (Appendix)",
+          "quote": "STARE markedly surpasses GRPO-ds with the largest margins on reflection and self-correction.",
+          "type": "experimental-evidence",
+          "location": "Appendix B.6, Figure 13"
+        }
+      ]
+    },
+    {
+      "id": "claim-12",
+      "statement": "The batch-internal top-P% surprisal-quantile proxy reliably identifies entropy-increasing tokens (consistency rising from ~60% to ~95%).",
+      "evidence": [
+        {
+          "source": "Section 5.3, Figure 11",
+          "quote": "The fraction of selected tokens falling within the theoretical entropy-increasing region (s_{i,t} > s*_{i,t}) rises steadily from ~60% to ~95% during training.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 11"
+        }
+      ]
+    },
+    {
+      "id": "claim-13",
+      "statement": "STARE's entropy range is robust to P between 5% and 20%, and remains confined to [0.1, 0.2] even at P = 40%.",
+      "evidence": [
+        {
+          "source": "Section 5.3, Figure 4(c)",
+          "quote": "Entropy stays within the target band for P ∈ [5%, 20%] and remains confined to [0.1, 0.2] even at P = 40%.",
+          "type": "experimental-evidence",
+          "location": "Section 5.3, Figure 4(c)"
+        }
+      ]
+    },
+    {
+      "id": "claim-14",
+      "statement": "All eight single-polarity (O1-O4) and combined (C1-C4) STARE variants effectively mitigate entropy collapse.",
+      "evidence": [
+        {
+          "source": "Section 5.3, Table 2",
+          "quote": "GRPO-ds 37.1/17.7; STARE-O1 44.2/23.8; STARE-O2 40.5/20.3; STARE-O3 39.6/21.6; STARE-O4 42.1/19.9; STARE-C1 43.1/23.5; STARE-C2 42.5/24.2; STARE-C3 39.9/20.8; STARE-C4 41.7/22.6.",
+          "type": "experimental-evidence",
+          "location": "Table 2, Section 5.3"
+        },
+        {
+          "source": "Figure 9",
+          "quote": "While GRPO-ds suffers rapid entropy decay, all eight variants effectively mitigate this collapse.",
+          "type": "experimental-evidence",
+          "location": "Figure 9, Section 5.3"
+        }
+      ]
+    }
+  ],
+  "cross_references": []
+}
