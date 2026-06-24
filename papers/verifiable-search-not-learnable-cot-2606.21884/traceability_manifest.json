@@ -1,0 +1,152 @@
+{
+  "paper_id": "2606.21884",
+  "paper_title": "A Verifiable Search Is Not a Learnable Chain-of-Thought",
+  "author": "Harsh Patel",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "statement": "Solver coverage does not predict whether a verifiable search distills into a chain-of-thought.",
+      "evidence": [
+        {
+          "source": "Figure 1",
+          "description": "Three-way plot: solver (backtracking search) vs. forward-derivable ceiling vs. fine-tuned model. For cryptarithm, solver reaches 71% but forward-derivable ceiling collapses to ~0% and model tracks that, not the solver.",
+          "locator": "Section 3, Figure 1"
+        },
+        {
+          "source": "Table 1",
+          "description": "Per-task comparison of solver accuracy vs. model accuracy. Gap is near-zero for four tasks (solver ≥98%, model ≥0.99) and exceeds 0.65 for cryptarithm (solver 71%, model 0.01-0.07).",
+          "locator": "Section 3, Table 1"
+        }
+      ],
+      "evidence_quote": "Solver coverage, in short, predicts model accuracy only when the solver is a forward map. For search procedures it predicts almost nothing."
+    },
+    {
+      "claim_id": "C2.1",
+      "statement": "A search over information-free structure admits no faithful forward chain-of-thought to imitate.",
+      "evidence": [
+        {
+          "source": "Table 3 (Wall 4)",
+          "description": "Forward derivation coverage: a closure applying only steps the base provably executes (column arithmetic, injectivity) covers only 1/659 instances.",
+          "locator": "Section 5, Table 3"
+        },
+        {
+          "source": "Information floor measurement",
+          "description": "MI(digit;glyph) = 0.021 nats vs. shuffle baseline of 0.005 nats, gap strata recover 17% of rows. Structural predictors all score at or below analytic chance rate of 1/10 on leave-one-digit-out prediction.",
+          "locator": "Section 5, Table 3 (Wall 2)"
+        }
+      ],
+      "evidence_quote": "Because the cipher is information-free, no single column reveals a digit: the map is pinned only by requiring all example equations to hold simultaneously..."
+    },
+    {
+      "claim_id": "C3.1",
+      "statement": "Cryptarithm-deduce accuracy never exceeds 0.07 across eleven successive CoT designs, RLVR/GRPO, and STaR.",
+      "evidence": [
+        {
+          "source": "Figure 4",
+          "description": "One floor, many rounds: cryptarithm-deduce accuracy under successive CoT designs. Nine reaching a held-out greedy eval are shown; all land at 0.01-0.07.",
+          "locator": "Section 5, Figure 4"
+        },
+        {
+          "source": "Table 8 (run ledger)",
+          "description": "14 cryptarithm training runs (various designs: boot, twn, honest, grpo). Every run's held-out deduce accuracy stays in 0.01-0.07 range.",
+          "locator": "Appendix C, Table 8"
+        }
+      ],
+      "evidence_quote": "Every round lands in 0.01-0.07. The truncation rate swings wildly across rounds, from 50% down to 14%, while accuracy does not move, which already rules out 'out of budget' as the explanation."
+    },
+    {
+      "claim_id": "C4.1",
+      "statement": "Under SFT, arithmetic is correct on 97-100% of lines but elimination verdicts are emitted as unconditional templates (fidelity 16-57%).",
+      "evidence": [
+        {
+          "source": "Figure 5",
+          "description": "Per-line fidelity audit across cryptarithm elimination-line types. Arithmetic on the line is essentially perfect while the line's verdict ('therefore drop this candidate') follows from its own numbers only 16-57% of the time.",
+          "locator": "Section 5, Figure 5"
+        },
+        {
+          "source": "Fidelity audit details",
+          "description": "659 transcript line records scored on three axes: transcription, arithmetic, and verdict. The dominant elimination type ('enumerate ones-residues, no matches, drop this candidate') has arithmetic correctness ~99% yet verdict correctness only ~27%.",
+          "locator": "Section 5.3"
+        }
+      ],
+      "evidence_quote": "The model has learned the form of a verifiable elimination step as a fixed template, decoupled from the logic the step is supposed to encode."
+    },
+    {
+      "claim_id": "C5.1",
+      "statement": "The search-distillation ceiling holds across four backbones (3B to 21B, hybrid Mamba/MoE, dense Transformer, MoE Transformer).",
+      "evidence": [
+        {
+          "source": "Table 6",
+          "description": "Four backbones fine-tuned with rank-32 LoRA on identical cryptarithm corpus: Nemotron-Nano-30B (3.5B act) ≤0.04, Llama 3.2 3B ≤0.04, Qwen 2.5 3B ≤0.04, GPT-OSS 5B ≤0.04.",
+          "locator": "Section 7, Table 6"
+        },
+        {
+          "source": "In-context results",
+          "description": "DeepSeek-V3 (671B) in-context: 0.03 (finishes, wrong). Nemotron-Super-49B in-context: 0.01 (79% truncate).",
+          "locator": "Section 7, Table 6"
+        }
+      ],
+      "evidence_quote": "The search-distillation failure is therefore architecture-general, and the binding constraint is task-intrinsic (no faithful forward CoT to imitate), not the SSM backbone."
+    },
+    {
+      "claim_id": "C6.1",
+      "statement": "Forward-derivability is causal: revealing the full cipher key lifts cryptarithm-deduce from 0.03 to 0.571; revealing only half barely helps.",
+      "evidence": [
+        {
+          "source": "Table 7",
+          "description": "Same cryptarithm instances with fraction of cipher key revealed: none → 0.03 (CI [0.01, 0.08]), half → 0.05 (CI [0.02, 0.13]), full → 0.571 (CI [0.45, 0.68]).",
+          "locator": "Section 7, Table 7"
+        }
+      ],
+      "evidence_quote": "Two things follow. First, forward-derivability is causal: it is the lever, holding the surface task fixed. Second, the effect is sharply nonlinear: half-forward does not give half-accuracy, because any residual search re-introduces the verdict-as-token failure."
+    },
+    {
+      "claim_id": "C7.1",
+      "statement": "The binding bottleneck is derivation, not ranking: the model can recognize a correct cipher (hit@8=0.71) but cannot construct one forward (1/659).",
+      "evidence": [
+        {
+          "source": "Generate-and-verify reframe",
+          "description": "With budget-unbounded generate-and-verify: hit@8 = 0.71 (gold answer in model's top 8 on 71% of instances). When requiring forward arithmetic closure instead: coverage collapses to 1/659.",
+          "locator": "Section 5.2"
+        }
+      ],
+      "evidence_quote": "The model can recognize a correct map but cannot construct one left-to-right, because constructing it requires tracking which assignments are still consistent, explicit search state, across the whole problem."
+    },
+    {
+      "claim_id": "C8.1",
+      "statement": "Training loss is not a signal for this kind of learnability: all 14 cryptarithm SFT rounds drove train NLL to the floor while held-out accuracy stayed ≤0.07.",
+      "evidence": [
+        {
+          "source": "Appendix C, training convergence",
+          "description": "Kaggle merge runs logged final loss ~1.22. Tinker warm-start reached NLL 0.04. Cryptarithm rounds reached NLL 0.013 by step 200 and floor by second epoch. Held-out deduce accuracy never left 0.01-0.07 across all 14 rounds.",
+          "locator": "Appendix C"
+        }
+      ],
+      "evidence_quote": "Train loss is not a signal for this kind of learnability; only held-out verification is."
+    },
+    {
+      "claim_id": "C9.1",
+      "statement": "The search-distillation ceiling is not a ceiling on the task: memorizing the search's finite structure reaches Private LB 0.92.",
+      "evidence": [
+        {
+          "source": "Section 9 (1st-place solution)",
+          "description": "Team NullSira's solution: 4,205-entry per-signature candidate catalog for cryptarithm, 5,238-entry rule-sequence catalog for bit-manipulation. Precomputed offline, memorized through SFT, verified in-trace. Reaches Private LB 0.92.",
+          "locator": "Section 9"
+        }
+      ],
+      "evidence_quote": "What transfers is therefore not search but memorization and verification. This sharpens the boundary: a verifiable search is learnable as a chain-of-thought exactly when its candidate structure compresses to a catalog small enough to memorize and a residual cheap enough to verify in-budget."
+    },
+    {
+      "claim_id": "C10.1",
+      "statement": "Non-native CoT voice causes 0% greedy adoption despite 1.0 teacher-forced fidelity: extreme exposure bias at the very first token.",
+      "evidence": [
+        {
+          "source": "Section 5.4",
+          "description": "Grammars authored in non-native voice (opening with 'Bit...' or 'Group...' rather than 'I...'): teacher-forced fidelity was 1.0, the model demonstrably learned them, yet at greedy decoding it entered them 0% of the time.",
+          "locator": "Section 5.4"
+        }
+      ],
+      "evidence_quote": "The grammar is a fully-learned but unreachable island. Cryptarithm, whose traces happen to share the native opener, does enter the grammar and then drifts mid-trace."
+    }
+  ]
+}

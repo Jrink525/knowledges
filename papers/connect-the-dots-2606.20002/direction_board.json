@@ -1,0 +1,125 @@
+{
+  "paper": {
+    "title": "Connect the Dots: Training LLMs for Long-Lifecycle Agents with Cross-Domain Generalization Via Reinforcement Learning",
+    "arxiv_id": "2606.20002"
+  },
+  "direction_seeds": [
+    {
+      "seed_id": "D1",
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "The current context mechanism is limited to a single 'hint' text appended to the system prompt. The paper acknowledges this as a minimalistic instantiation for proof-of-concept.",
+      "hidden_assumption_or_gap": "A single text hint is sufficient for transferring knowledge across episodes in real-world scenarios. In practice, agents need persistent memory banks, structured knowledge representations, and the ability to manage multi-modal context (code, files, images).",
+      "research_question": "Can structured, multi-modal context representations (e.g., Markdown files, vector databases, code repositories) as cross-episode context improve CoD performance over single-hint text, especially in complex environments?",
+      "hypothesis": "Rich, structured context representations enable better knowledge transfer across tasks and environments compared to flat text hints, because they allow the agent to selectively retrieve and update relevant information rather than rewriting the entire context each time.",
+      "minimum_viable_experiment": "Compare CoD-Train with three context mechanisms on Alchemy-Random: (a) single-hint text (current), (b) structured Markdown with sections per element/recipe, (c) key-value memory with retrieval. Measure success rate at position 3 and hint quality.",
+      "negative_result_interpretation": "If rich context does not outperform simple hints, it suggests that the bottleneck is not context representation but the RL algorithm's ability to leverage context, or that simple hints capture the essential information sufficiently.",
+      "killer_objection": "Rich context introduces more tokens per episode, increasing rollout cost and possibly diluting reward signal density, which could degrade training efficiency.",
+      "killer_result": "A 10+ point improvement in position-3 success rate with structured Markdown context over plain text on hard Alchemy-Random (5+ base elements)."
+    },
+    {
+      "seed_id": "D2",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "The adaptive RED-Weight augmentation (Eq. 3) is a heuristic with temperature T selected via bisection. The paper admits 'there is still room for improvements' and calls for 'a more principled and theoretically grounded RL algorithm tailored to CoD-Train.'",
+      "hidden_assumption_or_gap": "Current per-episode return uses average of rewards-to-go without discounting. The paper notes this 'might become problematic as the length of task sequences scales up.' The assumption is that all future rewards have equal weight regardless of distance.",
+      "research_question": "Can a theoretically grounded RL algorithm for CoD-Train be derived that incorporates discounting, proper reward-to-go weighting, and accounts for the non-comparability of baselines across trajectories with different context?",
+      "hypothesis": "A principled algorithm incorporating discounting (γ < 1) for future rewards, and using value-function estimation (PPO-style critic) instead of group-mean baselines, will provide more stable and sample-efficient training than the current heuristic approach.",
+      "minimum_viable_experiment": "Compare current CoD-Train algorithm against a PPO variant (with learned critic that takes context as part of state) on FrozenLake-Obscure with extended task sequences (length 16). Measure training stability (advantage variance), sample efficiency, and final success rates.",
+      "negative_result_interpretation": "If PPO does not outperform the current approach, it suggests that the group-mean baseline serves as an effective variance reduction technique in this setting, or that the critic is hard to learn due to context-dependent state transitions.",
+      "killer_objection": "Using a critic model doubles the compute requirements (training another model alongside the policy) and introduces additional hyperparameter sensitivity (critic learning rate, architecture).",
+      "killer_result": "PPO with learned critic achieves 10% higher success rate at position 7 (out of 16) with 2x sample efficiency (fewer training steps to reach same performance)."
+    },
+    {
+      "seed_id": "D3",
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "The paper demonstrates cross-domain generalization from FrozenLake-Obscure to both Alchemy-Random and TerminalSimulator. However, TerminalSimulator results are ambiguous — CoD-Deploy with different tasks shows no gain, only Ralph-loop shows improvement.",
+      "hidden_assumption_or_gap": "The current evaluation covers only 3 domains. Real-world agents will encounter vastly different environments. The paper asks: 'If CoD-Train is applied with game or synthetic environments, will the elicited CoD meta-capability generalize to real-world scenarios?'",
+      "research_question": "How does the diversity and composition of training environments in CoD-Train affect the breadth of cross-domain generalization of the CoD meta-capability to real-world agent tasks?",
+      "hypothesis": "Training on a diverse mixture of environments from fundamentally different categories (grid-world, crafting, code, web browsing, dialog) yields stronger cross-domain generalization than training on a few similar environments, following a scaling law with respect to distinct environment categories.",
+      "minimum_viable_experiment": "Train CoD on k from {1, 2, 4, 8} distinct environment categories (choosing from: FrozenLake-Obscure, Alchemy-Random, TerminalSimulator, WebShop, DocQA, CodeRepo, Game2048, Maze). Evaluate OOD on a held-out 9th category. Measure success rate vs k.",
+      "negative_result_interpretation": "If adding more environment categories does not improve OOD performance, it suggests that either (a) the environments are not diverse enough in the fundament, or (b) the CoD meta-capability saturates after 2-3 categories.",
+      "killer_objection": "More environments = much higher training cost (compute), and some environment types may be incompatible with the current rollout infrastructure. Scaling may hit engineering bottlenecks before research bottlenecks.",
+      "killer_result": "OOD success rate on held-out category increases from 20% (1 category) to 60% (8 categories), suggesting a clear scaling law for environment diversity."
+    },
+    {
+      "seed_id": "D4",
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "The paper reports that TerminalSimulator CoD-Deploy results show no performance gain on later tasks, explaining this by lack of task relatedness. However, this explanation is speculative — the root cause is not investigated.",
+      "hidden_assumption_or_gap": "The paper assumes task relatedness is necessary for CoD-Train benefits, but doesn't investigate whether the problem is the environment design, the context mechanism, the hint quality, or the RL algorithm itself.",
+      "research_question": "Why does CoD-Train not improve performance on sequences of unrelated tasks in TerminalSimulator? Is the bottleneck the environment design (tasks truly unrelated), the context mechanism (hint too coarse), or the learned capability (doesn't generalize to terminal tasks)?",
+      "hypothesis": "The bottleneck is the environment design: TerminalSimulator tasks (file manipulation) are not genuinely different-but-related in the CoD sense. Unlike FrozenLake where all tasks share the same action mapping, TerminalSimulator tasks share no reusable knowledge beyond generic terminal commands.",
+      "minimum_viable_experiment": "Redesign TerminalSimulator to have tasks grouped by scenario (e.g., all file-transfer tasks in environment A, all text-processing tasks in environment B). Run CoD-Train evaluation with this grouped setup. If performance improves, the issue was environment design.",
+      "negative_result_interpretation": "If grouped tasks still show no improvement, the bottleneck is likely in the context mechanism or the LLM's ability to form useful terminal-specific hints. This would suggest the CoD meta-capability is domain-dependent.",
+      "killer_objection": "The redesign might trivialize the TerminalSimulator environment, making tasks too similar and reducing the meaningfulness of the CoD evaluation.",
+      "killer_result": "Success rate on the 4th task in a grouped TerminalSimulator sequence improves by 15+ points after CoD-Train, confirming environment design as the bottleneck."
+    },
+    {
+      "seed_id": "D5",
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "The paper uses only Qwen3-8B-Instruct as the base model. Many frontier LLMs today are 70B+ or mixture-of-experts models. Scaling behavior is completely unexplored.",
+      "hidden_assumption_or_gap": "The CoD meta-capability can be elicited equally well in small (8B) and large (70B+) models. In practice, larger models may have different learning dynamics, sample efficiency, and generalization patterns.",
+      "research_question": "How does the CoD meta-capability scaling behave across model sizes (8B → 70B → 200B+)? Does the improvement from CoD-Train grow, shrink, or saturate with model scale?",
+      "hypothesis": "Larger models show greater absolute improvement from CoD-Train (stronger priors → better context utilization) but smaller relative improvement (already better zero-shot performance). The generalization benefit scales with model size.",
+      "minimum_viable_experiment": "Run CoD-Train on Qwen3-8B, Qwen3-32B, and Qwen3-72B with identical hyperparameters (scaling batch size proportionally) on FrozenLake-Obscure. Compare absolute and relative improvement at position 0 vs position 3.",
+      "negative_result_interpretation": "If larger models show diminishing returns from CoD-Train, it suggests that frontier models already have strong CoD-like capabilities from pre-training, and the bottleneck is in the RL algorithm rather than model capacity.",
+      "killer_objection": "Training 70B+ models with long rollouts is prohibitively expensive. A single CoD-Train run on 72B might cost 10x what an 8B run costs, making systematic scaling studies infeasible.",
+      "killer_result": "Qwen3-72B shows 15% higher absolute position-3 success rate after CoD-Train compared to 8B, and also shows better OOD generalization, confirming the value of scaling."
+    },
+    {
+      "seed_id": "D6",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "The paper assumes stationary environments throughout training and evaluation. It notes 'non-stationary environments' as a future work item but does not investigate them.",
+      "hidden_assumption_or_gap": "Real-world environments are inherently non-stationary — user preferences change, software versions update, data distributions shift. The current CoD framework may fail or degrade in non-stationary settings.",
+      "research_question": "Can the CoD meta-capability be extended to handle non-stationary environments where the underlying task structure changes over time (e.g., action mapping changes mid-deployment)?",
+      "hypothesis": "Training CoD-Train with periodic environment resets (simulating non-stationarity) will produce agents that can detect context invalidation, discard obsolete hints, and re-explore — a meta-meta-capability of 'forgetting and re-learning.'",
+      "minimum_viable_experiment": "Modify FrozenLake-Obscure to randomly remap actions every N tasks (N ∈ {2, 4, 8}). Train CoD with standard setup. Evaluate whether the agent can detect the remapping and adjust compared to a stationary baseline.",
+      "negative_result_interpretation": "If the agent fails to adapt to remapping even with N=8 (frequent changes), it suggests that the current RL formulation fundamentally assumes stationarity and a new formulation is needed.",
+      "killer_objection": "Non-stationary environments dramatically increase the difficulty of credit assignment — an update-context episode that was 'correct' based on past observations may become harmful after a change, confusing the RL signal.",
+      "killer_result": "Agent trained with varying N (randomized remapping schedule) achieves 65% success on 4th task after remapping, vs 35% for standard CoD-Train, demonstrating learned adaptivity to non-stationarity."
+    },
+    {
+      "seed_id": "D7",
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "The paper mentions potential integration of CoD into LLM post-training pipelines via 'CoD-Train as an extra sequential stage' or 'model merging via on-policy distillation.' These are not implemented or evaluated.",
+      "hidden_assumption_or_gap": "CoD-Train is complementary to standard task-by-task RL (fluid vs. crystallized intelligence), but the practical integration strategy is unexplored. Sequential training may suffer from catastrophic forgetting; model merging may dilute domain-specific capabilities.",
+      "research_question": "What is the most effective strategy for integrating CoD-Train into an existing multi-stage LLM post-training pipeline (including domain-specific RLVR stages)?",
+      "hypothesis": "An alternating training strategy (interleaving CoD-Train batches with domain-specific RLVR batches) outperforms both sequential training and model merging, because it maintains domain capabilities while continuously strengthening the CoD meta-capability.",
+      "minimum_viable_experiment": "Train Qwen3-8B with three integration strategies: (a) SFT → CoD-Train → math-RLVR → code-RLVR (sequential), (b) SFT → merge CoD teacher + math teacher + code teacher (merging), (c) SFT → alternating CoD/domain batches (alternating). Evaluate on both CoD benchmarks and domain benchmarks.",
+      "negative_result_interpretation": "If alternating training degrades domain benchmark performance, the hypothesis fails — suggesting that CoD and domain capabilities conflict at the gradient level and require different training regimes.",
+      "killer_objection": "Alternating training is complex to implement and tune — the ratio of CoD to domain batches becomes a critical hyperparameter that may vary across training stages.",
+      "killer_result": "Alternating training achieves 95% of pure-domain RLVR performance on math/code benchmarks while improving CoD position-3 success by 40+ points — best of both worlds."
+    },
+    {
+      "seed_id": "D8",
+      "seed_type": "reviewer_objection",
+      "trigger_evidence_summary": "The paper has no comparison with baseline methods like supervised fine-tuning (SFT) on oracle trajectories, behavioral cloning from a perfect hint-provider, or standard RL without the CoD rollout pattern.",
+      "hidden_assumption_or_gap": "The improvements attributed to CoD-Train might be achievable with simpler methods. Without proper baselines, it's unclear whether the complex CoD framework is necessary or if simpler approaches suffice.",
+      "research_question": "Does the CoD-specific end-to-end RL training (with interleaved solve/update episodes) provide benefits over simpler alternatives such as SFT on oracle hints, behavioral cloning from optimal hint-providing agents, or standard RL without the interleaved rollout pattern?",
+      "hypothesis": "CoD-Train outperforms simpler baselines because it learns the meta-cognitive skill of deciding what information is worth preserving and how to update context — a skill that cannot be distilled from oracle trajectories due to the fundamentally exploratory nature of context updating.",
+      "minimum_viable_experiment": "Compare CoD-Train against three baselines on FrozenLake-Obscure: (a) SFT on trajectories from an oracle that solves tasks and provides perfect hints, (b) Behavioral cloning from a CoD-trained agent's trajectories, (c) Standard RL where each task is solved independently (no cross-episode structure).",
+      "negative_result_interpretation": "If SFT on oracle trajectories matches or exceeds CoD-Train, then the complexity of end-to-end RL is unnecessary, and a simpler supervised approach suffices. This would be a negative result for the CoD framework.",
+      "killer_objection": "Oracle hints may be unrealistically perfect, making the SFT baseline too strong. A fair comparison requires either (a) oracle with realistic limitations or (b) comparison with other RL methods that have the same environment interaction budget.",
+      "killer_result": "CoD-Train achieves 76% position-3 success vs. 55% for SFT on oracle hints and 45% for standard RL, confirming the value of end-to-end RL for CoD."
+    }
+  ],
+  "metadata": {
+    "total_seeds": 8,
+    "generated": "2026-06-23",
+    "top_directions": [
+      {
+        "rank": 1,
+        "seed_id": "D8",
+        "reason": "Addresses the most fundamental methodological question — whether CoD-Train outperforms simpler baselines. Without this, the entire framework's contribution is uncertain."
+      },
+      {
+        "rank": 2,
+        "seed_id": "D3",
+        "reason": "Real-world impact depends on broad OOD generalization. Understanding the scaling law with environment diversity is critical for practical deployment."
+      },
+      {
+        "rank": 3,
+        "seed_id": "D5",
+        "reason": "Scaling behavior determines the practical relevance of CoD for frontier models (70B+). This is directly actionable for large labs."
+      }
+    ]
+  }
+}

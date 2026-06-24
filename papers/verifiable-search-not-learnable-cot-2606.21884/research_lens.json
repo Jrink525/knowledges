@@ -1,0 +1,66 @@
+{
+  "paper_id": "2606.21884",
+  "paper_title": "A Verifiable Search Is Not a Learnable Chain-of-Thought",
+  "author": "Harsh Patel",
+  "research_equation": {
+    "original_formulation": "Does a verifiable solver's procedure transfer into a small model's chain-of-thought via SFT? (RQ1: solver coverage → predict learnability; RQ2: binding bottleneck when procedure resists; RQ3: cheap pre-training test)",
+    "reconstructed_equation": "ForwardDerivability(task) ∧ FaithfulCoTExists(task) → SFT_transfers(task). When procedure's only solution = backtracking_search ∧ hidden_structure = information_free → ¬FaithfulCoTExists → SFT learns only verdict_shape → collapse_at_free_running",
+    "critical_insight": "Solver coverage is necessary but badly insufficient. The conditioning variable is not solver accuracy but whether the solver's procedure admits a faithful left-to-right derivation. The causal lever is forward-derivability, isolated by the cipher-key intervention."
+  },
+  "tri_pass_notes": {
+    "pass_1_overview": {
+      "what_i_read": "A controlled study on a benchmark of 9 deterministic-generator tasks, testing whether perfect symbolic solvers can be distilled into a rank-32 LoRA on Nemotron-30B via synthetic CoT SFT.",
+      "headline": "Five of nine tasks transfer readily (≥0.99 for lookup, 0.68 for bit-boolean). One task — cryptarithm — resists everything: 11 CoT designs, RLVR, STaR, all ≤0.07. The binding bottleneck is not capacity, architecture, or training method — it's that the search admits no faithful forward CoT to imitate.",
+      "surprise_level": "High. The author's thoroughness is remarkable: 14 cryptarithm training rounds, 4 backbones, causal intervention, fidelity audit, independent corroboration from two other teams. The verdict-as-token mechanism is crisp and measurable."
+    },
+    "pass_2_evidence": {
+      "key_measurements": [
+        "Solver 71% → Model 0.01-0.07 (cryptarithm-deduce gap = 0.65+)",
+        "Arithmetic correctness 97-100% per line, verdict correctness 16-57%",
+        "Forward derivation coverage: 1/659 instances",
+        "hit@8 = 0.71 (ranking works), but forward closure = 1/659 (derivation fails)",
+        "Causal intervention: 0.03 → 0.571 (full key), 0.03 → 0.05 (half key)",
+        "All 4 backbones hit same ≤0.04 floor on cryptarithm-deduce",
+        "3B dense, 5B MoE, 30B hybrid, 671B in-context — all ≤0.04"
+      ],
+      "robustness_assessment": "Extremely high. Convergent evidence from: (1) 11 CoT designs, (2) RLVR/GRPO, (3) STaR, (4) architecture control, (5) causal intervention, (6) per-line fidelity audit, (7) independent 3rd-party at same ceiling, (8) 1st-place solution confirming the escape",
+      "limitations": {
+        "depth_not_breadth": "Deep on one benchmark, not broad across many",
+        "single_seeds": "One training seed per cell; binomial CIs bound sampling noise but not seed variance",
+        "greedy_eval": "Greedy decoding (grader requirement); sampling-based test-time search would change numbers",
+        "missing_cell": "Exact 30B/3.5B Transformer match fine-tuned at length not schedulable",
+        "competition_not_won": "Best public 0.85, best private 0.86; leader at 0.92"
+      }
+    },
+    "pass_3_synthesis": {
+      "unifying_narrative": "Forward-computable tasks → SFT copies a faithful derivation → works. Backtracking search over information-free structure → no faithful forward derivation exists → SFT copies only the surface form of a verdict (decoupled from its evidence) → collapses at free-running inference. The collapse is a sharp, mechanistic instance of exposure bias localized to the verdict token. Two escapes: (a) teach a search the model can actually run (STaR on self-traces), or (b) precompute the combinatorial core into a memorized catalog and leave only bounded verification in the trace.",
+      "broader_implications": "Challenges the widespread assumption that if you can solve a task algorithmically, you can distill the solver into a model. The paper pinpoints why: imitation learning of search procedures fails because autoregressive models cannot maintain carried search state across the generated trace. The finding is architecture-general and scale-invariant (3B to 671B). Practical implication: benchmark designers should measure forward-derivability, not just solver coverage, when predicting whether a task will be CoT-learnable."
+    }
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Forward-computable procedures do not transfer into CoT",
+      "resolution": "Actually they do — four lookup/arithmetic tasks transfer at ≥0.99. Bit-manipulation transfers at 0.68, with the ceiling being three-tap rules."
+    },
+    {
+      "challenge": "Backtracking search (cryptarithm) does not transfer into CoT",
+      "resolution": "This is the paper's main finding. Root cause: no faithful forward CoT exists. Solution via verdict-as-token mechanism. Escape via memorization + verification."
+    },
+    {
+      "challenge": "Identifying the binding bottleneck",
+      "resolution": "Isolated via causal intervention (cipher key reveal). Forward-derivability is the causal lever, not capacity, architecture, or training method."
+    },
+    {
+      "challenge": "Distinguishing between ranking and derivation as the constraint",
+      "resolution": "Generate-and-verify reframe shows hit@8=0.71 (ranking works), forward closure=1/659 (derivation doesn't). Derivation is the bottleneck."
+    },
+    {
+      "challenge": "Explaining why SFT loss converges but accuracy stays at floor",
+      "resolution": "Verdict-as-token mechanism: SFT learns the unconditional verdict template (easy) rather than the evidence-conditioned logic (hard). Train NLL drops to floor while held-out accuracy never leaves 0.01-0.07."
+    },
+    {
+      "challenge": "Designing the escape from the distillation ceiling",
+      "resolution": "Not the paper's contribution, but documented via 1st-place solution. Remove search from trace: precompute combinatorial core into memorized catalog, leave only recall + bounded verification in CoT."
+    }
+  ]
+}

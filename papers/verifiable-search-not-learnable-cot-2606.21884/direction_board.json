@@ -1,0 +1,103 @@
+{
+  "paper_id": "2606.21884",
+  "paper_title": "A Verifiable Search Is Not a Learnable Chain-of-Thought",
+  "author": "Harsh Patel",
+  "seeds": [
+    {
+      "seed_type": "assumption_violation",
+      "rank": 1,
+      "trigger_evidence_summary": "The search-distillation ceiling holds identically across 4 backbones (dense Transformer, MoE Transformer, hybrid Mamba/MoE) spanning 3B-21B, plus frontier models at 671B in-context (Table 6). This refutes the author's own SSM-specific hypothesis.",
+      "hidden_assumption_or_gap": "The assumption that 'sufficiently large/dense model + enough data = procedure transfers' is disproven. The field assumes scaling will eventually solve distillation of reasoning procedures. This paper shows a class of procedures where scale does not help.",
+      "research_question": "Is there a model architecture (beyond autoregressive transformers) that can maintain explicit search state during generation and thus learn to imitate backtracking search procedures?",
+      "hypothesis": "Models with persistent, differentiable external memory (e.g., Neural Turing Machines, Differentiable Neural Computers, or transformers augmented with a writable scratchpad) could learn to carry search state and thus make cryptarithm learnable as CoT.",
+      "minimum_viable_experiment": "Replace the Nemotron backbone with a Differentiable Neural Computer or a transformer + external memory module. Fine-tune on the identical cryptarithm synthetic CoT corpus. Measure cryptarithm-deduce accuracy. Compare to the ≤0.04 baseline.",
+      "negative_result_interpretation": "If even augmented-memory architectures cannot learn cryptarithm CoT, then the bottleneck is deeper: autoregressive generation itself may be fundamentally incompatible with search-state maintenance, not just the static architecture.",
+      "killer_objection": "The 1st-place solution already solves the task via memorization+verification, not by enabling search. An explicit memory architecture may just learn the same memorization strategy with extra overhead — failing to prove that search distillation is possible in principle.",
+      "killer_result": "A model architecture that matches or exceeds the 1st-place solution (LB 0.92) on cryptarithm while using an in-trace *search* procedure rather than a memorized catalog. This would prove search can distill."
+    },
+    {
+      "seed_type": "unavailable_mechanism",
+      "rank": 2,
+      "trigger_evidence_summary": "STaR on the model's own successful searches lifts bit-manipulation from 0.526→0.678 and collapses truncation from 18.6%→0.2% (Figure 3). But STaR on cryptarithm fails because there are essentially no positive rollouts to learn from (pass@1 on real deduce rows stays near zero).",
+      "hidden_assumption_or_gap": "STaR only works when the model can generate *some* correct trajectories. For tasks where the model is completely lost from the start, the self-improvement loop cannot bootstrap. There is no bridge from 'uniformed guess' to 'correct search' without external scaffolding.",
+      "research_question": "Can a curriculum bootstrapping scheme — starting from strongly hinted/deterministic variants and gradually removing hints — bridge the gap from zero positive rollouts to a rich enough reward signal for STaR to work on cryptarithm?",
+      "hypothesis": "A curriculum that starts with revealed cipher keys (the full-information variant that achieves 0.571) and progressively removes key fraction → removes type hints → merges operators would allow STaR to bootstrap where direct training cannot.",
+      "minimum_viable_experiment": "Train on a curriculum: (1) full key revealed, (2) 75% key, (3) 50% key with operation hints, (4) 50% key alone, (5) 25% key with endianness hint, (6) original task. At each stage, harvest model's own correct rollouts (filtered by verifier) as STaR data for next stage. Measure cryptarithm-deduce at each curriculum step.",
+      "negative_result_interpretation": "If curriculum STaR plateaus below 0.07, it would confirm that positive rollouts on the full task are information-theoretically impossible until the model can derive the cipher — which requires the very carried state it lacks. The gap is fundamental, not bootstrappable.",
+      "killer_objection": "The curriculum itself may leak evaluation information if the hints overlap with test distribution properties. The deterministic-generator benchmark makes test distribution known, but curriculum design could inadvertently train to the test.",
+      "killer_result": "Curriculum STaR that reaches ≥0.50 on cryptarithm-deduce using only self-generated traces (no catalog). This would demonstrate that search can be learned stepwise when the task is decomposed by hiding what makes it hard."
+    },
+    {
+      "seed_type": "proxy_mismatch",
+      "rank": 3,
+      "trigger_evidence_summary": "Training loss is not a signal: all 14 cryptarithm SFT rounds drove train NLL to the floor (0.013 by step 200) while held-out accuracy never left 0.01-0.07. The Kaggle merger runs logged final loss ~1.22. Loss masks the verdict-as-token failure.",
+      "hidden_assumption_or_gap": "The standard SFT objective (next-token prediction) optimizes the wrong quantity for procedure distillation. Under teacher forcing, the model can minimize loss by memorizing unconditional verdict templates that happen to be correct in the training context, without learning the evidence-to-verdict mapping.",
+      "research_question": "Can a modified training objective that explicitly encourages evidence-conditioned verdict generation — e.g., contrastive loss between witnessed and teleported verdicts, or process-level supervision on the evidence→verdict link — overcome verdict-as-token?",
+      "hypothesis": "A training objective that penalizes verdicts not supported by preceding evidence (measured by a learned or rule-based 'faithfulness discriminator') would force the model to condition verdicts on the actual computed evidence, eliminating the verdict-as-token collapse.",
+      "minimum_viable_experiment": "Augment SFT with a faithfulness critic trained to distinguish witnessed vs. teleported verdicts. During fine-tuning, add a contrastive term: maximize log-probability of verdict given evidence, minimize log-probability of verdict given shuffled/unrelated evidence. Evaluate on cryptarithm-deduce, measure verdict fidelity vs. baseline.",
+      "negative_result_interpretation": "If faithfulness-aware training still shows verdict-as-token pattern, then exposure bias is not the root cause — the model genuinely cannot produce evidence-conditioned verdicts for this class of search, pointing to a deeper architectural or sequential constraint.",
+      "killer_objection": "The faithfulness discriminator itself would need to be trained on annotated data (witnessed vs. teleported verdicts), creating a chicken-and-egg problem. The per-line fidelity audit already provides this data, but scaling annotation to other tasks may be expensive.",
+      "killer_result": "A faithfulness-aware training regime that raises cryptarithm-deduce above 0.07 and shows verdict fidelity above 80%. This would establish that the bottleneck is the training objective, not the architecture."
+    },
+    {
+      "seed_type": "evidence_gap",
+      "rank": 4,
+      "trigger_evidence_summary": "The paper derives the 3-part screening heuristic post-hoc from 9 tasks but offers it as a hypothesis for testing: (1) forward closure coverage, (2) MI of hidden structure, (3) base model behavior. This is tested only on the same 9 tasks it was derived from.",
+      "hidden_assumption_or_gap": "The 3-part heuristic may not generalize beyond controlled deterministic-generator benchmarks. Real-world tasks have richer structure where MI, forward closure, and base behavior may interact in unpredicted ways.",
+      "research_question": "Can the three-part screening heuristic (forward closure, information structure, base behavior) predict CoT-learnability on a broader, independently designed set of reasoning tasks?",
+      "hypothesis": "The heuristic will reliably identify tasks whose procedures are forward-computable (pass all three) and those requiring search over hidden structure (fail all three), across diverse task families including math word problems, code reasoning, and logical deduction.",
+      "minimum_viable_experiment": "Assemble 20+ reasoning tasks from diverse benchmarks (GSM8K, MATH, ARC, synthetic reasoning). For each, compute: (1) forward closure coverage using a constrained solver that forbids backtracking, (2) MI between hidden variables and observable tokens, (3) base model behavior via few-shot prompting. Train rank-32 LoRA on synthetic CoT for tasks predicted learnable and those predicted resistant. Measure accuracy correlation with predictions.",
+      "negative_result_interpretation": "If the heuristic fails (e.g., tasks passing all three are still unlearnable, or failing all three are learnable), then the forward-derivability criterion is specific to this benchmark structure, not a general law of CoT distillation.",
+      "killer_objection": "Real-world tasks may not have clean deterministic generators or well-separated hidden/observed variables, making MI calculation and forward closure measurement ill-defined or infeasible.",
+      "killer_result": "A validated, broadly-applicable screening heuristic with >90% accuracy in predicting whether a procedure will transfer via CoT SFT. This would give practitioners a cheap pre-training test for distillation feasibility."
+    },
+    {
+      "seed_type": "evidence_gap",
+      "rank": 5,
+      "trigger_evidence_summary": "The 1st-place solution reaches Private LB 0.92 by memorizing a 4,205-entry per-signature candidate catalog for cryptarithm and a 5,238-entry rule-sequence catalog for bit-manipulation. The paper suggests this is the escape: compute the search offline, memorize the result, verify in-trace.",
+      "hidden_assumption_or_gap": "The catalog approach works because the combinatorial space is small enough to enumerate (4K-5K entries). There is no analysis of the scaling behavior: how large can the catalog be before memorization fails or becomes infeasible?",
+      "research_question": "At what catalog scale (number of precomputed entries) does the memorization+verification approach break down, and are there algorithmic compression techniques that extend the scaling frontier?",
+      "hypothesis": "The catalog approach fails when entries exceed the model's stable memorization capacity (roughly proportional to parameter count × LoRA rank). Structured compression (e.g., decision trees, rule-based indices, or learned hash functions) can extend the practical catalog scale by 1-2 orders of magnitude before collapsing to the original search problem.",
+      "minimum_viable_experiment": "Synthesize tasks with controllable catalog size (e.g., by varying symbol pool size, operator vocabulary, or input space dimension). For each catalog size N = {10, 100, 1K, 10K, 100K}, train rank-32 LoRA to memorize the catalog and verify in-trace. Measure cryptarithm-equivalent accuracy vs. N. Compare to compressed variants (CART-based index, prefix trees, hash embeddings). Identify the memorization ceiling curve.",
+      "negative_result_interpretation": "If the model can memorize 100K+ entries without accuracy degradation, then memorization+verification may be a general solution for a wide class of search tasks. If it fails at 10K, then only the smallest search problems are amenable to this escape.",
+      "killer_objection": "The 1st-place solution's catalog includes train-set leakage (by their own account), making it unclear how much generalization the memorization approach achieves vs. shallow memorization of training rows.",
+      "killer_result": "A principled catalog-compression technique that extends memorization+verification to tasks with combinatorial spaces 100× larger than cryptarithm, with held-out generalization confirmed (no train-set leakage)."
+    },
+    {
+      "seed_type": "negative_result",
+      "rank": 6,
+      "trigger_evidence_summary": "Non-native CoT voice causes 0% greedy adoption despite 1.0 teacher-forced fidelity (Section 5.4). This is extreme exposure bias at the very first token — the grammar is a 'fully-learned but unreachable island.'",
+      "hidden_assumption_or_gap": "The paper documents but does not deeply investigate the mechanism of native-voice attraction. Why does the first token divergence happen, and is it fundamental to the autoregressive generation process?",
+      "research_question": "What is the mechanistic origin of native-voice attraction at the first token, and can it be overcome by first-token prefix-tuning or by aligning the learned grammar's start token distribution with the base model's prior?",
+      "hypothesis": "Native-voice attraction is caused by the base model's strong prior over first-token distributions, which is amplified by the residual stream. A learned prefix vector prepended to the first non-native token can shift the base model into the learned grammar without full SFT retraining.",
+      "minimum_viable_experiment": "For cryptarithm, train a learned 'grammar-attractor' prefix (5-10 tokens) that bridges from the base model's native opener to the non-native grammar's first token. Compare: (1) prefix + non-native CoT, (2) native-voice CoT (baseline), (3) non-native CoT without prefix. Measure: greedy adoption rate, teacher-forced fidelity, cryptarithm-deduce accuracy.",
+      "negative_result_interpretation": "If prefix-tuning fails and non-native grammars remain unreachable, then the first-token distribution is a hard constraint of the autoregressive generation process. This would strengthen the paper's operational recommendation: always author CoT in native voice.",
+      "killer_objection": "The paper already gives the practical fix: author in native voice. Investigating first-token mechanisms may produce theoretical understanding but has limited practical value — native-voice CoT solved the adoption problem for the easy four tasks.",
+      "killer_result": "A prefix-tuning method that achieves >90% adoption rate for non-native CoT voice, enabling models to switch between reasoning styles (native search vs. structured procedures) on demand."
+    },
+    {
+      "seed_type": "successor_paper_gap",
+      "rank": 7,
+      "trigger_evidence_summary": "The paper shows search distillation ceiling is architecture-general (dense Transformer, MoE, hybrid Mamba all share the same ≤0.04 floor for cryptarithm-deduce in Table 6). But it does not test test-time compute scaling (e.g., self-consistency, tree-of-thoughts, Monte Carlo Tree Search).",
+      "hidden_assumption_or_gap": "The evaluation is exclusively greedy decoding. Test-time compute methods (majority voting, tree search, self-consistency, beam search) may partially bridge the search-distillation gap even with a greedily-trained model, because the model can *recognize* correct ciphers (hit@8=0.71).",
+      "research_question": "Can test-time compute scaling (self-consistency, ToT, MCTS over CoT branches) recover meaningful cryptarithm accuracy from the greedy-trained model, given that it can recognize correct ciphers at hit@8=0.71?",
+      "hypothesis": "Self-consistency with 16-32 samples on the existing greedy-trained adapter will lift cryptarithm-deduce from ≤0.07 to ≥0.30, because the model's ranking ability (hit@8=0.71) can be exploited via majority voting even though single greedy traces collapse.",
+      "minimum_viable_experiment": "Take the banked adapter (v5: 0.85 overall). Sample N=32 traces per cryptarithm test instance with temperature >0. Apply weighted majority voting (by trace likelihood or confidence). Measure cryptarithm-deduce accuracy vs. N={1,2,4,8,16,32}. Compare to hit@8 bound (0.71) and greedy baseline (≤0.07).",
+      "negative_result_interpretation": "If test-time compute does not lift accuracy significantly (<0.15), it would confirm that the verdict-as-token failure is catastrophic: individual traces are so unreliable that majority voting cannot overcome the bias. The model's rankings are not well-calibrated and collapse under aggregation.",
+      "killer_objection": "Test-time compute with sampling may violate the competition's deterministic greedy evaluation constraint. The paper's measurements would need reframing as 'achievable with test-time budget' rather than 'single-trace accuracy.'",
+      "killer_result": "Test-time compute scaling that lifts cryptarithm-deduce from ≤0.07 to ≥0.40 using the existing trained adapter, providing a 'no-training' escape route that complements the memorization+verification approach."
+    },
+    {
+      "seed_type": "tiny_example",
+      "rank": 8,
+      "trigger_evidence_summary": "The paper uses a rank-32 LoRA (≈880M params, 2.71% of model). The author notes 'a rank-32 update is a thin slice of a model whose capacity sits overwhelmingly in layers that summarize history into fixed state.'",
+      "hidden_assumption_or_gap": "Higher-rank adapters or full fine-tuning may provide enough capacity for the model to learn the search state representation implicitly, even if no faithful forward CoT exists by construction.",
+      "research_question": "Does increasing the adapter rank or switching to full fine-tuning enable search distillation for cryptarithm, by providing sufficient representational capacity to encode search state in the residual stream?",
+      "hypothesis": "Full fine-tuning (or rank >512 LoRA) of a dense Transformer backbone would provide enough capacity for the model to learn an internal search-state representation, enabling it to carry the search forward despite the lack of a faithful CoT surface form.",
+      "minimum_viable_experiment": "Fine-tune Llama 3.2 3B on the identical cryptarithm corpus at increasing capacity: (1) rank-32 LoRA (baseline), (2) rank-128 LoRA, (3) rank-512 LoRA, (4) full fine-tuning (LoRA-free, all params). Compare cryptarithm-deduce accuracy and verdict fidelity across conditions.",
+      "negative_result_interpretation": "If even full fine-tuning cannot break ≤0.07, it would confirm that the bottleneck is not capacity but the fundamental incompatibility between search-state representation and the autoregressive next-token prediction paradigm.",
+      "killer_objection": "Full fine-tuning of a 30B model is prohibitively expensive (the paper's hardware is a single RTX PRO 6000 with 96GB). The smallest dense backbones (3B) may lack capacity regardless of tuning regime.",
+      "killer_result": "A full fine-tuning run (or very high rank LoRA) that lifts cryptarithm-deduce above 0.07 while maintaining witness-bearing verdicts. This would show that verdict-as-token is a capacity problem, not a fundamental barrier."
+    }
+  ]
+}

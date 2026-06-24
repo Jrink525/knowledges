@@ -1,0 +1,136 @@
+{
+  "paper_id": "2606.20636",
+  "paper_title": "SkillHarness: Harnessing Safe Skills for Computer-Use Agents",
+  "direction_seeds": [
+    {
+      "seed_id": "D1",
+      "rank": 1,
+      "seed_type": "unavailable_mechanism",
+      "title": "Adaptive Capability Cluster Discovery",
+      "trigger_evidence_summary": "C14.1 — Predefined capability clusters constrain the scope of discoverable skills (§5). The paper acknowledges this as a limitation but does not propose a solution.",
+      "hidden_assumption_or_gap": "The 9 capability clusters (create, edit, search, etc.) are manually defined and static. In truly open-ended environments, new interaction patterns may emerge that don't fit any predefined cluster. The assumption that a fixed taxonomy captures all relevant skill categories is fragile.",
+      "research_question": "Can capability clusters be automatically discovered, expanded, or merged based on observed task distributions and exploration outcomes, rather than being manually predefined?",
+      "hypothesis": "Dynamic cluster formation — where new clusters are created via embedding-space clustering of successful action sequences not covered by existing clusters — leads to more complete skill coverage and higher downstream reusability.",
+      "minimum_viable_experiment": "Implement a cluster-update mechanism that monitors 'rejected' proposals (goals from uncovered families that don't match any cluster) and periodically runs embedding K-means on accumulated trajectory embeddings. Add the top-2 new clusters to the pool. Compare skill coverage and downstream SCR vs. static clusters on OpenApps with varied tasks.",
+      "negative_result_interpretation": "If dynamic clustering causes skill quality degradation (noisier abstractions), it indicates that expert-defined taxonomies provide beneficial structure that learned taxonomies lack — suggesting a human-in-the-loop approach for cluster definition.",
+      "killer_objection": "Dynamic taxonomies may lead to unstable skill representations — skills created under one cluster taxonomy may not transfer when clusters evolve, creating versioning and migration problems.",
+      "killer_result": "10+ pp improvement in skill reuse rate (measured by SCR) on held-out tasks from novel environments not covered by the original 9 clusters."
+    },
+    {
+      "seed_id": "D2",
+      "rank": 2,
+      "seed_type": "proxy_mismatch",
+      "title": "Beyond Policy-Derived Risk Guards: Online Safety Monitors",
+      "trigger_evidence_summary": "C15.1 — Skill-level boundaries are 'inherently bounded by the diversity of training trajectories' and cannot cover unseen adversarial patterns (Appendix A). The current risk guards depend on a predefined safety policy that may not capture all attack vectors.",
+      "hidden_assumption_or_gap": "Risk guards assume the safety policy is both comprehensive and stable. In practice, new attack patterns emerge continually. The paper uses LLM-based policy definition but this is done once upfront, not continuously updated. The proxy gap: 'policy-defined risk' != 'actual risk in deployment'.",
+      "research_question": "Can an online safety monitor — using a self-supervised anomaly detection approach on action embeddings — detect novel risky behaviors that are not covered by existing policy-derived risk guards?",
+      "hypothesis": "A lightweight online anomaly detector trained on 'safe execution' embeddings can flag out-of-distribution actions that deviate from known safe patterns, catching novel attack vectors missed by static policy-based guards.",
+      "minimum_viable_experiment": "Train a VAE on action-embedding sequences from safe SkillHarness executions on WASP. At test time, flag actions with reconstruction error > 95th percentile as 'potential violations'. Compare ASR reduction when augmenting existing risk guards with this anomaly signal vs. guards alone.",
+      "negative_result_interpretation": "If the anomaly detector has high false positive rate (suppressing legitimate actions), it suggests that safe action space is too diverse to be captured by unsupervised methods — requiring few-shot or preference-based approaches instead.",
+      "killer_objection": "Online anomaly detection introduces additional inference cost (potentially doubling latency per step) and may not generalize across different environments (web vs. OS).",
+      "killer_result": "ASR reduction of 5+ pp beyond existing risk guards on held-out attack types not present in training data, with <10% increase in inference cost."
+    },
+    {
+      "seed_id": "D3",
+      "rank": 3,
+      "seed_type": "assumption_violation",
+      "title": "Optimal Granularity for Macro Skills via Meta-Learning",
+      "trigger_evidence_summary": "C13.1 — Self-proposed skills are 'overly narrow and complex'; §5 discusses trade-off between fine-grained (rigid) and coarse-grained (context-losing) abstractions. The paper does not algorithmically determine optimal granularity.",
+      "hidden_assumption_or_gap": "The evolution policy decides whether to create/refine skills, but the granularity of macro skills is determined implicitly by the proposer's goal decomposition and the evolution policy's judgment of 'generalizable multi-step sequences'. The assumption that a single fixed threshold for "generalizable" works across all capability clusters may not hold.",
+      "research_question": "Can skill granularity be automatically adapted per capability cluster using a meta-learning approach that adjusts based on downstream reuse performance?",
+      "hypothesis": "Downstream SCR per skill invocation provides a natural reward signal for skill granularity: skills that are too fine-grained show low reuse rates; skills too coarse-grained show low execution success. Meta-learning on this signal can optimize skill granularity per cluster.",
+      "minimum_viable_experiment": "Maintain a granularity parameter g ∈ {fine, medium, coarse} per capability cluster. After each evaluation round, compute average SCR per granularity setting. Use a bandit algorithm (e.g., epsilon-greedy) to select granularity for the next exploration round. Compare against fixed-granularity baseline on ST-WebAgentBench.",
+      "negative_result_interpretation": "If no granularity setting consistently outperforms others, it suggests the granularity-safety trade-off is task-specific, not cluster-specific — requiring per-task adaptive granularity.",
+      "killer_objection": "Adding meta-learning adds another optimization loop that may destabilize skill evolution, and downstream SCR as a reward signal may be too noisy to distinguish granularity effects from other confounders (e.g., environment difficulty).",
+      "killer_result": "5+ pp SCR improvement on held-out tasks with adaptive granularity compared to best fixed-granularity baseline, with stable convergence within 10 evaluation rounds."
+    },
+    {
+      "seed_id": "D4",
+      "rank": 4,
+      "seed_type": "evidence_gap",
+      "title": "Formal Safety Guarantees for Skill Boundaries",
+      "trigger_evidence_summary": "The paper's threat model (§3.1) identifies two risk sources but provides no formal guarantees. Skill boundaries are described procedurally without provable safety properties.",
+      "hidden_assumption_or_gap": "The paper treats safety as an empirical property (measured by ASR/USR) rather than a formal property. There's no guarantee that skill boundaries won't miss edge cases, and no theoretical framework for when multi-source supervision is sufficient.",
+      "research_question": "Can skill boundaries in CUA systems be formalized using temporal logic constraints that provide provable safety guarantees for a bounded set of environment states?",
+      "hypothesis": "Encoding risk guards as finite-state LTL (Linear Temporal Logic) constraints and verifying micro skill execution against these constraints at planning time can provide formal safety guarantees for the bounded-horizon case, exceeding the coverage of empirical boundary learning.",
+      "minimum_viable_experiment": "Take the risk guards from a SkillHarness-trained model on ST-WebAgentBench. Formalize top-10 most common guards as LTL formulas. Use a bounded model checker at planning time to verify that the proposed micro skill execution trace satisfies all LTL guards. Compare ASR between LTL-verified and guard-only executions on 100 held-out test tasks.",
+      "negative_result_interpretation": "If LTL verification fails frequently (high planning-time rejection), it suggests the formal specification is too strict or environment dynamics are too complex for finite-state modeling.",
+      "killer_objection": "Full formal verification at each CUA step is computationally prohibitive — the state space of a web browser or OS environment is enormous.",
+      "killer_result": "Zero ASR violations on tasks where LTL verification passes (soundness), with <20% planning-time overhead and >90% task coverage."
+    },
+    {
+      "seed_id": "D5",
+      "rank": 5,
+      "seed_type": "cross_domain_transfer",
+      "title": "Cross-Environment Skill Transfer with Environment-Invariant Boundaries",
+      "trigger_evidence_summary": "C7.1 shows model-scale invariance (Table 3) but all experiments are within-environment (web→web, OS→OS). The skill representation (§3.2) is environment-specific via accessibility tree and pyautogui actions. No cross-environment skill transfer is demonstrated.",
+      "hidden_assumption_or_gap": "The paper implicitly assumes skills are learned and deployed in the same environment class. But a key promise of skill learning is transfer across interfaces — a 'create project' skill learned on GitLab could theoretically apply to other project management tools.",
+      "research_question": "Can skill boundaries be learned in a way that is invariant to environment-specific implementation details, enabling safe cross-environment skill transfer?",
+      "hypothesis": "If macro skills are parameterized at a higher level of abstraction (using intent + outcome predicates rather than environment-specific do/done_when pairs), they can transfer across environments while micro skills are dynamically grounded per environment via a lightweight adaptation layer.",
+      "minimum_viable_experiment": "Take macro skills learned on GitLab (ST-WebAgentBench) and attempt to deploy them on Reddit (WASP) with environment-specific micro skill grounding. Create an adapter that maps macro-level actions to environment-specific API calls. Compare SR and ASR with and without transferred skills.",
+      "negative_result_interpretation": "If transferred skills show ASR increase >5pp, it indicates that environment-specific failure/risk patterns (e.g., GitLab-specific vulnerabilities) do not transfer, and cross-environment reuse requires environment-specific boundary learning.",
+      "killer_objection": "Different environments have fundamentally different safety policies and risk profiles — skills with GitLab-specific boundaries may give false confidence when deployed on Reddit.",
+      "killer_result": "Cross-environment transfer maintains ASR within 3pp of in-environment baseline while improving SR by 5+ pp over no-skill baseline on the target environment."
+    },
+    {
+      "seed_id": "D6",
+      "rank": 6,
+      "seed_type": "evidence_gap",
+      "title": "Boundary Convergence Dynamics: How Many Exploration Rounds Needed?",
+      "trigger_evidence_summary": "C4.1 reports 57.1% USR reduction but the paper does not analyze how USR evolves over exploration rounds. The appendix mentions 30 exploration rounds per site but doesn't provide learning curves.",
+      "hidden_assumption_or_gap": "The paper implicitly assumes more exploration = better boundaries, but doesn't study convergence. There may be diminishing returns, or worse, boundary degradation from over-exploration (incorporating too many edge cases).",
+      "research_question": "What is the convergence behavior of skill boundaries during task-free exploration, and what is the optimal stopping criterion for exploration rounds?",
+      "hypothesis": "Skill boundary quality (measured by USR and downstream SCR) follows a saturating curve — most improvement occurs in the first 10-15 rounds, with diminishing returns and potential overfitting beyond 25-30 rounds.",
+      "minimum_viable_experiment": "Run SkillHarness exploration on ST-WebAgentBench with checkpoints every 5 rounds from 0 to 50. Evaluate the skill library at each checkpoint on fixed test tasks. Plot USR, SCR, and SR vs. exploration rounds. Identify the elbow point.",
+      "negative_result_interpretation": "If USR continues improving linearly past 30 rounds, it suggests more exploration is always beneficial — but this would contradict the 'sparse update' design philosophy (§3.3). If USR increases after a certain point, it confirms overfitting to exploration-specific patterns.",
+      "killer_objection": "The optimal stopping criterion may be environment-dependent, requiring per-environment hyperparameter tuning that undermines the 'task-free' exploration claim.",
+      "killer_result": "Clear elbow point at round ~15 where marginal USR improvement drops below 1% per 5 rounds, with no significant degradation up to 50 rounds."
+    },
+    {
+      "seed_id": "D7",
+      "rank": 7,
+      "seed_type": "reviewer_objection",
+      "title": "Safety-Utility Pareto Frontier in Skill Reuse",
+      "trigger_evidence_summary": "C5.1 (31.9% safety improvement) and C6.1 (19% SR improvement) report both improvements, but the paper does not analyze the safety-utility trade-off space. CUP bridges them but is a single joint metric.",
+      "hidden_assumption_or_gap": "The paper treats safety and utility as simultaneously improvable, but in practice there's likely a Pareto frontier — higher safety constraints may reduce task completion rate for complex tasks, and the paper's experimental tasks may not fully explore this trade-off.",
+      "research_question": "What is the shape of the safety-utility Pareto frontier under different risk guard strictness levels in SkillHarness?",
+      "hypothesis": "The safety-utility trade-off is not monotonic — moderate risk guard strictness improves both safety AND utility by preventing critical failures, but excessive strictness reduces utility by over-suppressing legitimate actions.",
+      "minimum_viable_experiment": "Vary the risk guard strictness threshold (e.g., number of violations required before a guard is asserted, from 1 to 10) and plot SR vs. ASR for each threshold. Identify the Pareto-optimal front. Repeat for each WASP task category.",
+      "negative_result_interpretation": "If stricter guards always improve ASR without degrading SR, the 'no free lunch' concern is unfounded for this setting, suggesting that existing skill methods operate far from the Pareto frontier.",
+      "killer_objection": "The strictness threshold is a scalar parameter that may interact unpredictably with LLM behavior — a fixed threshold may suppress legitimate actions on easy tasks while failing on hard ones.",
+      "killer_result": "A clear inverted-U shape for SR vs. guard strictness: SR peaks at moderate strictness (threshold ~3-4), declining at both extremes."
+    },
+    {
+      "seed_id": "D8",
+      "rank": 8,
+      "seed_type": "negative_result",
+      "title": "When Macro Skills Alone Suffice: The Redundancy of Micro Skills",
+      "trigger_evidence_summary": "C10.1 — Removing micro skills has NO effect on SR or ASR (Table 4). This is a surprising null result that the paper mentions but does not deeply analyze.",
+      "hidden_assumption_or_gap": "The micro skill module is a central design contribution but appears empirically redundant. This suggests either (a) the LLM fallback is powerful enough to replicate micro skill behavior, or (b) the evaluation tasks don't benefit from deterministic template replay.",
+      "research_question": "Under what conditions do micro skills provide measurable benefit over pure LLM-fallback execution guided by macro skill constraints alone?",
+      "hypothesis": "Micro skills provide benefit only on tasks requiring multi-step, latency-sensitive interactions (e.g., form filling with 10+ fields) where LLM fallback introduces noise. On simple tasks (2-3 steps), the LLM fallback matches or exceeds micro skill performance.",
+      "minimum_viable_experiment": "Stratify WASP tasks by 'interaction complexity' (number of steps: low 1-3, medium 4-7, high 8+). Compare SCR between SkillHarness with and without micro skills per complexity level. Include latency measurements.",
+      "negative_result_interpretation": "If micro skills provide no benefit even on high-complexity tasks, the dual-mode execution design (§3.2) may be unnecessary — macro-level guidance with LLM execution suffices.",
+      "killer_objection": "The ablation removes micro skills entirely, but the framework architecture may have other benefits (e.g., the separation enforces cleaner boundary extraction during learning) even if micro skills aren't directly invoked.",
+      "killer_result": "Micro skills improve SCR by 10+ pp on high-complexity tasks (>8 steps) with 40%+ latency reduction, while showing no significant difference on low-complexity tasks."
+    }
+  ],
+  "metadata": {
+    "total_direction_seeds": 8,
+    "seed_type_distribution": {
+      "unavailable_mechanism": 1,
+      "proxy_mismatch": 1,
+      "assumption_violation": 1,
+      "evidence_gap": 2,
+      "cross_domain_transfer": 1,
+      "reviewer_objection": 1,
+      "negative_result": 1
+    },
+    "top_3_most_promising": [
+      "D1 — Adaptive Capability Cluster Discovery (addresses explicit limitation, clear MVE)",
+      "D2 — Beyond Policy-Derived Risk Guards: Online Safety Monitors (high practical impact, novel approach)",
+      "D3 — Optimal Granularity for Macro Skills via Meta-Learning (addresses core design trade-off)"
+    ],
+    "generation_date": "2026-06-23"
+  }
+}

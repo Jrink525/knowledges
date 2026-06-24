@@ -1,0 +1,106 @@
+{
+  "paper_id": "2606.20636",
+  "paper_title": "SkillHarness: Harnessing Safe Skills for Computer-Use Agents",
+  "research_equation": {
+    "problem": "How can Computer-Use Agents (CUAs) learn and use skills safely in dynamic environments where trajectories may encode unsafe behaviors and environments shift unpredictably?",
+    "prior_solution": "Learn reusable skills from successful trajectories using code-based procedural abstractions (Voyager, ASI, SkillWeaver, Cascade). These treat task success as sufficient supervision and encode fixed interaction flows.",
+    "key_gap": "Existing methods assume static and safe environments, leading to (1) supervision bias that encodes transient/unsafe interaction states into skills, and (2) hardcoded interaction flows that are brittle under distribution shift.",
+    "proposed_solution": "SkillHarness — model skill lifecycle as a safety-constrained interaction process with multi-source supervision (successes, failures, risks) → skill boundaries + selective skill reuse with macro/micro skill decoupling.",
+    "target": "Safe skill learning and utilization in dynamic CUA environments with adversarial and environmental perturbations.",
+    "evaluation_mode": "Empirical comparison against ASI and SkillWeaver across 4 benchmarks (ST-WebAgentBench, WASP, OS-Harm, OpenApps) with multiple model scales."
+  },
+  "tri_pass_notes": {
+    "first_pass": {
+      "title": "SkillHarness: Harnessing Safe Skills for Computer-Use Agents",
+      "abstract_summary": "Proposes a harness-driven framework that uses multi-source supervision and selective skill reuse to enable safe CUA skill learning in dynamic environments. Achieves 57.1% USR reduction, 31.9% safety improvement, 19% SR improvement.",
+      "category": "cs.AI / Agent Safety",
+      "key_figures": [
+        "Figure 1: Comparison between code skill and SkillHarness",
+        "Figure 2: Overall framework (Skill Learning + Skill Utilization)",
+        "Figure 3: OS-Harm results",
+        "Figure 4: SCR under perturbations"
+      ],
+      "key_tables": [
+        "Table 1: Overall performance comparison",
+        "Table 2: USR on ST-WebAgentBench",
+        "Table 3: Model scale analysis on WASP",
+        "Table 4: Ablation study"
+      ],
+      "read": true
+    },
+    "second_pass": {
+      "read": true,
+      "figures_checked": true,
+      "related_works_connections": [
+        "Skill learning methods: Voyager (Wang 2023), ASI (Wang 2025b), SkillWeaver (Zheng 2025), Cascade (Huang 2025)",
+        "Harness engineering: from prompt engineering (Sahoo 2024) to context engineering (Zhang 2025) to harness engineering (Lopopolo 2026)",
+        "Safety benchmarks: ST-WebAgentBench (Levy 2024), WASP (Evtimov 2026), OS-Harm (Kuntz 2026), OpenApps (Ullrich 2025)",
+        "Human skill learning theory: Dreyfus & Dreyfus 1980, Fitts & Posner 1967"
+      ],
+      "questions": [
+        "How robust are the predefined capability clusters to different environments?",
+        "Does the dual-mode micro skill execution (Bind vs semantic) introduce latency overhead?",
+        "How many exploration rounds are needed before skill boundaries converge?"
+      ]
+    },
+    "third_pass": {
+      "read": true,
+      "claims_indexed": true,
+      "limitations_catalogued": true,
+      "neglected_areas": [
+        "Computational cost of multi-source supervision extraction",
+        "Quantitative analysis of skill boundary convergence over rounds",
+        "Cross-environment transfer (trained on web, tested on OS)",
+        "Human evaluation of skill safety",
+        "Trade-off between safety and task efficiency (latency)"
+      ],
+      "future_work_glimpses": [
+        "Balance granularity and coverage in self-proposed skill discovery",
+        "Harness design for test-time safety mitigation"
+      ]
+    }
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Supervision bias in trajectory-based skill learning",
+      "module": "Skill Boundary (multi-source supervision)",
+      "section": "3.3",
+      "mechanism": "Three signal types: success patterns (do+done_when), lessons from failures (type+recovery), risk guards (policy-derived constraints)"
+    },
+    {
+      "challenge": "Brittle execution under distribution shift",
+      "module": "Selective Skill Reuse (decoupled macro/micro design)",
+      "section": "3.2, 3.4",
+      "mechanism": "Macro skills encode strategy+boundaries; micro skills provide grounded templates. Planner checks constraints before activation; falls back to LLM when incompatible."
+    },
+    {
+      "challenge": "Skill library coverage vs. safe exploration",
+      "module": "Skill Proposal with Capability Clusters",
+      "section": "3.3",
+      "mechanism": "9 capability clusters (create, edit, search, format, etc.), coverage estimation guides exploration toward uncovered families."
+    },
+    {
+      "challenge": "Knowledge accumulation without catastrophic forgetting",
+      "module": "Sparse Evidence-Gated Skill Evolution",
+      "section": "3.3",
+      "mechanism": "Evolution policy evaluates 3 evidence sources; updates are sparse (only genuinely new knowledge) — 'stable, curated knowledge accumulation'."
+    },
+    {
+      "challenge": "Error accumulation in long-horizon reuse",
+      "module": "One-step-per-decision planning + adaptive bypass",
+      "section": "3.4",
+      "mechanism": "Planner issues one atomic subtask per step with expected effect verification; executor disables templates after repeated failures."
+    }
+  ],
+  "problem_reconstruction": {
+    "original_problem_statement": "How can CUAs learn and use skills safely in dynamic environments?",
+    "reframed_problem": "The problem is not just about learning executable skills from trajectories, but about learning the conditions under which those skills remain reliable — transforming know-what into know-how through structured experience across successes, failures, and risk scenarios.",
+    "key_insight": "Skill safety in dynamic environments requires a form of 'epistemic humility' — the system must encode not just how to do things, but the boundary conditions where it should NOT apply learned procedures. This mirrors how humans develop expertise through varied experiences rather than only successful outcomes.",
+    "missed_opportunities": [
+      "No analysis of how many failures/risks are needed per skill before boundaries stabilize",
+      "No comparison with alternative supervision sources (e.g., preference feedback, reward models)",
+      "Limited analysis of compute/API cost of the multi-source extraction pipeline",
+      "No formal guarantees on safety bounds"
+    ]
+  }
+}

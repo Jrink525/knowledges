@@ -1,0 +1,184 @@
+{
+  "paper": {
+    "title": "Connect the Dots: Training LLMs for Long-Lifecycle Agents with Cross-Domain Generalization Via Reinforcement Learning",
+    "arxiv_id": "2606.20002",
+    "authors": ["Yanxi Chen", "Weijie Shi", "Yuexiang Xie", "Boyi Hu", "Yaliang Li", "Bolin Ding", "Jingren Zhou"],
+    "affiliation": "Alibaba Group"
+  },
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "section": "2",
+      "statement": "CoD-Train goes up by one level in the RL hierarchy compared to standard task-by-task RL. The definition of one rollout trajectory in LLM-RL has evolved from single-turn tokens (RLHF), to multi-turn sequences for long-horizon tasks, to multi-task sequences for long-lifecycle deployment.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "From the perspective of hierarchical reinforcement learning, CoD-Train goes up by one level in the hierarchy, compared to standard task-by-task RL. Indeed, the definition of one rollout trajectory in LLM-RL has evolved from a sequence of tokens for a single-turn task... to a sequence of turns for a long-horizon agentic task... CoD-Train takes it one step further, to a sequence of tasks for long-lifecycle agentic deployment in an environment.",
+          "locator": "Section 2"
+        }
+      ],
+      "claim_type": "conceptual_argument"
+    },
+    {
+      "claim_id": "C1.2",
+      "section": "2",
+      "statement": "If there is at least an outcome reward for solving each task, the density of reward signals in CoD-Train is independent of the total number of tasks. The number of reward values grows proportionally with the number of tasks.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "Suppose that there is (at least) an outcome reward for solving each task, then the total number of reward values in the end-to-end state-action sequence will grow proportionally with the number of tasks, i.e., the density of reward signals is independent of the total number of tasks.",
+          "locator": "Section 2 (End-to-end reinforcement learning)"
+        }
+      ],
+      "claim_type": "formal_observation"
+    },
+    {
+      "claim_id": "C2.1",
+      "section": "3.1, Appendix A",
+      "statement": "The vanilla GRPO method (Eq. 1) and REC-OneSide-NoIS method (Eq. 2) cause training instability on Alchemy-Random domains, which correlates with decaying mean advantage metric.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "The vanilla GRPO method encounters unstable reward curves and a decaying mean advantage, and the issues are even more severe for REC-OneSide-NoIS.",
+          "locator": "Appendix A (Experiments)"
+        },
+        {
+          "source": "html",
+          "quote": "We have observed in our early experiments that, when adapted to the CoD-Train setting, this algorithm could incur training instability on the Alchemy-Random domain. In particular, such instability appears to correlate with the decay of the mean-advantage metric.",
+          "locator": "Appendix A (Gradient calculation)"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 5"
+    },
+    {
+      "claim_id": "C2.2",
+      "section": "3.1, Appendix A",
+      "statement": "The adaptive RED-Weight augmentation (Eq. 3) leads to the most stable training process among the three compared methods (vanilla GRPO, REC-OneSide-NoIS, adaptive RED-Weight).",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "In comparison, our final algorithm leads to the most stable training process among the three methods.",
+          "locator": "Appendix A (Experiments)"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 5"
+    },
+    {
+      "claim_id": "C3.1",
+      "section": "3.2",
+      "statement": "FrozenLake-Obscure imposes an information-theoretic limit on the success rate an agent can achieve when solving each task individually without additional context. For example, if starting position is surrounded by three holes, the agent fails with 75% probability on average in the first step.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "This imposes an information-theoretic limit on the success rate that an agent can possibly achieve when solving each task individually without additional context. For example, if the starting position of the agent is surrounded by three holes, then without prior information about the ground-truth action mapping, the agent will fail by falling into a hole in the first step with probability 75% on average.",
+          "locator": "Section 3.2"
+        }
+      ],
+      "claim_type": "formal_argument"
+    },
+    {
+      "claim_id": "C4.1",
+      "section": "3.3",
+      "statement": "Training reward curves grow with RL steps, and higher rewards are achieved at later positions within a task sequence. In Setting A, the mean reward at position 0 grows from 0.18 to 0.45, while at position 3 it grows from 0.28 to 0.76 during CoD-Train.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "The mean reward at position 0 (i.e., solving the initial task without any context about the current FrozenLake-Obscure environment) grows from 0.18 to 0.45 during CoD-Train, whereas the mean reward at position 3 grows substantially from 0.28 to 0.76.",
+          "locator": "Section 3.3, Figure 3"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 3"
+    },
+    {
+      "claim_id": "C4.2",
+      "section": "3.3",
+      "statement": "In-domain OOD generalization holds — performance improvements from CoD-Train persist on harder environment instances and longer task sequences (length 8).",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "Reward curves for in-domain evaluation — with harder environment instances and longer task sequences — show similar results, confirming the in-domain OOD generalization of CoD-Train.",
+          "locator": "Section 3.3, Figure 3"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 3"
+    },
+    {
+      "claim_id": "C4.3",
+      "section": "3.3",
+      "statement": "Cross-domain OOD generalization is validated — performance improvements can be observed for evaluation on Alchemy-Random and TerminalSimulator (in both CoD-Deploy and Ralph-loop settings) after CoD-Train on FrozenLake-Obscure.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "Performance improvements can be observed for evaluation on Alchemy-Random and TerminalSimulator (in both CoD-Deploy and Ralph-loop settings), which validates cross-domain generalization.",
+          "locator": "Section 3.3, Figure 3"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 3"
+    },
+    {
+      "claim_id": "C5.1",
+      "section": "3.3",
+      "statement": "In Setting B (mixture of FL-Obscure + Alchemy-Random), training reward curves are less stable than Setting A with minor performance degradation in Alchemy-Random curves, but overall results and conclusions are similar.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "One noticeable difference from the results of setting A is that training reward curves are less stable in setting B, reflected by minor performance degradation within the reward curves for Alchemy-Random. ... Other than that, the results and conclusions from experiments in setting B are similar to those in setting A.",
+          "locator": "Section 3.3, Figure 4"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 4"
+    },
+    {
+      "claim_id": "C5.2",
+      "section": "3.3",
+      "statement": "In Setting B, Alchemy-Random evaluation reward curves grow rapidly in early steps but fluctuate later on.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "Similarly, evaluation reward curves for Alchemy-Random grow rapidly in early steps, and fluctuate later on.",
+          "locator": "Section 3.3, Figure 4"
+        }
+      ],
+      "claim_type": "empirical",
+      "figure": "Figure 4"
+    },
+    {
+      "claim_id": "C6.1",
+      "section": "3.3",
+      "statement": "In the CoD-Deploy setting on TerminalSimulator with a sequence of different tasks, later tasks show no performance gain over early ones, likely because there is no close relation between different TerminalSimulator tasks within one sequence.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "Notice that in the CoD-Deploy setting (with a sequence of different tasks), later tasks in the sequence show no performance gain over early ones, which is likely because in our current implementations, there is no close relation between different TerminalSimulator tasks within one sequence.",
+          "locator": "Section 3.3, Figure 3 footnote"
+        }
+      ],
+      "claim_type": "empirical_observation"
+    },
+    {
+      "claim_id": "C6.2",
+      "section": "3.3",
+      "statement": "In the Ralph-loop setting on TerminalSimulator (repeated attempts at the same task), later episodes do achieve higher rewards than early ones, suggesting the learned meta-capability helps within each solve-task episode.",
+      "evidence": [
+        {
+          "source": "html",
+          "quote": "In comparison, for the Ralph-loop setting (with a sequence of repeated attempts for the same task), later episodes do achieve higher rewards than early ones.",
+          "locator": "Section 3.3, Figure 3 footnote"
+        }
+      ],
+      "claim_type": "empirical_observation"
+    }
+  ],
+  "metadata": {
+    "analysis_date": "2026-06-23",
+    "source": "arXiv HTML version",
+    "total_claims": 12,
+    "evidence_count": 15
+  }
+}

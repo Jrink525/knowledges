@@ -1,0 +1,118 @@
+{
+  "paper": {
+    "title": "Connect the Dots: Training LLMs for Long-Lifecycle Agents with Cross-Domain Generalization Via Reinforcement Learning",
+    "arxiv_id": "2606.20002"
+  },
+  "research_equation": {
+    "formulation": "How to train LLMs to elicit a meta-capability for long-lifecycle agentic deployment where the agent must accumulate knowledge about an environment and transfer it across different tasks?",
+    "components": {
+      "input": "LLM (pre-trained), collection of environments with multiple tasks per environment",
+      "process": "End-to-end RL with interleaved solve-task and update-context episodes, GRPO-style algorithm with fine-grained credit assignment across episodes",
+      "output": "LLM with CoD meta-capability that can self-improve during deployment by updating its context",
+      "constraints": "Clean reward signals (preferably outcome rewards), information-theoretic limits on per-task success without context, environment diversity for generalization"
+    }
+  },
+  "tri_pass_notes": {
+    "first_pass": {
+      "title": "What: CoD meta-capability for LLM-based agents",
+      "highlights": [
+        "LLMs today lack the ability to accumulate and transfer knowledge across tasks during long-lifecycle deployment",
+        "Standard task-by-task RL trains each task from scratch, misaligned with CoD",
+        "Framework with CoD-Deploy (deployment abstraction) and CoD-Train (RL training with matching rollout pattern)",
+        "Proof-of-concept with Qwen3-8B on FrozenLake-Obscure, Alchemy-Random, TerminalSimulator",
+        "Key empirical result: position 3 success rate jumps from 28% to 76% after CoD-Train"
+      ],
+      "contributions": [
+        "General CoD framework for LLM training with long rollout sequences",
+        "GRPO-style RL algorithm with fine-grained credit assignment across solve/update episodes",
+        "Dedicated environments with information-theoretic gaps for training/evaluation",
+        "Evidence of cross-domain and Ralph-loop OOD generalization"
+      ],
+      "limitations": [
+        "Small-scale proof-of-concept (8B model, short 4/8 task sequences)",
+        "Heuristic RL algorithm augmentations (adaptive RED-Weight)",
+        "Simplistic context mechanism (single 'hint' text)",
+        "Only 3 environments, limited OOD breadth"
+      ]
+    },
+    "second_pass": {
+      "title": "How: RL algorithm design and environment engineering",
+      "details": [
+        "GRPO-style algorithm adapted for multi-episode trajectories with per-episode rewards",
+        "Return = mean of rewards-to-go (current + future solve-task rewards)",
+        "Baseline = per-position group mean across parallel rollout trajectories",
+        "Adaptive RED-Weight augmentation to stabilize training: token-level re-weighting via temperature bisection when mean advantage is negative",
+        "FrozenLake-Obscure: abstract action symbols with random mappings → information-theoretic gap",
+        "Alchemy-Random: random element/recipe sets → exploration needed across episodes",
+        "TerminalSimulator: cross-domain evaluation with terminal command tasks"
+      ]
+    },
+    "third_pass": {
+      "title": "What's missing / what's next",
+      "gaps": [
+        "Scalability to larger models (70B+), longer sequences (hundreds of tasks), and more diverse environments",
+        "Theoretical grounding for the adaptive RED-Weight heuristic",
+        "More principled return calculation (discounting/sliding windows for long sequences)",
+        "Context mechanism beyond single 'hint' text",
+        "Non-stationary environments",
+        "Integration with standard LLM post-training pipelines",
+        "Grounded comparison with baselines (SFT, behavioral cloning)"
+      ],
+      "next_steps": [
+        "Scale up environment diversity for CoD-Train to improve generalization",
+        "Validate on real-world scenarios (personal assistant, coding agent)",
+        "Design more principled RL algorithm without heuristic augmentations",
+        "Explore flexible rollout patterns beyond current solve→update interleaving",
+        "Integrate into LLM post-training as sequential stage or via model merging"
+      ]
+    }
+  },
+  "challenge_module_map": {
+    "challenge: credit_assignment_across_episodes": {
+      "description": "Long state-action sequences containing multiple solve-task and update-context episodes, each possibly multi-turn with many tokens",
+      "module": "GRPO-style algorithm with rewards-to-go returns, per-position group baselines, adaptive RED-Weight",
+      "status": "partially_solved",
+      "remaining_issues": "Theoretical grounding missing; baseline not fully comparable across trajectories with different context"
+    },
+    "challenge: environment_design": {
+      "description": "Need environments that incentivize context-updating rather than per-task solving from scratch",
+      "module": "FrozenLake-Obscure (info-theoretic limits from hidden action mapping), Alchemy-Random (hidden recipes)",
+      "status": "partially_solved",
+      "remaining_issues": "Only 3 environments; need broader and more realistic environments"
+    },
+    "challenge: out_of_distribution_generalization": {
+      "description": "The elicited CoD meta-capability must transfer across domains, settings, and harder instances",
+      "module": "Multi-environment CoD-Train (Setting B), evaluation on unseen domains and Ralph-loop",
+      "status": "partially_validated",
+      "remaining_issues": "TerminalSimulator results ambiguous; wider OOD validation needed"
+    },
+    "challenge: training_stability": {
+      "description": "GRPO-style algorithms exhibit instability on certain domains (Alchemy-Random)",
+      "module": "Adaptive RED-Weight augmentation with temperature bisection",
+      "status": "empirically_mitigated",
+      "remaining_issues": "Hacky heuristic; theoretically grounded method desirable"
+    },
+    "challenge: context_mechanism": {
+      "description": "How to represent and update cross-episode context effectively",
+      "module": "Single 'hint' text appended to system prompt",
+      "status": "minimal_solution",
+      "remaining_issues": "Simplistic; needs generalization to persistent memory banks, Markdown skills files"
+    }
+  },
+  "key_numerics": {
+    "position_0_success_before": 0.18,
+    "position_0_success_after": 0.45,
+    "position_3_success_before": 0.28,
+    "position_3_success_after": 0.76,
+    "sequence_length_train": 4,
+    "sequence_length_eval": 8,
+    "rollout_batch_size": 32,
+    "rollout_group_size": 8,
+    "learning_rate": 1e-6,
+    "gradient_clip": 1.0,
+    "max_response_tokens": 2000,
+    "clip_epsilon": 0.2,
+    "red_weight_t_min": 0.8,
+    "model": "Qwen3-8B-Instruct"
+  }
+}

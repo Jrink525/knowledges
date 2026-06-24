@@ -184,6 +184,7 @@
   - `ai-tools/tooling/claude-code-advanced-tips-guide.md`
   - `ai-tools/tooling/claude-code-cloud-deployment-sandbox-isolation.md`
   - `ai-tools/tooling/claude-code-hooks-automation-workflow.md`
+  - `ai-tools/tooling/claude-code-hooks-guide-enhanced.md`
   - `ai-tools/tooling/claude-code-how-it-actually-works.md`
   - `ai-tools/tooling/claude-code-large-codebase-best-practices.md`
   - `ai-tools/tooling/claude-code-memory-system-deep-dive.md`
@@ -337,6 +338,9 @@
 ### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
   - `papers/coding-agents-misalignment-2605.29442/report.md`
 
+### papers/connect-the-dots-2606.20002/ (`papers/connect-the-dots-2606.20002`)
+  - `papers/connect-the-dots-2606.20002/report.md`
+
 ### papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/ (`papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053`)
   - `papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/report.md`
 
@@ -376,8 +380,14 @@
 ### papers/selective-synergistic-learning-2606.15527/ (`papers/selective-synergistic-learning-2606.15527`)
   - `papers/selective-synergistic-learning-2606.15527/report.md`
 
+### papers/skillharness-2606.20636/ (`papers/skillharness-2606.20636`)
+  - `papers/skillharness-2606.20636/report.md`
+
 ### papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/ (`papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236`)
   - `papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md`
+
+### papers/verifiable-search-not-learnable-cot-2606.21884/ (`papers/verifiable-search-not-learnable-cot-2606.21884`)
+  - `papers/verifiable-search-not-learnable-cot-2606.21884/report.md`
 
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
@@ -387,7 +397,7 @@
 
 ---
 
-总计 **286** 篇知识文档
+总计 **293** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -399,5 +409,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-23 16:14 UTC]_
+_[自动生成于 2026-06-24 16:11 UTC]_
 

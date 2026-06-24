@@ -1,0 +1,279 @@
+{
+  "paper_id": "2606.20636",
+  "paper_title": "SkillHarness: Harnessing Safe Skills for Computer-Use Agents",
+  "source": "https://arxiv.org/html/2606.20636",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "Existing skill learning methods for CUAs implicitly assume static and safe environments, leading to supervision bias in trajectories and hardcoded interaction flows.",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "these skill learning methods typically implicitly assume a static and safe environment, which we find leads to two risks in dynamic environments... (1) supervision bias in trajectories... (2) hardcoded interaction flows",
+          "line_ref": "Introduction, paragraph 2"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "foundational"
+    },
+    {
+      "claim_id": "C2.1",
+      "claim_text": "Skill boundary integrates three complementary supervision signals during skill induction: successful trajectories, failure cases, and identified risks.",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "skill boundary integrates three complementary supervision signals during skill induction: (i) successful trajectories that provide positive examples of effective behavior, (ii) failure cases that reveal behaviors that do not generalize under certain conditions, and (iii) identified risks that indicate when behaviors may become unsafe",
+          "line_ref": "Introduction, paragraph 5"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "3.3 Skill Boundary",
+          "quote_text": "Each skill in the library carries a boundary that defines the conditions under which it may be safely activated. The boundary is a structural property of the skill, composed of three complementary constraint types that correspond to the P, L, and R components in the macro skill definition",
+          "line_ref": "Section 3.3, Skill Boundary"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "design"
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "Macro skills and micro skills are decoupled: macro skills encode strategy + safety boundaries, micro skills provide parameterized code grounded in current state.",
+      "section": "3.2",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "3.2 Decoupled Skill Representation",
+          "quote_text": "Macro skills provide strategic direction together with safety boundaries. Micro skills supply parameterized actions that are grounded in the current state.",
+          "line_ref": "Section 3.2"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "design"
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "SkillHarness reduces the proportion of unsafe learned skills by 57.1% compared to existing skill learning methods.",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "SkillHarness reduces the proportion of unsafe learned skills by 57.1%",
+          "line_ref": "Abstract/Introduction"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2 Skill Learning Safety",
+          "quote_text": "SkillHarness achieves the lowest unsafe skill rate (2.2%); SkillWeaver reaches 43.6% and ASI reaches 75.0%",
+          "line_ref": "Section 4.2, Table 2"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "central"
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "SkillHarness improves safety performance during skill utilization by an average of 31.9% over baselines.",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "improves safety performance during skill utilization by an average of 31.9%",
+          "line_ref": "Introduction, last paragraph"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "central"
+    },
+    {
+      "claim_id": "C6.1",
+      "claim_text": "SkillHarness achieves an average improvement of 19% in task success rate over baselines.",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "owing to its more stable skill use, SkillHarness achieves an average improvement of 19% in task success rate.",
+          "line_ref": "Introduction, last paragraph"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "central"
+    },
+    {
+      "claim_id": "C7.1",
+      "claim_text": "The effectiveness of SkillHarness is largely insensitive to model scale; weaker models fail safely.",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2 Model Scale Analysis",
+          "quote_text": "the effectiveness of SkillHarness is largely insensitive to model scale. Although success rates vary dramatically across execution models, attack success rate (ASR) remains consistently low... weaker models may fail to complete tasks, but they tend to fail safely.",
+          "line_ref": "Section 4.2, Model Scale Analysis"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2",
+          "quote_text": "Table 3: Qwen3.6-plus SR 88.1 ASR 0.0, GPT-5.4-mini SR 82.5 ASR 2.5, Qwen3.6-27B SR 78.6 ASR 3.6, MAI-UI-8B SR 41.6 ASR 31.8, OpenCUA-7B SR 21.4 ASR 1.2",
+          "line_ref": "Table 3"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "supporting"
+    },
+    {
+      "claim_id": "C8.1",
+      "claim_text": "Removing the skill boundary component causes the largest performance degradation (+9.6pp increase in ASR).",
+      "section": "4.3",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.3 Ablation Study",
+          "quote_text": "Removing any component leads to performance degradation... removing skill boundary causes the largest increase in attack success rate (+9.6 percentage points)",
+          "line_ref": "Section 4.3, Ablation Study"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.3",
+          "quote_text": "Table 4: w/o Skill Boundary SR 76.2 (-3.6), ASR 10.8 (+9.6)",
+          "line_ref": "Table 4"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "supporting"
+    },
+    {
+      "claim_id": "C9.1",
+      "claim_text": "Human skill learning does not rely solely on successes; failures and risky situations contribute to skill acquisition (based on Fitts & Posner 1967).",
+      "section": "1",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "1 Introduction",
+          "quote_text": "humans do not learn solely from successful experiences, but integrate insights from successes, failures, and risky situations (Fitts and Posner 1967)",
+          "line_ref": "Introduction, paragraph 4"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "motivation"
+    },
+    {
+      "claim_id": "C10.1",
+      "claim_text": "Removing micro skills from SkillHarness has no effect on overall SR or ASR.",
+      "section": "4.3",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.3 Ablation Study",
+          "quote_text": "removing micro skills has no effect on either SR or ASR, indicating that reliability depends more on appropriate skill selection than on direct reuse of procedural code.",
+          "line_ref": "Section 4.3, Ablation Study"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.3",
+          "quote_text": "Table 4: w/o Micro Skills SR 79.8 (0.0), ASR 1.2 (0.0)",
+          "line_ref": "Table 4"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "supporting"
+    },
+    {
+      "claim_id": "C11.1",
+      "claim_text": "Under environmental perturbations (pop-ups, adversarial descriptions, misleading descriptions, mixed), SkillHarness maintains substantially higher SCR than SkillWeaver.",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2 Skill Utilization Safety",
+          "quote_text": "Both methods reach comparable SCR in the default, unperturbed environment... as perturbation intensity increases, SkillHarness maintains substantially higher SCR. Under pop-ups, adversarial descriptions, misleading descriptions, and mixed perturbations",
+          "line_ref": "Section 4.2, Skill Utilization Safety"
+        },
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2",
+          "quote_text": "Figure 4: Skill completion rate (SCR) under different perturbation scenarios in OpenApps",
+          "line_ref": "Figure 4"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "central"
+    },
+    {
+      "claim_id": "C12.1",
+      "claim_text": "ASI is relatively sensitive to external risks, and SkillWeaver performs the worst in terms of policy compliance.",
+      "section": "4.2",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "4.2 Overall Performance",
+          "quote_text": "ASI is relatively sensitive to external risks, while SkillWeaver performs the worst in terms of policy compliance.",
+          "line_ref": "Section 4.2, Overall Performance"
+        }
+      ],
+      "falsifiable": true,
+      "severity": "supporting"
+    },
+    {
+      "claim_id": "C13.1",
+      "claim_text": "Self-proposed exploration produces overly narrow and complex skill paths that are difficult to reuse downstream.",
+      "section": "5",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "5 Discussion & Future Work",
+          "quote_text": "Self-proposed skill objectives often lead to overly narrow and complex skill paths, making the resulting skills difficult to reuse in downstream tasks.",
+          "line_ref": "Section 5, Challenges of complex skill abstractions"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "limitation"
+    },
+    {
+      "claim_id": "C14.1",
+      "claim_text": "Predefined capability clusters constrain the scope of discoverable skills.",
+      "section": "5",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "5 Discussion & Future Work",
+          "quote_text": "predefined capability clusters also constrain the scope of discoverable skills",
+          "line_ref": "Section 5, Challenges of complex skill abstractions"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "limitation"
+    },
+    {
+      "claim_id": "C15.1",
+      "claim_text": "Skill-level boundaries are inherently bounded by the diversity of training trajectories, not providing comprehensive safety guarantees.",
+      "section": "A",
+      "evidence": [
+        {
+          "source_url": "https://arxiv.org/html/2606.20636",
+          "source_section": "A Case Study - Risky Case",
+          "quote_text": "skill-level boundaries are inherently bounded by the diversity of training trajectories rather than providing comprehensive safety guarantees.",
+          "line_ref": "Appendix A, Risky Case"
+        }
+      ],
+      "falsifiable": false,
+      "severity": "limitation"
+    }
+  ],
+  "metadata": {
+    "total_claims": 15,
+    "falsifiable_claims": 10,
+    "foundational_claims": 1,
+    "central_claims": 4,
+    "supporting_claims": 4,
+    "design_claims": 2,
+    "motivation_claims": 1,
+    "limitation_claims": 3,
+    "extraction_date": "2026-06-23"
+  }
+}
