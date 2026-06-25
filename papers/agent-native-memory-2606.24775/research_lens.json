@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.2.0",
+  "paper_id": "2606.24775",
+  "paper_title": "Are We Ready For An Agent-Native Memory System?",
+  "research_equation": {
+    "independent_variable": "记忆系统架构（4大流派 × 4个模块 ⟨ℛ, 𝒮, 𝒬, 𝒰⟩ 的 不同策略组合）",
+    "dependent_variable": "端到端任务有效性、检索保真度、更新鲁棒性、长周期稳定性、操作成本",
+    "moderator": "Workload 类型（对话QA / 跨会话推理 / 状态化执行）、LLM backbone、证据时间距离",
+    "equation_description": "Agent 记忆系统的性能并非由单一架构决定，而是架构策略与 workload 瓶颈特征的匹配程度（alignment）决定。结构导向记忆在分散证据跨会话聚合时最优，混合过滤型在精确接地时最优，轨迹保留型在状态化执行时最优。"
+  },
+  "tri_pass": {
+    "first_pass_what": "对现有 LLM Agent 记忆系统的系统性实验评估，从数据管理视角出发",
+    "second_pass_how": "提出四模块拆解框架 ⟨ℛ, 𝒮, 𝒬, 𝒰⟩ → 纵向评估12个系统（RQ1-RQ5）→ 横向消融每个模块（M1-M4）→ 量化权衡",
+    "third_pass_innovation": "不是另一个记忆系统，而是第一个从数据管理角度系统性评估记忆系统的方法论。核心创新是：(1) 模块化解构使"黑盒变白盒"，(2) 统一 testbed 实现公平比较，(3) 消融实验揭示每个模块的独立贡献，(4) 成本-效用权衡的量化分析"
+  },
+  "challenge_module_map": {
+    "现有评估架构覆盖不全": {
+      "primary_module": null,
+      "description": "论文整体方法论的贡献——提出统一的分类体系和 testbed"
+    },
+    "现有评估指标单一（仅F1/BLEU）": {
+      "primary_module": null,
+      "description": "论文引入多维评测体系：EM, ROUGE-L, LLM Judge Accuracy, Recall@K, 延迟, 效用等 10+ 种指标"
+    },
+    "现有评估忽视操作成本": {
+      "primary_module": "RQ5 (Cost) + 所有模块",
+      "description": "量化每个模块的构建时间和查询延迟；发现维护范围是成本的关键驱动"
+    },
+    "现有评估黑盒化": {
+      "primary_module": "⟨ℛ, 𝒮, 𝒬, 𝒰⟩ 全模块",
+      "description": "通过四模块拆解使消融实验成为可能，每个模块单独评估"
+    },
+    "记忆表示选择困难": {
+      "primary_module": "ℛ (Representation)",
+      "description": "M1 实验：raw > compressed > summary；层次结构不补偿表示损失"
+    },
+    "记忆提取粒度权衡": {
+      "primary_module": "𝒮 (Extraction)",
+      "description": "M2 实验：粗分割 + 轻处理 + 双通道 优于精细化提取"
+    },
+    "检索路由设计": {
+      "primary_module": "𝒬 (Retrieval & Routing)",
+      "description": "M3 实验：平衡混合检索 + 轻量规划 最优；反思无增益"
+    },
+    "动态更新失效（过去的幻觉）": {
+      "primary_module": "𝒰 (Maintenance)",
+      "description": "RQ3 实验：图谱+多版本>append-only；M4 实验：保守合并>延迟冲刷>过粗摘要"
+    },
+    "长周期灾难性退化": {
+      "primary_module": "𝒰 (Maintenance) + ℛ (Representation)",
+      "description": "RQ4 实验：关系索引/层次组织/多视角过滤对抗距离退化"
+    },
+    "成本-效用权衡不明": {
+      "primary_module": "全模块（RQ5）",
+      "description": "局部维护（树路径/段式）>> 全局重组（图/多存储同步）；LightMem/MemTree 效率最高"
+    }
+  }
+}

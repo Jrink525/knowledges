@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.2.0",
+  "paper_id": "2606.24775",
+  "paper_title": "Are We Ready For An Agent-Native Memory System?",
+  "seeds": [
+    {
+      "seed_id": "SEED-001",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "O1/O4: No single architecture dominates; leading systems shift across workloads (Zep leads Knowledge Update, Cognee leads Temporal Reasoning, MemOS leads LoCoMo EM)",
+      "hidden_assumption_or_gap": "论文隐含假设：一个记忆系统在部署时采用固定的单一架构策略。但实际上 Agent 的工作负载在生命周期内会动态变化（如从对话切换到工具调用再到长文档分析），单一架构无法适应所有阶段。",
+      "research_question": "能否设计出 workload-aware 的自适应记忆架构，根据 Agent 当前执行上下文动态切换检索策略和维护频率？",
+      "hypothesis": "一个具有 meta-controller 的自适应记忆系统，能够在运行时检测 workload 特征（如推理类型、证据分布、更新频率），并动态选择最优的 ⟨ℛ, 𝒮, 𝒬, 𝒰⟩ 策略组合，可以比任何固定架构在跨场景平均性能上提升 15-30%。",
+      "minimum_viable_experiment": "实现一个简单的 meta-controller：输入为查询文本和最近会话统计信息，输出为检索策略选择（稠密/稀疏/图谱/混合）和维护策略选择（立即合并/延迟冲刷）。在 LoCoMo、LongMemEval、DB-Bench 三个 workload 的混合流上评估。",
+      "killer_objection": "Meta-controller 本身的推理延迟和复杂性可能抵消自适应带来的增益；且 workload 分类的边界可能是模糊的，错误切换导致比单一基线更差。"
+    },
+    {
+      "seed_id": "SEED-002",
+      "seed_type": "unavailable_mechanism",
+      "trigger_evidence_summary": "O5 (Backbone Robustness): Backbone variation changes absolute answer quality more than it changes which memory pipeline remains effective. MemOS remains correct across all four backbones on date-grounded latest-state queries.",
+      "hidden_assumption_or_gap": "论文仅评估了固定 LLM backbone 下的记忆管线。但 backbone 本身也在快速进化（更强的小模型、更长的上下文窗口），可能改变现有权衡——如超长上下文可能使外部记忆不再必要。",
+      "research_question": "当 LLM backbone 的上下文窗口从 128K 扩展到 10M+ token 时（如 Gemini 1.5 Pro 趋势），外部记忆系统的边际价值是什么？是否存在一个「上下文窗口阈值」，超过该阈值后外部记忆不再必要？",
+      "hypothesis": "存在一个 context-memory utility 交叉点：在上下文窗口小于 1M tokens 时，外部记忆系统带来的增益显著（>20%）。但当窗口超过 10M tokens 时，Long Context + 简单检索 的表现将逼近最复杂的外部记忆系统，且成本更低。",
+      "minimum_viable_experiment": "在 LongBench 的 Long 桶和 LoCoMo 的最长证据距离桶上，固定记忆系统（如 MemOS）vs 无外部记忆但使用不同上下文窗口大小（128K、512K、1M、10M tokens）的 Long Context 基线。测量交叉点。",
+      "killer_objection": "即使上下文窗口无限大，模型的选择性注意力（attention sink 现象、lost-in-the-middle）仍然使外部记忆系统不可替代；且 token 成本随上下文增长线性增长，外部记忆的索引 + 检索成本可能仍更经济。"
+    },
+    {
+      "seed_id": "SEED-003",
+      "seed_type": "proxy_mismatch",
+      "trigger_evidence_summary": "O2 (Beyond Exact Match): EM is meaningful on LoCoMo but insufficient on LongMemEval and DB-Bench. Task Success Rate tells a different story from EM on DB-Bench.",
+      "hidden_assumption_or_gap": "论文使用的所有指标（EM, F1, ROUGE-L, LLM Judge）本质上还是 NLP 任务的代理指标，没有直接测量记忆系统对 Agent 执行质量的影响。在真实多步 Agent 场景中，记忆的"正确性"应该通过下游任务成功来定义。",
+      "research_question": "Agent 记忆系统最合适的评估指标是什么？是否应该用 Agent 执行成功率（而非 QA 准确率）作为记忆系统的核心指标？",
+      "hypothesis": "记忆系统的排名在 QA 指标和 Agent 执行成功率之间存在显著差异（Spearman ρ < 0.6），因为 QA 指标测量的是事实回忆，而 Agent 执行需要过程性记忆 + 时序一致性 + 状态跟踪。",
+      "minimum_viable_experiment": "在 DB-Bench 基础上扩展，构建一个多步 Agent 任务集（如 Web browsing + SQL querying），由 Agent 使用不同记忆系统执行。测量执行成功率、步骤完成率、错误恢复率，并与 QA 基准指标做相关性分析。",
+      "killer_objection": "Agent 执行成功率的高度 task-specific，标准化困难；不同步骤的错误相关性强，难以归因到记忆系统本身 vs Agent 规划/推理问题。"
+    },
+    {
+      "seed_id": "SEED-004",
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "O7/O8/O9: Multiple findings suggest that write-time information loss is irreversible. Fine extraction (MemOS Fine Memorize: 2.5 LoCoMo EM) is orders of magnitude worse than Fast Memorize (25.5). Summary representation (LightMem User-Only Summary: 8.5 EM) craters vs Raw (24.2).",
+      "hidden_assumption_or_gap": "论文评估了写时压缩/摘要/提取造成的损失，但没有测试**检索时动态重建**（retrieval-time reconstruction）是否能够补偿写时损失。一个可能的策略是：写时全部保留 raw，检索时由 LLM 动态生成摘要/重组。",
+      "research_question": "能否用 retrieval-time LLM reasoning 来补偿 write-time 信息的损失？即"笨写+聪读"策略是否优于"精写+简读"？",
+      "hypothesis": "Raw-Store + LLM-Reasoning-at-Query-Time 策略，在所有指标上持平或超越 Summary-Store + Simple-Retrieval，特别是在需要多跳推理的场景下。",
+      "minimum_viable_experiment": "比较 LightMem User-Only Raw（raw store + 语义检索）vs 一个变体：raw store + LLM agent 在检索后动态进行多步推理和摘要，在 LoCoMo 和 LongMemEval 上评估。",
+      "killer_objection": "检索时 LLM 推理增加了查询延迟和 token 成本，可能不可接受。而且在信息极度分散时（跨 30+ 会话），LLM 仍然可能在合成过程中丢失细节。"
+    },
+    {
+      "seed_id": "SEED-005",
+      "seed_type": "successor_paper_gap",
+      "trigger_evidence_summary": "O3 (Temporal Update Fidelity): Graph-based methods handle updates best. Zep leads Knowledge Update (44.4 Substr EM). Append-only stores suffer from 'hallucinations of the past'.",
+      "hidden_assumption_or_gap": "论文仅评估了单轮更新。但实际 Agent 场景中，事实会经历多次连续更新（如用户偏好从 A→B→C→...），且时间顺序非常重要。论文没有评估多轮级联更新的鲁棒性。",
+      "research_question": "事实经过多次连续更新后（A→B→C→D→E），记忆系统能否正确回答"当前状态"和"t=2时的状态"？多版本维度的累积是否会导致版本退化？",
+      "hypothesis": "在 10+ 轮连续更新后，所有系统的 Temporal Reasoning 准确率显著下降（>30%），但基于逻辑失效的图谱系统（Zep、Mem0^g）下降速度慢于 append-only 系统。图谱系统的版本链长度增长同样会带来查询退化。",
+      "minimum_viable_experiment": "在 LongMemEval 的 Knowledge Update 基础上扩展：构建一个多轮级联更新数据集（5/10/20轮更新），评估系统在每轮后的状态问答准确率和推理正确性。",
+      "killer_objection": "真实场景中很少需要如此密集的级联更新；且用户通常在更新时显式表达"撤销"或"修改"，而非隐式覆盖。"
+    },
+    {
+      "seed_id": "SEED-006",
+      "seed_type": "negative_result",
+      "trigger_evidence_summary": "O10 (Planning and Fusion): SimpleMem Planning + Reflect does not beat Planning Only (20.7 vs 20.0 Ans. F1). Adding reflection on top of planning yields no further gains, suggesting extra deliberation may weaken routing decisions.",
+      "hidden_assumption_or_gap": "论文将"planning + reflection"视为增加更多 LLM 推理步骤。但 reflection 的具体形式（校验、回溯、评分）可能不对。可能更好的反射形式是：基于检索结果的自反馈，而非独立反思。",
+      "research_question": "哪些类型的 reflection 对记忆检索有帮助？基于检索结果的 post-hoc reflection（如"我找到的证据够吗？"）是否优于独立反思？",
+      "hypothesis": "基于检索结果的 result-aware reflection（检查检索结果的完整性和一致性后决定是否重新检索或修改查询）比 SimpleMem 使用的独立反思更有效。",
+      "minimum_viable_experiment": "扩展 SimpleMem 的 reflection 变体：实现三种 reflection 模式——(1) SimpleMem 原始 reflective reranking, (2) 检索后覆盖率检查 + 可能二次检索, (3) 多轮迭代检索（类似 Tree of Thought），在 LoCoMo 和 LongMemEval 上对比。",
+      "killer_objection": "任何形式的 reflection 都会增加延迟和成本。如果差距不够大，生产系统不会接受这种权衡。论文已经显示 Planning Only 已经足够好。"
+    },
+    {
+      "seed_id": "SEED-007",
+      "seed_type": "cross_domain_transfer",
+      "trigger_evidence_summary": "O6/O4: Graph/temporal organized memory excels at scattered cross-session reasoning (Cognee: 18.7 Substr EM on Temporal Reasoning). Hybrid filtering excels at exact grounding. Trace-preserving memory excels at stateful execution.",
+      "hidden_assumption_or_gap": "论文将三个工作负载（对话QA、跨会话推理、状态化执行）视为独立场景。但真实 Agent 会在**同一会话**中混合这三种需求（如边对话边执行数据库操作）。",
+      "research_question": "当 Agent 同时需要跨会话事实回忆 + 精确状态接地 + 过程跟踪时（混合 workload），哪种记忆架构表现最好？是否需要新的混合架构？",
+      "hypothesis": "一个三层混合记忆架构（L1: 短时轨迹缓冲 for 状态执行, L2: 图结构 for 跨会话聚合, L3: raw text store for 精确接地）能够同时应对三种 workload 需求，总效用超过任何单一架构 20%+。",
+      "minimum_viable_experiment": "设计一个混合 workload benchmark：Agent 需要在对话中回忆起 5 轮前的用户偏好（跨会话）、同时跟踪一个数据库的当前状态（状态化执行）、并从长文本中提取特定事实（精确接地）。比较 Zep、MemOS、LightMem 和三层混合架构。",
+      "killer_objection": "三层架构的维护开销（跨层同步、一致性保证）可能超过增益；且 Agent 框架本身可能不需要在同一个系统中同时优化三个指标。"
+    },
+    {
+      "seed_id": "SEED-008",
+      "seed_type": "tiny_example",
+      "trigger_evidence_summary": "O11 (Conservative Consolidation): Conservative-Merge outperforms default MemoryOS (23.5 vs 23.2 Ans. F1). Delayed-Flush lowers to 20.6.",
+      "hidden_assumption_or_gap": "论文测试了三种维护策略（默认、保守合并、延迟冲刷），但缺少极端对比：**不维护 vs 过度维护**。是否存在一个"最优维护频率"的 U 型曲线？",
+      "research_question": "Agent 记忆系统的最优维护频率是什么？维护太少（知识过时/碎片化）和维护太多（合并损失细节/成本高）之间是否存在 U 型曲线？",
+      "hypothesis": "记忆系统的性能随维护频率呈倒 U 型：在低频维护下，碎片化和过时知识导致性能差；在中频维护下达到最优；在高频维护下，过多的合并/压缩导致信息损失和成本爆炸。",
+      "minimum_viable_experiment": "以 MemoryOS 为基座，将维护频率作为变量（每N轮触发一次合并，N=1/5/10/20/∞），在 LoCoMo 的长对话上评估 Answer F1 和操作成本，寻找 Pareto 最优点。",
+      "killer_objection": "最优维护频率高度依赖 workload 特征（更新密度、证据分布），不可能有一劳永逸的全局最优频率；自适应策略可能过于复杂。"
+    },
+    {
+      "seed_id": "SEED-009",
+      "seed_type": "evidence_gap",
+      "trigger_evidence_summary": "O5: Stronger backbones mostly improve answer realization after relevant evidence has already been localized, rather than compensating for weak temporal grounding.",
+      "hidden_assumption_or_gap": "论文只测试了闭源商业 LLM backbone（GPT-5.4, Claude 4.0, DeepSeek-R1），且在记忆管线中记忆系统与 LLM 分离。但开源模型 vs 闭源模型在记忆支持上的差异未被探索。更重要的是，论文没有评估**开源模型作为记忆提取/合并组件**时的效果。",
+      "research_question": "当使用小参数开源 LLM（如 Llama 3 8B、Qwen 2.5 7B）作为记忆提取和合并组件时，记忆系统的表现如何？成本-效用权衡是否会改变？",
+      "hypothesis": "开源小模型作为记忆提取组件时，提取质量下降导致下游性能降低 10-15%，但总运营成本降低 80%+，使得 LightMem 级别的效率在预算受限场景中更具吸引力。",
+      "minimum_viable_experiment": "将 MemOS 和 Cognee 的 LLM 提取/合并组件从 GPT-5.4 替换为 Llama 3 8B 和 Qwen 2.5 7B（本地部署），在 LoCoMo 和 LongMemEval 上评估性能变化，并完整记录 token 成本和延迟。",
+      "killer_objection": "开源模型在结构化提取（实体识别、关系抽取、JSON schema 填充）上的能力快速提升，可能很快赶上闭源模型；且论文结论的时间敏感性很强。"
+    },
+    {
+      "seed_id": "SEED-010",
+      "seed_type": "assumption_violation",
+      "trigger_evidence_summary": "O7/O8/O9/O10: Modular component evaluations show each layer of abstraction (compression, summarization, fact extraction) progressively discards information. The paper recommends 'late filtering' and 'raw preservation'.",
+      "hidden_assumption_or_gap": "论文假设信息丢失的顺序是从写时提取到检索，但未考虑**检索后重组**（post-retrieval reranking/reconstruction）是否能恢复部分丢失的信息。现代 RAG 系统中常用的 HyDE（假设文档嵌入）、重排序等技术可能改变这个权衡曲线。",
+      "research_question": "检索后增强技术（查询重写、HyDE、Cross-encoder reranking、LLM 摘要精炼）能在多大程度上补偿写时信息损失？",
+      "hypothesis": "使用 HyDE + Cross-encoder reranking + LLM synthesis 的 post-retrieval pipeline 可以使压缩表示（LightMem User-Only Compressed）的召回率提升 40%+，缩小与 raw 表示的差距至 5-10% 以内。",
+      "minimum_viable_experiment": "在 LightMem User-Only Compressed 基础上，添加 (1) HyDE 查询重写、(2) Cross-encoder 重排序、(3) LLM 合成后处理。在 LoCoMo 和 LongMemEval 上评估与 User-Only Raw 的性能差距缩小了多少。",
+      "killer_objection": "重排序和 LLM 合成步骤本身增加了检索延迟和成本，可能抵消存储端的效率优势；而且基于压缩表示的检索可能仍然遗漏关键细节，无法被后处理恢复。"
+    }
+  ]
+}

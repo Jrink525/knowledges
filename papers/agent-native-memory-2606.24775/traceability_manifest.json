@@ -1,0 +1,403 @@
+{
+  "schema_version": "1.2.0",
+  "paper_id": "2606.24775",
+  "paper_title": "Are We Ready For An Agent-Native Memory System?",
+  "claims": [
+    {
+      "claim_id": "C1.1",
+      "claim_text": "Existing evaluations fail to evaluate many representative memory architectures under unified workloads, making principled cross-system comparisons difficult",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "First, they fail to evaluate many representative memory architectures (e.g., systems such as MemoChat, MemTree, and LightMem have not been included in prior evaluations) under unified workloads, making principled cross-system comparisons difficult.",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.2",
+      "claim_text": "Database community efforts limit their scope to a few chatbot-centric datasets, neglecting complex agentic execution scenarios",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "Efforts from the database community (Wu et al., 2026) limit their scope to a few chatbot-centric datasets (e.g., LoCoMo and LongMemEval only), neglecting complex agentic execution scenarios.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.3",
+      "claim_text": "Existing benchmarks rely on single-sided end-to-end metrics rather than multi-dimensional evaluation",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "existing benchmarks predominantly rely on single-sided, end-to-end task success metrics (e.g., F1 and BLEU scores) rather than a comprehensive evaluation suite. They fail to explicitly isolate and measure multi-dimensional performance indicators such as evidence-level retrieval fidelity, dynamic update robustness under conflicting knowledge, and long-horizon stability.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.4",
+      "claim_text": "Existing benchmarks rarely measure key operational costs such as index construction time and query latency",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "Third, they rarely measure key operational costs from a systems perspective, such as index construction time and query latency, which are critical for production deployments.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C1.5",
+      "claim_text": "Existing evaluations treat memory systems as monolithic black boxes rather than decomposing them into fundamental data management modules",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "they treat memory systems as monolithic black boxes rather than decomposing them into fundamental data management modules for isolated, fine-grained analysis.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.1",
+      "claim_text": "The paper decomposes existing agent memory systems into four core components: representation and storage, extraction, retrieval and routing, and maintenance",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "We decompose existing agent memory systems into four core components: (i) memory representation and storage, (ii) memory extraction, (iii) memory retrieval and routing, and (iv) memory maintenance.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.2",
+      "claim_text": "The paper evaluates 12 representative memory systems across five benchmark workloads encompassing 11 datasets",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "We conduct end-to-end evaluations under a unified and fair testbed across five distinct benchmark workloads encompassing 11 datasets. Our study includes 12 representative memory systems.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C2.3",
+      "claim_text": "The paper conducts fine-grained controlled experiments within each technique component using controlled variants",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "By systematically generating controlled variants that modify one module at a time, we quantify their performance trade-offs and assess their individual impacts on representation fidelity, routing precision, and update correctness.",
+          "page": 2
+        }
+      ]
+    },
+    {
+      "claim_id": "C3.1",
+      "claim_text": "Agent memory system is formalized as a tuple of four modules: M_sys = ⟨R, S, Q, U⟩",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "2 Preliminaries",
+          "quote_text": "we formalize the agent memory system as a tuple of four modules: M_sys = ⟨R, S, Q, U⟩, where each module governs a distinct phase of the memory lifecycle.",
+          "page": 5
+        }
+      ]
+    },
+    {
+      "claim_id": "C4.1",
+      "claim_text": "Existing agent memory systems span four architectural paradigms: Stream-and-Reflection, Hierarchical Tiered, Knowledge Graph, and Composite Hybrid",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "1 Introduction",
+          "quote_text": "(1) Stream-and-Reflection Memory System... (2) Hierarchical Tiered Memory System... (3) Knowledge Graph Memory System... (4) Composite Hybrid Memory System...",
+          "page": 1
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.1",
+      "claim_text": "No single memory system dominates all workloads; methods that preserve task-critical evidence through structure-guided filtering remain the most competitive overall",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.1 Overall Effectiveness (RQ1)",
+          "quote_text": "No single memory system dominates all workloads, but methods that preserve task-critical evidence through structure-guided filtering remain the most competitive overall.",
+          "page": 13
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.2",
+      "claim_text": "Structure-aware systems lead LongMemEval: Zep reaches 48.0 LLM Judge Accuracy and Cognee attains 35.3 ROUGE-L F1",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.1 Overall Effectiveness (RQ1)",
+          "quote_text": "Structure-aware systems lead LongMemEval, where Zep reaches 48.0 LLM Judge Accuracy and Cognee attains 35.3 ROUGE-L F1",
+          "page": 13
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.3",
+      "claim_text": "Hybrid filtering is strongest on LoCoMo exactness, where MemOS reaches 11.5 Exact Match (EM)",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.1 Overall Effectiveness (RQ1)",
+          "quote_text": "Hybrid filtering is strongest on LoCoMo exactness, where MemOS reaches 11.5 Exact Match (EM)",
+          "page": 13
+        }
+      ]
+    },
+    {
+      "claim_id": "C5.4",
+      "claim_text": "Trace-preserving memories remain strongest on DB-Bench: Long Context achieves 48.20 EM and MemoChat 55.40 Task Success Rate",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.1 Overall Effectiveness (RQ1)",
+          "quote_text": "Trace-preserving memories remain strongest on DB-Bench, where Long Context achieves 48.20 EM and MemoChat reaches 55.40 Task Success Rate",
+          "page": 13
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.1",
+      "claim_text": "Retrieval quality depends more on how a system organizes evidence for later reconstruction than on how well it ranks one relevant memory first",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.2 Memory Retrieval Fidelity (RQ2)",
+          "quote_text": "retrieval quality depends more on how a system organizes evidence for later reconstruction than on how well it ranks one relevant memory first",
+          "page": 14
+        }
+      ]
+    },
+    {
+      "claim_id": "C6.2",
+      "claim_text": "A-MEM and MemTree become clearly stronger at larger retrieval budgets, reaching 69.5/85.9 and 59.7/80.5 on Recall@5/@10",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.2 Memory Retrieval Fidelity (RQ2)",
+          "quote_text": "A-MEM and MemTree become clearly stronger at larger retrieval budgets, reaching 69.5/85.9 and 59.7/80.5 on Recall@5/@10",
+          "page": 14
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.1",
+      "claim_text": "Reliable post-update behavior is a pipeline-level design problem rather than a pure model-capacity problem",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.3 Memory Evolution Robustness (RQ3)",
+          "quote_text": "reliable post-update behavior is a pipeline-level design problem rather than a pure model-capacity problem",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.2",
+      "claim_text": "Zep leads Knowledge Update with 44.4 Substring EM and 36.8 ROUGE-L F1",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.3 Memory Evolution Robustness (RQ3)",
+          "quote_text": "Zep leads Knowledge Update with 44.4 Substring EM and 36.8 ROUGE-L F1",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.3",
+      "claim_text": "Cognee leads Temporal Reasoning with 18.7 Substring EM and 35.8 ROUGE-L F1",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.3 Memory Evolution Robustness (RQ3)",
+          "quote_text": "Cognee leads Temporal Reasoning with 18.7 Substring EM and 35.8 ROUGE-L F1",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.4",
+      "claim_text": "Flat context accumulation or dense similarity alone is weakest when stale mentions must be separated from updated ones",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.3 Memory Evolution Robustness (RQ3)",
+          "quote_text": "flat context accumulation or dense similarity alone is weakest when stale mentions must be separated from updated ones",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "claim_id": "C7.5",
+      "claim_text": "Backbone variation changes absolute answer quality more than which memory pipeline remains effective; stable update behavior is determined before final generation",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.3 Memory Evolution Robustness (RQ3)",
+          "quote_text": "Backbone variation changes absolute answer quality more than it changes which memory pipeline remains effective, indicating that stable update behavior is determined primarily before final generation.",
+          "page": 15
+        }
+      ]
+    },
+    {
+      "claim_id": "C8.1",
+      "claim_text": "Memory remains more stable at longer horizons when evidence is organized through explicit relational links or hierarchical consolidation rather than left as flat text",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.4 Long Horizon Memory Stability (RQ4)",
+          "quote_text": "Memory remains more stable at longer horizons when evidence is organized through explicit relational links or hierarchical consolidation, rather than left as flat text for direct matching.",
+          "page": 16
+        }
+      ]
+    },
+    {
+      "claim_id": "C8.2",
+      "claim_text": "SimpleMem stays nearly unchanged from Short to Medium buckets (35.2 to 34.9 Accuracy) while Long Context drops from 42.6 to 19.0",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.4 Long Horizon Memory Stability (RQ4)",
+          "quote_text": "SimpleMem stays nearly unchanged from the Short to Medium buckets (35.2 to 34.9 Accuracy), whereas Long Context drops from 42.6 to 19.0",
+          "page": 16
+        }
+      ]
+    },
+    {
+      "claim_id": "C8.3",
+      "claim_text": "Embedding RAG falls from 37.1 to 7.4 Answer F1 as evidence gap widens, while graph-based systems remain substantially higher",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.4 Long Horizon Memory Stability (RQ4)",
+          "quote_text": "Embedding RAG falls from 37.1 to 7.4 Answer F1 as the evidence gap widens, while graph- or consolidated-memory systems such as Cognee, MemOS, and MemoryOS remain substantially higher across the same bins",
+          "page": 16
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.1",
+      "claim_text": "Efficiency is governed by maintenance scope rather than structure alone",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.5 Memory Operation Cost (RQ5)",
+          "quote_text": "efficiency is governed by maintenance scope rather than structure alone",
+          "page": 17
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.2",
+      "claim_text": "LightMem and MemTree occupy the strongest efficiency frontier: LightMem at 48.3 Normalized Utility at 3.67s, MemTree at 63.5 at 15.9s",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.5 Memory Operation Cost (RQ5)",
+          "quote_text": "LightMem and MemTree occupy the strongest efficiency frontier, with LightMem reaching 48.3 Normalized Utility at 3.67s Avg. Operation Latency/Query and MemTree reaching 63.5 at 15.9s",
+          "page": 17
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.3",
+      "claim_text": "Cognee and Zep exceed 84 utility only after 116.5s and 155.1s respectively",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.5 Memory Operation Cost (RQ5)",
+          "quote_text": "Cognee and Zep exceed 84 utility only after 116.5s and 155.1s",
+          "page": 17
+        }
+      ]
+    },
+    {
+      "claim_id": "C9.4",
+      "claim_text": "Segmented compression and bounded hybrid retrieval keep LightMem in the low-cost regime; path-local tree aggregation allows MemTree to preserve utility without global refresh",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "4.5 Memory Operation Cost (RQ5)",
+          "quote_text": "segmented compression and bounded hybrid retrieval keep LightMem close to the low-cost regime; (2) path-local tree aggregation allows MemTree to preserve substantially more utility without global refresh",
+          "page": 17
+        }
+      ]
+    },
+    {
+      "claim_id": "C10.1",
+      "claim_text": "Retaining the original conversational content is more important than increasing abstraction or hierarchy for sustaining both factual recall and reasoning quality",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "5.1 Memory Representation and Storage (M1)",
+          "quote_text": "Retaining the original conversational content is more important than increasing abstraction or hierarchy for sustaining both factual recall and reasoning quality.",
+          "page": 18
+        }
+      ]
+    },
+    {
+      "claim_id": "C10.2",
+      "claim_text": "LightMem User-Only Raw achieves the best result on all four metrics (24.2 EM, 38.9 Ans. F1 on LoCoMo; 26.0 Substr. EM, 31.4 ROUGE-L F1 on LongMemEval)",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "5.1 Memory Representation and Storage (M1)",
+          "quote_text": "LightMem User-Only Raw achieves the best result on all four metrics",
+          "page": 18
+        }
+      ]
+    },
+    {
+      "claim_id": "C11.1",
+      "claim_text": "Coverage-preserving write-time extraction provides the most stable balance between factual retrieval and downstream reasoning",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "5.2 Memory Extraction (M2)",
+          "quote_text": "Coverage-preserving write-time extraction provides the most stable balance between factual retrieval and downstream reasoning",
+          "page": 19
+        }
+      ]
+    },
+    {
+      "claim_id": "C12.1",
+      "claim_text": "Retrieval quality improves most from targeted structure rather than added complexity",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "5.3 Memory Retrieval and Routing (M3)",
+          "quote_text": "retrieval quality improves most from targeted structure rather than added complexity",
+          "page": 20
+        }
+      ]
+    },
+    {
+      "claim_id": "C13.1",
+      "claim_text": "Conservative consolidation is more effective than delayed flushing or overly coarse summarization for maintaining answer-relevant memory",
+      "evidence": [
+        {
+          "source_file": "paper.pdf",
+          "source_section": "5.4 Memory Maintenance (M4)",
+          "quote_text": "Conservative consolidation is more effective than delayed flushing or overly coarse summarization for maintaining answer-relevant memory",
+          "page": 20
+        }
+      ]
+    }
+  ]
+}

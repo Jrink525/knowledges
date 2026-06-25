@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.2.0",
+  "paper_id": "2606.24775",
+  "paper_title": "Are We Ready For An Agent-Native Memory System?",
+  "artifacts": {
+    "report": "report.md",
+    "traceability_manifest": "traceability_manifest.json",
+    "research_lens": "research_lens.json",
+    "direction_board": "direction_board.json",
+    "latex_paragraphs": null
+  },
+  "paper_metadata": {
+    "title": "Are We Ready For An Agent-Native Memory System?",
+    "arxiv_id": "2606.24775",
+    "authors": [
+      "Wei Zhou",
+      "Xuanhe Zhou",
+      "Shaokun Han",
+      "Hongming Xu",
+      "Guoliang Li",
+      "Zhiyu Li",
+      "Feiyu Xiong",
+      "Fan Wu"
+    ],
+    "date": "2026-06-23",
+    "affiliations": [
+      "Shanghai Jiao Tong University",
+      "Tsinghua University",
+      "MemTensor (Shanghai) Technology Co., Ltd"
+    ]
+  }
+}
