@@ -1,0 +1,105 @@
+{
+  "paper": "MemSlides: A Hierarchical Memory Driven Agent Framework for Personalized Slide Generation with Multi-turn Local Revision",
+  "arxiv_id": "2606.17162",
+  "research_lens": {
+    "problem_reconstruction": {
+      "original_problem_statement": "How can we build a slide generation agent that preserves stable user preferences across tasks, retains newly introduced preferences during multi-turn revision, and executes local edits reliably?",
+      "reconstructed_research_question": "What memory architecture enables a presentation agent to decouple user preferences by lifetime (persistent vs. session) and function (what to generate vs. how to edit), such that multi-turn personalized revision becomes compositional and reliable?",
+      "key_insight": "Personalization in presentation authoring is revealed through revision rather than fully specified before generation, so the memory system must support iterative preference discovery while preserving strict locality of edits."
+    },
+    "challenge_module_mapping": {
+      "challenges": [
+        {
+          "challenge": "C1: Cross-job preference persistence",
+          "description": "User preferences (themes, layouts, content style) must survive across independent slide-generation jobs without re-specification.",
+          "module": "User Profile Memory (P_u)",
+          "mechanism": "Intent-conditioned profiles with organized dimensions (theme, content, visual, layout, template, general). Profile selector S retrieves bucket by intent; constraint extractor E parses request; reconciliation R resolves conflicts: A_0 = R(S(P_u, i_0), E(q_0))",
+          "notation": "tilde_P_u = S(P_u, i_0), C_0 = E(q_0), A_0 = R(tilde_P_u, C_0)",
+          "section": "Sec 3.3"
+        },
+        {
+          "challenge": "C2: Session-level preference carryover",
+          "description": "Preferences discovered during revision (e.g., 'use blue accents', 'move methodology to appendix') must remain active for later turns in the current session.",
+          "module": "Working Memory (A_t)",
+          "mechanism": "Active temporary preferences from earlier feedback turns stored in session-scoped state; evolves as A_t = U(A_{t-1}, r_t) with revision feedback.",
+          "notation": "M_pref_t = (P_u, A_t)",
+          "section": "Sec 3.2, Sec 3.3"
+        },
+        {
+          "challenge": "C3: Multi-turn localized revision without scope drift",
+          "description": "Small editorial changes must not require full-deck re-generation or cause unintended drift in already-aligned content.",
+          "module": "Plan-Act-Guard Loop (Localized Modify Executor)",
+          "mechanism": "Plan: build execution contract (scope, targets, active rules, selectors, coverage). Act: edit bounded surface (prefer batch CSS and local patches over regeneration). Guard: inspect, verify coverage, check snapshot hashes, block premature finalize.",
+          "notation": "Execution contract: <scope, targets, rules, selectors, coverage>",
+          "section": "Sec 3.2"
+        },
+        {
+          "challenge": "C4: Reusable edit execution experience",
+          "description": "Successful edit patterns (tool chains, error recovery, inspection strategies) should accelerate future edits on similar problems.",
+          "module": "Tool Memory",
+          "mechanism": "Two granularities: (1) Round-scope task experience - job-level lessons buffered through working memory. (2) Operation-scope tool chains - reasoning + tool-call + observation fragments retrieved before similar operations.",
+          "notation": "M_tool = (M_round, M_op)",
+          "section": "Sec 3.4"
+        },
+        {
+          "challenge": "C5: Intent-aware profile routing",
+          "description": "The same user may have different preferences for different presentation intents (academic talk vs. business pitch), requiring intent-dependent profile retrieval.",
+          "module": "Profile Memory Selector S",
+          "mechanism": "Intent i_0 is used to select the appropriate profile bucket; only intent-matched items enter the reconciliation pipeline.",
+          "notation": "tilde_P_u = S(P_u, i_0)",
+          "section": "Sec 3.3"
+        },
+        {
+          "challenge": "C6: Request-profile conflict resolution",
+          "description": "A user's explicit request may contradict stored profile preferences. The system must handle this gracefully without ignoring either signal.",
+          "module": "Reconciliation Function R",
+          "mechanism": "Explicit request conflicts supersede the corresponding profile item for the current deck; compatible preferences coexist as active memory.",
+          "notation": "A_0 = R(tilde_P_u, C_0)",
+          "section": "Sec 3.3"
+        },
+        {
+          "challenge": "C7: Post-job preference consolidation",
+          "description": "Stable interaction signals from the job should be consolidated back into the user profile without introducing noise from temporary preferences.",
+          "module": "Consolidation Module",
+          "mechanism": "After job end, stable interaction signals are written back into P_u; only confirmed reusable preferences survive.",
+          "notation": "C: (P_u, job_signals) -> P'_u (implied)",
+          "section": "Sec 3.3"
+        },
+        {
+          "challenge": "C8: Evaluation of personalization alignment",
+          "description": "How to measure whether generated slides align with user persona/intent beyond generic quality metrics.",
+          "module": "Persona-Alignment Judgment Framework",
+          "mechanism": "Multi-persona, multi-intent user profile bank; human and LLM judges evaluate alignment across Content, Structure, Visual, Specificity dimensions.",
+          "notation": "align(deck, profile, intent) in R^4",
+          "section": "Sec 4"
+        }
+      ]
+    },
+    "design_principles": {
+      "principle_1": "Separate concerns by memory lifetime (persistent vs. session) and function (what vs. how)",
+      "principle_2": "Localize both read and write operations during revision to prevent scope creep",
+      "principle_3": "Treat personalization as an explicit service enabled by memory, not a prompting byproduct",
+      "principle_4": "Use Plan-Act-Guard as a checked state machine for revision execution",
+      "principle_5": "Reconcile profile conflicts in favor of explicit user requests for the current session",
+      "principle_6": "Consolidate back to long-term memory only after verifying stability of interaction signals"
+    },
+    "analytical_framework": {
+      "formulation_type": "Memory-augmented agentic system with hierarchical state management",
+      "evaluation_paradigm": "Three-axis evaluation: persona alignment (dimension scoring), deck quality (GPT judgment), edit reliability (matched-pair closed-loop completion)",
+      "key_tradeoffs": [
+        {
+          "tradeoff": "Profile rigidity vs. adaptability",
+          "resolution": "Explicit request conflicts supersede profile items (short-term adaptability), stable signals consolidate back (long-term learning)"
+        },
+        {
+          "tradeoff": "Edit locality vs. global coherence",
+          "resolution": "Plan-Act-Guard enforces local scope; coverage checks ensure completeness without full regeneration"
+        },
+        {
+          "tradeoff": "Memory specificity vs. generalization",
+          "resolution": "Tool memory at two granularities (round-scope and operation-scope) balances specific past solutions and generalizable patterns"
+        }
+      ]
+    }
+  }
+}

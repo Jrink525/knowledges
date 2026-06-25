@@ -1,0 +1,199 @@
+{
+  "board_id": "semantic-browsing-2606.23679-direction-board",
+  "paper_title": "Semantic Browsing: Controllable Diversity for Image Generation",
+  "research_seeds": [
+    {
+      "rank": 1,
+      "seed_name": "Cross-Modal Structured Diversity (Video / 3D)",
+      "seed_type": "domain_extension",
+      "research_question": "Can the hierarchical tree-based semantic browsing approach extend to video generation (where temporal consistency adds a new dimension) or 3D content generation (where camera/viewpoint variation is a natural semantic axis)?",
+      "motivation": "The paper explicitly identifies this as a natural next step: 'structured semantic exploration could extend beyond images to other generative domains, such as video, 3D content, or multimodal generation.'",
+      "gap_addressed": "Current diversity work is image-only. Video/3D diversity is an under-explored area with unique challenges (temporal consistency, 3D coherence).",
+      "key_idea_from_paper": "Text-level semantic control is domain-agnostic; only the rendering backbone needs to change.",
+      "minimal_validation_experiment": {
+        "goal": "Demonstrate that Semantic Browsing tree can generate diverse video scenes.",
+        "setup": "Use a text-to-video model as the rendering backbone (e.g., Kling, Sora). 10 prompts (e.g., 'A person walking through a market'). Generate depth-2 trees (BF=3, 9 leaf nodes).",
+        "evaluation_metrics": [
+          "CLIP-based diversity across video frames",
+          "Temporal consistency score (e.g., I3D features)",
+          "Human evaluation (20 participants, pairwise: our tree vs. random seed variation)"
+        ],
+        "expected_outcome": "Structured semantic diversity should propagate to video outputs with measurable temporal coherence. Videos from different branches should differ in interpretable semantic ways while maintaining internal temporal consistency."
+      },
+      "estimated_difficulty": "hard",
+      "estimated_impact": "high",
+      "tools_needed": ["Text-to-video API (e.g., Kling/Sora)", "Video evaluation metrics (CLIP, I3D, LPIPS)"],
+      "timeline_estimate": "3-6 months"
+    },
+    {
+      "rank": 2,
+      "seed_name": "Scaling Tree Efficiency — Sparse Hierarchical Representations",
+      "seed_type": "technical_improvement",
+      "research_question": "Can we reduce the computational overhead of the Semantic Browsing tree by using sparse representations (e.g., only storing incremental changes as deltas) rather than full JSON scene descriptions at every node, and can we eliminate 'preserve' branches to reduce identity-mapped nodes?",
+      "motivation": "The paper notes that with 3^3 trees, 19 of 27 leaf nodes are identity mappings from preserve branches. More efficient representations would enable deeper trees with higher branching factors.",
+      "gap_addressed": "Current implementation stores fully-specified JSON at each node. Preserve branches propagate identity states, wasting computation.",
+      "key_idea_from_paper": "Constraints accumulate along paths (C_s = (c_1, ..., c_n)). Each node could be represented as (root + constraint delta chain).",
+      "minimal_validation_experiment": {
+        "goal": "Prove that delta-encoded tree representations match or exceed full-encoding tree quality with lower compute.",
+        "setup": "Implement delta encoding: each node stores only the constraint delta from its parent. Compare quality (Vendi, DINO, Aesthetic) and compute (VLM calls, token usage) against the baseline full-encoding tree. 50 MS-COCO prompts.",
+        "evaluation_metrics": [
+          "Vendi Score (parity or improvement)",
+          "DINO Similarity (parity)",
+          "Total VLM token budget (reduction target: 40%)",
+          "Wall-clock time per tree"
+        ],
+        "expected_outcome": "Delta encoding should preserve tree quality while reducing compute by eliminating redundant JSON serialization of preserve branches. A 40-50% reduction in token usage is plausible."
+      },
+      "estimated_difficulty": "easy",
+      "estimated_impact": "medium",
+      "tools_needed": ["Existing Semantic Browsing codebase", "Token counter", "JSON diff/patch utilities"],
+      "timeline_estimate": "1-2 months"
+    },
+    {
+      "rank": 3,
+      "seed_name": "Interactive User Steering — Human-in-the-Loop Semantic Browsing",
+      "seed_type": "user_experience_extension",
+      "research_question": "How can human preferences and real-time feedback be integrated into the tree expansion process to guide semantic exploration based on user intent, and can a reinforcement learning from human feedback (RLHF) loop improve the agent's aspect selection over time?",
+      "motivation": "The paper introduces Interactive Browsing but only as manual node selection. Full human-in-the-loop control (preferred aspects, disliked branches, user-guided trajectory) would significantly improve practical utility.",
+      "gap_addressed": "Current agents explore 'objectively' without user preference signals. Real users may prefer certain semantic dimensions over others.",
+      "key_idea_from_paper": "The Decision Maker selects dimensions based on prompt-dependent evaluation. User feedback could serve as an additional signal for this selection.",
+      "minimal_validation_experiment": {
+        "goal": "Build a prototype where users can rate branches (like/dislike) and the Decision Maker adjusts future aspect selection via a learned preference model.",
+        "setup": "Implement a web UI showing the tree with thumbs-up/down per branch. Train a lightweight preference predictor (e.g., a small transformer) on user ratings from 20 participants × 10 prompts. Compare against unguided Semantic Browsing.",
+        "evaluation_metrics": [
+          "User satisfaction score (Likert 1-5)",
+          "Number of clicks/expansions before finding preferred image",
+          "Mean preference rating of selected leaf nodes",
+          "Diversity preservation (Vendi score per user tree)"
+        ],
+        "expected_outcome": "User-guided trees should achieve higher satisfaction with fewer expansions, while maintaining or improving diversity compared to unguided exploration."
+      },
+      "estimated_difficulty": "medium",
+      "estimated_impact": "high",
+      "tools_needed": ["Web interface (React/Next.js)", "User study platform", "Lightweight preference model"],
+      "timeline_estimate": "3-5 months"
+    },
+    {
+      "rank": 4,
+      "seed_name": "VLM Creative Capacity Bottleneck — Augmenting Semantic Diversity with External Knowledge",
+      "seed_type": "capability_improvement",
+      "research_question": "Can external knowledge sources (e.g., ConceptNet, Wikidata, visual concept databases) augment the Brainstormer's ability to propose high-impact, truly diverse semantic aspects, addressing the paper's noted limitation that VLMs' 'ability to propose rich and diverse semantic alternatives remains limited'?",
+      "motivation": "The paper concedes that VLM creative breadth constrains the resulting semantic space. External knowledge could expand this.",
+      "gap_addressed": "VLM-suggested aspects may cluster in common semantic regions. Rare or surprising but valid aspects are under-explored.",
+      "key_idea_from_paper": "43.7% of aspects are unique, suggesting room for more diverse suggestion. The Brainstormer's candidate aggregation from low-level details could benefit from structured external knowledge.",
+      "minimal_validation_experiment": {
+        "goal": "Compare aspect diversity with and without external knowledge augmentation.",
+        "setup": "Augment the Brainstormer agent with top-5 ConceptNet relations per object in the scene as additional candidate aspects. Run on 50 prompts. Measure aspect uniqueness rate and downstream Vendi score.",
+        "evaluation_metrics": [
+          "Unique aspect percentage (baseline: 43.7%)",
+          "Vendi Score of resulting trees",
+          "Human rating of aspect novelty/surprisingness (1-5)"
+        ],
+        "expected_outcome": "External knowledge augmentation should increase unique aspect rate and potentially improve Vendi scores by surfacing uncommon semantic dimensions. Human evaluators should find augmented aspects more creative."
+      },
+      "estimated_difficulty": "medium",
+      "estimated_impact": "medium",
+      "tools_needed": ["ConceptNet API", "Wikidata API", "Existing Semantic Browsing codebase"],
+      "timeline_estimate": "2-4 months"
+    },
+    {
+      "rank": 5,
+      "seed_name": "Tree-to-Image Grounding — Richer Scene Representations",
+      "seed_type": "technical_improvement",
+      "research_question": "Can the structured JSON scene representation be enriched with spatial layout graphs, bounding boxes, or compositional scene graphs to improve the precision of semantic constraint execution by the T2I model?",
+      "motivation": "The paper relies on the T2I model's prompt adherence to render JSON instructions. More structured representations could bridge the 'semantic gap' between JSON specifications and pixel-level outputs.",
+      "gap_addressed": "Current JSON representation is textual. Spatial relationships, object counts, and relative positions are implicitly encoded, potentially leading to imprecise rendering.",
+      "key_idea_from_paper": "The method requires 'fine-grained prompt-level control' from the generator. Richer structured representations could improve this control.",
+      "minimal_validation_experiment": {
+        "goal": "Compare rendering fidelity between textual JSON and layout-annotated JSON representations.",
+        "setup": "Implement layout-augmented JSON that includes bounding box annotations per object. Generate trees from 20 prompts with both representations. Evaluate using grounding metrics (e.g., object detection recall from GLIP/DETR).",
+        "evaluation_metrics": [
+          "Object detection recall (are rendered objects where specified?)",
+          "VQAScore (prompt adherence)",
+          "Human rating of 'intent rendered correctly' (1-5)"
+        ],
+        "expected_outcome": "Layout-augmented representations should improve object grounding and spatial arrangement fidelity, especially for complex multi-object scenes."
+      },
+      "estimated_difficulty": "medium",
+      "estimated_impact": "medium",
+      "tools_needed": ["Layout-to-image model (e.g., GLIGEN, Stable Diffusion with ControlNet)", "Object detection API", "Existing Semantic Browsing codebase"],
+      "timeline_estimate": "3-4 months"
+    },
+    {
+      "rank": 6,
+      "seed_name": "Constrained Optimization of Tree Structure — Adaptive Depth and Branching",
+      "seed_type": "formal_extension",
+      "research_question": "Given a fixed compute budget (e.g., N VLM calls), what is the optimal trade-off between tree depth and branching factor for maximizing structured diversity? Can the model adaptively decide expansion parameters per prompt?",
+      "motivation": "The paper's scaling ablation shows different Vendi/VQAScore tradeoffs for depth vs. width. An adaptive strategy could optimize per prompt.",
+      "gap_addressed": "Current implementation uses fixed depth=3, BF=3 for all prompts. Optimal structure likely varies with prompt complexity.",
+      "key_idea_from_paper": "Scaling ablation (Table 4, Appendix F) shows depth favors aesthetic quality while width favors Vendi. A prompt-dependent search over this tradeoff is missing.",
+      "minimal_validation_experiment": {
+        "goal": "Learn a prompt classifier that predicts optimal tree parameters.",
+        "setup": "Use the 50 MS-COCO prompts, measure Vendi/Aesthetic/VQAScore for (depth, BF) combinations {(1,3), (2,2), (3,3), (2,4), (4,2)}. Train a prompt embedding → optimal parameter predictor. Test on 20 held-out prompts.",
+        "evaluation_metrics": [
+          "Vendi score of adaptively expanded trees vs. fixed (3,3)",
+          "VQAScore degradation (minimizing)",
+          "Oracle gap (performance vs. best-per-prompt configuration)"
+        ],
+        "expected_outcome": "Adaptive expansion should match or exceed fixed (3,3) Vendi while maintaining better VQAScore on prompts where deep expansion causes degradation."
+      },
+      "estimated_difficulty": "medium",
+      "estimated_impact": "medium",
+      "tools_needed": ["Prompt embedding (e.g., CLIP text encoder)", "Hyperparameter search", "Existing Semantic Browsing codebase"],
+      "timeline_estimate": "3-4 months"
+    },
+    {
+      "rank": 7,
+      "seed_name": "Diversity + Quality Pareto Frontier — Blending Semantic Browsing with Generative Quality Methods",
+      "seed_type": "integration",
+      "research_question": "Can Semantic Browsing be combined with quality-enhancing methods (Autoguidance, improved CFG schedules) to extend the Pareto frontier of the diversity-quality tradeoff?",
+      "motivation": "The paper shows high diversity with competitive quality, but methods like Autoguidance could improve quality further. Combining structured diversity with quality-enhancing inference techniques is unexplored.",
+      "gap_addressed": "The paper uses standard FIBO/FLUX.2 inference. Quality-enhancing inference modifications could be layered on top.",
+      "key_idea_from_paper": "The method decouples semantic planning (VLM agents) from rendering (T2I backbone). The rendering step could be enhanced independently.",
+      "minimal_validation_experiment": {
+        "goal": "Measure whether applying Autoguidance during rendering of Semantic Browsing tree nodes improves quality without harming diversity.",
+        "setup": "Render Semantic Browsing trees (50 prompts, depth=3, BF=3) using FIBO with and without Autoguidance. Compare Vendi, Aesthetic, and VQAScore.",
+        "evaluation_metrics": [
+          "Vendi Score (diversity)",
+          "Aesthetic Score (quality)",
+          "VQAScore (prompt adherence)",
+          "Pareto improvement rate"
+        ],
+        "expected_outcome": "Autoguidance rendering should improve Aesthetic scores without reducing Vendi, extending the Pareto frontier — achieving diversity at quality levels previously unattainable."
+      },
+      "estimated_difficulty": "easy",
+      "estimated_impact": "medium",
+      "tools_needed": ["FIBO codebase", "Autoguidance implementation", "Existing Semantic Browsing pipeline"],
+      "timeline_estimate": "1-2 months"
+    },
+    {
+      "rank": 8,
+      "seed_name": "Edge-to-Edge Diversity — Synergistic Combination with Contextual Repulsion",
+      "seed_type": "synergy_exploration",
+      "research_question": "Can a hybrid approach combine text-level semantic browsing (for structural diversity of scene descriptions) with latent-level Contextual Repulsion (for visual diversity within each scene) to achieve both macro-semantic and micro-visual diversity simultaneously?",
+      "motivation": "Contextual Repulsion (Dahary et al., 2026 — co-authors from same lab) operates in contextual attention space for stochastic diversity. Combining both could provide complementary diversity axes.",
+      "gap_addressed": "Semantic Browsing provides macro-semantic diversity (scene interpretations). Contextual Repulsion provides micro-visual diversity (rendering variation). They operate at different levels and could be complementary.",
+      "key_idea_from_paper": "The paper positions Contextual Repulsion as prior work that 'still relies on stochastic diversity without explicit control.' Rather than replacing it, Semantic Browsing could provide the semantic axes that Contextual Repulsion then explores stochastically.",
+      "minimal_validation_experiment": {
+        "goal": "Compare diversity of (a) Semantic Browsing only, (b) Contextual Repulsion only, (c) Semantic Browsing → Contextual Repulsion per node.",
+        "setup": "Use the same 50 prompts. For condition (c), each Semantic Browsing tree node is rendered with Contextual Repulsion to produce 3 variations, rather than single renders. Compare Vendi and DINO across conditions.",
+        "evaluation_metrics": [
+          "Vendi Score",
+          "DINO Similarity",
+          "Aesthetic Score",
+          "Total unique valid interpretations (human-annotated)"
+        ],
+        "expected_outcome": "Hybrid approach should yield higher total diversity than either method alone, with macro-semantic diversity from the tree multiplied by micro-visual diversity from Contextual Repulsion."
+      },
+      "estimated_difficulty": "medium",
+      "estimated_impact": "high",
+      "tools_needed": ["Contextual Repulsion codebase", "Existing Semantic Browsing codebase", "Combined pipeline"],
+      "timeline_estimate": "3-4 months"
+    }
+  ],
+  "metadata": {
+    "generated_from": "arXiv:2606.23679v1",
+    "timestamp": "2026-06-24T17:20:00Z",
+    "ranking_rationale": "Seeds ranked by impact × feasibility × novelty. Cross-modal extension (1) is highest impact but hardest. Efficiency improvements (2) are immediate but incremental. User interaction (3) and external knowledge (4) bridge practical deployment gaps. The constrained optimization (6) and quality blending (7) are natural follow-ups. The synergistic combination (8) leverages co-authors' prior work for maximal impact."
+  }
+}

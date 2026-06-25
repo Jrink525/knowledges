@@ -1,0 +1,272 @@
+{
+  "manifest_id": "semantic-browsing-2606.23679-traceability",
+  "paper_title": "Semantic Browsing: Controllable Diversity for Image Generation",
+  "arxiv_id": "2606.23679",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "statement": "Modern text-to-image models exhibit limited semantic variation across samples generated from the same prompt, converging on the same high-level semantic interpretation.",
+      "category": "problem_characterization",
+      "evidence": [
+        {
+          "source": "§1 Introduction",
+          "text": "recent state-of-the-art text-to-image models often exhibit limited semantic variation across samples generated from the same prompt (Figure 2). In particular, even when prompts are underspecified, different generations tend to converge on the same high-level semantic interpretation, differing only in visually insignificant details, or exhibiting severe biases (Cohen et al., 2025).",
+          "figure": "Figure 2: Diversity Collapse in Standard Sampling"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C2",
+      "statement": "The training paradigm emphasizing strict adherence to highly detailed captions contributes to the lack of semantic diversity.",
+      "category": "problem_analysis",
+      "evidence": [
+        {
+          "source": "§1 Introduction",
+          "text": "A likely contributing factor to this lack of semantic diversity is the training paradigm of modern text-to-image models, which emphasizes strict adherence to highly detailed captions (Black Forest Labs, 2024; Gutflaish et al., 2025; Betker et al., 2023). While this design choice substantially improves controllability and prompt faithfulness, it also biases the model toward committing to a single realization of the prompt, leaving little room for semantically diverse outputs."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C3",
+      "statement": "Prior diversity methods (CADS, Particle Guidance, SGI, Contextual Repulsion) do not offer explicit user control over the nature of variations.",
+      "category": "prior_work_limitation",
+      "evidence": [
+        {
+          "source": "§1 Introduction",
+          "text": "While successful at increasing diversity, these approaches do not offer explicit user control over the nature of the resulting variations. Consequently, differences across samples are driven by stochastic effects rather than explicit semantic factors."
+        },
+        {
+          "source": "§2 Related Work",
+          "text": "To overcome these limitations, Contextual Repulsion (Dahary et al., 2026) applies repulsion within the contextual attention space. Although this shift improves semantic awareness and sample variety, the method still relies on stochastic diversity without explicit control over specific semantic axes."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C4",
+      "statement": "Our method induces diversity at the text level rather than the pixel/latent level, enabled by recent T2I models trained on elaborated captions.",
+      "category": "method_fundamental_approach",
+      "evidence": [
+        {
+          "source": "§1 Introduction",
+          "text": "We exploit the fact that recent text-to-image models are trained on elaborated captions, effectively decoupling semantic decision-making from pixel generation. This enables a paradigm shift: instead of relying on stochastic variation within the text-to-image model, we induce diversity directly at the text level."
+        },
+        {
+          "source": "Abstract",
+          "text": "By leveraging rich textual representations, we allow a Vision Language Model (VLM) to operate on the full scene context."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C5",
+      "statement": "Three requirements (Semantic Structuring, Heterogeneity, Plausibility) are necessary for a tree to remain both diverse and navigable.",
+      "category": "method_formalization",
+      "evidence": [
+        {
+          "source": "§3.2 Tree Requirements",
+          "text": "(i) Semantic Structuring: All children of a parent node must be derived from a shared semantic aspect a. (ii) Heterogeneity: Each constraint c must realize the common aspect a in a unique manner. (iii) Plausibility: Each constraint c must be logically consistent with the original prompt p and the preceding constraints in its branch."
+        },
+        {
+          "source": "Figure 4",
+          "text": "Example tree showing Semantic Structuring (children vary on Interactions), Heterogeneity (Lively play vs. Co-existing), and Plausibility (Cat dominates without aggression under Co-existing)."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C6",
+      "statement": "The multi-agent workflow (Context Analyst, Brainstormer, Decision Maker, Critic) produces structured diversity on 50 MS-COCO prompts.",
+      "category": "experimental_result",
+      "evidence": [
+        {
+          "source": "§4 Experiments",
+          "text": "We conduct our evaluation on a subset of 50 prompts randomly sampled from the MS-COCO dataset (Lin et al., 2015)."
+        },
+        {
+          "source": "Table 1",
+          "text": "Semantic Browsing achieves Vendi: 3.34, DINO Sim.: 0.61, Aesthetic: 6.52, VQAScore: 0.90."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C7",
+      "statement": "Our method achieves superior Vendi Score (3.34) compared to all baselines.",
+      "category": "quantitative_result",
+      "evidence": [
+        {
+          "source": "Table 1",
+          "text": "Semantic Browsing (Ours): Vendi = 3.34; best baseline is CADS at 3.29."
+        },
+        {
+          "source": "§4.2 Quantitative Evaluation",
+          "text": "Our method achieves superior diversity, securing the highest Vendi Score (3.34) and the lowest DINO Similarity (0.61), significantly outperforming all competing approaches."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C8",
+      "statement": "Our method achieves the lowest DINO Similarity (0.61) compared to all baselines.",
+      "category": "quantitative_result",
+      "evidence": [
+        {
+          "source": "Table 1",
+          "text": "Semantic Browsing (Ours): DINO Sim. = 0.61; best baseline is Post-Hoc Diversity Opt. at 0.67."
+        },
+        {
+          "source": "§4.2 Quantitative Evaluation",
+          "text": "Our method achieves superior diversity, securing the highest Vendi Score (3.34) and the lowest DINO Similarity (0.61), significantly outperforming all competing approaches."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C9",
+      "statement": "High diversity is achieved without degrading image quality (Aesthetic Score 6.52, comparable to baselines).",
+      "category": "quantitative_result",
+      "evidence": [
+        {
+          "source": "Table 1",
+          "text": "Semantic Browsing: Aesthetic = 6.52; Baseline range: 6.28-6.56."
+        },
+        {
+          "source": "§4.2 Quantitative Evaluation",
+          "text": "This substantial expansion in semantic coverage is achieved while maintaining comparable Aesthetic Scores (6.52). This confirms that our framework successfully balances high-variance exploration with high image quality, avoiding the significant degradation often associated with maximizing diversity."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C10",
+      "statement": "Human evaluators prefer our method for both diversity and overall preference across all baseline comparisons.",
+      "category": "human_evaluation",
+      "evidence": [
+        {
+          "source": "§4.2 User Study",
+          "text": "We conducted a head-to-head human evaluation with 25 participants, utilizing 12 randomly selected prompts for each baseline comparison."
+        },
+        {
+          "source": "Figure 10",
+          "text": "Human Preference Study. Our method (Semantic Browsing) dominates in Diversity across all comparisons while consistently outperforming baselines in Overall Preference."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C11",
+      "statement": "Semantic distance between images correlates with topological distance in the generation tree (monotonic increase).",
+      "category": "structural_evaluation",
+      "evidence": [
+        {
+          "source": "§4.3 Structure Evaluation",
+          "text": "As the number of graph hops between two nodes increases, the median pairwise DINO distance rises monotonically (ranging from 0.168 at 1 hop to 0.452 at 5 hops)."
+        },
+        {
+          "source": "Figure 11",
+          "text": "Box plot showing the distribution of Pairwise DINO Distances as a function of graph distance. The clear upward trend validates that our generation tree creates a coherent semantic space."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C12",
+      "statement": "The tree achieves a Hierarchical Consistency score of 0.87/1.0 using LLM-as-a-judge.",
+      "category": "structural_evaluation",
+      "evidence": [
+        {
+          "source": "§4.3 Structure Evaluation",
+          "text": "Our framework achieves a high consistency score of 0.87 (out of 1.0), demonstrating that in the vast majority of cases, generated nodes successfully adhere to the cumulative constraints derived from the full root-to-node path."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C13",
+      "statement": "Removing Context Analyst reduces Hierarchical Consistency from 0.87 to 0.82 (Plausibility degradation).",
+      "category": "ablation",
+      "evidence": [
+        {
+          "source": "§4.4 Ablation Study, Table 3",
+          "text": "Full Workflow: VQAScore 0.90, Hierarchical Consistency 0.87. w/o Context Analyst: VQAScore 0.90, Hierarchical Consistency 0.82."
+        },
+        {
+          "source": "§4.4 Ablation Study",
+          "text": "This divergence confirms that the Context Analyst is specifically required to maintain contextual continuity, directly associated with the Plausibility requirement."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C14",
+      "statement": "Separating Brainstormer and Decision Maker improves global mean DINO distance by 7.2% (0.362 → 0.389).",
+      "category": "ablation",
+      "evidence": [
+        {
+          "source": "§4.4 Ablation Study, Table 2",
+          "text": "Full Workflow global mean: 0.389; Unified Agent global mean: 0.362."
+        },
+        {
+          "source": "§4.4 Ablation Study",
+          "text": "Separating these roles increases the global mean DINO distance from 0.362 (unified) to 0.389 (separated), representing a 7.2% relative improvement in overall diversity."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C15",
+      "statement": "Removing Critic reduces VQAScore from 0.90 to 0.87 (prompt adherence degradation).",
+      "category": "ablation",
+      "evidence": [
+        {
+          "source": "§4.4 Ablation Study, Table 3",
+          "text": "Full Workflow: VQAScore 0.90, Hierarchical Consistency 0.87. w/o Critic: VQAScore 0.87, Hierarchical Consistency 0.87."
+        },
+        {
+          "source": "§4.4 Ablation Study",
+          "text": "The drop in VQAScore confirms that the Critic is essential for preventing semantic drift, ensuring that the output remains prompt adherent."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C16",
+      "statement": "The framework is model-agnostic; it transfers to FLUX.2 as the rendering backbone.",
+      "category": "generalization",
+      "evidence": [
+        {
+          "source": "§4 Model-Agnostic Design",
+          "text": "While our experimental results are obtained using FIBO's generation pipeline, the proposed framework itself is model-agnostic and decoupled from the underlying rendering backbone. To demonstrate this, we utilize FIBO's VLM-based modules for prompt enhancement and scene refinement, while employing a distinct architecture, FLUX.2 (Labs, 2025), to render the final images. As shown in Figure 9, our framework successfully separates semantic control from rendering, ensuring consistent performance across different backbones."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C17",
+      "statement": "The framework is robust to VLM choice (Gemini 2.5 Flash vs. ChatGPT-5.5 yields similar results).",
+      "category": "robustness",
+      "evidence": [
+        {
+          "source": "Appendix E",
+          "text": "The results (Vendi: 3.30, Aesthetic: 6.72, VQAScore: 0.94) closely match those obtained with Gemini (Vendi: 3.34, Aesthetic: 6.52, VQAScore: 0.90), demonstrating that the proposed framework is robust across different VLM choices and is not tailored to a specific model."
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C18",
+      "statement": "43.7% of generated aspects are prompt-specific unique dimensions, demonstrating creative semantic variation.",
+      "category": "diversity_characterization",
+      "evidence": [
+        {
+          "source": "Appendix D",
+          "text": "Across 50 trees with 27 leaves, 284 of 650 aspects (43.7%) were unique (e.g. 'Umbrella's Functional State' for the prompt 'A woman holding an umbrella...' and 'Milking Stage Depicted' for the prompt 'A woman next to a cow...'), demonstrating the workflow's ability to uncover creative and highly specific semantic variations."
+        }
+      ],
+      "confidence": "high"
+    }
+  ]
+}

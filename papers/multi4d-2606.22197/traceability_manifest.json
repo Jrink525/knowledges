@@ -1,0 +1,313 @@
+{
+  "paper_id": "2606.22197",
+  "paper_title": "Multi4D: High-Fidelity Dynamic Gaussian Splatting via Multi-Level Competitive Allocation",
+  "manifest_version": "1.0",
+  "created_at": "2026-06-24T17:21:00Z",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim": "Multi-level Gaussian decomposition (static ℊₛ, persistent ℊ𝒹, transient ℊₜ) resolves tension between motion consistency and visual fidelity",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 1 (Introduction)",
+          "description": "Explicit statement of the fundamental tension and the three-subset decomposition as the solution",
+          "key_excerpt": "Instead of a monolithic representation, we distribute modeling capacity across three structured levels: static structure, persistent dynamic geometry, and transient appearance primitives."
+        },
+        {
+          "type": "section",
+          "location": "Section 3 (Method)",
+          "description": "Formal definition of ℊ = ℊₛ ∪ ℊ𝒹 ∪ ℊₜ and the bottom-up multi-level competitive allocation framework",
+          "key_excerpt": "We represent the scene as 𝒢 = 𝒢s ∪ 𝒢d ∪ 𝒢t: Static (𝒢s): time-invariant 3D Gaussians... Persistent Dynamic (𝒢d): canonical Gaussians driven by a geometric-only deformation field... Transient Dynamic (𝒢t): 4D spatiotemporal Gaussians modeling high-frequency appearance changes."
+        },
+        {
+          "type": "ablation",
+          "location": "Table 5, Section 5",
+          "description": "Ablation confirms both ℊ𝒹 and ℊₜ are necessary: w/o ℊ𝒹 → 32.78 PSNR; w/o ℊₜ → 32.86 PSNR; full → 33.92 PSNR",
+          "key_excerpt": "Removing ℊ𝒹 degrades reconstruction quality (32.78 PSNR)... Conversely, removing ℊₜ limits high-frequency appearance modeling, reducing PSNR to 32.86."
+        }
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "claim": "Competitive allocation via shared rasterization induces emergent specialization across subsets without pre-assigned roles",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 3.3 (Unified Multi4D Rendering)",
+          "description": "Shared transmittance accumulation couples gradients across subsets, forming the basis of cross-set competition",
+          "key_excerpt": "The shared transmittance accumulation couples their gradients and forms the basis of cross-set competition."
+        },
+        {
+          "type": "section",
+          "location": "Section 3",
+          "description": "Natural competition mechanism described",
+          "key_excerpt": "Once one subset explains a region, residual-driven densification in the remaining subsets is suppressed."
+        },
+        {
+          "type": "section",
+          "location": "Appendix 0.B (Analysis on Subset Specialization)",
+          "description": "Visualization and analysis of emergent subset specialization across three diverse benchmarks",
+          "key_excerpt": "This emergent specialization arises naturally from the competitive allocation mechanism. Because all subsets are jointly optimized through a shared renderer, each subset competes to explain photometric residuals while respecting its inductive bias."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 8 (Appendix)",
+          "description": "Visual breakdown showing ℊₛ captures background, ℊ𝒹 maintains coherent motion, ℊₜ activates for fire/smoke/specular highlights"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "claim": "SOTA novel view synthesis on multi-view dynamic scenes (Technicolor 34.30 PSNR, Neu3D 32.30 PSNR)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1 (Technicolor)",
+          "description": "Multi4D achieves 34.30 mean PSNR, surpassing STG (33.35), E-D3DGS (32.89), and 4DGS (32.07)",
+          "key_excerpt": "Our method improves PSNR by 0.95 dB over the strongest Gaussian baseline while achieving real-time rendering at 161 FPS."
+        },
+        {
+          "type": "table",
+          "location": "Table 2 (Neu3D)",
+          "description": "Multi4D achieves 32.30 mean PSNR, surpassing STG (32.04), 4DGS (31.57), and DeGauss (31.52)",
+          "key_excerpt": "Multi4D also achieves state-of-the-art results on Neu3D with superior reconstruction quality and 217 FPS."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 3",
+          "description": "Qualitative comparison on Technicolor shows Multi4D better preserves high-frequency dynamic details"
+        },
+        {
+          "type": "figure",
+          "location": "Figure 4",
+          "description": "Qualitative comparison on Neu3D shows Multi4D mitigates both over-smoothing (deformation methods) and broken geometry (4D-primitive methods)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "claim": "Best monocular dynamic reconstruction on NeRF-DS (23.69 PSNR)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 3 (NeRF-DS)",
+          "description": "Multi4D achieves 23.69 mean PSNR and 0.077 DSSIM, best among all compared methods",
+          "key_excerpt": "Multi4D leverages persistent Gaussians 𝒢d for coherent motion modeling and transient Gaussians 𝒢t for localized specular highlights, resulting in consistently stronger reconstructions."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 5",
+          "description": "Qualitative results on NeRF-DS: 4D-primitive methods degrade heavily under monocular supervision; Multi4D preserves coherent geometry and fine specular details"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "claim": "Significantly fewer dynamic primitives (25× reduction vs 4DGS)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 5 (Ablation Study & Efficiency Analysis)",
+          "description": "Explicit comparison: 165k dynamic Gaussians (13k ℊ𝒹 + 152k ℊₜ) vs 4.2M for 4DGS",
+          "key_excerpt": "Compared to 4DGS, Multi4D uses only 165k dynamic Gaussians — a 25× reduction from 4.2M — while improving PSNR to 33.92."
+        },
+        {
+          "type": "table",
+          "location": "Table 5",
+          "description": "Shows dynamic Gaussian count for each ablation configuration",
+          "key_excerpt": "Dyn. GS #: Dynamic Gaussians number, denoted as (Persistent 𝒢d + Transient 𝒢t)"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "claim": "Real-time rendering at 161-217 FPS",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1",
+          "description": "161 FPS on Technicolor (vs 86 STG, 114 4DGS)",
+          "key_excerpt": "161 FPS"
+        },
+        {
+          "type": "table",
+          "location": "Table 2",
+          "description": "217 FPS on Neu3D (vs 140 STG, 114 4DGS)",
+          "key_excerpt": "217 FPS"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "claim": "SOTA 4D segmentation accuracy (0.9142 mIoU on Neu3D-Mask)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 4",
+          "description": "Multi4D achieves 0.9142 mIoU and 0.9952 mAcc, surpassing TRASE (0.8932), SA4D (0.8832), and OpenGaussian (0.8178)",
+          "key_excerpt": "Multi4D also extends naturally to 4D Segmentation, achieving state-of-the-art 0.9142 mIoU on the Neu3D-Mask benchmark."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 6",
+          "description": "Qualitative: Multi4D produces sharper masks and more stable tracks than TRASE"
+        },
+        {
+          "type": "section",
+          "location": "Section 3.8",
+          "description": "Method description: semantic optimization on persistent subset only (ℊₚ = ℊₛ ∪ ℊ𝒹), discarding ℊₜ"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "claim": "10× faster 4D segmentation inference (204 FPS vs 21 FPS TRASE)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 4.2",
+          "description": "Our representation uses only 13k dynamic Gaussians (vs. 624k in TRASE), enabling 32-dimensional feature rendering at 204 FPS — nearly a 10× speedup over the 21 FPS baseline.",
+          "key_excerpt": "enabling 32-dimensional feature rendering at 204 FPS — nearly a 10× speedup over the 21 FPS baseline."
+        }
+      ]
+    },
+    {
+      "claim_id": "C9",
+      "claim": "Robust to sparse/monocular supervision, unlike 4D-primitive methods",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 3 (NeRF-DS)",
+          "description": "4D-primitive methods (4DGS: 21.51, STG: 22.54) degrade significantly. Multi4D achieves best 23.69 PSNR.",
+          "key_excerpt": "These methods lacking a holistic motion prior degrade significantly and often produce floating artifacts."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 5",
+          "description": "Qualitative visualization of monocular NeRF-DS results"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim": "4.6× faster training than 4DGS",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 5 (Ablation Study & Efficiency Analysis)",
+          "description": "Training converges in 1.2 hours versus 5.5 hours on a single RTX 4090",
+          "key_excerpt": "Training converges in 1.2 hours versus 5.5 hours on a single RTX 4090 (4.6× faster)."
+        }
+      ]
+    },
+    {
+      "claim_id": "C11",
+      "claim": "Self-supervised dynamic-static decomposition without ground-truth tracking labels",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 3.4",
+          "description": "Self-supervised decomposition based on asymmetric initialization and mask-guided supervision",
+          "key_excerpt": "Following the self-supervised dynamic-static separation strategy introduced in [39], we isolate persistent actors from the background without relying on ground-truth tracking labels."
+        },
+        {
+          "type": "appendix",
+          "location": "Appendix 0.C.3",
+          "description": "Detailed formulation of mask rendering, composite rendering, and separation loss",
+          "key_excerpt": "This decomposition is learned in a fully self-supervised manner through asymmetric initialization and mask-guided supervision."
+        },
+        {
+          "type": "figure",
+          "location": "Figure 9 (Appendix)",
+          "description": "Pipeline diagram of the self-supervised dynamic-static decomposition"
+        }
+      ]
+    },
+    {
+      "claim_id": "C12",
+      "claim": "Velocity-aware lifting with momentum inheritance provides strong motion priors for transient primitives",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 3.5",
+          "description": "Full description of velocity estimation, momentum inheritance, and period lifting procedure",
+          "key_excerpt": "Momentum inheritance provides a strong motion prior for the high-capacity transient subset, mitigating the instability of unconstrained 4D optimization under sparse or monocular supervision."
+        },
+        {
+          "type": "ablation",
+          "location": "Table 5",
+          "description": "w/o Periodic Lifting reduces PSNR by 0.70 dB (33.92 → 33.22)",
+          "key_excerpt": "Replacing velocity-aware lifting with random initialization reduces PSNR by 0.70 dB."
+        },
+        {
+          "type": "section",
+          "location": "Appendix 0.C.5",
+          "description": "Implementation details: lifting starts at iteration 6000, performed every 50 iterations until 10000, K=2000, threshold τ=0.05"
+        }
+      ]
+    },
+    {
+      "claim_id": "C13",
+      "claim": "Mask-aware utility-based pruning prevents temporal over-parameterization",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 3.6",
+          "description": "Full description of peak visible contribution scoring with foreground-background-aware gating",
+          "key_excerpt": "This foreground–background-aware gating ensures that persistent and static primitives contribute only within their assigned regions, preventing cross-set overlap."
+        },
+        {
+          "type": "ablation",
+          "location": "Table 5",
+          "description": "w/o Mask-Aware Pruning increases dynamic Gaussians to 729k and storage by 145%",
+          "key_excerpt": "Without the mask-aware utility-based pruning, temporal over-parameterization re-emerges."
+        }
+      ]
+    },
+    {
+      "claim_id": "C14",
+      "claim": "Model size reduction: 214.7 MB vs 2.6 GB for 4DGS (12× reduction)",
+      "confidence": "high",
+      "evidence": [
+        {
+          "type": "section",
+          "location": "Section 5",
+          "description": "Model size comparison",
+          "key_excerpt": "Model size drops from 2.6 GB to 214.7 MB"
+        },
+        {
+          "type": "table",
+          "location": "Table 5",
+          "description": "Storage column shows 214.7 MB for full Multi4D vs 2.6 GB for baseline 4DGS"
+        }
+      ]
+    },
+    {
+      "claim_id": "C15",
+      "claim": "Subset specialization is robust to hyperparameter variation",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "type": "appendix",
+          "location": "Appendix 0.E.2, Table 6",
+          "description": "Sensitivity sweeps over 5 hyperparameters show at most -0.28 dB PSNR variation from reference",
+          "key_excerpt": "Sweeps over regularizers, lifting count, and mask-score threshold remain close to the reference setting, indicating robustness to exact hyperparameters."
+        }
+      ]
+    }
+  ]
+}

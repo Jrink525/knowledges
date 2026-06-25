@@ -1,0 +1,135 @@
+{
+  "paper": "MemSlides: A Hierarchical Memory Driven Agent Framework for Personalized Slide Generation with Multi-turn Local Revision",
+  "arxiv_id": "2606.17162",
+  "direction_board": {
+    "metadata": {
+      "description": "Ranked research seeds derived from MemSlides' limitations, unexplored edges, and adjacent open problems in personalized presentation generation.",
+      "ranking_criteria": [
+        "Practical impact — How many users/systems would benefit?",
+        "Novelty gap — How underexplored is this direction?",
+        "Feasibility — Can a meaningful minimal experiment be designed?",
+        "Measurability — Can results be clearly evaluated?",
+        "Synergy with MemSlides — Builds on or extends the framework"
+      ]
+    },
+    "ranked_seeds": [
+      {
+        "rank": 1,
+        "seed_name": "Cold-Start Profile Induction from Minimal Feedback",
+        "rationale": "MemSlides assumes pre-existing profile memory. In practice, new users have no history. Learning accurate profiles from zero prior knowledge (or very few interactions) is critical for real-world deployment.",
+        "gap": "Profile cold start is explicitly called out as a limitation (§9). No evaluation of few-shot or zero-shot profile initialization exists.",
+        "suggested_validation_experiment": {
+          "design": "A/B comparison: (A) MemSlides with empty profile vs. (B) MemSlides with profiles induced from N interactions (N = 1, 3, 5). Use the multi-persona profile bank for ground truth. Measure coverage of ground-truth preferences and persona-alignment scores.",
+          "metrics": ["Preference recall@N", "Persona-alignment score vs. ground truth", "Number of turns to converge to baseline profile performance"],
+          "expected_outcome": "Convergence within 3-5 interactions for common preference dimensions (theme, layout), slower for nuanced dimensions (content specificity, visual style gradations).",
+          "difficulty": "medium",
+          "estimated_effort": "2-4 weeks (build profile induction prompts + evaluation pipeline)"
+        },
+        "seed_type": "extension"
+      },
+      {
+        "rank": 2,
+        "seed_name": "Implicit Preference Conflict Detection from Revision Behavior",
+        "rationale": "The current reconciliation function ℛ only handles explicit conflicts (request contradicted by profile). Users may subtly contradict profile items through indirect revision behavior, leading to gradual profile drift or user frustration.",
+        "gap": "Implicit conflict detection is not addressed. When a user repeatedly edits generated slides in ways that silently contradict stored preferences, the system has no mechanism to detect or adapt.",
+        "suggested_validation_experiment": {
+          "design": "Construct a test suite where user behavior systematically deviates from profile (e.g., profile says 'formal academic template', user repeatedly switches to 'modern minimalist'). Measure: (a) detection rate of silent conflicts by an explicit conflict monitor vs. baseline monitoring; (b) time-to-detection.",
+          "metrics": ["Implicit conflict detection rate", "False positive rate", "Detection latency (in revision turns)", "User satisfaction delta after detection + adaptation"],
+          "expected_outcome": "Explicit monitors can detect ~60-70% of implicit conflicts within 2 turns; full detection requires behavioral pattern analysis across 3+ turns.",
+          "difficulty": "hard",
+          "estimated_effort": "4-8 weeks (behavior tracking + conflict classifier + controlled user study)"
+        },
+        "seed_type": "extension"
+      },
+      {
+        "rank": 3,
+        "seed_name": "Strict Verification Improvement via Multi-Agent Consensus",
+        "rationale": "The strict verification rate of 0.534 (with tool memory) is a clear weak point. Automated verification of slide edits is hard because correctness is subjective and context-dependent. Multi-agent consensus (multiple verifier agents debating or voting) may improve reliability.",
+        "gap": "Single-verifier ceiling at ~53% strict verification. Prior work in LLM self-verification shows multi-agent approaches can improve accuracy (e.g., Du et al. 2023, collaborative debate).",
+        "suggested_validation_experiment": {
+          "design": "Compare variants: (A) single verifier LLM, (B) verifier with 3-agent consensus voting, (C) verifier with adversarial debate (proposer vs. critic vs. arbiter). Test on the diagnostic matched-pair modify task from the paper.",
+          "metrics": ["Strict verification accuracy", "False acceptance rate", "False rejection rate", "Time overhead per verification", "Verification when ground truth is known"],
+          "expected_outcome": "3-agent consensus would improve strict verify to ~0.65-0.70; adversarial debate may reach ~0.75-0.80 but with 3× time cost.",
+          "difficulty": "medium-hard",
+          "estimated_effort": "3-6 weeks (build multi-agent verifier + test suite from paper's modify pairs)"
+        },
+        "seed_type": "improvement"
+      },
+      {
+        "rank": 4,
+        "seed_name": "Tool Memory Transfer Across Presentation Platforms",
+        "rationale": "MemSlides' tool memory captures execution experience for its own slide engine. Real-world users work across PowerPoint, Google Slides, Keynote, and web-based tools. Cross-platform transfer of tool memory would dramatically increase practical value.",
+        "gap": "Tool memory is platform-specific in the current implementation. No investigation of transfer learning across presentation tool interfaces.",
+        "suggested_validation_experiment": {
+          "design": "Build a platform abstraction layer mapping tool operations (write, inspect, patch, style) to 2-3 target platforms (e.g., python-pptx for PowerPoint, Google Slides API, Reveal.js for web). Measure: (a) tool memory reuse rate across platforms, (b) adaptation cost per new platform, (c) edit completion accuracy on each platform.",
+          "metrics": ["Cross-platform tool chain reuse rate", "Time to first successful edit on new platform", "Edit accuracy per platform"],
+          "expected_outcome": "Operation-scope tool chains (abstract reasoning patterns) transfer well (~70% reuse); round-scope task experience (platform-specific commands) transfers poorly (~20% reuse).",
+          "difficulty": "hard",
+          "estimated_effort": "8-12 weeks (platform abstraction + 2-3 target implementations + evaluation)"
+        },
+        "seed_type": "extension"
+      },
+      {
+        "rank": 5,
+        "seed_name": "Personalized Slide Generation with Multi-Modal Memory",
+        "rationale": "MemSlides currently handles text and structural slide content. Many slide decks rely on charts, diagrams, embedded media, and data visualizations. Extending memory to cover multi-modal elements would expand personalization to richer presentation types.",
+        "gap": "No multi-modal personalization memory in current framework. Users cannot store preferences for chart types, color palettes, data visualization styles, or media embeddings.",
+        "suggested_validation_experiment": {
+          "design": "Extend user profile memory with multi-modal dimensions (chart type preference, data visualization style, image selection criteria). Create a multi-modal profile bank (3 personas, 3 intents). Measure persona alignment on multi-modal slide generation.",
+          "metrics": ["Multi-modal persona alignment score", "Chart type consistency across jobs", "Visual element preference recall"],
+          "expected_outcome": "Multi-modal profiles would improve chart-type alignment by ~1.5-2.0 points on a 10-point scale compared to text-only profile baselines.",
+          "difficulty": "hard",
+          "estimated_effort": "8-12 weeks (multi-modal profile schema + generation support + evaluation bank)"
+        },
+        "seed_type": "extension"
+      },
+      {
+        "rank": 6,
+        "seed_name": "Privacy-Preserving Profile Sharing Across User Cohorts",
+        "rationale": "If MemSlides is deployed at scale, the system learns profiles for many users. Privacy-preserving profile sharing (e.g., differential privacy, federated profile consolidation) could enable cold-start personalization for new users by leveraging cohort patterns.",
+        "gap": "No exploration of multi-user profile sharing or privacy-preserving personalization. The current framework treats each user's profile in isolation.",
+        "suggested_validation_experiment": {
+          "design": "Simulate a user cohort with N personas, each with M users. Compare: (A) isolated profiles, (B) k-anonymized cohort profile templates, (C) differentially-private cohort template (ε = 1, 5, 10). Measure template utility for cold-start users.",
+          "metrics": ["Cold-start persona alignment (cohort template vs. isolated)", "Privacy loss budget (ε)", "Profile convergence rate"],
+          "expected_outcome": "Cohort templates provide ~50-60% of isolated profile benefit during cold start with ε ≥ 5; tradeoff sharpens below ε = 1.",
+          "difficulty": "hard",
+          "estimated_effort": "6-10 weeks (privacy mechanism integration + simulation framework)"
+        },
+        "seed_type": "exploration"
+      },
+      {
+        "rank": 7,
+        "seed_name": "Intent Drift Detection in Long-Term Personalization",
+        "rationale": "User preferences evolve. A graduate student who becomes a professor will have different presentation needs. Current MemSlides has no mechanism to detect when a user's intent has fundamentally shifted or when multiple intents have merged.",
+        "gap": "Static profile buckets by intent. No detection of intent drift or evolution over time.",
+        "suggested_validation_experiment": {
+          "design": "Simulate user evolution scenarios over 20+ sessions: (A) gradual intent drift (academic → industry talk), (B) abrupt intent change (new project), (C) intent merge (teaching + research). Measure detection accuracy and profile adaptation quality.",
+          "metrics": ["Intent drift detection accuracy", "Time (in sessions) to profile adaptation", "User satisfaction after vs. before adaptation"],
+          "expected_outcome": "Gradual drift detection is harder (requires 5+ sessions); abrupt changes are detectable within 1-2 sessions via revision behavior divergence.",
+          "difficulty": "hard",
+          "estimated_effort": "6-10 weeks (intent drift simulation + detection module + longitudinal evaluation)"
+        },
+        "seed_type": "exploration"
+      },
+      {
+        "rank": 8,
+        "seed_name": "Optimal Planning for Non-Linear Revision Sequences",
+        "rationale": "MemSlides handles discrete feedback → edit turns. But real slide authoring involves non-linear revision: users may want to undo an earlier change, branch from a previous version, or batch multiple pending changes into one coherent edit. The Plan phase could support trip planning over edit dependencies.",
+        "gap": "The current framework assumes a linear sequence of independent revision turns. No investigation of edit dependency graphs or transactional batch operations.",
+        "suggested_validation_experiment": {
+          "design": "Extend Plan to accept a dependency graph of pending changes. Compare: (A) sequential per-turn edits (current), (B) dependency-aware batched edits. Build a test suite of 10 multi-turn revision scenarios with known dependency structures.",
+          "metrics": ["Number of edit turns to convergence", "Edit consistency (conflicts resolved automatically)", "User effort score (fewer interactions)"],
+          "expected_outcome": "Dependency-aware batching reduces turn count by 30-50% on scenarios with 3+ pending interdependent changes; no significant difference on single-turn edits.",
+          "difficulty": "medium",
+          "estimated_effort": "4-8 weeks (dependency graph planner + batch execution + test suite)"
+        },
+        "seed_type": "improvement"
+      }
+    ],
+    "recommended_first_steps": [
+      "Rank 1 (Cold-Start Profile Induction) is the most impactful near-term extension — directly addresses a recognized limitation, requires modest effort, and has clear evaluation methodology using the existing profile bank.",
+      "Rank 3 (Strict Verification via Multi-Agent Consensus) addresses the clearest numerical weakness (0.534 strict verify) and could produce immediate quality improvements.",
+      "Rank 4 (Cross-Platform Tool Memory Transfer) has the highest practical impact potential but requires significant infrastructure investment."
+    ]
+  }
+}

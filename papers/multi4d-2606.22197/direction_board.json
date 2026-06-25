@@ -1,0 +1,172 @@
+{
+  "paper_id": "2606.22197",
+  "paper_title": "Multi4D: High-Fidelity Dynamic Gaussian Splatting via Multi-Level Competitive Allocation",
+  "board_version": "1.0",
+  "created_at": "2026-06-24T17:21:00Z",
+  "ranked_directions": [
+    {
+      "rank": 1,
+      "title": "Post-Training Deformation Distillation & Gaussian Quantization",
+      "seed_confidence": "high (explicitly mentioned by authors as limitation)",
+      "motivation": "Multi4D achieves structural compactness (25× fewer primitives) but does not apply explicit attribute compression. The 214.7 MB model could be significantly smaller.",
+      "research_questions": [
+        "Can we distill the HexPlane deformation field into a lightweight MLP or lookup table without quality loss?",
+        "What is the optimal quantization strategy for the three different subset types (static, persistent, transient) given their different roles?",
+        "Can we achieve sub-50 MB model size while maintaining SOTA rendering quality?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "Neu3D (Cut Beef + Cook Spinach — 2 scenes)",
+        "architecture": "Apply 8-bit quantization to SH coefficients and Gaussian covariance parameters; apply weight clustering to HexPlane deformation field",
+        "baseline": "Multi4D full-precision (33.92 PSNR, 214.7 MB)",
+        "expected_outcome": "30-50% storage reduction with <0.1 dB PSNR drop; identify which subset tolerates the most aggressive compression",
+        "compute_budget": "< 1 GPU-hour on RTX 4090"
+      },
+      "key_papers": [
+        "MEGA [53]: Memory-efficient 4DGS via temporal sensitivity analysis",
+        "OM-4DGS [18]: Optimized minimal 4D Gaussian splatting"
+      ]
+    },
+    {
+      "rank": 2,
+      "title": "Feed-Forward / One-Shot Dynamic Scene Reconstruction",
+      "seed_confidence": "medium (suggested in Appendix 0.F.3 as future direction)",
+      "motivation": "Multi4D and all current dynamic GS methods require per-scene optimization (20k iterations, ~1.2h). Feed-forward approaches could enable real-time reconstruction from monocular video.",
+      "research_questions": [
+        "Can we train a feed-forward network that predicts the three-level decomposition (ℊₛ, ℊ𝒹, ℊₜ) directly from video input?",
+        "How should the inductive biases (inverse expressiveness initialization) be encoded in a feed-forward architecture?",
+        "Can competitive allocation emerge from a single forward pass rather than iterative optimization?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "PointOdyssey [54] synthetic dataset or Aria Digital Twin [30]",
+        "architecture": "Small transformer-based predictor that takes video frame features + depth and outputs three Gaussian sets; fine-tune with ℒ_total from Multi4D",
+        "baseline": "Multi4D per-scene optimization quality",
+        "expected_outcome": "50-80% of per-scene optimization quality with <100 ms inference; identify the hardest scenes for feed-forward prediction",
+        "compute_budget": "4-8 GPU-days on RTX 4090 (pretraining on synthetic data)"
+      },
+      "key_papers": [
+        "Feed-forward bullet-time [23]: Monocular video → dynamic reconstruction",
+        "Instant4D [27]: 4D Gaussian splatting in minutes"
+      ]
+    },
+    {
+      "rank": 3,
+      "title": "Temporally-Consistent Dynamic Scene Editing Using Decomposed Representation",
+      "seed_confidence": "medium (natural extension of Multi4D's structured decomposition)",
+      "motivation": "Multi4D's explicit separation into static, persistent-dynamic, and transient components enables direct editing of each layer independently while preserving temporal consistency.",
+      "research_questions": [
+        "Can we edit the static background without affecting moving objects by modifying only ℊₛ?",
+        "Can we replace or remove moving objects by operating on ℊ𝒹 while ℊₜ automatically adapts?",
+        "Can we alter appearance (e.g., relighting) by constraining ℊₜ while preserving ℊ𝒹 geometry?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "Neu3D (Coffee Martini — complex background + moving object)",
+        "architecture": "Freeze ℊ𝒹 and ℊₜ, re-optimize ℊₛ with edited background texture; vice versa edit ℊ𝒹 to remove/relocate objects",
+        "baseline": "TRASE [21] editing or ground-truth masked composition",
+        "expected_outcome": "Plausible edited renderings with temporal consistency; quantify editing fidelity via user study or FID",
+        "compute_budget": "1-2 GPU-hours on RTX 4090 per editing operation"
+      },
+      "key_papers": [
+        "SC-GS [9]: Sparse-controlled GS for editable dynamic scenes",
+        "TRASE [21]: Tracking-free 4D segmentation and editing"
+      ]
+    },
+    {
+      "rank": 4,
+      "title": "Multi-Scale Transient Modeling with Hierarchical Temporal Granularity",
+      "seed_confidence": "medium (addressing why ℊₜ has only one level)",
+      "motivation": "Multi4D uses a single transient level ℊₜ. But dynamic scenes have phenomena at multiple temporal scales (e.g., smoke vs. cloth fluttering vs. specular flash). Hierarchical transient levels could improve efficiency.",
+      "research_questions": [
+        "Should transient modeling be further decomposed into multiple temporal-frequency bands (low-freq transient vs. high-freq transient)?",
+        "Can we apply different 4D covariance regularization based on the expected temporal frequency of each transient primitive?",
+        "Would multiple transient levels improve generalization to scenes with both slow and fast transient effects?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "Technicolor (Theater — has diverse temporal phenomena) + NeRF-DS (all scenes)",
+        "architecture": "Add a second transient level ℊₜ₂ with larger temporal variance (more persistent, fewer primitives); modify ℒ_diversity to also penalize overlap between ℊₜ₁ and ℊₜ₂",
+        "baseline": "Multi4D single-level transient",
+        "expected_outcome": "Similar or better PSNR with 10-20% further reduction in total transient primitives; better separation of e.g., fire (long-lived) vs. specular glints (very short-lived)",
+        "compute_budget": "2-3 GPU-hours per scene on RTX 4090"
+      },
+      "key_papers": [
+        "D²NeRF [43]: Self-supervised decoupling of dynamic/static",
+        "Motion Layering [5]: 4D Gaussian videos with motion layering"
+      ]
+    },
+    {
+      "rank": 5,
+      "title": "End-to-End Open-Vocabulary 4D Segmentation with Multi4D Features",
+      "seed_confidence": "medium (current pipeline has two-stage: reconstruction → semantic)",
+      "motivation": "Multi4D provides compact persistent Gaussians (13k dynamic) ideal for semantic embedding. Current pipeline reconstructs first, then adds semantics. Joint optimization could improve both tasks.",
+      "research_questions": [
+        "Can semantic feature learning be integrated into the reconstruction phase to jointly optimize geometry and semantics?",
+        "Would joint optimization improve tracking accuracy through semantic-aware deformation fields?",
+        "Can CLIP/DINO features be directly distilled into ℊ𝒹 Gaussians during training?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "Neu3D-Mask [21] (all 5 scenes with mask annotations)",
+        "architecture": "Add semantic feature head to ℊ𝒹 during Phase II of Multi4D training; apply contrastive loss alongside ℒ_color",
+        "baseline": "Multi4D two-stage pipeline + TRASE",
+        "expected_outcome": "0.920+ mIoU (+0.006 over two-stage); potentially cleaner segmentation boundaries; slightly slower training but faster inference",
+        "compute_budget": "3-5 GPU-hours per scene on RTX 4090"
+      },
+      "key_papers": [
+        "TRASE [21]: Tracking-free 4D segmentation",
+        "OpenGaussian [44]: Point-level open-vocabulary Gaussian understanding",
+        "SA4D [10]: Segment any 4D Gaussians"
+      ]
+    },
+    {
+      "rank": 6,
+      "title": "All-Point Tracking via Persistent Gaussian Correspondence",
+      "seed_confidence": "low-medium (briefly mentioned in Appendix 0.F.3)",
+      "motivation": "Multi4D's persistent Gaussians ℊ𝒹 maintain temporal identity through the deformation field, providing a natural substrate for long-term point tracking without per-frame correspondence.",
+      "research_questions": [
+        "How do tracking accuracy metrics (e.g., from TAP-Vid benchmark) compare between Multi4D Gaussian tracks and dedicated tracking methods (CoTracker)?",
+        "Can ℊ𝒹 centroid trajectories directly serve as point tracks with sub-pixel accuracy?",
+        "What is the minimum number of persistent Gaussians needed for reliable tracking?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "PointOdyssey [54] synthetic benchmark with ground-truth point trajectories",
+        "architecture": "Extract ℊ𝒹 centroid trajectories from Multi4D reconstruction; compare against ground-truth point tracks using standard tracking metrics (trajectory accuracy, occlusion accuracy)",
+        "baseline": "CoTracker [12] — state-of-the-art point tracking",
+        "expected_outcome": "Competitive tracking accuracy in well-textured regions; worse in textureless regions where persistent Gaussians are sparse; identify failure modes",
+        "compute_budget": "2 GPU-hours on RTX 4090 (inference only, Multi4D already trained)"
+      },
+      "key_papers": [
+        "CoTracker [12]: Joint tracking of points in video",
+        "Dynamic 3D Gaussians (Tracking by NVS) [26]"
+      ]
+    },
+    {
+      "rank": 7,
+      "title": "Multi4D for Egocentric / Surgical Video Reconstruction",
+      "seed_confidence": "low (domain adaptation; Multi4D authors have prior work in surgical domain [38])",
+      "motivation": "Multi4D was evaluated on multi-view lab settings and monocular specular scenes. Egocentric video (e.g., surgical procedures, AR/VR) presents unique challenges: rapid camera motion, self-occlusion, deformation of non-rigid tissues.",
+      "research_questions": [
+        "Can Multi4D handle the extreme camera motion typical of egocentric videos?",
+        "How does the competitive allocation perform for surgical scenes where both tool (rigid motion) and tissue (non-rigid deformation) occur?",
+        "Can ℊₜ model surgical smoke, blood splatter, and instrument reflections?"
+      ],
+      "minimal_validation_experiment": {
+        "dataset": "POV-Surgery [38] (egocentric surgical video dataset from same lab group)",
+        "architecture": "Apply Multi4D training pipeline directly to POV-Surgery sequences; evaluate rendering quality + dynamic mask quality",
+        "baseline": "Def-3DGS [48], 4DGS [47] on same sequences",
+        "expected_outcome": "Multi4D should outperform baselines for specular surgical scenes; key failure mode: very rapid camera motion may break COLMAP initialization for ℊₛ",
+        "compute_budget": "1-2 GPU-hours per sequence on RTX 4090"
+      },
+      "key_papers": [
+        "POV-Surgery [38]: Egocentric hand and tool pose estimation during surgical activities",
+        "EgoGaussian [52]: Dynamic scene understanding from egocentric video"
+      ]
+    }
+  ],
+  "ranking_rationale": {
+    "criteria": [
+      "Feasibility (can be validated with small compute within existing Multi4D codebase)",
+      "Impact (addresses a clear limitation or opens a significant new capability)",
+      "Immediacy (leverages existing Multi4D outputs without major architectural changes)",
+      "Novelty (not already covered by concurrent work)"
+    ],
+    "notes": "Rank 1 (compression) is the most immediately actionable since the authors explicitly identify it. Rank 2 (feed-forward) is higher risk but highest long-term impact. Ranks 3-5 leverage Multi4D's core strength (structured decomposition) for new capabilities. Ranks 6-7 are speculative extensions to new applications."
+  }
+}

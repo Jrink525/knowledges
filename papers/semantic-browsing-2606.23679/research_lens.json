@@ -1,0 +1,123 @@
+{
+  "lens_id": "semantic-browsing-2606.23679-research-lens",
+  "paper_title": "Semantic Browsing: Controllable Diversity for Image Generation",
+  "problem_reconstruction": {
+    "original_task": "Diversity in Text-to-Image Generation",
+    "reformulated_task": "Controlled Semantic Diversity — generating structured, navigable image galleries where each variation corresponds to a specific, user-understandable semantic decision, rather than stochastic sampling noise.",
+    "why_new_formulation": {
+      "shortcomings_of_prior_work": [
+        "Prior diversity methods (CADS, Particle Guidance, SGI, Contextual Repulsion) produce variations driven by stochastic effects, not explicit semantic factors",
+        "Users lack control over what aspects of the scene vary",
+        "Generated outputs collapse into a single semantic mode even when diverse seeds are used",
+        "Existing methods treat outputs as independent samples, ignoring structural relationships"
+      ],
+      "unexploited_opportunity": "Recent T2I models trained on elaborated captions decouple semantic decision-making from pixel generation, enabling precise text-level control — a capability prior diversity methods have not leveraged.",
+      "key_insight": "Strong prompt adherence is not a limitation on diversity but an enabler for precise semantic control. Diversity can be induced at the text level by constructing structured prompt alternatives."
+    },
+    "research_formula": {
+      "input": "User prompt $p$ (potentially under-specified)",
+      "output": "A rooted tree $(V, E)$ where each node is a fully specified scene interpretation $s \\in \\mathcal{S}$, and edges represent atomic semantic constraints",
+      "objective_requirements": [
+        "Semantic Structuring: Children share a common aspect",
+        "Heterogeneity: Each constraint instantiates the aspect uniquely",
+        "Plausibility: All constraints remain logically consistent with the prompt and prior constraints"
+      ],
+      "optimization_tradeoff": "Maximize semantic diversity while maintaining image quality, prompt adherence, and hierarchical consistency"
+    }
+  },
+  "challenge_module_mapping": {
+    "challenges": [
+      {
+        "challenge": "Identifying which aspects of a scene are flexible for modification without violating prompt intent",
+        "module": "Context Analyst",
+        "method": "Explicitly distinguishes explicit specifications (enforced by prompt or constraints) from unconstrained details filled in by the VLM. Isolates mutable details {d_i} for modification.",
+        "verification": "Ablation study shows Hierarchical Consistency drops from 0.87 to 0.82 without Context Analyst (Table 3)"
+      },
+      {
+        "challenge": "Synthesizing low-level mutable details into high-level semantic aspects for structured exploration",
+        "module": "Brainstormer",
+        "method": "Applies inductive reasoning to aggregate several low-level details into one high-level aspect. Evaluates candidate aspects for impact magnitude on narrative, layout, and style.",
+        "verification": "Separating Brainstormer from Decision Maker improves global DINO distance by 7.2% (Table 2)"
+      },
+      {
+        "challenge": "Selecting the most impactful semantic dimension and instantiating diverse alternatives",
+        "module": "Decision Maker",
+        "method": "Evaluates prompt-dependent candidate aspects, selects one high-impact dimension a*, and formulates widely divergent semantic constraints {c_i} that offer distinct interpretations.",
+        "verification": "Ablation shows unified Brainstormer+Decision Maker yields lower diversity (0.362 vs 0.389 global DINO mean)"
+      },
+      {
+        "challenge": "Ensuring proposed variations maintain logical consistency with the original prompt and accumulated constraints",
+        "module": "Critic",
+        "method": "Validates proposed constraints against the prompt p and constraint trajectory Cs. Identifies contradictions. Refines candidate set into precise, executable instructions.",
+        "verification": "VQAScore drops from 0.90 to 0.87 without Critic (Table 3)"
+      },
+      {
+        "challenge": "Encoding complex scene semantics for fine-grained control",
+        "module": "Structured JSON Scene Representation",
+        "method": "Fully specified scene interpretations S encoded as structured JSONs, allowing fine-grained control over objects, attributes, and global scene properties.",
+        "verification": "Qualitative results (Figures 7-9) demonstrate fine-grained semantic control across diverse prompts"
+      },
+      {
+        "challenge": "Constructing a navigable hierarchy where each branch explores one semantic dimension at a time",
+        "module": "Tree Growth + 'Preserve' Branches",
+        "method": "Each branching point corresponds to one semantic aspect. 'Preserve' branches propagate unchanged states, allowing exploration along other dimensions from the same parent.",
+        "verification": "Semantic-Topological Correlation: monotonic increase in DINO distance from 0.168 (1 hop) to 0.452 (5 hops) (Figure 11)"
+      }
+    ]
+  },
+  "key_design_decisions": [
+    {
+      "decision": "Text-level diversity over latent-level diversity",
+      "rationale": "Leverages strong prompt adherence of modern T2I models. Enables interpretable and controllable variations.",
+      "alternative_considered": "Stochastic variation in latent space (prior work), post-hoc selection from large candidate pools",
+      "empirical_support": "Outperforms all latent-level and post-hoc baselines in Vendi, DINO, and human preference"
+    },
+    {
+      "decision": "Hierarchical tree over flat set generation",
+      "rationale": "Provides structured navigation, semantic inheritance, and traceable variation paths.",
+      "alternative_considered": "Flat independent generation (baseline methods)",
+      "empirical_support": "Semantic-Topological Correlation confirms tree encodes meaningful relationships; hierarchical consistency score 0.87"
+    },
+    {
+      "decision": "Multi-agent decomposition (4 agents) over single agent",
+      "rationale": "Each requirement (Structuring, Heterogeneity, Plausibility) needs specialized reasoning. Single agent cannot balance all three simultaneously.",
+      "alternative_considered": "Unified single agent (ablated in §4.4)",
+      "empirical_support": "Unified agent yields 7.2% lower diversity; Context Analyst and Critic each have measurable contributions"
+    },
+    {
+      "decision": "Automatic tree expansion + interactive browsing",
+      "rationale": "Provides both fully automatic gallery generation and user-driven selective exploration.",
+      "alternative_considered": "Exhaustive exploration (computationally prohibitive)",
+      "empirical_support": "Scaling ablation shows manageable tradeoffs between depth, width, and performance"
+    }
+  ],
+  "evaluation_framework": {
+    "primary_metrics": [
+      {"name": "Vendi Score", "domain": "Diversity", "space": "Inception features", "target": "Maximize"},
+      {"name": "DINO Similarity", "domain": "Diversity", "space": "Pairwise DINOv2", "target": "Minimize"},
+      {"name": "Aesthetic Score", "domain": "Image Quality", "space": "LAION predictor", "target": "Maximize"},
+      {"name": "VQAScore", "domain": "Prompt Adherence", "space": "Image-to-text VQA", "target": "Maximize"}
+    ],
+    "novel_metrics": [
+      {
+        "name": "Semantic-Topological Correlation",
+        "method": "Pairwise DINO distance vs. graph distance (path length in hops)",
+        "purpose": "Validate Semantic Structuring — topological neighbors should be semantically close",
+        "result": "Monotonic increase from 0.168 (1 hop) to 0.452 (5 hops)"
+      },
+      {
+        "name": "Hierarchical Consistency",
+        "method": "LLM-as-a-judge measuring alignment between node and inherited constraints",
+        "purpose": "Validate Plausibility — generated nodes must respect ancestor constraints",
+        "result": "Score 0.87/1.0"
+      }
+    ],
+    "human_evaluation": {
+      "participants": 25,
+      "prompts": 12,
+      "comparisons": ["CADS", "Guidance Interval", "Power-Law CFG", "Post-Hoc Optimization"],
+      "dimensions": ["Diversity", "Overall Preference"],
+      "result": "Dominates in Diversity across all comparisons; holds majority for Overall Preference"
+    }
+  }
+}

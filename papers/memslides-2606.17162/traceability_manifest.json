@@ -1,0 +1,162 @@
+{
+  "paper": "MemSlides: A Hierarchical Memory Driven Agent Framework for Personalized Slide Generation with Multi-turn Local Revision",
+  "arxiv_id": "2606.17162",
+  "traceability_manifest": [
+    {
+      "claim_id": "C1",
+      "claim": "Multi-turn localized revision preserves already-aligned content while satisfying requested changes.",
+      "evidence_type": "design_analysis_and_qualitative",
+      "evidence": [
+        {
+          "source": "Method Sec 3.2 - Localized Modify Execution: Plan-Act-Guard loop.",
+          "detail": "The framework projects feedback onto the smallest affected slide region, reads only the local surface (layout, selectors, style rules), and writes only scoped patches. Both reading and writing stay local by construction.",
+          "location": "web_fetch HTML extract, Section 3.2, paragraphs on modify execution"
+        },
+        {
+          "source": "Qualitative results Sec 4.2 - Localized modification case studies.",
+          "detail": "Qualitative examples show targeted patches preserving already aligned content while satisfying local changes (e.g., color scheme update without touching content/layout).",
+          "location": "web_fetch HTML extract, Section 4.2 qualitative analysis"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C2",
+      "claim": "User profile memory improves round-0 persona alignment across multiple dimensions.",
+      "evidence_type": "quantitative_experiment",
+      "evidence": [
+        {
+          "source": "Table 1 - All-column wins over both baselines on GLM-5 and Gemini 3.1 Pro evaluations.",
+          "detail": "Persona-alignment judgments: Content +2.73 over SlideTailor, Structure +2.95, Visual +2.79, Specificity +3.08. These are averaged gains across the shared multi-profile comparison suite.",
+          "location": "web_fetch HTML extract, Experimental Results section, Table 1"
+        },
+        {
+          "source": "User Profile Memory lifecycle design (Sec 3.3).",
+          "detail": "Profile memory stores intent-conditioned preferences organized by theme, content, visual, layout, template, and general dimensions.",
+          "location": "web_fetch HTML extract, Section 3.3"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C3",
+      "claim": "MemSlides maintains competitive deck quality while adding personalization.",
+      "evidence_type": "quantitative_experiment",
+      "evidence": [
+        {
+          "source": "Table 2 - GPT-5 quality evaluation, DeepPresenter-style metrics.",
+          "detail": "MemSlides achieves GPT-5 Avg. 4.17, best among compared systems in the shared three-profile suite. This shows personalization does not degrade absolute quality.",
+          "location": "web_fetch HTML extract, Experimental Results section, Table 2"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C4",
+      "claim": "Tool memory improves localized edit reliability in diagnostic matched-pair settings.",
+      "evidence_type": "quantitative_experiment",
+      "evidence": [
+        {
+          "source": "Table 3 - Diagnostic modify pairs with/without tool-memory injection.",
+          "detail": "Closed-loop completion: 0.963 with tool memory vs. lower without. Strict verify: 0.534 with tool memory.",
+          "location": "web_fetch HTML extract, Experimental Results section, Table 3 and adjacent text"
+        },
+        {
+          "source": "Tool Memory design (Sec 3.4).",
+          "detail": "Tool memory stores round-scope task experience and operation-scope tool chains.",
+          "location": "web_fetch HTML extract, Section 3.4"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C5",
+      "claim": "Tool memory reduces time to first correct localized edit by more than half.",
+      "evidence_type": "quantitative_experiment",
+      "evidence": [
+        {
+          "source": "Table 3 - Time to first correct edit comparison.",
+          "detail": "With tool memory: 242.5s overall (about 92s for non-error cases). Without tool memory: 609.5s. This is a 2.5x speedup.",
+          "location": "web_fetch HTML extract, Experimental Results section, Table 3"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C6",
+      "claim": "Working memory carries session-level preferences across revision turns.",
+      "evidence_type": "qualitative_demonstration",
+      "evidence": [
+        {
+          "source": "Qualitative cases in Sec 4.2 - Working memory carryover.",
+          "detail": "Qualitative cases illustrate working memory's ability to carry over preferences across revision turns. Temporary preferences guide subsequent edits and inserted slides.",
+          "location": "web_fetch HTML extract, Section 4.2 qualitative analysis"
+        },
+        {
+          "source": "Working Memory design (Sec 3.2).",
+          "detail": "Working memory stores active temporary preferences, carryover instructions, and edit-state records.",
+          "location": "web_fetch HTML extract, Section 3.2 paragraph on working memory"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C7",
+      "claim": "Separating user profile memory from tool memory is beneficial for personalization and edit reliability.",
+      "evidence_type": "design_rationale_and_indirect_evidence",
+      "evidence": [
+        {
+          "source": "Framework design (Sec 3) and ablation via comparison across evaluation dimensions.",
+          "detail": "Profile memory improves persona alignment (vertical comparison without profile shows lower scores); tool memory independently improves edit reliability (matched-pair comparison with/without).",
+          "location": "web_fetch HTML extract, Section 3 and Experimental Results sections"
+        },
+        {
+          "source": "Related work contrast (Sec 2).",
+          "detail": "Prior systems treat all memory as one homogeneous buffer. MemSlides explicitly separates user preference from execution experience.",
+          "location": "web_fetch HTML extract, Section 2"
+        }
+      ],
+      "confidence": "medium"
+    },
+    {
+      "claim_id": "C8",
+      "claim": "The reconciliation mechanism handles explicit request-profile conflicts.",
+      "evidence_type": "design_analysis",
+      "evidence": [
+        {
+          "source": "Profile reconciliation lifecycle (Sec 3.3, Equations 3 and 4).",
+          "detail": "At job start: profile bucket selected by intent, constraints extracted from request, compatible items reconciled. Explicit request conflicts supersede profile items for the current deck.",
+          "location": "web_fetch HTML extract, Section 3.3, equations and surrounding text"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C9",
+      "claim": "The Plan-Act-Guard loop prevents premature finalization and scope expansion.",
+      "evidence_type": "design_analysis",
+      "evidence": [
+        {
+          "source": "Modified Exec description (Sec 3.2).",
+          "detail": "Guard phase uses inspection, coverage checks, snapshot hashes, and repair focus. Premature finalize calls are blocked until all target slides are modified or confirmed compliant.",
+          "location": "web_fetch HTML extract, Section 3.2, Guard phase description"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "claim_id": "C10",
+      "claim": "Profile memory enables consistent persona-aligned behavior across different presentation intents.",
+      "evidence_type": "design_analysis_and_qualitative",
+      "evidence": [
+        {
+          "source": "Project page demonstrations and profile bank design.",
+          "detail": "24 profile-shaped slides generated from the same source document show distinct structural and visual differences per persona (product strategy, research seminar, visual teaching).",
+          "location": "Project page at memslides.github.io and Section 4 evaluation description"
+        }
+      ],
+      "confidence": "medium"
+    }
+  ],
+  "methodology_notes": "Evidence extracted from web_fetch of the arXiv HTML page (20,000 chars, readability mode) and cross-checked with the project page (memslides.github.io). The PDF (14.1 MB) confirmed correct title/authors via binary grep. The arXiv HTML endpoint intermittently returns mixed content; claims verified against both sources and experimental numbers cross-checked with the project page evidence summary."
+}

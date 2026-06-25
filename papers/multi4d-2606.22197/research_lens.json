@@ -1,0 +1,138 @@
+{
+  "paper_id": "2606.22197",
+  "paper_title": "Multi4D: High-Fidelity Dynamic Gaussian Splatting via Multi-Level Competitive Allocation",
+  "lens_version": "1.0",
+  "created_at": "2026-06-24T17:21:00Z",
+  "problem_reconstruction": {
+    "original_problem": "Dynamic 3D Gaussian Splatting methods face a fundamental conflict between motion consistency (temporal correspondence) and visual fidelity (high-frequency rendering quality).",
+    "reformulated_problem": "How can we break the monolithic representation assumption and enable dynamic scenes to be modeled by multiple specialized sub-representations that compete to explain different aspects of the signal?",
+    "research_formula": "Given multi-view video frames 𝒮 = {Iₜ}ₜ₌₁ᵀ, find an optimal decomposition 𝒢 = ℊₛ ∪ ℊ𝒹 ∪ ℊₜ that minimizes ℒ_total = ℒ_color + λ_sep·ℒ_sep + λ_reg·ℒ_reg + λ_div·ℒ_diversity, where ℊₛ is static, ℊ𝒹 is persistent-deformable, and ℊₜ is transient-4D, such that:\n  (1) ℊ𝒹 maintains long-term temporal identity via deformation field Φ𝓰\n  (2) ℊₜ captures high-frequency residuals via 4D spatiotemporal slicing\n  (3) Shared transmittance in a unified renderer induces competitive allocation that suppresses redundancy\n  (4) Total dynamic primitives ≪ monolithic alternatives (target: 25× fewer than 4DGS)",
+    "key_constraints": [
+      "Long-term motion consistency / Gaussian identity preservation for downstream tasks",
+      "High-frequency appearance modeling (specularities, lighting shifts, fire, smoke)",
+      "Compact storage (≪ 4DGS's 2.6 GB for comparable quality)",
+      "Real-time rendering speed (≥ 100 FPS)",
+      "Robustness to sparse/monocular camera supervision",
+      "No ground-truth motion or segmentation labels required"
+    ]
+  },
+  "challenge_to_module_mapping": {
+    "motion_over_factorization": {
+      "problem": "Deformation-based methods over-smooth high-frequency dynamics by grouping nearby motion",
+      "corresponding_modules": [
+        "Competitive multi-level allocation — transient subset ℊₜ absorbs high-frequency residuals that deformation field Φ𝓰 cannot model",
+        "ℒ_diversity loss — penalizes structural similarity between ℊₜ and ℊ𝒹 outputs, forcing specialization",
+        "Self-supervised dynamic-static decomposition — prevents static content from polluting deformation modeling"
+      ]
+    },
+    "temporal_over_parameterization": {
+      "problem": "4D-primitive methods hallucinate millions of short-lived primitives with broken geometry",
+      "corresponding_modules": [
+        "Persistent dynamic subset ℊ𝒹 — provides structured motion backbone with long-term identity",
+        "Mask-aware utility-based pruning — removes low-contribution primitives using peak visible contribution scoring",
+        "Velocity-aware lifting — provides motion prior for ℊₜ instead of random initialization",
+        "Independent per-subset densification with tight capacity control on ℊₜ"
+      ]
+    },
+    "monocular_sparse_view_degradation": {
+      "problem": "4D-primitive methods without holistic motion prior generalize poorly to sparse/monocular settings",
+      "corresponding_modules": [
+        "Deformation field Φ𝓰 on ℊ𝒹 — provides holistic motion prior and canonical geometric constraints",
+        "Velocity-aware lifting with momentum inheritance — strong motion prior stabilizes ℊₜ under limited supervision",
+        "Spatial-temporal rescaling — prevents numerical instability from ill-conditioned covariance matrices",
+        "Dense ℊₛ from COLMAP — provides structural anchor for the scene"
+      ]
+    },
+    "appearance_as_spurious_motion": {
+      "problem": "Deformation-based methods interpret complex appearance changes as physical motion, causing spurious warping",
+      "corresponding_modules": [
+        "Transient ℊₜ with 4D slicing and 4DSH — captures time-varying appearance changes directly",
+        "ℒ_diversity — encourages ℊₜ to explain appearance residuals rather than ℊ𝒹",
+        "Geometric-only deformation field Φ𝓰 — predicts rigid motion (μₜ, rₜ) without appearance drift"
+      ]
+    },
+    "semantic_feature_rendering_bottleneck": {
+      "problem": "Deformation-based semantic models inherit computational overhead of evaluating high-dim features per-primitive per-frame",
+      "corresponding_modules": [
+        "Persistent subset ℊₚ = ℊₛ ∪ ℊ𝒹 only for semantic learning — discards transient noise",
+        "Compact dynamic Gaussians (13k vs 624k in TRASE) — enables 204 FPS feature rendering",
+        "KNN feature smoothing in canonical 3D space — enforces spatial coherence without per-frame processing",
+        "Frozen deformation field Φ𝓰 — propagates features through time without re-optimization"
+      ]
+    },
+    "cross_subset_redundancy": {
+      "problem": "Multiple subsets could redundantly model the same regions, wasting capacity",
+      "corresponding_modules": [
+        "Shared transmittance coupling — once one subset explains a region, residual-driven densification suppresses others",
+        "ℒ_diversity loss — penalizes SSIM similarity between ℊₜ and ℊ𝒹 renders",
+        "Mask-aware gating in pruning — ensures ℊₛ and ℊ𝒹 contribute only within their assigned regions",
+        "Inverse expressiveness initialization — dense COLMAP for ℊₛ, sparse for ℊ𝒹, empty for ℊₜ"
+      ]
+    }
+  },
+  "architecture_diagram": {
+    "input": "Multi-view video: 𝒮 = {Iₜ}ₜ₌₁ᵀ with camera parameters",
+    "representation": "𝒢 = ℊₛ ∪ ℊ𝒹 ∪ ℊₜ (three Gaussian subsets)",
+    "process_flow": [
+      "[COLMAP SfM] → Dense points → ℊₛ (Static)",
+      "[Random init] → Sparse points → ℊ𝒹 (Persistent Dynamic)",
+      "[Empty] → ℊₜ = ∅ (Transient, populated via lifting)",
+      "",
+      "For each timestamp t:",
+      "  ℊₛ: (μ, Σ, σ, c₃D) — time invariant",
+      "  ℊ𝒹: (μₜ, rₜ) = (μ, r) + Φ𝓰(μ, t) — geometric deformation via HexPlane",
+      "  ℊₜ: (μ_xyz|t, Σ_xyz|t) via 4D slicing (Eq. 3); σₜ = σ·exp(−(t−μₜ)²/2Σ₄,₄)",
+      "",
+      "→ Joint rasterization → C_full, Cₚ, Cₜ",
+      "→ ℒ_total = ℒ_color + λ_sep·ℒ_sep + λ_reg·ℒ_reg + λ_div·ℒ_diversity",
+      "",
+      "[Phase I: 0–10k] Subset formation with all mechanisms active",
+      "[Phase II: 10k–20k] Rendering refinement, separation/lifting disabled",
+      "",
+      "Downstream: Freeze ℊₛ + ℊ𝒹, attach semantic features → 4D segmentation (Section 3.8)"
+    ],
+    "outputs": [
+      "Full render C_full for novel view synthesis",
+      "Persistent render Cₚ for downstream tasks (segmentation)",
+      "Transient contribution Cₜ for appearance analysis",
+      "Semantic features → 4D object masks with temporal consistency"
+    ]
+  },
+  "key_equations": [
+    {
+      "id": "Eq. 1",
+      "formula": "g(x) = exp(−½ (x−μ)ᵀ Σ⁻¹ (x−μ)), Σ = R S Sᵀ Rᵀ",
+      "purpose": "3D Gaussian primitive definition"
+    },
+    {
+      "id": "Eq. 2",
+      "formula": "C(u) = Σᵢ cᵢ(d) σᵢ 𝒫ᵢ(gᵢ, u) Πⱼ₌₁ⁱ⁻¹ (1−σⱼ 𝒫ⱼ(gⱼ, u))",
+      "purpose": "Differentiable splatting / alpha composition"
+    },
+    {
+      "id": "Eq. 3",
+      "formula": "μ_xyz|t = μ₁:₃ + Σ₁:₃,₄ Σ₄,₄⁻¹ (t−μₜ), Σ_xyz|t = Σ₁:₃,₁:₃ − Σ₁:₃,₄ Σ₄,₄⁻¹ Σ₄,₁:₃",
+      "purpose": "4D Gaussian slicing to 3D at timestamp t"
+    },
+    {
+      "id": "Eq. 4",
+      "formula": "Θₜ,ᵢ = f(gᵢ, t) per subset type",
+      "purpose": "Unified rendering projection for each subset type"
+    },
+    {
+      "id": "Eq. 5",
+      "formula": "μ₄D⁽ⁿᵉʷ⁾ = [μᵢ(t) + ϵ, t]ᵀ, r₄D⁽ⁿᵉʷ⁾ ← Align(vᵢ)",
+      "purpose": "Momentum inheritance for velocity-aware lifting"
+    },
+    {
+      "id": "Eq. 6-7",
+      "formula": "wᵢ,𝐼 = max_𝐮 (σᵢ 𝒫ᵢ Π (1−σⱼ 𝒫ⱼ)) · M(u); sᵢ = β·max + (1−β)·mean",
+      "purpose": "Mask-aware utility-based pruning score"
+    },
+    {
+      "id": "Eq. 8",
+      "formula": "ℒ_total = ℒ_color + λ_sep·ℒ_sep + λ_reg·ℒ_reg + λ_div·ℒ_diversity",
+      "purpose": "Overall training objective"
+    }
+  ]
+}
