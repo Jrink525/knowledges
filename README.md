@@ -30,6 +30,7 @@
   - `ai-tools/career/loop-engineering-beginners-tutorial.md`
   - `ai-tools/career/loop-engineering-explained.md`
   - `ai-tools/career/loop-engineering-memory.md`
+  - `ai-tools/career/loop-engineering-quant-trading.md`
   - `ai-tools/career/loop-engineering.md`
   - `ai-tools/career/mvanhorn-wtf-is-a-loop-part1.md`
   - `ai-tools/career/my-thoughts-on-loop-engineering.md`
@@ -57,6 +58,7 @@
 ### ai-tools/harness/ (`ai-tools/harness`)
   - `ai-tools/harness/10-claude-code-agents-pipeline.md`
   - `ai-tools/harness/20-claude-prompts-personal-assistant.md`
+  - `ai-tools/harness/30-core-agentic-concepts.md`
   - `ai-tools/harness/agent-complexity-ratchet.md`
   - `ai-tools/harness/agent-engineers-survival-guide.md`
   - `ai-tools/harness/agent-harness-engineering.md`
@@ -124,6 +126,7 @@
   - `ai-tools/inference/github-copilot-memory-architecture.md`
   - `ai-tools/inference/gpu-memory-math-llms-2026-ahmad.md`
   - `ai-tools/inference/grit-rewriting-git-in-rust.md`
+  - `ai-tools/inference/hermes-agent-17-prompts.md`
   - `ai-tools/inference/how-llms-actually-work.md`
   - `ai-tools/inference/how-to-actually-use-claude.md`
   - `ai-tools/inference/how-to-fine-tune-llms-2026.md`
@@ -173,6 +176,7 @@
   - `ai-tools/tooling/7-days-claude-ai-employee-guide.md`
   - `ai-tools/tooling/agent-harness-self-repair-opik.md`
   - `ai-tools/tooling/agent-memory-framework-remember-cite-forget.md`
+  - `ai-tools/tooling/agent-memory-loop-langsmith.md`
   - `ai-tools/tooling/ai-automation-service-guide.md`
   - `ai-tools/tooling/build-ai-agents-2026.md`
   - `ai-tools/tooling/build-claude-workflow-11-stages.md`
@@ -200,7 +204,10 @@
   - `ai-tools/tooling/dive-into-claude-code.md`
   - `ai-tools/tooling/every-agentic-engineering-hack-mvanhorn.md`
   - `ai-tools/tooling/feedback-loops-claude-code.md`
+  - `ai-tools/tooling/feynman-method-claude-4-prompts-guide.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
+  - `ai-tools/tooling/from-prompter-to-loop-designer.md`
+  - `ai-tools/tooling/how-does-vllm-work.md`
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
   - `ai-tools/tooling/karpathy-knowledge-stack.md`
@@ -329,6 +336,9 @@
 ### papers/2606-19236-2606.19236/ (`papers/2606-19236-2606.19236`)
   - `papers/2606-19236-2606.19236/report.md`
 
+### papers/agent-native-memory-2606.24775/ (`papers/agent-native-memory-2606.24775`)
+  - `papers/agent-native-memory-2606.24775/report.md`
+
 ### papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/ (`papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629`)
   - `papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md`
 
@@ -368,6 +378,12 @@
 ### papers/legalhallulens-2606.18021/ (`papers/legalhallulens-2606.18021`)
   - `papers/legalhallulens-2606.18021/report.md`
 
+### papers/memslides-2606.17162/ (`papers/memslides-2606.17162`)
+  - `papers/memslides-2606.17162/report.md`
+
+### papers/multi4d-2606.22197/ (`papers/multi4d-2606.22197`)
+  - `papers/multi4d-2606.22197/report.md`
+
 ### papers/no-resource-no-benchmarks-no-problem-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-2606.16827`)
   - `papers/no-resource-no-benchmarks-no-problem-2606.16827/report.md`
 
@@ -379,6 +395,9 @@
 
 ### papers/selective-synergistic-learning-2606.15527/ (`papers/selective-synergistic-learning-2606.15527`)
   - `papers/selective-synergistic-learning-2606.15527/report.md`
+
+### papers/semantic-browsing-2606.23679/ (`papers/semantic-browsing-2606.23679`)
+  - `papers/semantic-browsing-2606.23679/report.md`
 
 ### papers/skillharness-2606.20636/ (`papers/skillharness-2606.20636`)
   - `papers/skillharness-2606.20636/report.md`
@@ -397,7 +416,7 @@
 
 ---
 
-总计 **293** 篇知识文档
+总计 **304** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -409,5 +428,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-24 16:11 UTC]_
+_[自动生成于 2026-06-25 16:04 UTC]_
 
