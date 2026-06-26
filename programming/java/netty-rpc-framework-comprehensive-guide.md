@@ -22,13 +22,14 @@
 12. [Epoll 深度解析：从原理到 Netty 集成](#12-epoll-深度解析从原理到-netty-集成)
 13. [Netty 内存管理揭秘](#13-netty-内存管理揭秘)
 14. [Netty Native Transport](#14-netty-native-transport)
-15. [Netty 最佳实践（13 条生产级）](#15-netty-最佳实践13-条生产级)
+15. [Netty 最佳实践（15 条生产级）](#15-netty-最佳实践15-条生产级)
 16. [从 Netty 源码学到的代码技巧](#16-从-netty-源码学到的代码技巧)
 17. [性能压榨：压测驱动的极致优化](#17-性能压榨压测驱动的极致优化)
 18. [完整 RPC 框架实战](#18-完整-rpc-框架实战)
 19. [常见问题与排查指南](#19-常见问题与排查指南)
 20. [总结与学习路径](#20-总结与学习路径)
 21. [更多真实场景代码案例](#21-更多真实场景代码案例)
+22. [附录：生产架构案例](#22-附录生产架构案例)(#22-附录生产架构案例)
 
 ---
 
@@ -537,9 +538,73 @@ public Method findMethod(Class<?> serviceClass, String methodName, Object[] args
 
 **最佳实践**：传输 overload 索引（int 值）代替完整类型字符串——体积小且无锁。
 
----
+### 6.4 真实案例：22 字节自定义协议
 
-## 7. RPC 框架关键特性
+以下是一个生产级分布式的调度系统（Server-Agent 架构）自定义二进制协议的头部设计：
+
+```
+ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+├─Magic Number─┬─V─┬─MT──┬─Seq ID──┬──Body Length────┬───Timestamp───────────┤
+│   0xCAFEBABE │ 1 │  1  │   4     │       4          │         8              │
+│   (4 bytes)  │ B │  B  │  bytes  │     bytes        │       bytes            │
+└──────────────┴───┴─────┴─────────┴──────────────────┴────────────────────────┘
+```
+
+| 字段 | 长度 | 说明 |
+|------|------|------|
+| Magic Number | 4 bytes | `0xCAFEBABE`，快速识别合法数据包 |
+| Version | 1 byte | 协议版本号，预留升级空间 |
+| Message Type | 1 byte | 注册/心跳/任务下发/结果上报/任务停止/状态变更等 8 种类型 |
+| Sequence ID | 4 bytes | 请求-响应匹配标识 |
+| Body Length | 4 bytes | 后续 JSON 负载字节长度 |
+| Timestamp | 8 bytes | 消息生成时间戳，用于超时检测与排障 |
+
+**设计考量**：
+
+1. **长连接优先**：HTTP 短连接在高频心跳与实时任务下发场景下，连接建立与 TLS 握手开销不可忽视。TCP 长连接结合 `IdleStateHandler` 可实现毫秒级状态感知。
+2. **头部精简**：22 字节头部在千兆网络环境下带宽占用可忽略，但解析效率远高于 HTTP/1.1 的文本头。
+3. **JSON Body 平衡**：未采用 Protobuf/Thrift 强 schema 序列化，JSON 保持可读性与调试便利性，降低多语言客户端实现门槛。
+
+```java
+// 协议编解码器实现
+public class AgentProtocolDecoder extends ByteToMessageDecoder {
+    public static final int HEADER_LENGTH = 22;
+    public static final int MAGIC = 0xCAFEBABE;
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+        if (in.readableBytes() < HEADER_LENGTH) return;
+
+        in.markReaderIndex();
+        int magic = in.readInt();
+        if (magic != MAGIC) {
+            in.resetReaderIndex();
+            throw new RuntimeException("Invalid magic: " + Integer.toHexString(magic));
+        }
+
+        byte version = in.readByte();
+        byte msgType = in.readByte();
+        int seqId = in.readInt();
+        int bodyLength = in.readInt();
+        long timestamp = in.readLong();
+
+        if (in.readableBytes() < bodyLength) {
+            in.resetReaderIndex();
+            return; // 半包，等更多数据
+        }
+
+        byte[] body = new byte[bodyLength];
+        in.readBytes(body);
+
+        // 消息体直接 JSON 反序列化
+        AgentMessage msg = new AgentMessage(msgType, seqId, timestamp, new String(body, StandardCharsets.UTF_8));
+        out.add(msg);
+    }
+}
+```
+
+**与 §6.1 RPC 协议对比**：
+- 该协议更
 
 ### 7.1 序列化/反序列化
 
@@ -613,6 +678,107 @@ public class SerializerFactory {
     }
 }
 ```
+
+
+#### 真实案例：Agent 调度系统的插件化执行引擎
+
+以下是一个分布式 Agent 调度系统的 `TaskExecutor` SPI 接口设计：
+
+```java
+// 1. 定义 SPI 接口
+public interface TaskExecutor {
+    String getType();                        // 执行器类型标识
+    TaskResult execute(TaskConfig config);   // 执行契约
+}
+
+// 2. 内置四种实现
+public class MockExecutor implements TaskExecutor {
+    @Override public String getType() { return "mock"; }
+    @Override public TaskResult execute(TaskConfig config) {
+        return TaskResult.success("Mock result: " + config.getParams());
+    }
+}
+
+public class HttpExecutor implements TaskExecutor {
+    @Override public String getType() { return "http"; }
+    @Override public TaskResult execute(TaskConfig config) {
+        try {
+            URL url = new URL(config.getString("url"));
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(config.getInt("timeout", 5000));
+            return TaskResult.success(readResponse(conn));
+        } catch (Exception e) {
+            return TaskResult.error(e.getMessage());
+        }
+    }
+}
+
+public class ShellExecutor implements TaskExecutor {
+    @Override public String getType() { return "shell"; }
+    @Override public TaskResult execute(TaskConfig config) {
+        try {
+            String cmd = config.getString("command");
+            Process p = Runtime.getRuntime().exec(cmd);
+            String output = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            return TaskResult.success(output.trim());
+        } catch (Exception e) {
+            return TaskResult.error(e.getMessage());
+        }
+    }
+}
+
+public class JsoupExecutor implements TaskExecutor {
+    @Override public String getType() { return "jsoup"; }
+    @Override public TaskResult execute(TaskConfig config) {
+        try {
+            Document doc = Jsoup.connect(config.getString("url")).get();
+            String selector = config.getString("cssSelector");
+            Elements elements = doc.select(selector);
+            return TaskResult.success(elements.text());
+        } catch (Exception e) {
+            return TaskResult.error(e.getMessage());
+        }
+    }
+}
+
+// 3. SPI 注册：META-INF/services/com.example.agent.TaskExecutor
+// com.example.agent.executor.MockExecutor
+// com.example.agent.executor.HttpExecutor
+// com.example.agent.executor.ShellExecutor
+// com.example.agent.executor.JsoupExecutor
+
+// 4. SPI 加载与使用
+public class ExecutorFactory {
+    private static final Map<String, TaskExecutor> EXECUTORS = new LinkedHashMap<>();
+
+    static {
+        ServiceLoader<TaskExecutor> loader = ServiceLoader.load(TaskExecutor.class);
+        for (TaskExecutor executor : loader) {
+            EXECUTORS.put(executor.getType(), executor);
+        }
+    }
+
+    public static TaskResult execute(String type, TaskConfig config) {
+        TaskExecutor executor = EXECUTORS.get(type);
+        if (executor == null) {
+            throw new IllegalArgumentException("Unknown executor type: " + type);
+        }
+        return executor.execute(config);
+    }
+}
+
+// 5. 扩展执行器只需：
+//    a) 实现 TaskExecutor 接口
+//    b) 在 META-INF/services/ 注册
+//    c) 将 jar 放入 classpath
+//    无需修改主框架代码，无需重新编译。
+```
+
+**此模式的价值**：
+- 避免动态类加载的安全风险
+- 无需引入 OSGi 等重量级模块框架
+- 扩展者只需关注单一接口的契约
+- 多语言客户端（Python/Go）可各自实现协议兼容的 Agent
 
 ### 7.3 服务级别线程池隔离
 
@@ -1542,7 +1708,7 @@ b.channel(EpollServerDomainSocketChannel.class);
 
 ---
 
-## 15. Netty 最佳实践（13 条生产级）
+## 15. Netty 最佳实践（15 条生产级）
 
 ### 15.1 业务线程池必要性
 
@@ -1759,6 +1925,88 @@ String sessionId = ctx.channel().attr(SESSION_KEY).get();
 **实现原理**：拉链法 + 分段锁（只锁链表头），类似 `ConcurrentHashMap V8`。默认只有 4 个桶，不要太任性。
 
 ---
+
+
+
+### 15.14 ES + 内存缓存双层架构
+
+大规模 Agent 调度系统的一种成熟架构模式：
+
+```
+写路径: Agent → Netty Server → Elasticsearch(先写) → 更新 ConcurrentHashMap(后更新)
+读路径: ConcurrentHashMap(优先) → 未命中 → ES 加载 → 回填缓存
+恢复:   Server 重启后缓存为空 → 首次查询懒加载 → 后续访问恢复内存加速
+```
+
+```java
+public class DualLayerCache<K, V> {
+    private final ConcurrentHashMap<K, V> cache = new ConcurrentHashMap<>();
+    private final ElasticsearchClient esClient;
+
+    public DualLayerCache(ElasticsearchClient esClient) {
+        this.esClient = esClient;
+    }
+
+    // 写路径：ES 优先，缓存后更新
+    public void put(K key, V value) {
+        esClient.index(i -> i.index("agent_tasks").id(key.toString())
+            .document(value));  // ES 先写
+        cache.put(key, value);  // 后更新 cache（容错：ES 失败则 cache 不更新）
+    }
+
+    // 读路径：缓存优先，懒加载回填
+    public V get(K key) {
+        V value = cache.get(key);
+        if (value != null) return value;
+
+        // 未命中 → 从 ES 加载
+        try {
+            GetResponse<V> resp = esClient.get(g -> g.index("agent_tasks")
+                .id(key.toString()), (Class<V>) Object.class);
+            if (resp.found()) {
+                value = resp.source();
+                cache.put(key, value);  // 回填
+            }
+        } catch (IOException e) {
+            log.error("ES load failed for key: {}", key, e);
+        }
+        return value;
+    }
+}
+```
+
+**未引入 Redis/MySQL 的考量**：
+- 数据模型以文档型时序数据为主，ES 索引机制天然适合
+- 减少组件数量，显著降低部署与运维复杂度
+- 单 Server 数百 Agent 的场景下，ES 足以承载
+
+**ES 索引设计**（Agent 调度系统案例）：
+
+| 索引 | 内容 |
+|------|------|
+| `agent_tasks` | 任务定义与配置快照 |
+| `agent_task_executions` | 每次任务执行的详细记录（输出、耗时、状态） |
+| `agent_heartbeats` | Agent 心跳时序数据，离线判定与历史轨迹分析 |
+
+### 15.15 JSON Body 平衡取舍
+
+> **规则**：协议选型没有银弹，JSON 在某些场景下优于 Protobuf。
+
+**什么时候用 JSON + 精简头部 > Protobuf**：
+
+| 场景 | JSON 优势 |
+|------|-----------|
+| 多语言客户端 | Java、Python、Go、Node.js 都能无门槛接入 |
+| 调试调试 | Wireshark/tcpdump 直接可读，无需 schema |
+| 动态字段 | Agent 调度系统的任务参数结构各异 |
+| 小团队 | 无需维护 .proto 文件 + codegen CI |
+
+**什么时候必用 Protobuf**：
+- 极致性能（万级 QPS 的实时竞价系统）
+- 严格的向后兼容和契约管理
+- 码流体积极为敏感（IoT 设备）
+
+**最终原则**：先 JSON 跑通业务，遇到瓶颈再局部替换 Protobuf。
 
 ## 16. 从 Netty 源码学到的代码技巧
 
@@ -3411,6 +3659,243 @@ public class VirtualThreadNettyServer {
 ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4,
     Thread.ofVirtual().factory());  // JDK 21+ 虚拟线程工厂
 ```
+
+### 21.12 纯 Netty HTTP 服务端（无 Spring Boot）
+
+以下是生产级 Agent 调度系统的 HTTP API 网关实现——纯 Netty 驱动，不依赖 Spring Boot：
+
+```java
+// Netty HTTP 网关：替代 Spring Boot Web
+public class NettyHttpGateway {
+    private final int httpPort;
+    private final Map<String, RouteHandler> routes = new ConcurrentHashMap<>();
+
+    public NettyHttpGateway(int httpPort) {
+        this.httpPort = httpPort;
+    }
+
+    public void registerRoute(String path, RouteHandler handler) {
+        routes.put(path, handler);
+    }
+
+    public void start() throws InterruptedException {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(new HttpServerCodec())          // HTTP 编解码
+                       .addLast(new HttpObjectAggregator(65536)) // 聚合为 FullHttpRequest
+                       .addLast(new JsonRouterHandler(routes)); // 路径路由 + JSON 序列化
+                 }
+             });
+
+            ChannelFuture f = b.bind(httpPort).sync();
+            System.out.println("HTTP Gateway started on port " + httpPort);
+            f.channel().closeFuture().sync();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+
+    @FunctionalInterface
+    public interface RouteHandler {
+        FullHttpResponse handle(FullHttpRequest req) throws Exception;
+    }
+}
+
+// 路径路由 + JSON 序列化处理器
+class JsonRouterHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+    private final Map<String, RouteHandler> routes;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    JsonRouterHandler(Map<String, RouteHandler> routes) {
+        this.routes = routes;
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) {
+        String path = extractPath(req.uri());
+        RouteHandler handler = routes.get(path);
+
+        if (handler == null) {
+            sendJson(ctx, 404, Map.of("error", "Not found: " + path));
+            return;
+        }
+
+        try {
+            FullHttpResponse resp = handler.handle(req);
+            // 统一添加 JSON content-type
+            resp.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json; charset=UTF-8");
+            ctx.writeAndFlush(resp);
+        } catch (Exception e) {
+            sendJson(ctx, 500, Map.of("error", e.getMessage()));
+        }
+    }
+
+    private String extractPath(String uri) {
+        int queryIdx = uri.indexOf('?');
+        return queryIdx < 0 ? uri : uri.substring(0, queryIdx);
+    }
+
+    private void sendJson(ChannelHandlerContext ctx, int status, Object data) {
+        try {
+            byte[] json = MAPPER.writeValueAsBytes(data);
+            FullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1,
+                HttpResponseStatus.valueOf(status), Unpooled.wrappedBuffer(json));
+            resp.headers()
+                .set(HttpHeaderNames.CONTENT_TYPE, "application/json; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_LENGTH, json.length);
+            ctx.writeAndFlush(resp);
+        } catch (JsonProcessingException e) {
+            ctx.close();
+        }
+    }
+}
+
+// 主程序：纯 Netty，无 Spring Boot
+public class AgentSchedulerApp {
+    public static void main(String[] args) throws Exception {
+        int httpPort = 8080;
+        int tcpPort = 9000;
+
+        // 1. TCP Server：Agent 长连接
+        NettyAgentServer agentServer = new NettyAgentServer(tcpPort);
+
+        // 2. HTTP Gateway：REST API
+        NettyHttpGateway httpGateway = new NettyHttpGateway(httpPort);
+        httpGateway.registerRoute("/api/agents", req -> {
+            List<AgentInfo> agents = agentServer.getOnlineAgents();
+            return jsonOk(agents);
+        });
+        httpGateway.registerRoute("/api/tasks", req -> {
+            if (req.method() == HttpMethod.POST) {
+                CreateTask body = MAPPER.readValue(req.content().array(), CreateTask.class);
+                agentServer.dispatchTask(body);
+                return jsonOk(Map.of("taskId", body.getId()));
+            }
+            // GET /api/tasks
+            return jsonOk(agentServer.getAllTasks());
+        });
+        httpGateway.registerRoute("/api/tasks/{taskId}/start", req -> {
+            String taskId = extractPathSegment(req.uri(), "tasks", "start");
+            agentServer.startTask(taskId);
+            return jsonOk(Map.of("status", "started"));
+        });
+
+        // 3. 同时启动两个 Netty 服务
+        CompletableFuture.allOf(
+            CompletableFuture.runAsync(() -> {
+                try { agentServer.start(); } catch (Exception e) { e.printStackTrace(); }
+            }),
+            CompletableFuture.runAsync(() -> {
+                try { httpGateway.start(); } catch (Exception e) { e.printStackTrace(); }
+            })
+        ).join();
+    }
+
+    private static FullHttpResponse jsonOk(Object data) throws Exception {
+        byte[] json = new ObjectMapper().writeValueAsBytes(data);
+        FullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, OK,
+            Unpooled.wrappedBuffer(json));
+        resp.headers()
+            .set(HttpHeaderNames.CONTENT_TYPE, "application/json; charset=UTF-8")
+            .set(HttpHeaderNames.CONTENT_LENGTH, json.length);
+        return resp;
+    }
+}
+```
+
+**纯 Netty 方案 vs Spring Boot Web**：
+
+| 对比项 | 纯 Netty HTTP | Spring Boot Web |
+|--------|-------------|-----------------|
+| 启动时间 | 秒级 | 5-15 秒 |
+| 镜像大小 | 极小（< 20 MB fat-jar） | 较大（含 Tomcat/IoC 依赖） |
+| 并发模型 | 统一 EventLoop，IO + HTTP 共享线程池 | 独立线程池（Tomcat + 应用） |
+| 路由灵活性 | 手写 PathVariable 匹配 | `@PathVariable` 注解 |
+| 生态工具 | 自己实现 JSON、CORS、错误处理 | Spring 全家桶 |
+| 适用场景 | 内部工具、Agent 调度等轻量服务 | 复杂业务系统 |
+
+**生产经验**：Agent 调度系统的服务端同时启动两个 Netty 服务（TCP 9000 + HTTP 8080），单进程可承载数百 Agent + REST API，CPU 占用 < 5%。
+
+
+
+---
+
+## 22. 附录：生产架构案例
+
+### 22.1 Netty Agent 调度系统
+
+从微信文章《基于 Netty 构建的分布式 Agent 调度系统》提炼的完整架构：
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                   Web 管理控制台                           │
+│          React 18 + Umi 4 + TypeScript + Ant Design Pro    │
+│        仪表盘 · 客户端管理 · 任务管理 · 任务日志           │
+└─────────────────────────┬─────────────────────────────────┘
+                          │ HTTP REST API
+                          ▼
+┌───────────────────────────────────────────────────────────┐
+│               Netty HTTP 网关 (端口 8080)                   │
+│       JsonRouterHandler + 路径变量解析 + CORS               │
+│               /api/agents /api/tasks ...                    │
+└─────────────────────────┬─────────────────────────────────┘
+                          │ 内部调用
+                          ▼
+┌───────────────────────────────────────────────────────────┐
+│              Netty TCP 调度层 (端口 9000)                   │
+│   ┌────────────────────────────────────────────────────┐  │
+│   │  自定义二进制协议 (22 字节头部 + JSON Body)          │  │
+│   │  Magic(4) + Ver(1) + Type(1) + Seq(4) + Len(4)    │  │
+│   │  + Timestamp(8)                                    │  │
+│   ├────────────────────────────────────────────────────┤  │
+│   │  连接管理: IdleStateHandler 90s 超时                │  │
+│   │  心跳检测: Agent 30s 一次                           │  │
+│   │  消息派发: 注册/心跳/任务下发/结果上报/停止/状态变更 │  │
+│   └────────────────────────────────────────────────────┘  │
+└───────────────┬─────────────────────────────────────┬─────┘
+                │ TCP long connection                   │
+    ┌───────────┴───────────┐       ┌──────────────────┴────┐
+    │  Agent 节点 1          │  ...  │  Agent 节点 N          │
+    │  独立 Java 进程         │       │                        │
+    │  ┌─────────────────┐  │       │  ┌─────────────────┐   │
+    │  │ SPI Executor    │  │       │  │ SPI Executor    │   │
+    │  │ Mock/Http/Shell │  │       │  │ Mock/Http/Shell │   │
+    │  │ Jsoup/自定义     │  │       │  │ Jsoup/自定义    │   │
+    │  └─────────────────┘  │       │  └─────────────────┘   │
+    └──────────────────────┘       └─────────────────────────┘
+                          │
+                          ▼ result 上传
+┌───────────────────────────────────────────────────────────┐
+│                    Elasticsearch 8.x                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │  agent_tasks │  │agent_task_   │  │agent_heart-  │    │
+│  │  (任务定义)   │  │executions    │  │beats         │    │
+│  │              │  │(执行记录)     │  │(心跳数据)     │    │
+│  └──────────────┘  └──────────────┘  └──────────────┘    │
+│    ▲                                                    │
+│    │ ConcurrentHashMap 热缓存 (懒加载回填)                │
+└───────────────────────────────────────────────────────────┘
+```
+
+**核心指标**：单 Server 100+ Agent 在线，每秒数十次心跳，CPU < 5%，内存数百 MB。
+
+**关键技术决策**：
+- 自定义 22 字节二进制协议（JSON Body）代替 HTTP/Protobuf
+- 纯 Netty 既做 HTTP 又做 TCP，不引入 Spring Boot
+- ES 单组件持久化（不用 MySQL/Redis），控制部署复杂度
+- SPI 插件化执行引擎，扩展无需重编译
+- 指数退避自动重连（3s → 6s → 12s → ... → 60s cap）
+- 前端 Ant Design Pro 标准范式，保证信息密度与操作效率
 
 ---
 
