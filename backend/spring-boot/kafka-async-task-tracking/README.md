@@ -1,6 +1,7 @@
 # Spring Boot + Kafka 实时跟踪长时间运行任务 — MECE 知识体系
 
-> 引子文章：[Spring Boot + Kafka，实时跟踪长时间运行任务](https://mp.weixin.qq.com/s/ibxkVE2ButhJPtUJ8txJ4A)（程序猿DD / SpringBoot实战案例锦集）
+> 引子文章：[Spring Boot + Kafka，实时跟踪长时间运行任务](./00-original-wechat-article.md)（程序猿DD / SpringBoot实战案例锦集）
+> 原文：<https://mp.weixin.qq.com/s/ibxkVE2ButhJPtUJ8txJ4A>
 > Spring Boot 3.5.0 + Kafka 实现异步长时间任务进度跟踪（轮询 API 方案）
 
 ---
@@ -16,6 +17,9 @@ kafka-async-task-tracking/
 ├── B1-kafka-rest-api-long-tasks-howtodoinjava.md ← 维度B: REST API + Kafka 进度追踪
 ├── B2-kafka-long-running-jobs-codex-medium.md ← 维度B: Kafka 长任务模式
 ├── B3-kafka-vs-rabbitmq-patterns-thecodeforge.md ← 维度B: Kafka vs RabbitMQ 选型
+├── B4-kafka-kraft-docker-kafka-ui-setup.md   ← 维度B: KRaft + Docker + Kafka-UI 环境搭建
+├── B5-spring-kafka-consumer-raw-api-thread-safety.md ← 维度B: 底层 Consumer API + 线程安全
+├── B6-kafka-offset-restart-recovery.md       ← 维度B: Offset 管理与重启恢复
 ├── C1-rest-api-design-long-tasks-restfulapi.md ← 维度C: 长任务 REST API 设计模式
 ├── C2-sse-spring-boot-obregon-medium.md     ← 维度C: SSE 实时推送
 ├── D1-kafka-retry-dlt-spring-boot-medium.md ← 维度D: 重试与死信队列
@@ -57,6 +61,9 @@ kafka-async-task-tracking/
 | B1 | [REST API for Long-Running Tasks](./B1-kafka-rest-api-long-tasks-howtodoinjava.md) | howtodoinjava | Spring Boot Kafka 进度追踪 REST API：TaskStatus 模型、KafkaTemplate 生产者、@KafkaListener 消费者、轮询端点 |
 | B2 | [Dealing with Long-Running Jobs Using Kafka](./B2-kafka-long-running-jobs-codex-medium.md) | Medium / Codex | Kafka 流式处理长任务架构：分区策略、消费者组协调、进度事件设计 |
 | B3 | [Async Messaging Patterns: Kafka vs RabbitMQ](./B3-kafka-vs-rabbitmq-patterns-thecodeforge.md) | TheCodeForge | 异步消息模式全面对比：Pub/Sub、Fire-and-Forget、Request-Reply、Dead Letter Queue；Kafka vs RabbitMQ 选型决策树 |
+| **B4** | [KRaft + Docker + Kafka-UI 环境搭建](./B4-kafka-kraft-docker-kafka-ui-setup.md) | 实战总结 | ✅ 匹配引子文章：Docker Kafka KRaft 安装、Kafka-UI 配置、逐行参数解析、多节点部署 |
+| **B5** | [底层 Consumer API、线程安全与动态 Topic](./B5-spring-kafka-consumer-raw-api-thread-safety.md) | Spring Kafka Docs / 实战 | ✅ 匹配引子文章：原始 KafkaConsumer vs @KafkaListener 三层 API、线程安全问题（ConcurrentModificationException）、AdminClient 动态 Topic 创建、Json 序列化、单任务一个 Topic 的架构权衡 |
+| **B6** | [Offset 管理与重启恢复](./B6-kafka-offset-restart-recovery.md) | 实战总结 | ✅ 匹配引子文章：重启后数据丢失根因分析（H2 内存 + offset 未提交）、4 种修复方案、compact topic、Idempotent Consumer |
 
 **最佳实践要点**：
 - 使用 String 或 Avro/Protobuf 序列化，避免 Java 序列化
@@ -64,6 +71,8 @@ kafka-async-task-tracking/
 - Consumer: 使用 `@Transactional` + `AckMode.MANUAL_IMMEDIATE` 保证 exactly-once
 - 为每个消费者组指定独立 `group.id`
 - 合理设置 `concurrency`（分区数 ≤ 消费者数）
+- 生产环境避免 `KafkaConsumer` 底层 API（线程不安全），优先 `@KafkaListener`
+- 重启恢复设计：compact topic + earliest offset + Idempotent Consumer
 
 ---
 
@@ -171,4 +180,35 @@ kafka-async-task-tracking/
 ---
 
 > 创建日期: 2026-06-26
-> 收集自：Medium、Dev.to、howtodoinjava、restfulapi.net、TheCodeForge、JavaCodeGeeks、Substack、Spring 官方文档、Turkcell Engineering
+> 收集自：Medium、Dev.to、howtodoinjava、restfulapi.net、TheCodeForge、JavaCodeGeeks、Substack、Spring 官方文档、Turkcell Engineering、Apache Kafka 官方文档
+
+---
+
+## 附：引子文章知识点覆盖检查
+
+以下是对照 [00-original-wechat-article.md](./00-original-wechat-article.md) 的完全覆盖检查：
+
+| # | 引子文章知识点 | 覆盖文章 | 覆盖情况 |
+|---|---------------|---------|---------|
+| 1 | @Async 异步方法 | A1, A2, A3 | ✅ 深入覆盖 |
+| 2 | Kafka 生产者 `KafkaTemplate.send()` | B1, B2 | ✅ 深入覆盖 |
+| 3 | Kafka 消费者模式（`@KafkaListener`） | B1, B2 | ✅ 深入覆盖 |
+| 4 | 轮询 REST API 查进度 | C1, C2 | ✅ 深入覆盖 |
+| 5 | Task 数据模型设计 | B1 | ✅ 等效 |
+| 6 | UUID taskId | B1 | ✅ 等效 |
+| 7 | 状态枚举 SUBMITTED→STARTED→RUNNING→FINISHED | E1 | ✅ 更深入（状态机） |
+| **8** | **Docker KRaft 安装 Kafka** | **B4** | ✅ **新增覆盖** |
+| **9** | **Kafka-UI 安装配置** | **B4** | ✅ **新增覆盖** |
+| **10** | **序列化配置细节（JsonSerializer/Deserializer/trusted packages）** | **B5** | ✅ **新增覆盖** |
+| **11** | **原始 `KafkaConsumer` 手动 poll 模式** | **B5** | ✅ **新增覆盖（三层 API 对比）** |
+| **12** | **KafkaConsumer 线程不安全（ConcurrentModificationException）** | **B5** | ✅ **新增覆盖** |
+| **13** | **AdminClient 动态创建 Topic** | **B5** | ✅ **新增覆盖** |
+| **14** | **每条任务一个 Topic 的架构权衡** | **B5** | ✅ **新增覆盖（含 3 种替代方案）** |
+| **15** | **重启后数据丢失 + offset 恢复** | **B6** | ✅ **新增覆盖** |
+| **16** | **H2 内存数据库局限** | **B6** | ✅ **新增覆盖** |
+| 17 | UriComponentsBuilder 构建 URL | (Spring MVC 知识) | 基础 Spring 知识，不需独立文章 |
+| 18 | 错误处理 | D1 | ✅ 深度覆盖 |
+| 19 | 可观测性/监控 | F1 | ✅ 深度覆盖 |
+| 20 | 调度方案 | G1 | ✅ 全景覆盖 |
+
+**修复前覆盖 7/20 → 修复后覆盖 20/20** 🎉

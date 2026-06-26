@@ -292,15 +292,17 @@ public class TaskController {
 | 维度 | 内容 | 文件 |
 |------|------|------|
 | A — 异步执行基础 | ThreadPoolTaskExecutor, @Async | `A1-*`, `A2-*`, `A3-*` |
-| B — Kafka 集成深度 | 生产者/消费者模式, 选型 | `B1-*`, `B2-*`, `B3-*` |
+| B — Kafka 集成深度 | 生产者/消费者模式, 选型, 环境搭建, 底层 API, Offset 管理 | `B1-*` ~ `B6-*` |
 | C — 实时推送 | SSE 替代轮询 | `C1-*`, `C2-*` |
 | D — 错误处理 | Retry, DLT | `D1-*` |
 | E — 任务编排 | Saga, 状态机 | `E1-*` |
 | F — 可观测性 | Micrometer, 监控 | `F1-*` |
 | G — 调度方案 | Quartz, @Scheduled, MQ | `G1-*` |
 
+> B4-B6 是新增的底层覆盖，专门匹配本文章的 Docker、底层 Consumer API、线程安全和重启恢复问题。
+
 ---
 
 > 保存日期：2026-06-26
 > 关键要点：每条任务创建一个独立 Kafka Topic，任务执行过程通过 Kafka 发送进度事件，客户端通过轮询获取最新状态
-> 局限性：重启后进度丢失、每条任务一个 Topic 可能变成 Topic 爆炸、KafkaConsumer 非线程安全需注意
+> 局限性：重启后进度丢失（详见 [B6](./B6-kafka-offset-restart-recovery.md)）、每条任务一个 Topic 可能变成 Topic 爆炸（详见 [B5 §4](./B5-spring-kafka-consumer-raw-api-thread-safety.md)）、KafkaConsumer 非线程安全需注意（详见 [B5 §3](./B5-spring-kafka-consumer-raw-api-thread-safety.md)）
