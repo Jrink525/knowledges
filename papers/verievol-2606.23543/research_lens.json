@@ -1,0 +1,103 @@
+{
+  "paper": "VeriEvol: Scaling Multimodal Mathematical Reasoning via Verifiable Evol-Instruct",
+  "arxiv_id": "2606.23543",
+  "lens_type": "research_problem_reconstruction",
+  "research_equation": {
+    "original_problem": "Scaling multimodal mathematical reasoning requires more than harder questions; labels must remain reliable as data volume grows, but existing methods either trust the labeller (data-pipeline family) or assume answers are correct (policy-side family).",
+    "reconstructed_problem": "Multimodal RL data construction is a verifiable two-axis optimization problem: maximize prompt difficulty (via route-specific evolution) AND maximize answer reliability (via offline hypothesis-test falsification), with both axes decoupled from any policy update.",
+    "research_equation": "VeriEvol: argmax_{O_z, v, g} E_{benchmarks}[Acc(GRPO(D_SFT + D_RL[O_z(q), v(â̂), g]))] s.t. prompt difficulty ⊥ answer reliability",
+    "key_insight": "Decoupling two axes before policy update makes scaling properties near-additive, independently auditable, and directly compatible with existing GRPO recipes."
+  },
+  "tri_pass_notes": {
+    "pass_1_first_principles": {
+      "what_is_essential": "Data construction for visual-math RL → two fundamental requirements: (1) prompts must be hard and image-grounded, (2) answers must be reliable enough to serve as repeated reward signals.",
+      "what_is_incidental": "The specific 12-topic taxonomy, the choice of Qwen2.5-VL backbone, the exact GRPO hyperparameters — these are implementation choices, not first-principle requirements.",
+      "first_principles_decomposition": [
+        "P1: Seed prompts are too easy → need controlled difficulty amplification with image grounding guarantee",
+        "P2: Answers must survive adversarial refutation before becoming reward → offline verification decoupled from policy",
+        "P3: Different visual domains need different difficulty operators → routing by problem family",
+        "P4: Single-channel verification misses errors → multi-channel complementary evidence (code + visual)",
+        "P5: Scaling must be monotonic and auditable → component separation with traceable metadata"
+      ]
+    },
+    "pass_2_bridge_to_paper": {
+      "p1_mapping": "Type-aware evolution module (Section 3.2): routing → route-specific operators → question gate φ_q with 5 conjunctive checks",
+      "p2_mapping": "HTV-Agent (Section 3.3): 4-stage pipeline (solvers → verifiers → decider → gate) with refutation-seeking framing",
+      "p3_mapping": "12-topic routing taxonomy + route-specific operator sets O_z (Appendix C)",
+      "p4_mapping": "Code-checking module (Python AST assertions) + visual-evidence module (OCR, crops, pixel probes) as distinct channels",
+      "p5_mapping": "Separate D_SFT / D_RL materialization + per-sample verifier trace + rollout-based curriculum filtering"
+    },
+    "pass_3_gap_analysis": {
+      "what_is_well_supported": [
+        "SFT and RL data scaling both monotonic across ~1 order of magnitude",
+        "Near-additive RL contributions confirming orthogonal axes",
+        "Training dynamics evidence (reward + entropy)",
+        "Verifier channel complementarity demonstrated via inference-time ablation",
+        "Full traceability and open release"
+      ],
+      "what_could_be_stronger": [
+        "Verifier-on/off ablation not directly matched at RL budget (inference-time proxy only)",
+        "Single seed per RL run — statistical significance of per-benchmark deltas not established",
+        "60-sample single-annotator pilot for error analysis — qualitative only",
+        "SFT init interaction with RL data construction acknowledged but not controlled",
+        "External baselines from original papers (not re-run) — different harnesses"
+      ],
+      "what_remains_open": [
+        "Full cross-product composition of (route × skill × answer-type × verifier-contract) beyond 12-topic discretization",
+        "Heterogeneous verifier ensembles (different backbones, tool stacks)",
+        "Generalization beyond mathematical reasoning to chart QA, science diagrams, document understanding",
+        "Backbone-capacity ceiling at larger model scales (beyond 7B)",
+        "Effectiveness with synthetic image generators vs natural image seeds"
+      ],
+      "critical_evaluation": "The paper's core claims are well-supported by clean ablations and monotonic scaling curves. The strongest evidence is the controlled RL ablation where only prompt evolution and verifier are swapped while SFT init and GRPO recipe remain fixed — this is methodologically sound. The main weakness is the indirect verifier isolation (inference-time proxy rather than matched RL budget), which the authors explicitly acknowledge. The error analysis is appropriately cautious (n=60, single annotator). Overall, this is a rigorous empirical paper with honest limitations."
+    }
+  },
+  "challenge_module_map": {
+    "challenge_1_prompt_difficulty": {
+      "description": "Seeds are low-difficulty recognition/lookup; need to amplify reasoning difficulty while keeping image grounding necessary.",
+      "modules": [
+        "Type-aware routing: z = (t, y, u, c) schema-constrained classifier",
+        "Route-specific operators O_z: constrained prompt templates per 12-topic taxonomy",
+        "Question-level gate φ_q: 5 conjunctive checks (img, cons, vis, hard, dedup)"
+      ],
+      "design_rationale": "Routing prevents operator mismatch (geometry template on charts). Independent gate prevents generator self-reward bias."
+    },
+    "challenge_2_answer_reliability": {
+      "description": "Answers must survive as reward signals across thousands of rollouts; a single wrong label is reinforced systematically.",
+      "modules": [
+        "Three independent solvers (T=0.2, 0.6, 0.15)",
+        "Refutation-seeking verifiers: code-checking (Python AST) + visual-evidence (OCR, probes)",
+        "Conflict-aware decider: constrained LLM, no tool use, assesses verifier quality",
+        "Deterministic acceptance gate: g(â,m) = 𝟙[G_schema ∧ G_evidence ∧ G_verify ∧ G_program ∧ G_consensus]"
+      ],
+      "design_rationale": "Multi-solver exposes disagreement; refutation framing probes VG/TS failure modes; conjunctive gate is stricter than majority voting."
+    },
+    "challenge_3_training_signal_materialization": {
+      "description": "Verified samples must be usable by existing SFT and GRPO recipes without modification.",
+      "modules": [
+        "D_SFT materialization: (I, q', r, â, e) — retains trace",
+        "D_RL materialization: (I, q', â, v, m) — trace removed, deterministic checker",
+        "Rollout-based curriculum: ρ(x) estimation → intermediate ρ prioritized"
+      ],
+      "design_rationale": "Standard prompt-answer-reward tuple format ensures plug-and-play compatibility."
+    },
+    "challenge_4_scaling_without_degradation": {
+      "description": "Data construction must remain useful across orders of magnitude; verification must not introduce systematic bias.",
+      "modules": [
+        "Separate evolution (O_z) and verification (v, g) so each scales independently",
+        "Rollout pass rate ρ filtering removes trivially solved (ρ=1) and intractable (ρ=0) samples",
+        "Full metadata traceability for audit"
+      ],
+      "design_rationale": "Component separation avoids single end-to-end generator where all interfaces fail together."
+    },
+    "challenge_5_verifier_modularity": {
+      "description": "New verification strategies must be addable without redesigning the policy optimizer.",
+      "modules": [
+        "Plugin architecture: evidence channels (code-checking, visual-evidence) are independent modules",
+        "Decider consumes all channel outputs; doesn't assume verifier > solver",
+        "Gate is conjunctive — any new channel adds a new conjunctive term"
+      ],
+      "design_rationale": "Evidence channels target different failure modes; complementarity empirically confirmed."
+    }
+  }
+}

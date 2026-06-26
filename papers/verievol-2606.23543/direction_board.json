@@ -1,0 +1,194 @@
+{
+  "paper": "VeriEvol: Scaling Multimodal Mathematical Reasoning via Verifiable Evol-Instruct",
+  "arxiv_id": "2606.23543",
+  "board_version": "1.0",
+  "research_directions": [
+    {
+      "id": "RD-1",
+      "title": "Verifier-Aware Operator Composition Beyond Fixed Taxonomies",
+      "seed_source": "Section 3.2 limitation: 12-topic discretization reduced expressivity vs full cross product of (route × skill × answer-type × verifier-contract).",
+      "gap": "Current operators O_z are hand-assigned to fixed topic bins; this limits the diversity of evolved prompts and prevents the verifier's failure patterns from guiding operator selection.",
+      "hypothesis": "Learning to compose operators conditioned on both seed features and verifier failure history produces higher-quality training data than any fixed taxonomy.",
+      "approach": "Replace the 12-topic routing with a learned composition function f(seed_features, verifier_feedback) → operator_subset. Use verifier confusion matrices to identify which operator classes systematically fail on which seed types, and weight operators to compensate.",
+      "minimal_viable_experiment": {
+        "compute": "~20 H100-hours",
+        "steps": [
+          "1. Run VeriEvol on 1K seeds with per-operator success tracking (what % pass φ_q × HTV-Agent)",
+          "2. Build a confusion matrix: operator class × seed feature (problem family, image complexity, answer type)",
+          "3. Replace 12-topic routing with a linear probe over seed features predicting per-operator success probability",
+          "4. Compare evolved data quality (SFT accuracy at 10K) against vanilla VeriEvol routing"
+        ],
+        "success_metric": "+0.5-1.5 avg accuracy improvement at matched 10K SFT budget over vanilla routing",
+        "risk": "May overfit to the 1K seed distribution; validate on a held-out 200-seed pool"
+      },
+      "novelty": "medium",
+      "impact": "medium-high",
+      "confidence": 0.65
+    },
+    {
+      "id": "RD-2",
+      "title": "Heterogeneous Verifier Ensembles Across Backbones",
+      "seed_source": "Limitation ii (Section 5): HTV-Agent accepts wrong answers when all channels share a blind spot; all use same backbone family.",
+      "gap": "Current HTV-Agent uses a single backbone family (Gemini variants); blind spots can be shared across channels because solver and verifier weights are correlated.",
+      "hypothesis": "Using different backbone families (e.g., Qwen + Llama + Gemini as solvers, Claude as decider) reduces shared blind spots more than adding channels within the same family.",
+      "approach": "Implement HTV-Agent with heterogeneous solvers (different architectures/training distributions) and cross-backbone decider. Measure shared blind-spot rate under homogeneous vs heterogeneous configurations.",
+      "minimal_viable_experiment": {
+        "compute": "~$500 API credits",
+        "steps": [
+          "1. Sample 200 seed problems and produce evolved prompts via VeriEvol operators",
+          "2. Run HTV-Agent in two configurations: (a) 3 × Gemini-3 solvers + Gemini decider, (b) 1 × Qwen2.5-VL, 1 × Llama-4-Vision, 1 × Gemini-3 solvers + Claude decider",
+          "3. Manual audit of 30 disagreements per configuration (180 samples total) — count shared blind spots",
+          "4. Measure acceptance gate rejection rate difference between configurations",
+          "5. Train VeriEvol-SFT-10K with both pools, compare accuracy"
+        ],
+        "success_metric": "≥30% reduction in shared blind-spot rate + at least statistically insignificant accuracy improvement",
+        "risk": "API costs × heterogeneous compute requirements; decoding stability varies across backbones"
+      },
+      "novelty": "high",
+      "impact": "high",
+      "confidence": 0.7
+    },
+    {
+      "id": "RD-3",
+      "title": "Direct Matched-Budget RL Ablation of Verifier Contribution",
+      "seed_source": "Limitation ii.a (Section 5): Verifier on/off ablation not directly matched at RL budget — inference-time proxy on Gemini-3.5-Flash is indirect.",
+      "gap": "The +2.06 marginal verifier contribution is computed by comparing (RL-Evol + Verifier) against (RL-Evol) at different data volumes because matching the exact same RL data budget with/without verifier screening is expensive.",
+      "hypothesis": "When matched at the same RL data budget, the verifier's marginal contribution is ≥+1.5 (lower bound ≥ 75% of the reported +2.06).",
+      "approach": "Construct two 50K RL pools from the same 100K evolved-prompt candidates: (a) verifier-screened (accept ≈ 50K), (b) random subset without verifier filtering. Train GRPO on both with identical SFT init, measure accuracy gap. Repeat at 100K.",
+      "minimal_viable_experiment": {
+        "compute": "~400 H100-hours (2 RL runs at 50K + 2 RL runs at 100K)",
+        "steps": [
+          "1. Generate 100K evolved prompts from seeds (using VeriEvol operators, no verification)",
+          "2. Run HTV-Agent on all 100K; collect accept/reject decisions",
+          "3. Construct pool (a): 50K accepted prompts. Pool (b): random 50K from the 100K (including rejected ones). Overlap controlled to at most 5K",
+          "4. Train GRPO on both pools from VeriEvol-SFT-Init. Repeat at 100K (all accepted vs all candidates)",
+          "5. Report accuracy on all 5 benchmarks"
+        ],
+        "success_metric": "Verifier-screened pool ≥+1.5 avg accuracy over unscreened pool at both 50K and 100K",
+        "risk": "High compute cost; unscreened pool may have much higher ρ=1 failure rate, making the comparison noisy"
+      },
+      "novelty": "low",
+      "impact": "high",
+      "confidence": 0.85,
+      "notes": "This is the most important missing ablation. It's direct and expensive but definitive."
+    },
+    {
+      "id": "RD-4",
+      "title": "Scaling to Larger Backbone Sizes (14B–72B)",
+      "seed_source": "Limitation v (Section 5): Single seed per RL run at 7B scale; results below ~1 point are suggestive at best. Backbone-capacity ceiling mentioned in error analysis.",
+      "gap": "The reported results are all at 7B. The backbone-capacity ceiling (~20% residual errors from multi-step symbolic chains) suggests VeriEvol's data quality gains may amplify at larger scales where the policy can actually exploit harder evolved prompts.",
+      "hypothesis": "VeriEvol's marginal gain over un-evolved RL increases with backbone capacity, because larger models can better exploit the hard image-grounded prompts that simpler models find intractable (ρ=0).",
+      "approach": "Repeat the main RL ablation (RL-Origin vs full VeriEvol) on Qwen2.5-VL-14B and 72B. Additionally, compute ρ(x) distributions for each model size to verify the rollout-curriculum intuition.",
+      "minimal_viable_experiment": {
+        "compute": "~2000 H100-hours for 14B, ~8000 H100-hours for 72B",
+        "steps": [
+          "1. Run VeriEvol-SFT-Init on Qwen2.5-VL-14B (adapt 250K SFT recipe for larger batch size)",
+          "2. Train RL-Origin and RL-Evol+Verifier on 130K verified pool at 14B",
+          "3. Repeat at 72B (single evaluation run may be sufficient to establish trend)",
+          "4. Compute per-model-size ρ(x) distributions for the evolved pool"
+        ],
+        "success_metric": "VeriEvol marginal gain increases from +3.88 (7B) to ≥+5.5 (14B) to ≥+8.0 (72B); ρ=0 fraction for hard prompts decreases with scale",
+        "risk": "Compute budget may be prohibitive; distributional shift in ρ may saturate by 14B"
+      },
+      "novelty": "low",
+      "impact": "very high",
+      "confidence": 0.8
+    },
+    {
+      "id": "RD-5",
+      "title": "Domain Transfer: Chart QA and Science Diagrams",
+      "seed_source": "Section 5 (Broader Impact): 'Composability principle suggests extensions to chart QA, diagram-based science, document understanding.'",
+      "gap": "VeriEvol is demonstrated only on mathematical reasoning benchmarks. The type-aware routing and verification framework is architecture-agnostic but not yet validated on other visual reasoning domains.",
+      "hypothesis": "The same two-axis framework (type-aware evolution + HTV-Agent verification) transfers to chart QA and science diagram domains with at least +2 avg gain over un-evolved baselines.",
+      "approach": "Apply VeriEvol pipeline to ChartQA and ScienceQA seeds. Adapt route-specific operators for chart types (bar, line, pie, scatter) and science diagrams (biological, physical, chemical). Measure transfer by training VeriEvol-SFT+RL and comparing against seed-only baselines on each domain's benchmarks.",
+      "minimal_viable_experiment": {
+        "compute": "~100 H100-hours",
+        "steps": [
+          "1. Collect 5K seeds each from ChartQA and ScienceQA training sets",
+          "2. Define 3-5 route-specific operators per domain (chart-specific: 'extract value from axis grid', 'compare two series'; science-specific: 'count labeled structures', 'trace pathway')",
+          "3. Run VeriEvol pipeline: routing → evolution → HTV-Agent → D_SFT/D_RL",
+          "4. SFT on Qwen2.5-VL-7B at 10K/50K; compare against seed-only SFT"
+        ],
+        "success_metric": "≥+2 avg accuracy on each domain-specific benchmark over seed-only SFT baseline",
+        "risk": "HTV-Agent's visual-evidence module may need chart-specific adapters (legend parsing, axis alignment)"
+      },
+      "novelty": "medium",
+      "impact": "high",
+      "confidence": 0.75
+    },
+    {
+      "id": "RD-6",
+      "title": "Iterative VeriEvol: Closed-Loop Data Construction",
+      "seed_source": "Section 3.2 and Appendix F: Algorithm 1 operates statically on seed pool; no feedback from model's errors back into evolution.",
+      "gap": "VeriEvol constructs training data once, then trains. There's no loop where the model's errors (particularly VG failures that survive VeriEvol) become seeds for a second round of evolution.",
+      "hypothesis": "A closed-loop VeriEvol that feeds residual errors back as new seeds produces more efficient data (same accuracy with 30-40% less data) than a single-pass construction.",
+      "approach": "After training on VeriEvol data, collect the model's errors (especially VG type). Use these error-case images+questions as new seeds for a second pass through VeriEvol's operators (with adapted operator targeting). Compare accuracy vs same-budget single-pass baseline.",
+      "minimal_viable_experiment": {
+        "compute": "~150 H100-hours",
+        "steps": [
+          "1. Train full VeriEvol (250K SFT + 130K RL) on Qwen2.5-VL-7B",
+          "2. Evaluate on MathVerse-VO; collect 200 error cases (any type), filter to VG+TS errors (~100 expected)",
+          "3. Run VeriEvol pipeline on these 100 error seeds → produce ~2K SFT + ~1K RL additional samples",
+          "4. Continue training from full VeriEvol checkpoint on the additional 30K-sample mixture",
+          "5. Compare accuracy against VeriEvol with same total budget but single-pass construction"
+        ],
+        "success_metric": "Closed-loop VeriEvol matches or exceeds single-pass VeriEvol with 30-40% less total data (or same data but +0.8 higher avg)",
+        "risk": "Distribution shift from repeated VG error targeting may lead to overfitting on VG failure modes"
+      },
+      "novelty": "high",
+      "impact": "medium-high",
+      "confidence": 0.65
+    },
+    {
+      "id": "RD-7",
+      "title": "Cost-Efficiency Analysis: Optimal Verification Budget Allocation",
+      "seed_source": "Appendix B latency: HTV-Agent is 15-20× more expensive per sample than raw single call. D_SFT 250K + D_RL 130K implies substantial verification cost.",
+      "gap": "No cost-efficiency analysis of the verification budget. Does every sample need full HTV-Agent, or is a cheaper two-stage filter (cheap heuristic → expensive verifier only on borderline) more efficient?",
+      "hypothesis": "A cascade filter (cheap SC-only gate → full HTV-Agent only when SC confidence < threshold) produces 90%+ of VeriEvol's data quality improvement at ≤40% of the verification cost.",
+      "approach": "Implement a cascade verifier: (1) quick 2-solver consistency + rule-based check, (2) if confidence below threshold, escalate to full HTV-Agent. Sweep threshold at 10 cost-quality Pareto points. Compare against full HTV-Agent on all samples.",
+      "minimal_viable_experiment": {
+        "compute": "~50 H100-hours + $200 API credits",
+        "steps": [
+          "1. Run 3K prompts through full HTV-Agent; record all intermediate outputs (per-channel scores, decider confidence)",
+          "2. Simulate cascade by replaying: use subset of channels as cascade stages; sweep acceptance threshold",
+          "3. Identify optimal cost-quality Pareto frontier",
+          "4. Validate top-3 cascade designs by constructing 50K D_SFT and measuring RL accuracy"
+        ],
+        "success_metric": "At least one cascade design achieves ≥95% of the full HTV-Agent accuracy gain at ≤50% verification cost",
+        "risk": "Phase transition: if the cheap stage is too aggressive, it may reject all hard-to-verify samples that actually benefit RL most"
+      },
+      "novelty": "medium",
+      "impact": "medium",
+      "confidence": 0.7
+    },
+    {
+      "id": "RD-8",
+      "title": "Visual Grounding Necessity as a First-Class Optimization Target",
+      "seed_source": "Section 4.4: VG errors drop from 13→6 but remain the largest residual error category. Layer 2 analysis shows VeriEvol explicitly targets VG, but only through indirect scoring.",
+      "gap": "The current C_vis check (text-only probe) provides a binary signal (image is necessary or not). There's no gradient for how thoroughly the image is used, and no explicit optimization for image-grounded reasoning depth.",
+      "hypothesis": "Explicitly optimizing for visual grounding necessity (measured via a fine-grained metric like 'number of image regions referenced in trace') produces models with systematically fewer VG errors than indirectly targeting VG through prompt difficulty.",
+      "approach": "Augment the question gate φ_q with a fine-grained visual-groundedness score (using HTV-Agent's visual-evidence module to count distinct image regions referenced). Add a lightweight reward bonus during GRPO for traces that reference the image. Compare VG error rates under explicit vs implicit VG targeting.",
+      "minimal_viable_experiment": {
+        "compute": "~80 H100-hours",
+        "steps": [
+          "1. Implement visual-groundedness scoring: for each evolved prompt, count distinct image regions referenced in the HTV-Agent trace (using OCR box counts + crop coordinates)",
+          "2. Augment φ_q with a threshold: reject prompts with VG score < 2 regions referenced",
+          "3. Construct 50K D_SFT (standard φ_q only) and 50K D_SFT (augmented φ_q)", 
+          "4. Also try adding ρ_vg = VG_score as auxiliary reward bonus during GRPO (weight λ=0.1)",
+          "5. Compare VG error rates on MathVerse-VO and MathVision_MINI (60-sample audit)"
+        ],
+        "success_metric": "VG error rate reduction: augmented VeriEvol reduces VG errors by ≥40% (relative) compared to standard VeriEvol",
+        "risk": "Optimizing for VG score directly may reduce prompt diversity; cross-validate that other error types don't increase"
+      },
+      "novelty": "high",
+      "impact": "high",
+      "confidence": 0.6
+    }
+  ],
+  "metadata": {
+    "created": "2026-06-25",
+    "num_directions": 8,
+    "top_priorities": ["RD-3", "RD-4", "RD-2"],
+    "easiest_to_start": ["RD-3", "RD-7"]
+  }
+}

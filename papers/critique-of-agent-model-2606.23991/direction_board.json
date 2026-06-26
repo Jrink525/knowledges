@@ -1,0 +1,312 @@
+{
+  "paper": "Critique of Agent Model (arXiv:2606.23991)",
+  "generated_at": "2026-06-25T17:08:00Z",
+  "directions": [
+    {
+      "rank": 1,
+      "name": "Empirical Validation of Fast-Slow Identity Learning (Theorem 1)",
+      "seed_type": "theoretical_prediction_testing",
+      "motivation": "Theorem 1 is the paper's most actionable formal claim, but depends on assumptions (A1, A2) that need empirical characterization. Companion papers (Deng et al. 2026a,b) address Performance/Efficiency but not Growth.",
+      "key_question": "Under what practical conditions does fast identity revision dominate slow-only learning?",
+      "hypothesis": "An agent with learned identity evolver ι will accumulate less regret than a fixed-identity agent across multiple rounds of slow updates + within-round identity adaptation.",
+      "minimum_viable_experiment": {
+        "setting": "Simplified grid-world or text-based task where identity encodes capability self-assessment (e.g., 'I can navigate mazes of complexity ≤ N')",
+        "independent_variables": [
+          "Identity update frequency (none / per-episode / per-step)",
+          "Identity representation (scalar capability estimate / categorical role / vector embedding)",
+          "Identity evolver training (rule-based / learned from feedback)"
+        ],
+        "dependent_variables": [
+          "Cumulative regret (as defined in Eq. 9-10)",
+          "Per-step value difference Δ_t",
+          "Cross-round advantage η_k (Eq. 16)",
+          "Sensitivity to A1 violation (random vs adversarial identity updates)"
+        ],
+        "baselines": [
+          "Slow-only (identity fixed at i_0 throughout)",
+          "Identity reset at each episode (no carry-over)",
+          "Random identity updates (as lower bound)"
+        ],
+        "expected_outcome": "Fast-slow dominates in settings where identity revision is ≥55% accurate; gap grows with round count N_k as predicted.",
+        "compute_budget": "< 1 GPU-week (text-based) or < 10 GPU-weeks (grid-world)",
+        "success_criteria": "Statistically significant regret gap (p < 0.01) confirming Ω(∑N_k) bound; characterization of A1 failure regimes."
+      },
+      "open_challenges": [
+        "Defining identity space ℐ concretely",
+        "Training ι without ground-truth identity labels",
+        "Measuring 'closeness' of self-model d(i, i*)"
+      ],
+      "related_sections": "§4.2, Appendix A"
+    },
+    {
+      "rank": 2,
+      "name": "Effectiveness of World-Model-Based Augmentation (Theorem 2)",
+      "seed_type": "theoretical_prediction_testing",
+      "motivation": "Theorem 2 is central to the paper's critique of black-box policies. Testing it empirically reveals when and why world-model augmentation actually helps.",
+      "key_question": "Under what world-model quality (ε) and task characteristics does π_mix outperform the baseline policy π?",
+      "hypothesis": "Mixed policy π_mix (world-model-based planning fallback) improves any baseline policy when world model TV error ε ≤ ε_critical, with improvement proportional to task novelty/complexity.",
+      "minimum_viable_experiment": {
+        "setting": "Procedurally generated grid-world with controlled dynamics (familiar vs novel transitions)",
+        "independent_variables": [
+          "World model accuracy ε (controlled via training data volume, 10% → 90% next-state accuracy)",
+          "Task novelty (in-distribution / mildly OOD / strongly OOD)",
+          "Planning horizon depth (1 step / 3 steps / 10 steps)"
+        ],
+        "dependent_variables": [
+          "V^g_{π_mix} - V^g_π (improvement over baseline)",
+          "Empirical gap from Theorem 2 bound",
+          "Planning invocation frequency (how often is π_mix ≠ π?)",
+          "Fraction of tasks where π_mix degrades performance"
+        ],
+        "baselines": [
+          "Baseline policy π (no world model, end-to-end RL)",
+          "Pure world-model-based planner π_f (no fallback)",
+          "Ensemble of policies (without structured mixed strategy)"
+        ],
+        "expected_outcome": "π_mix matches or exceeds π when ε ≤ 0.2; improvement grows with task novelty; degradation risk near zero due to fallback mechanism.",
+        "compute_budget": "< 5 GPU-weeks",
+        "success_criteria": "Confirm Theorem 2 prediction: V^g_{π_mix} ≥ V^g_π for all tested ε, with statistically significant advantage when ε ≤ 0.2."
+      },
+      "open_challenges": [
+        "Implementing the mixed policy selection mechanism (when to trust world model vs baseline)",
+        "Handling continuous action spaces",
+        "Measuring TV error between world model and true environment"
+      ],
+      "related_sections": "§4.3, Appendix B"
+    },
+    {
+      "rank": 3,
+      "name": "GIC Training Phase Ablation Study",
+      "seed_type": "architectural_validation",
+      "motivation": "GIC's three-phase training (pretrain → simulative RL → deployment) is a central architectural claim but untested. An ablation study reveals which phases matter and how.",
+      "key_question": "What is the marginal contribution of each GIC training phase to final agentive capability?",
+      "hypothesis": "All three phases are necessary: phase 2 (simulative RL) provides the largest marginal gain, but phase 3 (deployment) is essential for sim-to-real robustness.",
+      "minimum_viable_experiment": {
+        "setting": "Minecraft-like or VirtualHome environment with physical and social components (e.g., 'cook a meal' requires navigation, tool use, coordination)",
+        "independent_variables": [
+          "Training phase inclusion (phase 1 only / phases 1+2 / phases 1+2+3)",
+          "World model quality (accurate / moderately accurate / poor)",
+          "Task horizon (short: 10 steps / medium: 100 steps / long: 1000 steps)"
+        ],
+        "dependent_variables": [
+          "Task success rate",
+          "Sample efficiency (experience required for competence)",
+          "Generalization to unseen tasks/environments",
+          "Sim-to-real gap (performance drop from simulative test to deployment test)"
+        ],
+        "baselines": [
+          "End-to-end RL without phase distinction (monolithic training)",
+          "Phase 2 only (skip pretraining)",
+          "Phase 1 + Phase 3 (skip simulative RL)"
+        ],
+        "expected_outcome": "Full GIC (phases 1+2+3) significantly outperforms all ablations; phase 2 shows largest gain on long-horizon tasks; phase 3 critical for novel environments.",
+        "compute_budget": "< 50 GPU-weeks (would require substantial infrastructure)",
+        "success_criteria": "Clear performance hierarchy: Full GIC > 1+2 > 1+3 > 2-only > end-to-end RL, with p < 0.01 on long-horizon tasks."
+      },
+      "open_challenges": [
+        "Building a sufficiently rich environment with both physical and social dimensions",
+        "Implementing all GIC components at even a prototype level",
+        "Controlling for model capacity across ablations"
+      ],
+      "related_sections": "§5.3 Training the Agent Model, §5.2 GIC Architecture"
+    },
+    {
+      "rank": 4,
+      "name": "Configurator (System III) Training and Evaluation",
+      "seed_type": "new_method_proposal",
+      "motivation": "The configurator κ is the most novel component of GIC but the paper offers minimal guidance on how to train it. This is a high-precision open problem.",
+      "key_question": "How can κ learn to allocate deliberation optimally across diverse situations?",
+      "hypothesis": "A configurator trained via RL on a meta-reward (task success minus computation cost) will learn adaptive regulation policies that outperform fixed deliberation strategies.",
+      "minimum_viable_experiment": {
+        "setting": "Web navigation or text-based game with variable-difficulty tasks (easy: single step, hard: multi-hop reasoning)",
+        "independent_variables": [
+          "Configurator training signal (meta-reward with computation cost weight: 0.0 / 0.1 / 0.5 / 1.0)",
+          "Regulation variable granularity (binary System I/II / fine-grained compute budget / hierarchical)",
+          "Task difficulty distribution (uniform / skewed easy / skewed hard)"
+        ],
+        "dependent_variables": [
+          "Accuracy vs computation Pareto frontier",
+          "Planning frequency vs task difficulty correlation",
+          "Overthinking rate (unnecessary deliberation on easy tasks)",
+          "Underthinking rate (insufficient deliberation on hard tasks)"
+        ],
+        "baselines": [
+          "Always plan (System II always active)",
+          "Never plan (System I only)",
+          "Fixed threshold (plan if task takes > T expected steps)",
+          "GPT-5 style 'invisible model picker' (baseline from section 4.4)"
+        ],
+        "expected_outcome": "RL-trained configurator achieves best Pareto frontier; planning frequency correlates with task difficulty; computation cost weight of 0.1-0.3 produces best trade-off.",
+        "compute_budget": "< 10 GPU-weeks",
+        "success_criteria": "Learned configurator achieves ≥90% of optimal Pareto frontier with ≤20% overthinking rate; significantly outperforms all fixed baselines at computation-accuracy trade-off."
+      },
+      "open_challenges": [
+        "Defining computation cost function (FLOPs? latency? tokens?)",
+        "Avoiding configurator collapse (always choosing cheap mode)",
+        "Credit assignment across configurator decisions and downstream task outcomes"
+      ],
+      "related_sections": "§4.4 Self-Regulation, §5.2 GIC Architecture (Configurator)"
+    },
+    {
+      "rank": 5,
+      "name": "PEG Evaluation Framework Application",
+      "seed_type": "benchmark_proposal",
+      "motivation": "The PEG framework (Performance, Efficiency, Growth) is proposed to evaluate agentive systems. No concrete benchmark or protocol exists — this direction creates one.",
+      "key_question": "Can the PEG framework distinguish agentive systems from agentic ones on a standardized suite?",
+      "hypothesis": "PEG evaluation reveals systematic differences between agentive and agentic systems: both may score well on Performance, but only agentive systems score well on Growth.",
+      "minimum_viable_experiment": {
+        "setting": "Curated task suite across three tiers: procedural (fixed), adaptive (environment changes over time), and open-ended (no fixed termination)",
+        "evaluation_dimensions": {
+          "Performance_test": {
+            "goal_decomposition": "Multi-stage tasks (e.g., 'prepare dinner for 4 with dietary restrictions')",
+            "identity_adaptation": "Environment transfer tasks (change action space mid-deployment)",
+            "simulative_reasoning": "Multi-constraint planning (e.g., 'find shortest path visiting A, B, C avoiding D')",
+            "reactive_execution": "Real-time continuous control (e.g., object manipulation, driving)"
+          },
+          "Efficiency_test": {
+            "think_vs_act_ratio": "Planning frequency distribution across tasks",
+            "accuracy_per_token": "Task accuracy / mean thinking tokens",
+            "latency_adaptation": "Decision latency vs task difficulty correlation"
+          },
+          "Growth_test": {
+            "learning_efficiency": "Performance vs amount of real-world experience",
+            "self_directed_exploration": "Performance when agent schedules own training vs fixed curriculum",
+            "learning_transfer": "Performance gain on OOD tasks after in-distribution learning"
+          }
+        },
+        "agents_to_evaluate": [
+          "Current agentic systems (Claude Code, Cursor, OpenClaw acting on tool-calling only)",
+          "LLM-centered systems (DeepSeek-V4 with chain-of-thought)",
+          "GIC prototypes (Deng et al. 2026a,b)",
+          "Random/naive baseline"
+        ],
+        "expected_outcome": "PEG reveals clear separation: all systems score on Performance (varying levels); agentic systems show near-zero Growth; GIC prototypes show positive Growth curve.",
+        "compute_budget": "N/A (framework design + evaluation infrastructure: < 10 GPU-weeks to establish)",
+        "success_criteria": "PEG produces consistent, interpretable results across evaluation runs; Growth dimension differentiates agentive from agentic systems with d > 1.0 effect size."
+      },
+      "open_challenges": [
+        "Task suite coverage and bias",
+        "Standardizing environment interfaces across different agent architectures",
+        "Long evaluation cycles for Growth (requires many training iterations)"
+      ],
+      "related_sections": "§5.5 Evaluation of the Agent Model"
+    },
+    {
+      "rank": 6,
+      "name": "Goal-Oriented Dataset Construction and Benchmarking",
+      "seed_type": "dataset_proposal",
+      "motivation": "The paper identifies goal-oriented data as 'the highest-leverage investment for training general-purpose agent models.' No such dataset currently exists at scale.",
+      "key_question": "What is the marginal value of goal annotations over raw trajectory data for training agent models?",
+      "hypothesis": "Goal-annotated trajectories provide substantially better training signal for hierarchical planning than raw trajectories alone, especially on long-horizon tasks.",
+      "minimum_viable_experiment": {
+        "setting": "Construct a dataset of 100K+ goal-annotated trajectories across multiple domains (household, office, games)",
+        "dataset_design": {
+          "domains": [
+            "Household: cooking, cleaning, organizing (from VirtualHome or BEHAVIOR)",
+            "Office: document processing, meeting scheduling (from task-oriented dialog datasets)",
+            "Games: Minecraft task completion, NetHack ascension runs"
+          ],
+          "annotation_schema": {
+            "top_level_goal": "Free-text description of overall objective",
+            "subgoal_sequence": "Ordered list of subgoals with timestamps",
+            "contingencies": "Alternative behaviors when subgoal fails",
+            "goal_progress": "Per-timestep scalar progress toward goal"
+          }
+        },
+        "training_conditions": [
+          "Raw trajectory data (no goal annotations)",
+          "Goal-annotated data (full schema)",
+          "Goal-annotated with subgoal hierarchy only",
+          "Mixed: 10% goal-annotated + 90% raw"
+        ],
+        "evaluation": "PEG Performance tasks requiring hierarchical planning",
+        "expected_outcome": "Goal-annotated training produces agents with 30%+ higher success on long-horizon tasks; subgoal hierarchy annotations provide most of the benefit.",
+        "compute_budget": "< 20 GPU-weeks for data generation + agent training",
+        "success_criteria": "Statistically significant improvement (p < 0.01) from goal annotations on long-horizon tasks; diminishing returns analysis showing 10% annotation is 80% as effective as 100%."
+      },
+      "open_challenges": [
+        "Scalable annotation pipeline (human annotation expensive; automated annotation needs validation)",
+        "Annotation consistency across domains",
+        "Ensuring goal variety covers broad objective space"
+      ],
+      "related_sections": "§5.6 Data Requirements"
+    },
+    {
+      "rank": 7,
+      "name": "Safety Audit of GIC vs Monolithic Systems",
+      "seed_type": "empirical_safety_research",
+      "motivation": "The paper's safety argument is entirely theoretical. An empirical comparison of failure modes between GIC-like modular architectures and monolithic systems would be highly impactful.",
+      "key_question": "Does GIC's layered transparency actually enable better failure detection and correction than monolithic approaches?",
+      "hypothesis": "Modular architectures (GIC) allow faster and more precise identification of failure sources, and more targeted correction, compared to monolithic policies.",
+      "minimum_viable_experiment": {
+        "setting": "Controlled sandbox environment with known safety violations (reward hacking, unsafe exploration, goal misgeneralization)",
+        "adversarial_scenarios": [
+          "Reward hacking: agent discovers shortcut that maximizes reward without achieving goal",
+          "Goal misgeneralization: training goal differs from deployment goal in subtle ways",
+          "Instrumental subgoal emergence: self-preservation behavior conflicting with human termination",
+          "Distributional shift: deployment environment differs from training"
+        ],
+        "independent_variables": [
+          "Architecture type (monolithic black-box / modular GIC-like with explicit components)",
+          "Component auditability (all components inspectable / partial / none)"
+        ],
+        "dependent_variables": [
+          "Time to detect failure (interaction steps before anomaly flag)",
+          "Accuracy of root cause attribution (correct component identified)",
+          "Time to correct failure (interaction steps to repair and resume)",
+          "Side effects of correction (unintended behavior changes)"
+        ],
+        "baselines": [
+          "Monolithic end-to-end policy",
+          "Monolithic with observation-only oversight",
+          "Modular with no auditability (components exist but opaque)"
+        ],
+        "expected_outcome": "GIC's modular architecture enables 2-5× faster failure detection and 3-10× faster correction compared to monolithic baselines.",
+        "compute_budget": "< 15 GPU-weeks",
+        "success_criteria": "Statistically significant advantage (p < 0.01) in detection time, attribution accuracy, and correction time for GIC-style architecture across all four scenarios."
+      },
+      "open_challenges": [
+        "Building a representative GIC prototype for safety testing",
+        "Designing adversarial scenarios that are challenging but diagnostic",
+        "Controlling for confounds (modular systems may detect failures via simpler heuristics)"
+      ],
+      "related_sections": "§5.7 Safety Considerations"
+    },
+    {
+      "rank": 8,
+      "name": "World Model vs Agent Model Separation: Empirical Impact",
+      "seed_type": "architectural_validation",
+      "motivation": "A core principle of the paper is functional separation of world model and agent model. Many recent proposals (DreamZero, Cosmos) collapse them. This is a falsifiable architectural claim.",
+      "key_question": "Does keeping the world model functionally separate from the agent model measurably improve performance, safety, or training efficiency?",
+      "hypothesis": "Separate training (WM on prediction error, AM on reward) produces more reliable planning and more interpretable failures than joint world-action models.",
+      "minimum_viable_experiment": {
+        "setting": "Continuous control task (MuJoCo or DM Control) with known transition dynamics where planning accuracy is critical",
+        "independent_variables": [
+          "Architecture (separate WM + AM / joint world-action model / collapsed model)",
+          "Training signal separation (separate losses / shared loss / shared weights)",
+          "Task type (deterministic dynamics / stochastic dynamics / partially observable)"
+        ],
+        "dependent_variables": [
+          "Planning accuracy (predicted next-state error under chosen actions)",
+          "Task success rate",
+          "Interpretability score (human rater: can failure be attributed to agent or world model?)",
+          "Training efficiency (experience required to reach threshold performance)"
+        ],
+        "baselines": [
+          "DreamZero-style joint world-action model",
+          "Cosmos-style collapsed model",
+          "GIC-style separate WM+AM with information exchange only through activations"
+        ],
+        "expected_outcome": "Separate models achieve comparable or better task performance, with significantly better interpretability and cleaner training gradients.",
+        "compute_budget": "< 20 GPU-weeks",
+        "success_criteria": "Separate-model architecture demonstrates statistically significant advantage in interpretability (Cohen's d > 0.8) without significant performance degradation (≤ 5% from best collapsed model)."
+      },
+      "open_challenges": [
+        "Implementing a fair comparison where model capacity is controlled across architectures",
+        "Defining and measuring 'interpretability' objectively",
+        "Handling the coupling through activation exchange (which may introduce its own issues)"
+      ],
+      "related_sections": "§4.5 World Model, §2.1 Preliminaries"
+    }
+  ]
+}

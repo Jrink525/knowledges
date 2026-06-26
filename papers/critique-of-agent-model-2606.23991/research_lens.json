@@ -1,0 +1,181 @@
+{
+  "paper": "Critique of Agent Model (arXiv:2606.23991)",
+  "generated_at": "2026-06-25T17:08:00Z",
+  "research_equation": {
+    "formulation": "Agency = f(Goals, Identity, Decision-Making, Self-Regulation, Learning) | World-Model-Grounded",
+    "independent_variables": [
+      {
+        "name": "Goal Internalization",
+        "range": "[externally_specified → internally_persistent_and_decomposable]",
+        "formalized_as": "p_δ(g_t | s_t, g) — learned hierarchical decomposition module"
+      },
+      {
+        "name": "Identity Internalization",
+        "range": "[static/externally_fixed → evolving/fast-slow_adaptive]",
+        "formalized_as": "p_ι(i_t | s_t, i_{t-1}) — identity evolver, Theorem 1"
+      },
+      {
+        "name": "Decision-Making Grounding",
+        "range": "[black_box_CoT → simulative_reasoning + reactive_execution]",
+        "formalized_as": "p_π_f(c_t | s_t, g_t, i_t) — world-model-grounded planner, Theorem 2"
+      },
+      {
+        "name": "Self-Regulation Depth",
+        "range": "[fixed_workflow / emergent → learned_configurator]",
+        "formalized_as": "p_κ(u_t | s_t, g_t, i_t, c_{t-1}) — System III meta-controller"
+      },
+      {
+        "name": "Learning Autonomy",
+        "range": "[human_scheduled → self_directed_continuous]",
+        "formalized_as": "configurator-governed interleaving of acting and learning"
+      }
+    ],
+    "dependent_measure": {
+      "PEG_framework": {
+        "Performance": "Task success with generalizable reasoning (goal decomp, identity adapt, simulative planning)",
+        "Efficiency": "Compute allocation quality (latency, thinking tokens vs accuracy, planning frequency)",
+        "Growth": "Learning curves (learning efficiency, self-directed exploration, learning transfer)"
+      }
+    },
+    "key_constraint": "Agent model p_π(a|s,g,i) must remain functionally distinct from world model p_f(s'|s,a); collapsed models conflate reward-driven action selection with fidelity-driven prediction"
+  },
+
+  "tri_pass_notes": {
+    "first_pass_summary": "Philosophical-framework paper establishing a principled boundary between scaffolded automation (agentic) and genuine agency (agentive). Proposes GIC architecture integrating five dimensions. Two formal theorems. No empirical experiments — experimental validation deferred to companion papers.",
+    "second_pass_structure": {
+      "sections": [
+        {"§1_Introduction": "Motivates agency from Descartes, Blade Runner. Defines agentic vs agentive. Introduces five dimensions. States AM = p_π(a|s,g,i). Introduces GIC at high level."},
+        {"§2_Agentic_vs_Agentive": "Formalizes agent-environment model. Five subsections each formalizing one dimension along a spectrum. Key equation (1): factorization of trajectory into agent and universe factors."},
+        {"§3_Landscape": "Six-category taxonomy of current systems from program-based to embodied-model. Relation to six existing surveys. Observation: core agency structures still reside outside the model."},
+        {"§4_Critique": "Deep critique of five common practices. Each: status quo → limitation → constructive alternative. Identifies common root cause — absence of explicit world model. Two theorems."},
+        {"§5_GIC_Architecture": "Presents complete GIC proposal: 6 agent model components + 1 world model. Three-system cognitive architecture (I/II/III). Three-phase training. PEG evaluation. Data requirements. Safety analysis."},
+        {"§6_Conclusion": "Not definitive answers but inspiration. GIC as principled path. Future directions: multi-agent, time scales, modalities, perpetual learning."}
+      ]
+    },
+    "third_pass_deep_analysis": {
+      "strengths": [
+        "Principled formal framework grounded in decision theory (agent-environment factorization)",
+        "Comprehensive: covers philosophical, formal, architectural, practical, and safety dimensions",
+        "Theorems provide testable formal claims with explicit assumptions",
+        "Novel agentic vs agentive taxonomy clarifies a muddy conceptual landscape",
+        "GIC architecture is modular and addresses a gap (no existing framework integrates all five dimensions)",
+        "Safety argument (component-level auditability) is principled and addresses real concerns about opaque systems"
+      ],
+      "weaknesses": [
+        "No empirical validation — all experimental results deferred to companion papers",
+        "Computational cost of GIC is unanalyzed (multiple interacting components, separate world model)",
+        "Theorem assumptions (A1, A2) may be strong — 'better than random' identity revision is non-trivial",
+        "World model accuracy assumption (TV error ≤ ε) is a first-order concern for open-ended environments",
+        "No discussion of parameter scales, memory budgets, or engineering feasibility of the full architecture",
+        "Goal-oriented data is identified as crucial but its collection/scaling at variety is hand-waved",
+        "Multi-agent extension (nested world models) is mentioned but not developed"
+      ],
+      "gaps": [
+        "No quantitative analysis of GIC's sample complexity vs existing approaches",
+        "No discussion of how to train the configurator κ beyond 'refined via RL'",
+        "No treatment of identity representation — what form does i_t take? Neural embedding? Symbolic?",
+        "Safety argument is theoretical — no red-teaming or adversarial evaluation",
+        "No concrete benchmark or evaluation protocol for the PEG framework",
+        "Computational efficiency of the three-system architecture vs monolithic models unaddressed"
+      ],
+      "critical_assumptions": [
+        "World model can be trained to sufficient accuracy (bounded TV error) for open-ended environments",
+        "Identity evolver ι can learn to produce better-than-random revisions from interaction experience",
+        "Slow update operator 𝒰 is monotone in both base-policy and data-generating-policy quality",
+        "Goal-oriented data can be curated at sufficient scale and variety",
+        "Layered transparency in practice leads to better safety outcomes than monolithic approaches",
+        "The separation of agent and world model can be maintained without sacrificing end-to-end performance"
+      ]
+    }
+  },
+
+  "challenge_module_map": {
+    "root_challenge": "How to build machine learning models with genuine, general-purpose agency — capable of autonomous, continuous, and self-directed operation in open-ended environments",
+    "sub_challenges": [
+      {
+        "id": "CH-GOAL",
+        "challenge": "Scalable long-horizon goal pursuit without human step-by-step instruction",
+        "gic_module": "δ (Goal Decomposition)",
+        "gic_formulation": "g_t ~ p_δ(·|s_t, g)",
+        "key_idea": "Isolate long-horizon difficulty in learned decomposition module; short-horizon subgoals are easier to learn and supervise",
+        "open_questions": [
+          "How to train δ without dense reward signals at the subgoal level?",
+          "How to ensure δ revisits decomposition appropriately when plans fail?",
+          "How to learn δ that generalizes across diverse goal spaces?"
+        ]
+      },
+      {
+        "id": "CH-IDENTITY",
+        "challenge": "Self-model that adapts to new capabilities, environments, and constraints without retraining",
+        "gic_module": "ι (Identity Evolver) + i_t (Self-Model)",
+        "gic_formulation": "i_t ~ p_ι(i_t | s_t, i_{t-1})",
+        "key_idea": "Fast-slow update: identity revisions take effect immediately (fast), parameter updates consolidate durable changes (slow)",
+        "open_questions": [
+          "What is the right representation for identity i_t? (embeddings? symbolic? hybrid?)",
+          "How to bootstrap ι when the agent has little interaction history?",
+          "How does identity interact with goal decomposition — can identity influence which goals are pursued?"
+        ]
+      },
+      {
+        "id": "CH-DECISION",
+        "challenge": "Grounded decision-making that goes beyond narrative plausibility of chain-of-thought",
+        "gic_module": "π_f (Simulative Planner / System II) + α (Actor / System I)",
+        "gic_formulation": "c_t ~ p_π_f(·|s_t, g_t, i_t); a_t ~ p_α(·|s_t, c_t)",
+        "key_idea": "Plan via predicting consequences through a separately trained world model f; Theorem 2 guarantees improvement if f is sufficiently accurate",
+        "open_questions": [
+          "How to efficiently search action spaces under the world model? (Equation 3 is intractable)",
+          "What is the optimal trade-off between planning horizon depth and computation cost?",
+          "How does the critic evaluator v interact with the planner?"
+        ]
+      },
+      {
+        "id": "CH-REGULATION",
+        "challenge": "Metacognitive control of when and how much to deliberate, learn, and revise",
+        "gic_module": "κ (Configurator / System III)",
+        "gic_formulation": "u_t ~ p_κ(·|s_t, g_t, i_t, c_{t-1})",
+        "key_idea": "Learn a meta-controller that adaptively allocates computation (System I vs II vs III) and schedules learning",
+        "open_questions": [
+          "How to train κ without a separate supervisory signal for meta-decisions?",
+          "What is the right granularity of regulation variables u_t? (binary mode switch? continuous budget?)",
+          "How to prevent the configurator from becoming a model of task difficulty that itself needs regulation?"
+        ]
+      },
+      {
+        "id": "CH-LEARNING",
+        "challenge": "Autonomous, continuous, self-directed learning from both real and simulated experience",
+        "gic_module": "λ (Learning Process, governed by κ)",
+        "gic_formulation": "θ_{t+1} ~ p_λ(·|θ_t, D_μ, D_f)",
+        "key_idea": "Learning is not a separate phase — it is governed by the configurator as part of the agent's ongoing decision-making",
+        "open_questions": [
+          "How to prevent catastrophic forgetting during continuous learning?",
+          "How to decide when simulated experience is sufficient vs real interaction is necessary?",
+          "How to credit-assign across learning episodes in open-ended environments?"
+        ]
+      },
+      {
+        "id": "CH-WORLD",
+        "challenge": "Building a world model accurate enough for reliable planning while general enough for open-ended environments",
+        "gic_module": "f (World Model, separate from Agent Model)",
+        "gic_formulation": "p_f(s_{t+1} | s_t, a)",
+        "key_idea": "Trained on next-state prediction alone; no agent reward signal flows into WM parameters; GLP architecture (Xing et al. 2025)",
+        "open_questions": [
+          "How to handle combinatorial state spaces (open worlds)?",
+          "How to model other agents within the world model?",
+          "When should the agent update/recalibrate its world model during deployment?"
+        ]
+      },
+      {
+        "id": "CH-SAFETY",
+        "challenge": "Ensuring safety in systems with persistent goals, evolving identity, and autonomous learning",
+        "gic_module": "Layered Transparency (all components)",
+        "gic_formulation": "Safety = audit(δ) + monitor(ι) + inspect(f) + verify(κ) + review(learning)",
+        "key_idea": "Modularity makes safety a component-debugging problem; all capabilities are explicit and inspectable by design",
+        "open_questions": [
+          "Does modular auditability scale to the complexity of real-world deployment?",
+          "What are the failure modes when individual components are well-trained but interact unexpectedly?",
+          "How to handle cases where goal g itself is harmful (beyond scope of architectural safety)?"
+        ]
+      }
+    ]
+  }
+}

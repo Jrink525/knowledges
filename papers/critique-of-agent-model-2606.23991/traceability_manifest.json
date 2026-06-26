@@ -1,0 +1,227 @@
+{
+  "paper": "Critique of Agent Model (arXiv:2606.23991)",
+  "generated_at": "2026-06-25T17:08:00Z",
+  "claims": [
+    {
+      "id": "C1",
+      "category": "definition",
+      "claim": "The agent model (AM) and world model (WM) must be kept functionally distinct: AM decides what to do, WM predicts what will happen.",
+      "location": "§1, §2.1, §4.5",
+      "evidence_type": "formal_argument",
+      "evidence": [
+        "Formal factorization: p^π_μ(a_t,s_{t+1},...,s_T|s_t) = ∏ p_π(a_k|s_k) · p_μ(s_{k+1}|s_k,a_k)",
+        "Equation (1) decomposition into agent factor and universe factor",
+        "§4.5: Separate training signals — WM uses prediction error, AM uses reward/goal-directed feedback",
+        "Contrast with recent collapsed models: DreamZero (Ye et al. 2026), Cosmos (NVIDIA 2026a), Li (2026)"
+      ],
+      "source_section": "1 Introduction, 2.1 Preliminaries, 4.5 World Model"
+    },
+    {
+      "id": "C2",
+      "category": "taxonomy",
+      "claim": "Agentic vs. Agentive: Agentic systems achieve competence through external scaffolding; Agentive systems derive capabilities endogenously.",
+      "location": "§1, §2",
+      "evidence_type": "definitional",
+      "evidence": [
+        "Agentic: 'competence resides primarily in the engineering around a given reasoning model'",
+        "Agentive: 'derive their capabilities endogenously (maintaining long-term goals, evolving self-identity, simulating future possibilities, regulating when to reason, learning better behaviors)'",
+        "Five-dimensional spectrum framework (goals, identity, decision-making, self-regulation, learning)"
+      ],
+      "source_section": "1 Introduction, 2 The Boundary Between Agentic and Agentive Systems"
+    },
+    {
+      "id": "C3",
+      "category": "theorem",
+      "claim": "Fast-slow learning (parameter + identity updates) dominates slow-only learning in regret.",
+      "location": "§4.2, Appendix A",
+      "evidence_type": "mathematical_proof",
+      "evidence": [
+        "Theorem 1: Regret^{fast-slow}_K ≤ Regret^{std}_K - Ω(∑_{k=1}^K N_k)",
+        "Per-step gain ε̄ = inf_{k,t} E[Δ_t] > 0 from identity revision",
+        "Proof: Three-step argument — per-step gain (A1), within-round aggregation (Step 2), cross-round compounding via monotonic update operator (A2, Step 3)",
+        "Assumptions: A1(a) identity revision closes gap to optimal, A1(b) closer identity → higher value, A2 monotone update operator"
+      ],
+      "source_section": "§4.2 Identity, Appendix A"
+    },
+    {
+      "id": "C4",
+      "category": "theorem",
+      "claim": "World-model-based planning improves any baseline policy given a reasonably accurate world model.",
+      "location": "§4.3",
+      "evidence_type": "mathematical_proof",
+      "evidence": [
+        "Theorem 2: For TV-bounded world model (error ≤ ε), ∃ π_mix = φ(f,π,ε) such that V^g_{π_mix} ≥ V^g_π",
+        "Proof: Simulation Lemma → model error bound 2γR_maxε/(1-γ)² = ε_model",
+        "Mixed policy follows π*_f only when its value exceeds π's by 2ε_model margin",
+        "Performance Difference Lemma ensures true improvement in real environment"
+      ],
+      "source_section": "§4.3 Decision-Making, Appendix B"
+    },
+    {
+      "id": "C5",
+      "category": "observation",
+      "claim": "Current agentic systems cannot scale to long-horizon tasks because they require human-supplied step-by-step goals.",
+      "location": "§4.1",
+      "evidence_type": "analysis_and_examples",
+      "evidence": [
+        "Examples: Claude Code, Cursor, OpenClaw, π-series, Helix all receive short-term instructions",
+        "Goal disappears after each interaction; new goal required for further action",
+        "Impossibility of scaling to tasks like 'make wine over a year'",
+        "Alternative: hierarchical decomposition with learned module δ and hierarchical world model f"
+      ],
+      "source_section": "§4.1 Goal: From Step-by-Step Instruction to Hierarchical Decomposition"
+    },
+    {
+      "id": "C6",
+      "category": "observation",
+      "claim": "Identity in current systems is externally specified via system prompts and harness engineering, which precludes genuine autonomy.",
+      "location": "§4.2",
+      "evidence_type": "analysis_and_examples",
+      "evidence": [
+        "Identity implemented as hand-written system prompts (role, tools, constraints)",
+        "MCP (Anthropic 2024) and Agent Skills (Anthropic 2025b) as examples of 'harness engineering'",
+        "Cannot adapt to new environments without human re-engineering",
+        "Alternative: fast-slow update with identity evolver ι"
+      ],
+      "source_section": "§4.2 Identity: From Harness Engineering to Adaptive Self-Models"
+    },
+    {
+      "id": "C7",
+      "category": "observation",
+      "claim": "Black-box end-to-end policies conflate internal compute with planning; chain-of-thought is not grounded in real-world dynamics.",
+      "location": "§4.3",
+      "evidence_type": "analysis",
+      "evidence": [
+        "CoT 'describes possible futures but these descriptions are not grounded in a model that predicts state transitions from observations'",
+        "'prediction based on narrative plausibility (token probability) rather than real-world consistency'",
+        "Cites Florence and Generalist AI Team (2026) as advocating emergent-planning hypothesis",
+        "Contrast: world model provides grounded counterfactual engine for course-of-action evaluation"
+      ],
+      "source_section": "§4.3 Decision-Making: From Black-Box Policies to Simulative Reasoning"
+    },
+    {
+      "id": "C8",
+      "category": "observation",
+      "claim": "Current approaches to self-regulation are insufficient: unconstrained RL leads to over-/under-thinking; fixed workflows are rigid.",
+      "location": "§4.4",
+      "evidence_type": "analysis_and_examples",
+      "evidence": [
+        "Su et al. (2025) on underthinking/overthinking in LLMs",
+        "Gema et al. (2025) on inverse scaling in test-time compute",
+        "GPT-5 backlash (Newton 2025) and Claude Opus 4.7 backlash (Hwang 2026) over invisible model picker",
+        "Alternative: learned configurator κ governing deliberation mode allocation"
+      ],
+      "source_section": "§4.4 Self-Regulation"
+    },
+    {
+      "id": "C9",
+      "category": "observation",
+      "claim": "Even 'AI trains AI' systems keep the learning loop external — the agent does not govern its own training.",
+      "location": "§2.6, §4.5",
+      "evidence_type": "analysis_and_examples",
+      "evidence": [
+        "'In virtually all such AI training AI systems, the learning process itself remains external'",
+        "Training decisions (when to learn, what data, how long, when to stop) are made by humans",
+        "Self-directed learning = configurator κ governs learning as part of ongoing decision-making",
+        "Theorem 4 (informal): mixture of simulated+real experience dominates real-only training"
+      ],
+      "source_section": "§2.6 Learning, §4.5 Learning: From Human-Scheduled Pipelines to Self-Directed Learning"
+    },
+    {
+      "id": "C10",
+      "category": "architectural",
+      "claim": "The GIC architecture provides layered transparency: each agency-relevant capacity is explicit, inspectable, and auditable.",
+      "location": "§5.7",
+      "evidence_type": "architectural_argument",
+      "evidence": [
+        "δ (goal decomposition) can be audited for undesirable subgoals before execution",
+        "ι (identity evolution) can be monitored over time for appropriate self-model",
+        "f (world model) predictions can be inspected for consistency with reality",
+        "κ (configurator) decisions can be audited for proportional deliberation",
+        "Learning decisions can be reviewed for competence gaps"
+      ],
+      "source_section": "§5.7 Safety Considerations"
+    },
+    {
+      "id": "C11",
+      "category": "architectural",
+      "claim": "Goal-oriented data (extended purposeful activity with goal annotations) is the highest-leverage investment for training general-purpose agent models.",
+      "location": "§5.6",
+      "evidence_type": "argument",
+      "evidence": [
+        "Example: video of 'leaving apartment → taking elevator → hailing cab → arriving at airport' structured by goal 'fly to Paris'",
+        "Goal annotation transforms noisy activity streams into training signals for multi-scale planning",
+        "'Curating and scaling goal-oriented datasets is among the highest-leverage investments'"
+      ],
+      "source_section": "§5.6 Data Requirements"
+    },
+    {
+      "id": "C12",
+      "category": "safety",
+      "claim": "In GIC, harmful behavior decomposes entirely into goal misspecification or component imperfection — no emergent misalignment.",
+      "location": "§5.7",
+      "evidence_type": "architectural_argument",
+      "evidence": [
+        "Goal g is exogenous — 'no mechanism for GIC to generate its own terminal objectives'",
+        "Harmful subgoal → poorly trained δ, not emergent fundamental misalignment",
+        "Identity i_t is instrumental and subordinate to g",
+        "Configurator regulates how, not what",
+        "'For a sufficiently well-trained system, harmful behavior converges to zero unless the goal itself is wrong'"
+      ],
+      "source_section": "§5.7 Safety Considerations"
+    },
+    {
+      "id": "C13",
+      "category": "safety",
+      "claim": "Building agents with transparent architectures (like GIC) is itself a safety intervention — the alternative is opaque systems where failures cannot be diagnosed.",
+      "location": "§5.7",
+      "evidence_type": "argument",
+      "evidence": [
+        "Aviation analogy: 'Pilots crash during training; the response was not to ban pilot training but to develop simulators, staged curricula, instructor oversight'",
+        "'The choice is whether they are developed within transparent architectures where failures can be isolated and corrected, or within opaque ones where they cannot'",
+        "Agent trains primarily in world model before real deployment"
+      ],
+      "source_section": "§5.7 Safety Considerations"
+    },
+    {
+      "id": "C14",
+      "category": "observation",
+      "claim": "The collaborative/competitive social coordination in current 'multi-agent' systems is externally orchestrated, not emergent from agents' own decisions.",
+      "location": "§2.7, §3",
+      "evidence_type": "analysis_and_examples",
+      "evidence": [
+        "AutoGen (Wu et al. 2023) and OpenAI Swarm specify team membership, protocols, roles externally",
+        "'Such systems are better understood as a single scaffolded system consisting of a federation of tasks'",
+        "Agentive: coordination emerges as internal decision of participating agents"
+      ],
+      "source_section": "§2.7 Coordination and Communication, §3 Landscape"
+    },
+    {
+      "id": "C15",
+      "category": "architectural",
+      "claim": "GIC training follows a three-phase curriculum: ground school (pretraining), simulator hours (simulative RL), first flights (real-world deployment/refinement).",
+      "location": "§5.3",
+      "evidence_type": "architectural_design",
+      "evidence": [
+        "Phase 1: Agent model from LLM, world model via GLP, critic from reward data, policy from demos",
+        "Phase 2: RL within world model — builds System I, II, III competence",
+        "Phase 3: Real-world refinement — sim-to-real gap correction, identity evolution",
+        "Pilot training analogy throughout"
+      ],
+      "source_section": "§5.3 Training the Agent Model"
+    }
+  ],
+  "metadata": {
+    "total_claims": 15,
+    "evidence_categories": {
+      "mathematical_proof": 2,
+      "formal_argument": 1,
+      "definitional": 1,
+      "analysis": 3,
+      "analysis_and_examples": 4,
+      "architectural_argument": 2,
+      "architectural_design": 1,
+      "argument": 1
+    }
+  }
+}

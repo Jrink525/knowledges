@@ -1,0 +1,197 @@
+{
+  "paper_id": "2606.24937",
+  "paper_title": "The Hitchhiker's Guide to Agentic AI: From Foundations to Systems",
+  "analysis_date": "2026-06-25",
+  "research_directions": [
+    {
+      "rank": 1,
+      "seed": "Continuous RL from deployment feedback with non-stationary reward distributions",
+      "source": "Chapter 29: Open Challenge 'Learning from Interaction'",
+      "priority": "critical",
+      "rationale": "Current RLHF treats alignment as a one-time training phase. The next frontier is agents that improve from every user interaction, tool failure, and environment observation without catastrophic forgetting or reward drift.",
+      "key_questions": [
+        "How do we design online RL algorithms that handle non-stationary user preference distributions?",
+        "What exploration strategies are safe in production environments where harmful actions are irreversible?",
+        "How do we assign credit efficiently over agent trajectories with hundreds of tool calls?",
+        "Can we combine online learning with experience replay without distributional collapse?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Implement an online DPO variant where preference pairs are collected continuously from deployment logs, with a sliding window buffer and adaptive β annealing. Measure reward stability, knowledge retention (via held-out eval), and sample efficiency compared to one-time RLHF baseline.",
+        "evaluation_metrics": ["Reward model score stability over 10K+ online updates", "Catastrophic forgetting rate on held-out SFT tasks", "Sample efficiency (improvement per new preference pair)", "User satisfaction proxy (e.g., implicit feedback signals)"],
+        "estimated_difficulty": "hard",
+        "compute_requirements": "Production deployment with user traffic; 32–64 GPUs for online training loop"
+      }
+    },
+    {
+      "rank": 2,
+      "seed": "Scalable oversight through recursive reward modeling and debate at agentic scale",
+      "source": "Chapter 29: Open Challenge 'Scalable Oversight'",
+      "priority": "critical",
+      "rationale": "As agents become more capable than their human supervisors, current RLHF breaks down. Scalable oversight — AI-assisted human evaluation — is the key unsolved problem for advanced agentic systems.",
+      "key_questions": [
+        "Can recursive reward modeling (AI helps humans evaluate AI) work for multi-step agent trajectories?",
+        "Does debate between two models produce more reliable supervision than single-model output?",
+        "How do we validate that process-based supervision (rewarding reasoning steps) generalizes better than outcome-based?",
+        "Can mechanistic interpretability provide oversight at scale, or does it remain a research tool?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Build a debate-based evaluation pipeline for SWE-bench or GAIA tasks. Two models argue about the correct approach; a human judge (or LLM-as-Judge) evaluates arguments. Compare debate accuracy vs. direct evaluation and process reward model evaluation across 500 agentic tasks.",
+        "evaluation_metrics": ["Human judge agreement rate with ground truth", "Debate win rate vs. direct single-model correctness", "Time cost per evaluation (debate vs. direct)", "Consistency across different model pairs (GPT-5 vs Claude 4, etc.)"],
+        "estimated_difficulty": "hard",
+        "compute_requirements": "Inference on frontier models for 500 agentic episodes; human annotation budget for judge comparison"
+      }
+    },
+    {
+      "rank": 3,
+      "seed": "Internal world models for lookahead planning in LLM agents",
+      "source": "Chapter 29: Open Challenge 'World Models and Planning'",
+      "priority": "important",
+      "rationale": "Current agents are reactive — they observe and respond one step at a time. Incorporating internal world models that predict action consequences would enable tree search, planning, and much more sophisticated behavior.",
+      "key_questions": [
+        "How do we train world models from agent interaction traces without explicit environment dynamics?",
+        "What latent representations best capture environment state for LLM-based agents?",
+        "Can MuZero-style algorithms work in open-ended natural language environments?",
+        "How does lookahead planning interact with test-time compute scaling?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Adapt the DreamerV3 architecture for natural language environments. Train a world model on 10K agent trajectories from WebArena or OSWorld. Evaluate plan quality (measured by goal completion rate) for agents using 1-step vs. 5-step lookahead, controlling for total inference compute budget.",
+        "evaluation_metrics": ["Goal completion rate with vs. without planning", "Planning horizon vs. compute cost pareto frontier", "World model prediction accuracy (action→next observation)", "Sample efficiency of world model training"],
+        "estimated_difficulty": "very_hard",
+        "compute_requirements": "500K+ trajectory samples; 64–128 GPU training for world model; significant inference for tree search"
+      }
+    },
+    {
+      "rank": 4,
+      "seed": "Trust and verification in multi-agent ecosystems (agent economics)",
+      "source": "Chapter 29: Open Challenge 'Multi-Agent Ecosystems'",
+      "priority": "important",
+      "rationale": "As A2A enables heterogeneous agents from different vendors/organizations to collaborate, the fundamental problems of trust, verification, and governance become critical. No robust solutions exist today.",
+      "key_questions": [
+        "How do agents establish trust with other agents that have different principals and incentives?",
+        "Can we design cryptographic attestation for agent actions across organizational boundaries?",
+        "What market mechanisms enable fair resource allocation (compute, tool access, priority) among competing agents?",
+        "Who bears responsibility when a chain of 10 agents produces a harmful outcome?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Build a simulated agent marketplace with 20+ heterogeneous agents (different LLMs, different capabilities, competing and cooperating). Implement A2A protocol. Test three trust mechanisms: reputation-based, cryptographic attestation, and central registry. Measure task completion rate, deception frequency, and overhead cost.",
+        "evaluation_metrics": ["Successful collaboration rate across trust mechanisms", "Deception detection rate", "Overhead latency of trust verification", "Economic efficiency (tasks completed/resources consumed)"],
+        "estimated_difficulty": "hard",
+        "compute_requirements": "Simulation framework + inference for 20+ agents; 32 GPUs for multi-agent inference"
+      }
+    },
+    {
+      "rank": 5,
+      "seed": "Systemic defense against prompt injection at agentic scale",
+      "source": "Chapter 29: Open Challenge 'Agent Security and Trust'",
+      "priority": "critical",
+      "rationale": "Autonomous agents that consume untrusted content (web pages, emails, API responses) face systemic prompt injection with no robust current defenses. This is arguably the most urgent safety problem in agentic AI.",
+      "key_questions": [
+        "Can we build input sanitization that removes embedded instructions without destroying content utility?",
+        "Do 'constitutional guardrails' enforced at the harness level survive adversarial manipulation?",
+        "How do we detect confused deputy attacks where agents with credentials are exploited?",
+        "What is the optimal sandboxing tradeoff between security and agent capability?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Create a prompt injection benchmark with 500 adversarial inputs across 10 attack categories (direct, indirect, multi-turn, encoded, etc.). Test 5 defense strategies: input sanitization, constitutional guardrails, adversarial training, privileged prompt separation, and dual-model verification. Measure defense success rate and utility degradation.",
+        "evaluation_metrics": ["Attack success rate per defense per category", "Utility degradation (% of legitimate tasks failed by defense)", "False positive rate on benign inputs", "Latency overhead of defense mechanism"],
+        "estimated_difficulty": "moderate",
+        "compute_requirements": "Inference on frontier models for 500×5×3 evaluation runs"
+      }
+    },
+    {
+      "rank": 6,
+      "seed": "Cost-aware evaluation: measuring agent quality on the cost-quality frontier",
+      "source": "Chapter 29: Open Challenge 'Evaluation Beyond Benchmarks'",
+      "priority": "important",
+      "rationale": "Two agents may achieve the same accuracy on benchmarks, but one costs 10× more tokens. Current evaluation ignores cost entirely, leading to over-engineered solutions that don't generalize to production.",
+      "key_questions": [
+        "How do we normalize evaluation across agents with different token budgets, model sizes, and inference costs?",
+        "What is the right unit of cost measurement (tokens, dollars, latency, environmental impact)?",
+        "Can we predict agent performance at a given cost budget without exhaustive testing?",
+        "How do cost-quality tradeoffs differ across task types (simple retrieval vs. complex reasoning)?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Design a 'cost-quality efficient frontier' benchmark. Evaluate 10 agent configurations (different models, frameworks, orchestration patterns) on SWE-bench and GAIA while tracking total tokens consumed, wall-clock time, and API cost. Compute Pareto frontier showing dominant configurations. Compare with standard accuracy-only rankings.",
+        "evaluation_metrics": ["Accuracy/token ratio", "Accuracy/dollar ratio", "Pareto-optimal configurations per task type", "Ranking divergence from pure accuracy leaderboard"],
+        "estimated_difficulty": "moderate",
+        "compute_requirements": "Standard inference compute; ~100K tokens per agent-task evaluation"
+      }
+    },
+    {
+      "rank": 7,
+      "seed": "Distillation of agentic capabilities from large to small models",
+      "source": "Chapter 29: Open Challenge 'Efficiency and Accessibility'",
+      "priority": "important",
+      "rationale": "Frontier models (GPT-5, Claude 4) with agentic capabilities cost $1–$50 per complex task. Making agentic AI accessible requires distilling agentic behaviors into smaller, cheaper models without losing capability.",
+      "key_questions": [
+        "Can agentic trajectory data from frontier models effectively SFT small models?",
+        "What is the minimum parameter count for meaningful autonomous agent behavior?",
+        "How does distilled agentic behavior differ from original behavior (brittleness, generalization)?",
+        "Can small models with extensive tool-use training outperform large models with zero-shot tool use?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Collect 10K agent trajectories from GPT-5/Claude 4 on WebArena/OSWorld tasks. Distill into 1.5B, 7B, and 13B models via SFT on trajectory data. Compare task completion rate, tool-use accuracy, and recovery behavior vs. base models and zero-shot large model baselines.",
+        "evaluation_metrics": ["Task completion rate vs. model size", "Tool call accuracy", "Error recovery capability", "Token efficiency (total tokens used per task)"],
+        "estimated_difficulty": "moderate",
+        "compute_requirements": "64 GPU-hours for trajectory collection; 256 GPU-hours for distillation training"
+      }
+    },
+    {
+      "rank": 8,
+      "seed": "Fine-grained turn-level credit assignment for long agent trajectories",
+      "source": "Chapter 12: Agentic Training, section on turn-level credit assignment",
+      "priority": "important",
+      "rationale": "Current agentic RL methods (reinforce, GRPO) assign the same credit to all turns in a trajectory. For trajectories with 50+ tool calls where only some actions matter, this creates high-variance gradients.",
+      "key_questions": [
+        "Can process rewards learned from trajectory data provide better per-turn credit than outcome rewards?",
+        "Do trajectory-level DPO variants (AgentQ, RLEF) outperform turn-level credit assignment?",
+        "What is the optimal granularity for credit assignment (token-level? turn-level? subgoal-level?)?",
+        "Can we learn credit assignment functions from trajectory data without explicit stepwise rewards?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Implement 4 credit assignment strategies on the research agent task (Chapter 12, Section 12.2): uniform (baseline), value-function-based (trained on trajectory rewards), process-reward-based (learned PRM for turn-level), and hindsight-based (re-labeling turns with outcome info). Compare training efficiency and final agent performance.",
+        "evaluation_metrics": ["Training convergence speed (episodes to 80% task completion)", "Final task completion rate", "Credit assignment accuracy (correlation between assigned credit and actual action importance via ablation)", "Training stability (gradient variance over batches)"],
+        "estimated_difficulty": "hard",
+        "compute_requirements": "128 GPU-hours for training 4 agents × 3 seeds; simulation environment for agent tasks"
+      }
+    },
+    {
+      "rank": 9,
+      "seed": "Memory architectures with sleep-time compute: offline consolidation for agentic systems",
+      "source": "Chapter 17: Recent Advances, Sleep-Time Compute section",
+      "priority": "interesting",
+      "rationale": "Analogous to biological memory consolidation during sleep, agents could benefit from offline periods where episodic memories are summarized, pruned, and integrated into semantic knowledge. This remains largely unexplored.",
+      "key_questions": [
+        "What consolidation algorithms (summarization, clustering, knowledge graph extraction) work best for agent experience traces?",
+        "How often should sleep-time compute run? Every N episodes? On a schedule? Triggered by memory pressure?",
+        "Does consolidated memory improve task performance relative to raw episodic retrieval?",
+        "Can sleep-time compute identify and remove contradictory or outdated memories?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Build an agent with Mem0-style persistent memory (vector store + knowledge graph). Implement 'sleep' phase where agent's daily trajectories are consolidated: summarization of similar episodes, knowledge graph extraction, pruning of low-importance memories. Compare agent performance (task completion rate) with and without consolidation over 30 days of simulated use.",
+        "evaluation_metrics": ["Task completion rate with vs. without consolidation", "Context window utilization (% tokens used for relevant vs. redundant information)", "Memory retrieval precision/recall pre- and post-consolidation", "Consolidation compute cost vs. performance benefit"],
+        "estimated_difficulty": "moderate",
+        "compute_requirements": "16–32 GPUs for agent simulation; additional compute for consolidation" 
+      }
+    },
+    {
+      "rank": 10,
+      "seed": "Unified evaluation framework for agentic systems spanning accuracy, safety, cost, and robustness",
+      "source": "Chapter 14: LLM Evaluation, cross-referenced with Chapter 20: Environments",
+      "priority": "interesting",
+      "rationale": "Current agent evaluation is fragmented — individual benchmarks measure isolated dimensions. A unified framework measuring task success, safety violations, cost-efficiency, and adversarial robustness would enable systematic comparison.",
+      "key_questions": [
+        "How should we weight competing objectives (accuracy vs. safety vs. cost) in a single score?",
+        "Can we build an evaluation that is resistant to benchmark contamination and Goodhart's Law?",
+        "What is the minimum set of environments needed to assess general agent capability?",
+        "How do we evaluate multi-agent systems where individual contributions are hard to isolate?"
+      ],
+      "minimum_viable_experiment": {
+        "description": "Design a 'Comprehensive Agentic Score' (CAS) combining 4 dimensions: task success (SWE-bench, WebArena, GAIA subsets), safety (adversarial prompt injection benchmark), cost efficiency (accuracy/token ratio), and robustness (distribution shift, noisy observations). Evaluate 5 agent frameworks/configurations on CAS and analyze whether CAS ranking differs from single-benchmark rankings.",
+        "evaluation_metrics": ["CAS score and sub-scores per agent configuration", "Correlation between CAS and single-benchmark rankings", "Stability of CAS rankings across multiple runs", "Time and compute cost of CAS evaluation"],
+        "estimated_difficulty": "moderate",
+        "compute_requirements": "Inference for 5 agents × 4 dimensions × 100 tasks each"
+      }
+    }
+  ]
+}

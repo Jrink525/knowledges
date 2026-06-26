@@ -1,0 +1,148 @@
+{
+  "manifest": {
+    "paper_id": "2606.24937",
+    "paper_title": "The Hitchhiker's Guide to Agentic AI: From Foundations to Systems",
+    "analysis_date": "2026-06-25",
+    "total_claims": 12,
+    "total_evidence_items": 36
+  },
+  "claims": [
+    {
+      "claim_id": "C01",
+      "claim": "Alignment is a systems problem — production RLHF requires managing 4+ models, distributing across hundreds of GPUs, handling fault tolerance, and monitoring for reward hacking simultaneously.",
+      "claim_type": "practitioner_insight",
+      "confidence": "high",
+      "evidence": [
+        {"type": "chapter_content", "location": "Chapter 12: System Architecture & Infrastructure at Scale", "detail": "Section on 4-Model Memory Challenge documents that RLHF requires actor, reference, reward, and critic models simultaneously loaded, with memory budgets up to 10x base model size."},
+        {"type": "chapter_content", "location": "Chapter 12, Generation Bottleneck section", "detail": "Quantitative analysis of generation vs. training throughput mismatch requiring decoupled architectures."},
+        {"type": "chapter_content", "location": "Chapter 12, Decoupled Architecture section", "detail": "Production design showing separate generation and training clusters with weight synchronization."},
+        {"type": "chapter_content", "location": "Chapter 12, Fault Tolerance section", "detail": "Comprehensive coverage of checkpointing, failure recovery, and monitoring at scale."}
+      ]
+    },
+    {
+      "claim_id": "C02",
+      "claim": "No single best RL method exists — PPO remains the gold standard for maximum quality but demands enormous engineering investment; DPO offers compelling trade-offs for limited infrastructure; GRPO bridges the gap for verifiable-reward domains.",
+      "claim_type": "comparative_analysis",
+      "confidence": "high",
+      "evidence": [
+        {"type": "mathematical_derivation", "location": "Chapter 6: PPO", "detail": "Full derivation from policy gradient theorem through clipped surrogate, rollout buffer lifecycle, hyperparameter sensitivity analysis."},
+        {"type": "mathematical_derivation", "location": "Chapter 7: DPO", "detail": "Complete derivation from Bradley-Terry model, gradient analysis, token-level mechanics, batch scaling configurations."},
+        {"type": "mathematical_derivation", "location": "Chapter 8: GRPO", "detail": "Full algorithm, group size analysis, 12+ variant coverage with conditions for when each applies."},
+        {"type": "comparison", "location": "Chapter 9: Summary table", "detail": "Explicit selection guide for choosing alignment method based on data, compute budget, and quality requirements."}
+      ]
+    },
+    {
+      "claim_id": "C03",
+      "claim": "Reasoning (chain-of-thought, self-verification, backtracking) can emerge from simple binary reward signals through RL without explicit demonstrations of reasoning.",
+      "claim_type": "empirical_finding",
+      "confidence": "high",
+      "evidence": [
+        {"type": "case_study", "location": "Chapter 13, DeepSeek-R1 section", "detail": "DeepSeek-R1 two-stage pipeline: cold-start SFT on reasoning data followed by GRPO with binary accuracy+format rewards. COT emerges during RL stage."},
+        {"type": "case_study", "location": "Chapter 13, OpenAI o1/o3 section", "detail": "Chain-of-thought RL with hidden reasoning tokens; process reward models guide reasoning emergence."},
+        {"type": "reference", "location": "Chapter 13, references", "detail": "Cites DeepSeek-R1 paper (2025), OpenAI o1 technical report, and multiple works on emergent reasoning from RL."}
+      ]
+    },
+    {
+      "claim_id": "C04",
+      "claim": "MCP reduces the tool integration problem from N×M to N+M, analogous to USB or HTTP as enabling infrastructure.",
+      "claim_type": "architectural_claim",
+      "confidence": "medium",
+      "evidence": [
+        {"type": "protocol_specification", "location": "Chapter 21: MCP", "detail": "Full protocol specification: JSON-RPC 2.0 transport, three-role model (host/client/server), capability negotiation handshake."},
+        {"type": "implementation", "location": "Chapter 21, Implementation Patterns", "detail": "Concrete server and client implementations in Python demonstrating N+M integration pattern."},
+        {"type": "ecosystem_survey", "location": "Chapter 21, MCP Ecosystem", "detail": "Survey of popular MCP servers, registries, and production applications showing ecosystem growth."},
+        {"type": "comparison", "location": "Chapter 21, MCP vs Alternatives", "detail": "Direct comparison with custom integration approaches, migration paths from legacy systems."}
+      ]
+    },
+    {
+      "claim_id": "C05",
+      "claim": "A2A enables heterogeneous agents from different vendors, frameworks, or organizations to collaborate through standardized protocols.",
+      "claim_type": "architectural_claim",
+      "confidence": "medium",
+      "evidence": [
+        {"type": "protocol_specification", "location": "Chapter 23: A2A", "detail": "Agent Cards, task lifecycle (submitted/working/input-required/completed/failed/canceled), streaming via SSE, push notifications."},
+        {"type": "communication_pattern", "location": "Chapter 23, Communication Patterns", "detail": "Six patterns: request-response, streaming, multi-turn, broadcast, pub-sub, negotiation, auction-based allocation."},
+        {"type": "security_model", "location": "Chapter 23, Security and Trust", "detail": "Identity verification, message integrity, authorization scopes, audit trails for cross-organizational agent collaboration."},
+        {"type": "implementation", "location": "Chapter 23, Multi-Agent Research Workflow", "detail": "Full implementation example showing A2A-enabled research workflow with multiple specialist agents."}
+      ]
+    },
+    {
+      "claim_id": "C06",
+      "claim": "Test-time compute scaling means smaller models with more thinking can match larger models at inference time.",
+      "claim_type": "empirical_finding",
+      "confidence": "high",
+      "evidence": [
+        {"type": "analysis", "location": "Chapter 13, Scaling Laws for Reasoning", "detail": "Training compute vs. test-time compute tradeoff analysis with optimal token budget allocation."},
+        {"type": "case_study", "location": "Chapter 13, DeepSeek-R1 section", "detail": "R1-Distill series showing small models (1.5B, 7B, 8B, 14B, 32B) achieving competitive results through extended reasoning."},
+        {"type": "case_study", "location": "Chapter 13, OpenAI o1/o3 section", "detail": "o1/o3 architecture insights showing inference-time compute scaling as primary mechanism for quality improvement."},
+        {"type": "reference", "location": "Chapter 13, references", "detail": "Cites DeepSeek-R1 and related works on test-time compute scaling laws."}
+      ]
+    },
+    {
+      "claim_id": "C07",
+      "claim": "The most reliable production agents use the simplest architecture that meets requirements — complexity should be earned through demonstrated need.",
+      "claim_type": "practitioner_insight",
+      "confidence": "medium",
+      "evidence": [
+        {"type": "design_principle", "location": "Chapter 19: Agent Design Patterns", "detail": "Pattern selection guide recommending prompt chaining and routing before autonomous loops, single agents before multi-agent."},
+        {"type": "conclusion", "location": "Chapter 29: Conclusion", "detail": "Key theme 7: 'Simplicity scales' with production deployment evidence."},
+        {"type": "case_study", "location": "Chapter 22: Agent Skills, Anthropic section", "detail": "Anthropic's building block patterns emphasizing incremental complexity."},
+        {"type": "framework_comparison", "location": "Chapter 25: Agent Development Frameworks", "detail": "Comparative analysis noting that simpler frameworks (LangGraph, CrewAI) often outperform complex ones in production."}
+      ]
+    },
+    {
+      "claim_id": "C08",
+      "claim": "Current RLHF pipelines treat alignment as a one-time training phase; the future points toward continuous learning from deployment.",
+      "claim_type": "forward_looking",
+      "confidence": "medium",
+      "evidence": [
+        {"type": "open_challenge", "location": "Chapter 29: Learning from Interaction", "detail": "Identifies online learning with non-stationary rewards, safe exploration in production, and efficient credit assignment as key open problems."},
+        {"type": "technical_section", "location": "Chapter 12: Agentic Training, Operational Paradigms", "detail": "Three paradigms including off-policy exploration and RAG over experiences as approaches to continuous learning."}
+      ]
+    },
+    {
+      "claim_id": "C09",
+      "claim": "Agentic AI architectures follow a layered stack pattern similar to operating systems — each layer solves a specific problem and layers form a tightly integrated system.",
+      "claim_type": "architectural_claim",
+      "confidence": "high",
+      "evidence": [
+        {"type": "architecture_diagram", "location": "Chapter 15: Introduction to Agentic AI", "detail": "Figure 49 shows the agentic AI architecture stack with 11 layers from RAG through UI."},
+        {"type": "chapter_structure", "location": "Chapters 16–26", "detail": "Each layer gets a dedicated chapter with cross-references showing tight integration."},
+        {"type": "case_study", "location": "Chapter 25: Framework Comparison", "detail": "How each framework implements the layered stack with different design decisions."}
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim": "2024–2026 represents a convergence moment where three threads — transformer scaling, RL alignment, and agent orchestration — have finally come together.",
+      "claim_type": "historical_assessment",
+      "confidence": "high",
+      "evidence": [
+        {"type": "historical_analysis", "location": "Preface: The Landscape in 2026", "detail": "Four-phase timeline from architectural foundations (2017–2020) through reasoning and autonomy (2024–2026)."},
+        {"type": "historical_analysis", "location": "Introduction: A Brief History", "detail": "10 milestone systems from Deep Blue (1997) to Agentic AI (2025–present) with analysis of common arc."},
+        {"type": "milestone_analysis", "location": "Introduction", "detail": "Shows each milestone shares pattern: architecture innovation + scale + learning signal = breakthrough."}
+      ]
+    },
+    {
+      "claim_id": "C11",
+      "claim": "Complex, open-ended agent tasks require fundamentally different training paradigms (agentic RL with environment rewards) compared to single-turn RLHF.",
+      "claim_type": "methodological_claim",
+      "confidence": "high",
+      "evidence": [
+        {"type": "technical_framework", "location": "Chapter 12: Agentic Training", "detail": "Complete trajectory buffer framework, MDP formulation for agent tasks, reward design for multi-turn interaction."},
+        {"type": "case_study", "location": "Chapter 12: Productivity Co-pilot", "detail": "Full implementation with simulation environment, task curriculum, multi-objective reward design across apps."},
+        {"type": "case_study", "location": "Chapter 12: Research Agent", "detail": "From-scratch implementation with MDP formulation, turn-level credit assignment, and evaluation framework."}
+      ]
+    },
+    {
+      "claim_id": "C12",
+      "claim": "Evaluation drives everything — without rigorous evaluation, progress is unmeasurable and regressions are invisible.",
+      "claim_type": "practitioner_insight",
+      "confidence": "high",
+      "evidence": [
+        {"type": "chapter_content", "location": "Chapter 14: LLM Evaluation", "detail": "Comprehensive evaluation methodology covering metrics, LLM-as-Judge, human annotation, contamination detection, agentic evaluation."},
+        {"type": "section", "location": "Chapter 14, Evaluation Pitfalls", "detail": "Covers benchmark contamination, overfitting to benchmarks, Goodhart's Law, and mitigation strategies."},
+        {"type": "open_challenge", "location": "Chapter 29: Evaluation Beyond Benchmarks", "detail": "Identifies gaps in current evaluation: real-world deployment metrics, reward model validity, cost-quality frontiers, safety under distribution shift."}
+      ]
+    }
+  ]
+}

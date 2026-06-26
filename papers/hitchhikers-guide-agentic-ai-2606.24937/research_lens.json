@@ -1,0 +1,149 @@
+{
+  "paper_id": "2606.24937",
+  "paper_title": "The Hitchhiker's Guide to Agentic AI: From Foundations to Systems",
+  "analysis_date": "2026-06-25",
+  "research_lens": {
+    "problem_reconstruction": {
+      "original_problem": "How do we understand, build, and deploy autonomous AI systems that can perceive, reason, and act in complex, open-ended environments?",
+      "reconstructed_problem": "The field of agentic AI suffers from fragmented knowledge spread across four disconnected bodies of literature: (1) LLM architecture and training, (2) reinforcement learning for alignment, (3) reasoning methods, and (4) agent orchestration and deployment. Practitioners cannot effectively build production systems because no single reference covers the full stack with sufficient depth, mathematical rigor, and implementation guidance.",
+      "decomposition": [
+        "Sub-problem 1: What transformer architecture and training techniques produce capable base models?",
+        "Sub-problem 2: How do we align these models with human intent using RL?",
+        "Sub-problem 3: How do we teach models to reason through multi-step problems?",
+        "Sub-problem 4: How do we evaluate whether any of this works?",
+        "Sub-problem 5: How do we deploy these models as autonomous agents with RAG, memory, tools, and inter-agent coordination?"
+      ]
+    },
+    "research_equation": {
+      "equation": "Agentic_AI = Transformer(Text → Representations) + RL(Representations → Aligned_Behavior) + Reasoning(Aligned_Behavior → Multi_Step_Solutions) + Orchestration(Agent → Environment_Interaction) + Evaluation(Feedback_Loop)",
+      "interpretation": "Each term in this equation corresponds to one part of the book. The '+' signs represent the tight integration between layers — you cannot optimize any term in isolation."
+    },
+    "tri_pass_notes": {
+      "first_pass_title_abstract_structure": {
+        "type": "Book/Practitioner Reference",
+        "scope": "29 chapters, 427 references, ~28,000 lines of LaTeX",
+        "central_thesis": "Building great agentic systems requires understanding every layer of the pipeline.",
+        "key_terms": [
+          "RLHF", "PPO", "DPO", "GRPO", "MCP", "A2A", "RAG", "MoE",
+          "test-time compute scaling", "agentic training", "process reward models"
+        ]
+      },
+      "second_pass_sections_proofs": {
+        "mathematical_frameworks": [
+          "Transformer self-attention: Attention(Q,K,V) = softmax(QK^T/√d)V",
+          "PPO clipped surrogate: L^CLIP(θ) = E[min(r_t(θ)Â_t, clip(r_t(θ),1-ε,1+ε)Â_t)]",
+          "DPO loss: L_DPO(π_θ, π_ref) = -E[log σ(β(log π_θ(y_w)/π_ref(y_w) - log π_θ(y_l)/π_ref(y_l)))]",
+          "GRPO advantage: A_i = (r_i - mean(r)) / std(r) (group-relative normalization)",
+          "Flash Attention: tiled online softmax algorithm for O(N²) → O(N) memory"
+        ],
+        "key_derivations": [
+          "PPO from policy gradient theorem through importance sampling to clipped surrogate (6 steps)",
+          "DPO from Bradley-Terry preference model through reward function reparameterization",
+          "GRPO from REINFORCE through group-relative advantage estimation",
+          "Flash Attention tiling algorithm with online softmax correction"
+        ]
+      },
+      "third_pass_critique_synthesis": {
+        "strengths": [
+          "Unmatched breadth covering full stack from GPU architecture to agent UI",
+          "Mathematical rigor in every algorithm derivation",
+          "Implementation-aware with code, hyperparameter tables, debugging strategies",
+          "Current as of mid-2026 including latest MCP/A2A/DAPO developments",
+          "Practical 'intuition first, formalism second' pedagogy"
+        ],
+        "weaknesses": [
+          "Not peer-reviewed — reflects author's synthesis and experience",
+          "No original experimental results",
+          "Text-only scope excludes multimodal agents",
+          "Length (~28K lines) makes it a reference rather than a survey",
+          "Some recommendations may date quickly"
+        ],
+        "gaps": [
+          "No empirical validation of framework comparisons",
+          "Limited treatment of multimodal agent architectures",
+          "Scant coverage of agent safety red-teaming methodology",
+          "Open problems acknowledged but no concrete research agenda for solving them"
+        ]
+      }
+    },
+    "challenge_to_module_map": {
+      "challenges": [
+        {
+          "challenge": "LLM capability ceiling — how to get better base models?",
+          "modules": [
+            "Chapter 1: Transformer architecture, scaling laws, MoE, Flash Attention",
+            "Chapter 2: GPU architecture, training infrastructure, vLLM",
+            "Chapter 11: Infrastructure at scale, MFU, network topology"
+          ]
+        },
+        {
+          "challenge": "Alignment — how to make models helpful, honest, harmless?",
+          "modules": [
+            "Chapter 3: RL foundations (MDP, policy gradients, actor-critic)",
+            "Chapter 4: RLHF pipeline overview",
+            "Chapter 6: PPO full derivation",
+            "Chapter 7: DPO and all variants",
+            "Chapter 8: GRPO and 12+ extensions",
+            "Chapter 9: Preference optimization variants (KTO, IPO, ORPO)",
+            "Chapter 10: Reward model training"
+          ]
+        },
+        {
+          "challenge": "Reasoning — how to solve multi-step problems?",
+          "modules": [
+            "Chapter 13: DeepSeek-R1, o1/o3, MCTS, PRMs, test-time scaling",
+            "Chapter 12: STaR, Reflexion, ReAct, LATS (agentic reasoning)"
+          ]
+        },
+        {
+          "challenge": "Knowledge integration — how to ground models in external data?",
+          "modules": [
+            "Chapter 16: RAG (retrieval, chunking, hybrid search, agentic RAG)"
+          ]
+        },
+        {
+          "challenge": "Persistence — how to maintain state across interactions?",
+          "modules": [
+            "Chapter 17: Memory systems (working, episodic, semantic, procedural)"
+          ]
+        },
+        {
+          "challenge": "Tool use — how to let agents interact with the world?",
+          "modules": [
+            "Chapter 18: Agent harness and context management",
+            "Chapter 21: MCP (Model Context Protocol)",
+            "Chapter 22: Agent skills"
+          ]
+        },
+        {
+          "challenge": "Coordination — how to manage multiple agents?",
+          "modules": [
+            "Chapter 23: A2A (Agent-to-Agent Protocol)",
+            "Chapter 24: Multi-agent architectures"
+          ]
+        },
+        {
+          "challenge": "Development — how to build and deploy agentic systems?",
+          "modules": [
+            "Chapter 19: Design patterns",
+            "Chapter 20: Environments and benchmarks",
+            "Chapter 25: Development frameworks",
+            "Chapter 26: Agentic UI"
+          ]
+        },
+        {
+          "challenge": "Evaluation — how to measure progress?",
+          "modules": [
+            "Chapter 14: Comprehensive evaluation methodology"
+          ]
+        }
+      ]
+    },
+    "methodology_assessment": {
+      "approach_type": "synthesis and pedagogical exposition",
+      "evidence_level": "derived from cited primary literature rather than original experiments",
+      "reproducibility": "Not applicable — no experiments to reproduce. Implementation guidance provided via code and hyperparameter tables.",
+      "validation": "Claims validated through rigorous citation of published results, not through original controlled experiments."
+    }
+  }
+}

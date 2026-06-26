@@ -1,0 +1,291 @@
+{
+  "paper": "VeriEvol: Scaling Multimodal Mathematical Reasoning via Verifiable Evol-Instruct",
+  "arxiv_id": "2606.23543",
+  "manifest_version": "1.0",
+  "claims": [
+    {
+      "id": "C1",
+      "claim": "Increasing evolved SFT data from 10K to 250K samples raises the five-benchmark mean accuracy from 35.42 to 54.73 (+19.31).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 2, Section 4.3",
+          "description": "SFT data volume sweep: 10K→250K produces monotonic improvement from 35.42 to 54.73.",
+          "value": "35.42 → 54.73 (+19.31)"
+        },
+        {
+          "type": "figure",
+          "location": "Figure 1 (right panel)",
+          "description": "Data-volume scaling plot showing monotonic SFT scaling curve."
+        }
+      ],
+      "strength": "strong",
+      "notes": "Clean isolation: same backbone, same SFT recipe, only sample count varies."
+    },
+    {
+      "id": "C2",
+      "claim": "VeriEvol adds a cumulative +3.88 over an un-evolved RL baseline with backbone, SFT initialization, and GRPO recipe held fixed.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "RL-stage ablation: RL-Origin 55.24 → RL-Evol 57.06 → RL-Evol+Verifier 59.12.",
+          "value": "55.24 → 59.12 (+3.88)"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Pristine controlled comparison: all three RL rows share VeriEvol-SFT-Init and GRPO recipe."
+    },
+    {
+      "id": "C3",
+      "claim": "Of the +3.88 RL-stage gain, +1.82 comes from evolved prompts and +2.06 from the HTV-Agent verifier.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "RL-Origin→RL-Evol = +1.82 (evolved prompts); RL-Evol→RL-Evol+Verifier = +2.06 (verifier)."
+        }
+      ],
+      "strength": "strong",
+      "notes": "Marginal contributions are near-additive, supporting orthogonal failure modes claim."
+    },
+    {
+      "id": "C4",
+      "claim": "Scaling verified RL data from 10K to 130K adds a smooth +4.60 along the data-volume axis.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 3, Section 4.3",
+          "description": "RL data volume sweep: 10K (54.52) → 33K (55.40) → 67K (56.51) → 100K (57.60) → 130K (59.12).",
+          "value": "54.52 → 59.12 (+4.60)"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Monotonic improvement, no benchmark worsens with scale."
+    },
+    {
+      "id": "C5",
+      "claim": "On MathVerse-VO, VeriEvol (70.46) leads the strongest external baseline (OpenMMReasoner-7B, 63.80) by +6.66 points.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "MathVerse-VO column: VeriEvol 70.46 vs OpenMMReasoner 63.80."
+        }
+      ],
+      "strength": "strong",
+      "notes": "MathVerse-VO is the most diagnostic test of image reliance; VeriEvol targets this directly."
+    },
+    {
+      "id": "C6",
+      "claim": "On DynaMath-Worst, full VeriEvol (35.73) leads every full-coverage external baseline (next-best OpenMMReasoner-7B, 34.90).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "DynaMath-Worst column: VeriEvol 35.73 vs OpenMMReasoner 34.90."
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Narrow margin (+0.83), single-seed run."
+    },
+    {
+      "id": "C7",
+      "claim": "Under We-Math-Strict, full VeriEvol (63.05) leads the strongest external strict score (OpenMMReasoner-7B, 53.81).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "We-Math-Strict column: VeriEvol 63.05 vs OpenMMReasoner 53.81."
+        }
+      ],
+      "strength": "strong",
+      "notes": "OpenMMReasoner's paper reports only loose metric; authors reproduced strict metric under their harness."
+    },
+    {
+      "id": "C8",
+      "claim": "VeriEvol-SFT (VeriEvol-SFT-Init) lifts the five-benchmark mean from 51.80 to 54.73 over a Seed-only SFT baseline (+2.93).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, SFT rows, Section 4.2",
+          "description": "Seed-only SFT 51.80 vs VeriEvol-SFT 54.73.",
+          "value": "+2.93"
+        }
+      ],
+      "strength": "strong"
+    },
+    {
+      "id": "C9",
+      "claim": "Prompt difficulty and answer reliability contributions are near-additive at the RL stage.",
+      "evidence": [
+        {
+          "type": "reasoning",
+          "location": "Section 3.1, Section 4.2",
+          "description": "+1.82 (prompts) + 2.06 (verifier) = 3.88 which closely matches the cumulative gap RL-Origin→RL-Evol+Verifier of 3.88."
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Near-additivity strongly suggests orthogonal failure modes but the SFT init interaction is acknowledged as a residual confound."
+    },
+    {
+      "id": "C10",
+      "claim": "Evolved prompts sustain higher policy entropy throughout GRPO training (~0.31, roughly flat) whereas original prompts collapse to ~0.22.",
+      "evidence": [
+        {
+          "type": "figure",
+          "location": "Figure 3, Section 4.2",
+          "description": "GRPO training dynamics: entropy curves for RL-Origin vs RL-Evol."
+        }
+      ],
+      "strength": "strong"
+    },
+    {
+      "id": "C11",
+      "claim": "Evolved prompts achieve higher terminal reward (running mean ~0.43 vs ~0.35).",
+      "evidence": [
+        {
+          "type": "figure",
+          "location": "Figure 3, Section 4.2",
+          "description": "GRPO reward curves for RL-Origin vs RL-Evol."
+        }
+      ],
+      "strength": "strong"
+    },
+    {
+      "id": "C12",
+      "claim": "The full HTV-Agent improves inference-time judge accuracy by +4.51 pp over raw single-call baseline and never degrades any benchmark.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 6, Appendix B",
+          "description": "Raw 80.89 → Full HTV-Agent 85.40 (+4.51). All 6 benchmarks improve or stay flat."
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Inference-time proxy on Gemini-3.5-Flash (300 samples/benchmark). Not a matched-budget RL ablation (acknowledged as Limitation ii.a)."
+    },
+    {
+      "id": "C13",
+      "claim": "Multi-solver self-consistency is the dominant component on visually rich tasks (MathVision: +6.00 pp from voting alone).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 7, Appendix B",
+          "description": "MathVision: Raw 83.33 → Single Solver 86.67 → SC 89.33 → SC+python_exec 90.14."
+        }
+      ],
+      "strength": "moderate"
+    },
+    {
+      "id": "C14",
+      "claim": "python_exec is the dominant component on computation-heavy tasks (OlympiadBench: +4.23 pp on top of SC).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 7, Appendix B",
+          "description": "OlympiadBench: SC 65.67 → SC+python_exec 69.90 (+4.23)."
+        }
+      ],
+      "strength": "moderate"
+    },
+    {
+      "id": "C15",
+      "claim": "Two rounds of evolution at fixed 10K budget improve over one round (SFT: +1.37, RL: +0.50).",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 4, Section 4.3",
+          "description": "Evolution depth ablation at matched 10K budget."
+        }
+      ],
+      "strength": "moderate",
+      "notes": "SFT more sensitive to prompt quality; RL at 10K closer to saturation."
+    },
+    {
+      "id": "C16",
+      "claim": "VG (visual grounding) and TS (text-only shortcut) errors drop from 57% to 38% of residual error pool with VeriEvol.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 5, Section 4.4",
+          "description": "60-sample pilot error distribution: VG+TS goes from 16/28 to 9/24 absolute."
+        }
+      ],
+      "strength": "weak",
+      "notes": "60-sample single-annotator pilot — illustrative, not significance-tested. Authors explicitly warn against quantitative conclusions."
+    },
+    {
+      "id": "C17",
+      "claim": "In 12 paired flips, VeriEvol's successful traces show explicit image reference 83% of the time vs 42% for failed RL-Origin traces.",
+      "evidence": [
+        {
+          "type": "text",
+          "location": "Section 4.4, Layer 2",
+          "description": "12 paired flips analysed on 3 binary criteria."
+        }
+      ],
+      "strength": "weak",
+      "notes": "n=12, statistical significance not claimed."
+    },
+    {
+      "id": "C18",
+      "claim": "VeriEvol SFT data scales monotonically across 6 volume points (10K→250K) without degradation.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 2, Section 4.3",
+          "description": "6-point sweep: every increment improves or is flat, never degrades."
+        }
+      ],
+      "strength": "strong"
+    },
+    {
+      "id": "C19",
+      "claim": "VeriEvol RL data scales monotonically across 5 volume points (10K→130K) without any benchmark worsening.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 3, Section 4.3",
+          "description": "5-point sweep: every increment improves or is flat, no benchmark degrades."
+        }
+      ],
+      "strength": "strong"
+    },
+    {
+      "id": "C20",
+      "claim": "VeriEvol is competitive on all five benchmarks and leads the mean against the strongest external 7B baselines.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 1, Section 4.2",
+          "description": "Full external comparison against 16 baselines on 5 benchmarks."
+        }
+      ],
+      "strength": "strong",
+      "notes": "External baselines from original papers (not re-run); OpenMMReasoner-7B uses 3.5× larger SFT corpus."
+    },
+    {
+      "id": "C21",
+      "claim": "Verifier channels are complementary rather than redundant: SC helps visual tasks, python_exec helps computational tasks.",
+      "evidence": [
+        {
+          "type": "table",
+          "location": "Table 7, Appendix B",
+          "description": "Per-benchmark inversion: SC dominant on MathVision, python_exec dominant on OlympiadBench."
+        }
+      ],
+      "strength": "moderate"
+    }
+  ],
+  "coverage": {
+    "total_claims": 21,
+    "strong_evidence": 11,
+    "moderate_evidence": 7,
+    "weak_evidence": 3
+  },
+  "metadata": {
+    "created": "2026-06-25",
+    "tool": "paper-deep-reading"
+  }
+}

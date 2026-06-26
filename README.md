@@ -138,6 +138,7 @@
   - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
   - `ai-tools/inference/llm-engineering-roadmap-2026.md`
   - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
+  - `ai-tools/inference/loop-engineering-roadmap.md`
   - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
   - `ai-tools/inference/obsidian-llm-wiki-complete-guide.md`
   - `ai-tools/inference/openclaw-vs-hermes-agent-memory-architecture.md`
@@ -354,6 +355,9 @@
 ### papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/ (`papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053`)
   - `papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/report.md`
 
+### papers/critique-of-agent-model-2606.23991/ (`papers/critique-of-agent-model-2606.23991`)
+  - `papers/critique-of-agent-model-2606.23991/report.md`
+
 ### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
   - `papers/dive-into-claude-code-2604.14228/report.md`
 
@@ -365,6 +369,9 @@
 
 ### papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/ (`papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605`)
   - `papers/fapo-fully-autonomous-prompt-optimization-of-multi-step-llm-pipelines-2606.19605/report.md`
+
+### papers/hitchhikers-guide-agentic-ai-2606.24937/ (`papers/hitchhikers-guide-agentic-ai-2606.24937`)
+  - `papers/hitchhikers-guide-agentic-ai-2606.24937/report.md`
 
 ### papers/how-ai-agents-reshape-knowledge-work-2606.07489/ (`papers/how-ai-agents-reshape-knowledge-work-2606.07489`)
   - `papers/how-ai-agents-reshape-knowledge-work-2606.07489/report.md`
@@ -405,6 +412,9 @@
 ### papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/ (`papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236`)
   - `papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md`
 
+### papers/verievol-2606.23543/ (`papers/verievol-2606.23543`)
+  - `papers/verievol-2606.23543/report.md`
+
 ### papers/verifiable-search-not-learnable-cot-2606.21884/ (`papers/verifiable-search-not-learnable-cot-2606.21884`)
   - `papers/verifiable-search-not-learnable-cot-2606.21884/report.md`
 
@@ -416,7 +426,7 @@
 
 ---
 
-总计 **304** 篇知识文档
+总计 **321** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -428,5 +438,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-25 16:04 UTC]_
+_[自动生成于 2026-06-26 01:18 UTC]_
 
