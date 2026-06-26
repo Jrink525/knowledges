@@ -248,6 +248,27 @@ function query(params: {
 
 **标准消息处理模式**：
 
+**Python 版**：
+
+```python
+async for message in query(prompt="...", options=options):
+    if message.type == "system" and hasattr(message, "subtype") and message.subtype == "init":
+        print(f"Session: {message.data.get('session_id')}")
+        print(f"Tools: {message.tools}")
+    elif message.type == "assistant":
+        for block in message.content:
+            if block.type == "text":
+                print("Claude:", block.text)
+            elif block.type == "tool_use":
+                print(f"Tool call: {block.name}")
+    elif message.type == "result":
+        if message.subtype == "success":
+            print(f"Cost: ${message.total_cost_usd}")
+            print(f"Token usage: {message.usage}")
+```
+
+**TypeScript 版**：
+
 ```typescript
 for await (const message of query({ prompt: "...", options })) {
   switch (message.type) {
@@ -483,7 +504,11 @@ options = ClaudeAgentOptions(
 | 绕过权限 | `bypassPermissions` | `bypassPermissions` | **不请求任何确认**（仅隔离环境使用） |
 | 计划模式 | `plan` | `plan` | 只读分析模式 |
 
-#### 细粒度权限控制（TypeScript）
+#### 细粒度权限控制
+
+> `canUseTool` 是 TypeScript SDK 特有的回调；Python SDK 中通过 Hook 机制实现相同效果。
+
+**TypeScript 版（`canUseTool` 回调）**：
 
 ```typescript
 options = {
@@ -502,6 +527,35 @@ options = {
     return { behavior: "allow", updatedInput: input };
   }
 }
+```
+
+**Python 版（通过 Hook 模拟）**：
+
+```python
+from claude_agent_sdk import HookMatcher, ClaudeAgentOptions
+
+async def can_use_tool(input_data, tool_use_id, context):
+    tool_name = input_data.get("tool_name", "")
+    tool_input = input_data.get("tool_input", {})
+
+    # 允许所有读取操作
+    if tool_name in ("Read", "Glob", "Grep"):
+        return {}  # 允许
+
+    # 阻止修改敏感文件
+    if tool_name == "Write" and ".env" in str(tool_input.get("file_path", "")):
+        return {"decision": "block", "reason": "不能修改 .env 文件"}
+
+    # 默认允许
+    return {}
+
+options = ClaudeAgentOptions(
+    hooks={
+        "PreToolUse": [
+            HookMatcher(matcher=".*", hooks=[can_use_tool])
+        ]
+    }
+)
 ```
 
 ### 4.3 自定义工具（SDK MCP Server）
@@ -1102,6 +1156,48 @@ async def safe_query(prompt: str, options: ClaudeAgentOptions, retries: int = 3)
     return {"status": "failed", "error": str(last_error)}
 ```
 
+**TypeScript 版**：
+
+```typescript
+import { query, Options } from "@anthropic-ai/claude-agent-sdk";
+
+async function safeQuery(
+  prompt: string,
+  options: Options,
+  retries = 3
+): Promise<{ status: string; text?: string; cost?: number; error?: string }> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      let resultText = "";
+      for await (const message of query({ prompt, options })) {
+        if (message.type === "assistant") {
+          for (const block of message.message.content) {
+            if ("text" in block) {
+              resultText += block.text;
+            }
+          }
+        } else if (message.type === "result") {
+          if (message.subtype === "success") {
+            return { status: "success", text: resultText, cost: message.total_cost_usd };
+          } else {
+            return { status: "error", error: message.subtype, text: resultText };
+          }
+        }
+      }
+    } catch (e) {
+      lastError = e;
+      if (attempt < retries - 1) {
+        const wait = 2 ** attempt * 1000;
+        console.log(`Attempt ${attempt + 1} failed, retrying in ${wait}ms...`);
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+  }
+  return { status: "failed", error: String(lastError) };
+}
+```
+
 ### 9.2 日志与监控
 
 ```python
@@ -1153,6 +1249,46 @@ class AgentObserver:
         }
 ```
 
+**TypeScript 版**：
+
+```typescript
+const observer = {
+  events: [] as Array<{ timestamp: string; type: string; agent_id?: string; tool?: string; duration_ms?: number; cost_usd?: number }>,
+
+  onToolCall: (agentId: string, toolName: string) => {
+    const event = {
+      timestamp: new Date().toISOString(),
+      type: "tool_call",
+      agent_id: agentId,
+      tool: toolName,
+    };
+    observer.events.push(event);
+    console.log(`Agent ${agentId} calling tool: ${toolName}`);
+  },
+
+  onAgentComplete: (agentId: string, durationMs: number, cost: number) => {
+    const event = {
+      timestamp: new Date().toISOString(),
+      type: "agent_complete",
+      agent_id: agentId,
+      duration_ms: durationMs,
+      cost_usd: cost,
+    };
+    observer.events.push(event);
+  },
+
+  getMetrics: () => {
+    const toolCalls = observer.events.filter(e => e.type === "tool_call").length;
+    const completions = observer.events.filter(e => e.type === "agent_complete");
+    const avgDuration = completions.length
+      ? completions.reduce((s, e) => s + (e.duration_ms || 0), 0) / completions.length
+      : 0;
+    const totalCost = completions.reduce((s, e) => s + (e.cost_usd || 0), 0);
+    return { totalToolCalls: toolCalls, avgDurationMs: avgDuration, totalCostUsd: totalCost, totalEvents: observer.events.length };
+  },
+};
+```
+
 ### 9.3 成本追踪
 
 SDK 的 `result` 消息内置了成本统计：
@@ -1166,6 +1302,22 @@ async for message in query(prompt="...", options=options):
         # 按模型细分（多子代理时）
         for model, usage in message.modelUsage.items():
             print(f"  {model}: ${usage.costUSD:.4f}")
+```
+
+**TypeScript 版**：
+
+```typescript
+for await (const message of query({ prompt: "...", options })) {
+  if (message.type === "result" && message.subtype === "success") {
+    console.log(`Total cost: $${message.total_cost_usd.toFixed(4)}`);
+    console.log("Token usage:", message.usage);
+    if (message.modelUsage) {
+      for (const [model, usage] of Object.entries(message.modelUsage)) {
+        console.log(`  ${model}: $${usage.costUSD.toFixed(4)}`);
+      }
+    }
+  }
+}
 ```
 
 ### 9.4 安全最佳实践
@@ -1193,6 +1345,22 @@ options = ClaudeAgentOptions(
         ]
     }
 )
+```
+
+**TypeScript 版**：
+
+```typescript
+const options = {
+  allowedTools: ["Read", "Glob", "Grep", "Edit", "Write", "Bash"],
+  permissionMode: "acceptEdits" as const,
+  maxTurns: 30,
+  hooks: {
+    PreToolUse: [
+      { matcher: "Bash", hooks: [securityHook] },
+      { matcher: ".*", hooks: [auditHook] },
+    ],
+  },
+};
 ```
 
 ---
@@ -1300,6 +1468,61 @@ async function reviewCodeStructured(directory: string) {
     }
   }
 }
+```
+
+**Python 版**（使用 `output_format` 参数）：
+
+```python
+import asyncio
+import json
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+async def review_code_structured(directory: str):
+    json_schema = {
+        "type": "object",
+        "properties": {
+            "issues": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+                        "category": {"type": "string", "enum": ["bug", "security", "performance", "style"]},
+                        "file": {"type": "string"},
+                        "line": {"type": "integer"},
+                        "description": {"type": "string"},
+                        "suggestion": {"type": "string"}
+                    },
+                    "required": ["severity", "category", "file", "description"]
+                }
+            },
+            "summary": {"type": "string"},
+            "overall_score": {"type": "integer", "minimum": 0, "maximum": 100}
+        },
+        "required": ["issues", "summary", "overall_score"]
+    }
+
+    async for message in query(
+        prompt=f"审查 {directory} 的代码，识别所有问题",
+        options=ClaudeAgentOptions(
+            model="opus",
+            allowed_tools=["Read", "Glob", "Grep"],
+            permission_mode="bypassPermissions",
+            max_turns=250,
+            output_format={
+                "type": "json_schema",
+                "schema": json_schema
+            }
+        )
+    ):
+        if message.type == "result" and message.subtype == "success":
+            review = json.loads(message.result_text)
+            print(f"分数: {review['overall_score']}/100")
+            print(f"摘要: {review['summary']}")
+            for issue in review['issues']:
+                print(f"[{issue['severity']}] {issue['file']}:{issue['line']} - {issue['description']}")
+
+asyncio.run(review_code_structured("./src"))
 ```
 
 ### 10.3 项目三：CI/CD 集成 Agent（生产级）
@@ -1542,6 +1765,53 @@ if __name__ == "__main__":
     asyncio.run(interactive_chat())
 ```
 
+**TypeScript 版**：
+
+```typescript
+import { query, Options } from "@anthropic-ai/claude-agent-sdk";
+import { stdin as input, stdout as output } from "node:process";
+import { createInterface } from "node:readline/promises";
+
+const options: Options = {
+  model: "claude-sonnet-4-6",
+  allowedTools: ["Read", "Write", "Bash"],
+  systemPrompt: "你是全能助手。你可以读写文件、执行命令和搜索网络。用中文回复。",
+};
+
+async function interactiveChat() {
+  console.log("=".repeat(60));
+  console.log("欢迎使用交互式 Agent！");
+  console.log("输入 退出 结束对话");
+  console.log("=".repeat(60));
+
+  const rl = createInterface({ input, output });
+
+  while (true) {
+    const userInput = await rl.question("\n你: ");
+    const trimmed = userInput.trim();
+    if (!trimmed) continue;
+    if (["exit", "quit", "退出", "再见"].includes(trimmed.toLowerCase())) {
+      console.log("\nAgent: 再见！");
+      break;
+    }
+
+    process.stdout.write("\nAgent: ");
+    for await (const message of query({ prompt: trimmed, options })) {
+      if (message.type === "assistant") {
+        for (const block of message.message.content) {
+          if ("text" in block) {
+            process.stdout.write(block.text);
+          }
+        }
+      }
+    }
+  }
+  rl.close();
+}
+
+interactiveChat().catch(console.error);
+```
+
 ---
 
 ## 11. 常见问题与故障排查
@@ -1645,31 +1915,54 @@ def compress_output(text: str, max_len: int = 2000) -> str:
 
 ### 12.1 Agent 反馈循环模式（核心模式）
 
-Anthropic 工程团队推荐的 **Gather → Take Action → Verify** 循环：
+Anthropic 推荐的 **Gather → Take Action → Verify** 循环是 Agent 设计的核心模式。以下是代码示例：
 
+**Python 版**：
+
+```python
+import asyncio
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+async def gather_then_act(prompt: str, options: ClaudeAgentOptions, max_iterations: int = 3):
+    """显式的收集 → 执行 → 验证循环"""
+    for iteration in range(max_iterations):
+        result_text = ""
+        async for message in query(prompt=prompt, options=options):
+            if message.type == "assistant":
+                for block in message.content:
+                    if block.type == "text":
+                        result_text += block.text
+            elif message.type == "result":
+                if iteration < max_iterations - 1:
+                    # 验证步骤：让 Agent 再次检查自己的工作
+                    prompt = f"验证以下结果，如有问题请修复：\n\n{result_text}"
+                else:
+                    return result_text
+    return ""
 ```
-┌─────────────────────────────────────────────┐
-│         Gather Context（收集上下文）          │
-│  · 文件系统索引（grep/tail 智能加载）         │
-│  · 子代理并行搜索                           │
-│  · 自动上下文压缩（Compaction）               │
-└─────────────────┬───────────────────────────┘
-                  ▼
-┌─────────────────────────────────────────────┐
-│         Take Action（执行任务）               │
-│  · 内置工具（Read/Write/Bash/...）           │
-│  · MCP 外部服务调用                         │
-│  · 代码生成（精确、可组合、可复用）            │
-└─────────────────┬───────────────────────────┘
-                  ▼
-┌─────────────────────────────────────────────┐
-│         Verify Work（验证工作）               │
-│  · 规则反馈（lint、类型检查）                 │
-│  · 视觉反馈（截图、渲染）                    │
-│  · LLM 作为评判者（子代理评审）               │
-└─────────────────┬───────────────────────────┘
-                  ▼
-          继续或结束 ─── 未完成 → 回到收集上下文
+
+**TypeScript 版**：
+
+```typescript
+async function gatherThenAct(
+  prompt: string,
+  options: Options,
+  maxIterations = 3
+): Promise<string> {
+  for (let i = 0; i < maxIterations; i++) {
+    let resultText = "";
+    for await (const message of query({ prompt, options })) {
+      if (message.type === "assistant") {
+        for (const block of message.message.content) {
+          if ("text" in block) resultText += block.text;
+        }
+      } else if (message.type === "result" && i < maxIterations - 1) {
+        prompt = `验证以下结果，如有问题请修复：\n\n${resultText}`;
+      }
+    }
+  }
+  return "";
+}
 ```
 
 ### 12.2 工具设计原则
@@ -1679,12 +1972,101 @@ Anthropic 工程团队推荐的 **Gather → Take Action → Verify** 循环：
 3. **错误处理要优雅**：工具内部捕获异常，返回友好信息
 4. **命名要自描述**：`get_user_info` 优于 `user_tool`
 
+**Python 版**——工具注册示例：
+
+```python
+from claude_agent_sdk import tool
+
+# ✅ 好的工具设计
+@tool(
+    "search_codebase",
+    "在代码库中搜索文本，支持正则表达式。例如：search_codebase(pattern='TODO|FIXME', extension='.py')",
+    {"pattern": str, "extension": str}
+)
+async def search_codebase(args):
+    """使用内置 Grep 工具实现代码搜索"""
+    ...
+
+# ❌ 不好的工具设计
+@tool("file_op", "操作文件", {})
+async def file_op(args):
+    # Agent 不知道何时调用此工具
+    ...
+```
+
+**TypeScript 版**：
+
+```typescript
+import { ToolDefinition } from "@anthropic-ai/claude-agent-sdk";
+
+// ✅ 好的工具设计
+const searchCodebase: ToolDefinition = {
+  name: "search_codebase",
+  description: "在代码库中搜索文本",
+  inputSchema: {
+    type: "object",
+    properties: {
+      pattern: { type: "string", description: "搜索模式" },
+      extension: { type: "string", description: "文件扩展名过滤" },
+    },
+    required: ["pattern"],
+  },
+};
+
+// ❌ 不好的工具设计
+const fileOp: ToolDefinition = {
+  name: "file_op",
+  description: "操作文件",  // 描述含糊，Agent 难以判断何时使用
+  inputSchema: {},
+};
+```
+
 ### 12.3 Prompt 工程策略
 
 1. **明确角色设定**：在 `system_prompt` 中定义 Agent 的专家角色
 2. **给出约束边界**：告诉 Agent 什么不能做（安全边界）
 3. **结构化输出要求**：指定输出格式（JSON、列表等）
 4. **提供错误恢复路径**：告诉 Agent 出错时该怎么办
+
+**Python 版**——结构化 System Prompt：
+
+```python
+from claude_agent_sdk import ClaudeAgentOptions
+
+options = ClaudeAgentOptions(
+    system_prompt="""你是代码审查专家。
+
+## 约束
+- 只审查被明确要求审查的文件
+- 不要修改任何文件，除非得到许可
+
+## 错误恢复
+- 如果某个文件无法读取，跳过它并继续审查其他文件
+- 如果遇到任何错误，在报告中标注
+
+## 输出要求
+- 问题按严重程度排序
+- 每个问题必须包含文件路径和行号
+"""
+)
+```
+
+**TypeScript 版**：
+
+```typescript
+const options = {
+  systemPrompt: `你是代码审查专家。
+
+## 约束
+- 只审查被明确要求审查的文件
+- 不要修改任何文件，除非得到许可
+
+## 错误恢复
+- 如果某个文件无法读取，跳过它并继续审查其他文件
+- 如果遇到任何错误，在报告中标注
+`,
+};
+```
 
 ### 12.4 成本优化策略
 
@@ -1696,7 +2078,62 @@ Anthropic 工程团队推荐的 **Gather → Take Action → Verify** 循环：
 | **会话恢复** | 避免重复读取大文件 | 30-50% |
 | **Batch API** | 批量调用 Anthropic API 享折扣 | 50% |
 
-### 12.5 安全清单
+**Python 版**——分层模型与成本追踪：
+
+```python
+from claude_agent_sdk import query, ClaudeAgentOptions
+
+def get_model_for_complexity(complexity: str) -> str:
+    """根据任务复杂度选择模型"""
+    model_map = {
+        "simple": "haiku",     # 简单任务用 Haiku（最便宜）
+        "medium": "sonnet",    # 中等用 Sonnet（性价比）
+        "complex": "opus",     # 复杂用 Opus（最强推理）
+    }
+    return model_map.get(complexity, "sonnet")
+
+async def cost_aware_query(prompt: str, complexity: str, budget: float):
+    options = ClaudeAgentOptions(
+        model=get_model_for_complexity(complexity),
+        max_turns=10 if complexity == "simple" else 50,
+    )
+    allowed_cost = 0.0
+    async for message in query(prompt=prompt, options=options):
+        if message.type == "result" and message.subtype == "success":
+            allowed_cost += message.total_cost_usd
+            if allowed_cost > budget:
+                return {"status": "budget_exceeded", "cost": allowed_cost}
+    return {"status": "ok", "cost": allowed_cost}
+```
+
+**TypeScript 版**：
+
+```typescript
+const TIERED_MODELS = {
+  simple: "haiku",
+  medium: "sonnet",
+  complex: "opus",
+} as const;
+
+async function costAwareQuery(prompt: string, complexity: keyof typeof TIERED_MODELS, budget: number) {
+  const options = {
+    model: TIERED_MODELS[complexity],
+    maxTurns: complexity === "simple" ? 10 : 50,
+  };
+  let totalCost = 0;
+  for await (const message of query({ prompt, options })) {
+    if (message.type === "result" && message.subtype === "success") {
+      totalCost += message.total_cost_usd;
+      if (totalCost > budget) {
+        return { status: "budget_exceeded", cost: totalCost };
+      }
+    }
+  }
+  return { status: "ok", cost: totalCost };
+}
+```
+
+### 12.5 安全清单与配置模板
 
 - [ ] `allowed_tools` 遵循最小权限原则
 - [ ] 通过 Hook 阻止危险 Bash 命令
@@ -1706,6 +2143,120 @@ Anthropic 工程团队推荐的 **Gather → Take Action → Verify** 循环：
 - [ ] 设置合理的 `max_turns` 上限
 - [ ] API Key 通过环境变量注入，不硬编码
 - [ ] 子代理权限范围不超过主 Agent
+
+**Python 版**——生产安全配置：
+
+```python
+import os
+
+def production_security_config():
+    """生产环境安全配置"""
+    is_prod = os.getenv("ENV") == "production"
+    return ClaudeAgentOptions(
+        allowed_tools=["Read", "Glob", "Edit"] if is_prod else None,
+        permission_mode="acceptEdits" if is_prod else "bypassPermissions",
+        max_turns=30 if is_prod else 100,
+        hooks={
+            "PreToolUse": [
+                HookMatcher(matcher="Bash", hooks=[security_hook]),
+                HookMatcher(matcher=".*", hooks=[audit_hook]),
+            ]
+        }
+    )
+```
+
+**TypeScript 版**：
+
+```typescript
+function productionSecurityConfig(): Options {
+  const isProd = process.env.ENV === "production";
+  return {
+    allowedTools: isProd ? ["Read", "Glob", "Edit"] : undefined,
+    permissionMode: isProd ? "acceptEdits" : "bypassPermissions",
+    maxTurns: isProd ? 30 : 100,
+    hooks: {
+      PreToolUse: [
+        { matcher: "Bash", hooks: [securityHook] },
+        { matcher: ".*", hooks: [auditHook] },
+      ],
+    },
+  };
+}
+```
+
+### 12.6 模型选择策略
+
+根据任务类型选择最合适的模型：
+
+| 场景 | 推荐模型 | 理由 |
+|------|---------|------|
+| 快速 Prompt、简单代码生成 | `haiku` | 秒级响应，成本低 |
+| 代码审查、中等复杂任务 | `sonnet` | 速度与质量最佳平衡 |
+| 跨文件重构、复杂架构分析 | `opus` | 最强推理能力 |
+| 子代理中的简单任务 | 继承主 Agent 或 `haiku` | 避免不必要的开销 |
+
+**Python 版**：
+
+```python
+def smart_model_selection(task: str) -> str:
+    """根据任务特征自动选择模型"""
+    task_lower = task.lower()
+    if any(kw in task_lower for kw in ["简单", "hello", "列出", "快速"]):
+        return "haiku"
+    elif any(kw in task_lower for kw in ["重构", "优化", "安全", "跨文件"]):
+        return "opus"
+    else:
+        return "sonnet"
+```
+
+**TypeScript 版**：
+
+```typescript
+function smartModelSelection(task: string): "sonnet" | "opus" | "haiku" {
+  const t = task.toLowerCase();
+  if (["hello", "quick", "simple"].some(kw => t.includes(kw))) return "haiku";
+  if (["refactor", "security", "cross-file"].some(kw => t.includes(kw))) return "opus";
+  return "sonnet";
+}
+```
+
+### 12.7 开发环境 vs 生产环境配置
+
+| 配置项 | 开发环境 | 生产环境 |
+|--------|---------|---------|
+| `permission_mode` | `bypassPermissions` | `acceptEdits` 或 `default` |
+| `allowed_tools` | 全部开放 | 最小权限原则 |
+| `max_turns` | 较大（100+） | 较小（20-50） |
+| Hook 日志 | 打印到终端 | 写入结构化日志文件 |
+| 错误重试 | 简单重试 | 指数退避 + 回退方案 |
+| 版本锁定 | 自动 latest | 固定版本号 |
+
+**Python 版**：
+
+```python
+import os
+
+def get_env_options():
+    is_prod = os.getenv("ENV") == "production"
+    return ClaudeAgentOptions(
+        allowed_tools=None if not is_prod else ["Read", "Glob", "Grep", "Edit", "Write"],
+        permission_mode="bypassPermissions" if not is_prod else "acceptEdits",
+        max_turns=100 if not is_prod else 30,
+    )
+```
+
+**TypeScript 版**：
+
+```typescript
+function getEnvOptions(): Options {
+  const isProd = process.env.ENV === "production";
+  return {
+    allowedTools: isProd ? ["Read", "Glob", "Grep", "Edit", "Write"] : undefined,
+    permissionMode: isProd ? "acceptEdits" : "bypassPermissions",
+    maxTurns: isProd ? 30 : 100,
+  };
+}
+```
 
 ---
 
