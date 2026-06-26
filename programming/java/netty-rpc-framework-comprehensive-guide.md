@@ -28,6 +28,7 @@
 18. [完整 RPC 框架实战](#18-完整-rpc-框架实战)
 19. [常见问题与排查指南](#19-常见问题与排查指南)
 20. [总结与学习路径](#20-总结与学习路径)
+21. [更多真实场景代码案例](#21-更多真实场景代码案例)
 
 ---
 
@@ -2259,6 +2260,1157 @@ Netty 学习路线
 > **Don't trust it, test it.**
 
 Netty 的每一个优化、每一条最佳实践，都应该通过压测验证。理论上的优化方案不一定在你的场景下生效——真正的高速公路是用里程压出来的。
+
+---
+
+## 21. 更多真实场景代码案例
+
+### 21.1 Netty + Spring Boot 集成
+
+```java
+@SpringBootApplication
+public class NettyServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(NettyServerApplication.class, args);
+    }
+}
+
+// 服务端配置
+@Component
+public class NettyServerRunner implements CommandLineRunner {
+    @Autowired private NettyServerConfig config;
+    @Autowired private List<ChannelHandler> handlers;
+
+    @Override
+    public void run(String... args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+        
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ChannelPipeline p = ch.pipeline();
+                     handlers.forEach(p::addLast);
+                 }
+             });
+
+            ChannelFuture f = b.bind(config.getPort()).sync();
+            f.channel().closeFuture().addListener(future -> {
+                boss.shutdownGracefully();
+                worker.shutdownGracefully();
+            });
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
+
+@Component
+@ConfigurationProperties(prefix = "netty.server")
+public class NettyServerConfig {
+    private int port = 8080;
+    private int bossThreads = 1;
+    private int workerThreads = Runtime.getRuntime().availableProcessors() * 2;
+    // getters/setters
+}
+```
+
+```yaml
+# application.yml
+netty:
+  server:
+    port: 8888
+    boss-threads: 1
+    worker-threads: 8
+```
+
+### 21.2 WebSocket 完整示例
+
+```java
+// WebSocket 服务端
+public class WebSocketServer {
+    public static void main(String[] args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(new HttpServerCodec())
+                       .addLast(new HttpObjectAggregator(65536))
+                       .addLast(new WebSocketServerProtocolHandler("/ws"))
+                       .addLast(new WebSocketFrameHandler());
+                 }
+             });
+
+            ChannelFuture f = b.bind(8080).sync();
+            f.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+        System.out.println("Client connected: " + ctx.channel().remoteAddress());
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) {
+        if (frame instanceof TextWebSocketFrame) {
+            String msg = ((TextWebSocketFrame) frame).text();
+            System.out.println("Received: " + msg);
+            ctx.channel().writeAndFlush(
+                new TextWebSocketFrame("Echo: " + msg));
+        } else if (frame instanceof PingWebSocketFrame) {
+            ctx.writeAndFlush(new PongWebSocketFrame(frame.content().retain()));
+        } else if (frame instanceof CloseWebSocketFrame) {
+            ctx.close();
+        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
+        ctx.close();
+    }
+}
+
+// WebSocket 客户端
+public class WebSocketClient {
+    public static void main(String[] args) {
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+             .channel(NioSocketChannel.class)
+             .handler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(new HttpClientCodec())
+                       .addLast(new HttpObjectAggregator(65536))
+                       .addLast(new WebSocketClientProtocolHandler(
+                           URI.create("ws://localhost:8080/ws"),
+                           WebSocketClientProtocolHandler.ClientHandshakerFactory
+                               .newHandshaker(
+                                   URI.create("ws://localhost:8080/ws"),
+                                   WebSocketVersion.V13, null, false, null, 65536)))
+                       .addLast(new WebSocketClientHandler());
+                 }
+             });
+
+            Channel ch = b.connect("localhost", 8080).sync().channel();
+            ch.writeAndFlush(new TextWebSocketFrame("Hello WebSocket!"));
+            ch.closeFuture().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+}
+
+class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> {
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+        if (msg instanceof TextWebSocketFrame) {
+            System.out.println("Server: " + ((TextWebSocketFrame) msg).text());
+        }
+    }
+}
+```
+
+### 21.3 UDP 单播/组播
+
+```java
+// UDP 单播服务器
+public class UdpServer {
+    public static void main(String[] args) {
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+             .channel(NioDatagramChannel.class)
+             .option(ChannelOption.SO_BROADCAST, true)
+             .handler(new ChannelInitializer<NioDatagramChannel>() {
+                 @Override
+                 protected void initChannel(NioDatagramChannel ch) {
+                     ch.pipeline().addLast(new UdpServerHandler());
+                 }
+             });
+
+            b.bind(8080).sync().channel().closeFuture().await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+}
+
+class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
+        String msg = packet.content().toString(StandardCharsets.UTF_8);
+        System.out.println("Received from " + packet.sender() + ": " + msg);
+
+        // 原路返回
+        ByteBuf echo = Unpooled.copiedBuffer("Echo: " + msg, StandardCharsets.UTF_8);
+        ctx.writeAndFlush(new DatagramPacket(echo, packet.sender()));
+    }
+}
+
+// UDP 组播服务器
+public class UdpMulticastServer {
+    public static void main(String[] args) {
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+             .channel(NioDatagramChannel.class)
+             .option(ChannelOption.IP_MULTICAST_IF, NetworkInterface.getByName("eth0"))
+             .option(ChannelOption.SO_REUSEADDR, true)
+             .handler(new ChannelInitializer<NioDatagramChannel>() {
+                 @Override
+                 protected void initChannel(NioDatagramChannel ch) {
+                     ch.pipeline().addLast(new UdpMulticastHandler());
+                 }
+             });
+
+            NioDatagramChannel ch = (NioDatagramChannel) b.bind(0).sync().channel();
+
+            // 每秒发送一次组播消息
+            ScheduledFuture<?> task = ch.eventLoop().scheduleAtFixedRate(() -> {
+                ByteBuf buf = Unpooled.copiedBuffer(
+                    "Heartbeat " + System.currentTimeMillis(), StandardCharsets.UTF_8);
+                ch.writeAndFlush(new DatagramPacket(buf,
+                    new InetSocketAddress("230.0.0.1", 8080)));
+            }, 0, 1, TimeUnit.SECONDS);
+
+            ch.closeFuture().sync();
+            task.cancel(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+}
+
+// UDP 组播接收者
+public class UdpMulticastSubscriber {
+    public static void main(String[] args) throws Exception {
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        Bootstrap b = new Bootstrap();
+        b.group(group)
+         .channel(NioDatagramChannel.class)
+         .option(ChannelOption.SO_REUSEADDR, true)
+         .handler(new SimpleChannelInboundHandler<DatagramPacket>() {
+             @Override
+             protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket pkt) {
+                 String msg = pkt.content().toString(StandardCharsets.UTF_8);
+                 System.out.println("Multicast: " + msg);
+             }
+         });
+
+        NioDatagramChannel ch = (NioDatagramChannel) b.bind(8080).sync().channel();
+        ch.joinGroup(InetAddress.getByName("230.0.0.1"), 
+            NetworkInterface.getByName("eth0")).sync();
+        System.out.println("Joined multicast group 230.0.0.1");
+
+        ch.closeFuture().sync();
+    }
+}
+```
+
+### 21.4 SSL/TLS 配置
+
+```java
+public class SslNettyServer {
+    public static void main(String[] args) throws Exception {
+        // 自签名证书（生产环境用 CA 签发）
+        // keytool -genkey -alias netty -keyalg RSA -keysize 2048 \
+        //   -validity 365 -keystore server.keystore \
+        //   -dname "CN=localhost,OU=Dev,O=Example,C=CN"
+
+        SelfSignedCertificate ssc = new SelfSignedCertificate();
+        SslContext sslCtx = SslContextBuilder.forServer(ssc.certificate(), ssc.privateKey())
+            .sslProvider(SslProvider.JDK)   // 或 SslProvider.OPENSSL（推荐生产）
+            .ciphers(null, IdentityCipherSuiteFilter.INSTANCE)
+            .build();
+
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(sslCtx.newHandler(ch.alloc()))  // SSL handler 必须第一
+                       .addLast(new HttpServerCodec())
+                       .addLast(new HttpObjectAggregator(65536))
+                       .addLast(new SimpleChannelInboundHandler<FullHttpRequest>() {
+                           @Override
+                           protected void channelRead0(ChannelHandlerContext ctx,
+                                                       FullHttpRequest req) {
+                               FullHttpResponse resp = new DefaultFullHttpResponse(
+                                   HTTP_1_1, OK,
+                                   Unpooled.wrappedBuffer("HTTPS OK!".getBytes()));
+                               resp.headers().set(CONTENT_TYPE, "text/plain");
+                               resp.headers().set(CONTENT_LENGTH, resp.content().readableBytes());
+                               ctx.writeAndFlush(resp);
+                           }
+                       });
+                 }
+             });
+
+            ChannelFuture f = b.bind(8443).sync();
+            System.out.println("HTTPS Server running on 8443");
+            f.channel().closeFuture().sync();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+// SSL 客户端
+public class SslNettyClient {
+    public static void main(String[] args) throws Exception {
+        SslContext sslCtx = SslContextBuilder.forClient()
+            .trustManager(InsecureTrustManagerFactory.INSTANCE) // 生产用 CA 证书
+            .build();
+
+        EventLoopGroup group = new NioEventLoopGroup();
+
+        try {
+            Bootstrap b = new Bootstrap();
+            b.group(group)
+             .channel(NioSocketChannel.class)
+             .handler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(sslCtx.newHandler(ch.alloc(), "localhost", 8443))
+                       .addLast(new HttpClientCodec())
+                       .addLast(new HttpObjectAggregator(65536))
+                       .addLast(new SimpleChannelInboundHandler<FullHttpResponse>() {
+                           @Override
+                           protected void channelRead0(ChannelHandlerContext ctx,
+                                                       FullHttpResponse resp) {
+                               System.out.println(resp.content()
+                                   .toString(StandardCharsets.UTF_8));
+                           }
+
+                           @Override
+                           public void channelActive(ChannelHandlerContext ctx) {
+                               FullHttpRequest req = new DefaultFullHttpRequest(
+                                   HTTP_1_1, GET,
+                                   Unpooled.wrappedBuffer("/".getBytes()));
+                               req.headers().set(HOST, "localhost");
+                               ctx.writeAndFlush(req);
+                           }
+                       });
+                 }
+             });
+
+            b.connect("localhost", 8443).sync().channel().closeFuture().sync();
+        } finally {
+            group.shutdownGracefully();
+        }
+    }
+}
+```
+
+**生产级 SSL 注意点：**
+- 不要在 JDK 参数中设置 `-Djavax.net.ssl.keyStore`，不同 SSL 连接需要不同证书时无法区分
+- 每个 SSL Handler 指定各自的 `SslContext`，Spring Boot 配置 `server.ssl.*` 无法用于 Netty
+- 验证 `SSLSession` 的 peer principal
+
+```java
+// 获取客户端证书信息
+@Override
+public void channelActive(ChannelHandlerContext ctx) {
+    SSLEngine engine = ctx.pipeline().get(SslHandler.class).engine();
+    SSLSession session = engine.getSession();
+    System.out.println("Cipher Suite: " + session.getCipherSuite());
+    try {
+        java.security.cert.Certificate[] certs = session.getPeerCertificates();
+        System.out.println("Client Cert CN: " + 
+            ((X509Certificate) certs[0]).getSubjectX500Principal());
+    } catch (SSLPeerUnverifiedException e) {
+        // 无客户端证书
+    }
+}
+```
+
+### 21.5 心跳检测与断线重连
+
+```java
+// 服务端：使用 IdleStateHandler 检测空闲
+public class HeartbeatServer {
+    public static void main(String[] args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       // 读空闲 60s, 写空闲 30s, 全部空闲 0 (disabled)
+                       .addLast(new IdleStateHandler(60, 30, 0))
+                       .addLast(new HeartbeatServerHandler());
+                 }
+             });
+
+            b.bind(8080).sync().channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+class HeartbeatServerHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent e = (IdleStateEvent) evt;
+            switch (e.state()) {
+                case READER_IDLE:
+                    // 读超时：客户端可能挂了
+                    System.out.println("Client " + ctx.channel().remoteAddress() 
+                        + " read idle, closing");
+                    ctx.close();
+                    break;
+                case WRITER_IDLE:
+                    // 写超时：发送心跳 ping
+                    ctx.writeAndFlush(new HeartbeatPacket(PING))
+                        .addListener(future -> {
+                            if (!future.isSuccess()) {
+                                ctx.close();  // 发送失败，关闭
+                            }
+                        });
+                    break;
+            }
+        }
+    }
+}
+
+// 客户端：带重连逻辑
+public class ReconnectingClient {
+    private final String host;
+    private final int port;
+    private EventLoopGroup group;
+    private Channel channel;
+    private volatile boolean running = true;
+
+    public ReconnectingClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public void start() {
+        group = new NioEventLoopGroup();
+        connect();
+    }
+
+    private void connect() {
+        Bootstrap b = new Bootstrap();
+        b.group(group)
+         .channel(NioSocketChannel.class)
+         .handler(new ChannelInitializer<SocketChannel>() {
+             @Override
+             protected void initChannel(SocketChannel ch) {
+                 ch.pipeline()
+                   .addLast(new IdleStateHandler(0, 15, 0))
+                   .addLast(new HeartbeatClientHandler());
+             }
+         });
+
+        b.connect(host, port).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                channel = future.channel();
+                channel.closeFuture().addListener(closeFuture -> {
+                    if (running) {
+                        reconnect();  // 连接断开后自动重连
+                    }
+                });
+                System.out.println("Connected to " + host + ":" + port);
+            } else {
+                System.out.println("Failed to connect, retrying in 5s...");
+                future.channel().eventLoop().schedule(this::connect, 5, TimeUnit.SECONDS);
+            }
+        });
+    }
+
+    private void reconnect() {
+        if (!running) return;
+        System.out.println("Reconnecting in 5s...");
+        group.schedule(this::connect, 5, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 指数退避重连
+     */
+    public static class ExponentialBackoffReconnector {
+        private static final int MAX_RETRIES = 10;
+        private static final long BASE_DELAY_MS = 1000;
+        private int retries = 0;
+
+        public void reconnect(Runnable connectTask) {
+            if (retries >= MAX_RETRIES) {
+                System.err.println("Max retries reached, giving up");
+                return;
+            }
+            long delay = BASE_DELAY_MS * (1L << retries);  // 1s, 2s, 4s, 8s...
+            delay = Math.min(delay, 60_000);  // 上限 60s
+            retries++;
+
+            System.out.println("Reconnecting in " + delay + "ms (attempt " + retries + ")");
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    connectTask.run();
+                }
+            }, delay);
+        }
+
+        public void reset() {
+            retries = 0;
+        }
+    }
+}
+
+class HeartbeatClientHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+        if (evt instanceof IdleStateEvent) {
+            // 15 秒没写数据了，发心跳
+            ctx.writeAndFlush(new HeartbeatPacket(PONG));
+        }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        System.out.println("Connection closed");
+    }
+}
+```
+
+### 21.6 RPC 客户端连接池管理
+
+```java
+// 多路复用：每个 Provider 维护多个 Channel
+public class RpcChannelPool {
+    private final LoadBalancer loadBalancer;
+    private final Map<ProviderAddress, ChannelPool> pools = new ConcurrentHashMap<>();
+
+    public Channel acquire(ProviderAddress addr) {
+        return pools.computeIfAbsent(addr, this::createPool).acquire();
+    }
+
+    private ChannelPool createPool(ProviderAddress addr) {
+        return new ChannelPool(addr, 4, 16);  // 核心 4, 最大 16
+    }
+}
+
+class ChannelPool {
+    private final ProviderAddress addr;
+    private final int minConnections;
+    private final int maxConnections;
+    private final AtomicInteger activeCount = new AtomicInteger(0);
+    private final BlockingQueue<Channel> idle = new LinkedBlockingQueue<>();
+    private final EventLoopGroup group = new NioEventLoopGroup(1);
+
+    ChannelPool(ProviderAddress addr, int min, int max) {
+        this.addr = addr;
+        this.minConnections = min;
+        this.maxConnections = max;
+        initMinConnections();
+    }
+
+    private void initMinConnections() {
+        for (int i = 0; i < minConnections; i++) {
+            createChannel();
+        }
+    }
+
+    private void createChannel() {
+        Bootstrap b = new Bootstrap();
+        b.group(group)
+         .channel(NioSocketChannel.class)
+         .handler(new RpcClientInitializer());
+
+        b.connect(addr.getHost(), addr.getPort()).addListener((ChannelFutureListener) f -> {
+            if (f.isSuccess()) {
+                idle.offer(f.channel());
+                activeCount.incrementAndGet();
+            }
+        });
+    }
+
+    public Channel acquire() {
+        Channel ch = idle.poll();
+        if (ch != null && ch.isActive()) {
+            return ch;
+        }
+
+        // 池为空，创建新连接
+        while (activeCount.get() < maxConnections) {
+            CountDownLatch latch = new CountDownLatch(1);
+            createChannel();
+            // 简单等待连接建立（生产用 CompletableFuture）
+        }
+
+        try {
+            return idle.poll(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RpcException("No available channel");
+        }
+    }
+
+    public void release(Channel ch) {
+        if (ch.isActive()) {
+            idle.offer(ch);
+        }
+    }
+}
+
+// 连接池管理下的 RPC 调用
+public class PooledRpcClient {
+    private final RpcChannelPool pool = new RpcChannelPool();
+    private final Map<Long, CompletableFuture<RpcResponse>> pending = new ConcurrentHashMap<>();
+    private final AtomicLong idGen = new AtomicLong(0);
+
+    public CompletableFuture<RpcResponse> invoke(ProviderAddress addr, RpcRequest req) {
+        CompletableFuture<RpcResponse> future = new CompletableFuture<>();
+        long requestId = idGen.incrementAndGet();
+        req.setRequestId(requestId);
+        pending.put(requestId, future);
+
+        try {
+            Channel ch = pool.acquire(addr);
+            ch.writeAndFlush(req).addListener(f -> {
+                if (!f.isSuccess()) {
+                    pending.remove(requestId);
+                    future.completeExceptionally(
+                        new RpcException("Write failed", f.cause()));
+                    pool.release(ch);
+                }
+            });
+            // 响应在 handler 中完成 future 并归还连接
+        } catch (Exception e) {
+            pending.remove(requestId);
+            future.completeExceptionally(e);
+        }
+
+        return future;
+    }
+}
+
+// 动态上下线：监听注册中心服务变更
+@Component
+public class DynamicProviderManager {
+    private final RpcChannelPool pool;
+    private final Set<ProviderAddress> currentProviders = new CopyOnWriteArraySet<>();
+
+    @EventListener
+    public void onProviderChange(ProviderChangeEvent event) {
+        if (event.getType() == ProviderChangeEvent.Type.ADD) {
+            currentProviders.add(event.getAddress());
+        } else if (event.getType() == ProviderChangeEvent.Type.REMOVE) {
+            currentProviders.remove(event.getAddress());
+            // 清理该 provider 的连接池
+            pool.remove(event.getAddress());
+        }
+    }
+}
+```
+
+### 21.7 流量整形（Rate Limiting）
+
+```java
+// Netty 内置的 GlobalTrafficShapingHandler
+public class TrafficShapingServer {
+    public static void main(String[] args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        // 全局限流：写入 1MB/s，读取 512KB/s
+        GlobalTrafficShapingHandler trafficHandler =
+            new GlobalTrafficShapingHandler(worker, 1024 * 1024, 512 * 1024);
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(trafficHandler)
+                       .addLast(new EchoServerHandler());
+                 }
+             });
+
+            b.bind(8080).sync().channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+// 自定义令牌桶限流器
+public class TokenBucketLimiter extends ChannelInboundHandlerAdapter {
+    private final RateLimiter rateLimiter;
+
+    public TokenBucketLimiter(double permitsPerSecond) {
+        this.rateLimiter = RateLimiter.create(permitsPerSecond);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        if (rateLimiter.tryAcquire()) {
+            ctx.fireChannelRead(msg);  // 通过
+        } else {
+            // 拒绝或返回错误
+            ctx.writeAndFlush(Unpooled.wrappedBuffer("Rate limited\n".getBytes()));
+            // 注意：不调用 fireChannelRead，消息被消费
+        }
+    }
+}
+
+// 使用方式
+ch.pipeline()
+    .addLast(new TokenBucketLimiter(1000.0))  // 每秒 1000 个请求
+    .addLast(new BusinessHandler());
+
+// 基于 Channel 维度的限流
+public class PerChannelLimiter extends ChannelInboundHandlerAdapter {
+    private final RateLimiter perChannelLimiter;
+
+    public PerChannelLimiter(double permitsPerSecond) {
+        this.perChannelLimiter = RateLimiter.create(permitsPerSecond);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        if (!perChannelLimiter.tryAcquire()) {
+            ctx.writeAndFlush("Too many requests, slow down\r\n");
+            return;
+        }
+        ctx.fireChannelRead(msg);
+    }
+}
+```
+
+### 21.8 文件传输
+
+```java
+// 大文件下载：零拷贝发送
+public class FileServer {
+    public static void main(String[] args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(new StringDecoder())
+                       .addLast(new FileServerHandler());
+                 }
+             });
+
+            b.bind(8080).sync().channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+class FileServerHandler extends SimpleChannelInboundHandler<String> {
+    private static final String FILE_DIR = "/data/share";
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, String fileName) {
+        File file = new File(FILE_DIR, fileName);
+        if (!file.exists()) {
+            ctx.writeAndFlush("File not found\r\n");
+            return;
+        }
+
+        // 方案一：使用 DefaultFileRegion 零拷贝
+        try {
+            FileRegion region = new DefaultFileRegion(
+                new FileInputStream(file).getChannel(), 0, file.length());
+            ctx.writeAndFlush(region).addListener((ChannelFutureListener) future -> {
+                if (future.isSuccess()) {
+                    ctx.writeAndFlush("\r\n");  // 传输完成标记
+                }
+            });
+        } catch (IOException e) {
+            ctx.writeAndFlush("Error reading file\r\n");
+        }
+    }
+
+    // 方案二：ChunkedWriteHandler 分块传输（稳妥）
+    public void sendLargeFile(ChannelHandlerContext ctx, File file) {
+        ctx.writeAndFlush(new ChunkedFile(
+            new RandomAccessFile(file, "r"),
+            8192  // chunk size
+        ));
+    }
+}
+
+// 文件上传
+public class FileUploadHandler extends ChannelInboundHandlerAdapter {
+    private static final String UPLOAD_DIR = "/data/uploads";
+    private FileOutputStream out;
+    private String fileName;
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        if (msg instanceof String) {
+            // 第一个消息是文件名
+            fileName = (String) msg;
+            try {
+                out = new FileOutputStream(new File(UPLOAD_DIR, fileName));
+            } catch (FileNotFoundException e) {
+                ctx.close();
+            }
+        } else if (msg instanceof ByteBuf) {
+            // 后续是文件内容
+            ByteBuf buf = (ByteBuf) msg;
+            try {
+                buf.readBytes(out, buf.readableBytes());
+            } catch (IOException e) {
+                ctx.close();
+            } finally {
+                buf.release();
+            }
+        } else if (msg instanceof LastHttpContent) {
+            // 传输完成
+            try {
+                out.close();
+                ctx.writeAndFlush("Upload complete\r\n");
+            } catch (IOException e) {
+                ctx.writeAndFlush("Upload error\r\n");
+            }
+        }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        if (out != null) {
+            try { out.close(); } catch (IOException ignored) {}
+        }
+    }
+}
+```
+
+### 21.9 优雅关闭
+
+```java
+// 生产环境必须实现优雅关闭，让进行中的请求完成
+public class GracefulShutdown {
+    private final EventLoopGroup boss;
+    private final EventLoopGroup worker;
+    private volatile boolean shuttingDown = false;
+
+    public GracefulShutdown(EventLoopGroup boss, EventLoopGroup worker) {
+        this.boss = boss;
+        this.worker = worker;
+    }
+
+    public void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down gracefully...");
+            shuttingDown = true;
+
+            // 1. 停止接受新连接
+            boss.shutdownGracefully(0, 5, TimeUnit.SECONDS);
+
+            // 2. 等待处理中的请求完成（最多 30 秒）
+            worker.shutdownGracefully(1, 30, TimeUnit.SECONDS);
+
+            // 3. 等待所有 EventLoop 完全终止
+            try {
+                boss.terminationFuture().sync();
+                worker.terminationFuture().sync();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            System.out.println("Shutdown complete");
+        }));
+    }
+
+    /**
+     * 在 Handler 中使用：判断是否正在关闭
+     */
+    public class GracefulHandler extends SimpleChannelInboundHandler<Object> {
+        @Override
+        protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+            if (shuttingDown) {
+                ctx.writeAndFlush("Server shutting down, try later\r\n");
+                ctx.close();
+                return;
+            }
+            ctx.fireChannelRead(msg);  // 正常处理
+        }
+    }
+}
+
+// 使用方式
+public class ProductionServer {
+    public static void main(String[] args) {
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        // 注册 JVM shutdown hook
+        new GracefulShutdown(boss, worker).registerShutdownHook();
+
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(boss, worker)
+         .channel(NioServerSocketChannel.class)
+         .childHandler(...);
+
+        try {
+            b.bind(8080).sync().channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
+
+// RPC 客户端优雅关闭：等待 pending 请求
+public void shutdownRpcClient(RpcClient client) {
+    // 1. 拒绝新请求
+    client.setAcceptRequests(false);
+
+    // 2. 等待 pending 请求完成（最多 10 秒）
+    long deadline = System.currentTimeMillis() + 10_000;
+    while (client.getPendingCount() > 0 && System.currentTimeMillis() < deadline) {
+        try { Thread.sleep(100); } catch (InterruptedException e) { break; }
+    }
+
+    // 3. 超时后关闭 channel
+    client.close();
+}
+```
+
+### 21.10 Micrometer 指标集成
+
+```java
+// 添加 Micrometer 依赖
+// <dependency>
+//     <groupId>io.micrometer</groupId>
+//     <artifactId>micrometer-core</artifactId>
+// </dependency>
+
+public class MetricsHandler extends ChannelDuplexHandler {
+    private final Counter msgReceived;
+    private final Counter msgSent;
+    private final Timer processTimer;
+    private final Gauge activeConnections;
+
+    public MetricsHandler(MeterRegistry registry) {
+        this.msgReceived = registry.counter("netty.messages.received");
+        this.msgSent = registry.counter("netty.messages.sent");
+        this.processTimer = registry.timer("netty.message.process.time");
+        this.activeConnections = registry.gauge("netty.connections.active", 
+            new AtomicInteger(0), AtomicInteger::get);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+        activeConnections.incrementAndGet();
+        ctx.fireChannelActive();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        activeConnections.decrementAndGet();
+        ctx.fireChannelInactive();
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        msgReceived.increment();
+        Timer.Sample sample = Timer.start();
+
+        ctx.fireChannelRead(msg);
+
+        // 在 write 回调中记录处理时间
+        ctx.channel().writeAndFlush(msg).addListener(future -> {
+            if (future.isSuccess()) {
+                sample.stop(processTimer);
+            }
+        });
+    }
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+        msgSent.increment();
+        ctx.write(msg, promise);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        registry.counter("netty.errors", 
+            "type", cause.getClass().getSimpleName()).increment();
+        ctx.fireExceptionCaught(cause);
+    }
+}
+
+// RPC 调用耗时追踪
+public class RpcMetricsInterceptor extends ChannelDuplexHandler {
+    private static final Map<Long, Long> invokeTimes = new ConcurrentHashMap<>();
+
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+        if (msg instanceof RpcRequest) {
+            RpcRequest req = (RpcRequest) msg;
+            invokeTimes.put(req.getRequestId(), System.nanoTime());
+        }
+        ctx.write(msg, promise);
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        if (msg instanceof RpcResponse) {
+            RpcResponse resp = (RpcResponse) msg;
+            Long start = invokeTimes.remove(resp.getRequestId());
+            if (start != null) {
+                long elapsed = System.nanoTime() - start;
+                // 上报到 Metrics 系统
+                reportLatency(resp.getServiceName(), elapsed / 1_000_000);
+            }
+        }
+        ctx.fireChannelRead(msg);
+    }
+}
+```
+
+### 21.11 Virtual Threads 集成（JDK 21+）
+
+```java
+// ServerBootstrap 仍然用 Netty EventLoop 处理 IO（非阻塞）
+// 但业务 handler 可以用虚拟线程执行
+
+// 配置方式 1：用 virtual thread 执行阻塞业务
+public class VirtualThreadHandler extends ChannelInboundHandlerAdapter {
+    private final ExecutorService virtualExecutor = 
+        Executors.newVirtualThreadPerTaskExecutor();
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        virtualExecutor.submit(() -> {
+            try {
+                // 看似阻塞的 JDBC/HTTP 调用，实际不阻塞 OS 线程
+                Object result = doBlockingBusiness(msg);
+                ctx.writeAndFlush(result);
+            } catch (Exception e) {
+                ctx.fireExceptionCaught(e);
+            }
+        });
+    }
+}
+
+// 配置方式 2：EventLoop 使用虚拟线程
+public class VirtualThreadNettyServer {
+    public static void main(String[] args) {
+        // 注意：EventLoop 本身不适合用虚拟线程（非阻塞 IO 调用 epoll_wait）
+        // 虚拟线程的场景在：业务逻辑中的阻塞调用
+
+        EventLoopGroup boss = new NioEventLoopGroup(1);
+        EventLoopGroup worker = new NioEventLoopGroup();
+
+        try (ExecutorService vtExec = Executors.newVirtualThreadPerTaskExecutor()) {
+            ServerBootstrap b = new ServerBootstrap();
+            b.group(boss, worker)
+             .channel(NioServerSocketChannel.class)
+             .childHandler(new ChannelInitializer<SocketChannel>() {
+                 @Override
+                 protected void initChannel(SocketChannel ch) {
+                     ch.pipeline()
+                       .addLast(new RpcDecoder())
+                       .addLast(new RpcEncoder())
+                       .addLast(new SimpleChannelInboundHandler<RpcRequest>() {
+                           @Override
+                           protected void channelRead0(ChannelHandlerContext ctx,
+                                                       RpcRequest req) {
+                               // 虚拟线程执行阻塞业务，不占用 IO 线程
+                               vtExec.submit(() -> {
+                                   try {
+                                       // 这个 sleep 不会阻塞 OS 线程
+                                       Thread.sleep(100);
+                                       ctx.writeAndFlush(buildResponse(req));
+                                   } catch (Exception e) {
+                                       ctx.fireExceptionCaught(e);
+                                   }
+                               });
+                           }
+                       });
+                 }
+             });
+
+            b.bind(8080).sync().channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+
+// 配置方式 3：ScheduledExecutorService 改用虚拟线程
+ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4,
+    Thread.ofVirtual().factory());  // JDK 21+ 虚拟线程工厂
+```
 
 ---
 
