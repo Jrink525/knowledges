@@ -35,6 +35,7 @@
   - `ai-tools/career/mvanhorn-wtf-is-a-loop-part1.md`
   - `ai-tools/career/my-thoughts-on-loop-engineering.md`
   - `ai-tools/career/notebooklm-maxxing-complete-guide.md`
+  - `ai-tools/career/self-learning-agents-clearly-explained.md`
   - `ai-tools/career/state-of-agent-engineering-2026.md`
   - `ai-tools/career/the-art-of-loop-engineering.md`
   - `ai-tools/career/top-10-agent-skills-bibryam.md`
@@ -182,6 +183,7 @@
   - `ai-tools/tooling/build-ai-agents-2026.md`
   - `ai-tools/tooling/build-claude-workflow-11-stages.md`
   - `ai-tools/tooling/building-recursive-agent-systems-cursor.md`
+  - `ai-tools/tooling/claude-agent-sdk-comprehensive-guide.md`
   - `ai-tools/tooling/claude-all-features-guide-2026.md`
   - `ai-tools/tooling/claude-code-10-plugins-vince.md`
   - `ai-tools/tooling/claude-code-101-academic-researchers.md`
@@ -208,6 +210,7 @@
   - `ai-tools/tooling/feynman-method-claude-4-prompts-guide.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
   - `ai-tools/tooling/from-prompter-to-loop-designer.md`
+  - `ai-tools/tooling/hermes-agent-masterclass.md`
   - `ai-tools/tooling/how-does-vllm-work.md`
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
@@ -252,6 +255,7 @@
 ### spring/data-jpa/ (`spring/data-jpa`)
   - `spring/data-jpa/09-spring-data-jpa-hibernate.md`
   - `spring/data-jpa/13-architecture-layered-design.md`
+  - `spring/data-jpa/spring-transaction-hooks-comprehensive-guide.md`
   - `spring/data-jpa/spring-transaction-management.md`
   - `spring/data-jpa/spring-transactional-complete-guide.md`
 
@@ -306,6 +310,7 @@
   - `programming/java/jvm-tuning-and-profiling-complete-guide.md`
   - `programming/java/leetcode-complete-dsa-pattern-sheet.md`
   - `programming/java/maven-tutorial.md`
+  - `programming/java/netty-rpc-framework-comprehensive-guide.md`
   - `programming/java/spring-boot-field-desensitization-data-permission-complete-guide.md`
   - `programming/java/spring-controller-return-types-complete-guide.md`
   - `programming/java/spring-event-comprehensive-guide.md`
@@ -426,7 +431,7 @@
 
 ---
 
-总计 **321** 篇知识文档
+总计 **314** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -438,5 +443,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-26 01:18 UTC]_
+_[自动生成于 2026-06-26 16:12 UTC]_
 
