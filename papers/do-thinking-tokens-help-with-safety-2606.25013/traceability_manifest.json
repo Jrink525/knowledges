@@ -1,0 +1,144 @@
+{
+  "paper_metadata": {
+    "title": "Do Thinking Tokens Help with Safety?",
+    "arxiv_id": "2606.25013",
+    "slug": "do-thinking-tokens-help-with-safety",
+    "authors": ["Narutatsu Ri", "Abhishek Panigrahi", "Sanjeev Arora"],
+    "affiliation": "Princeton University",
+    "submitted": "2026-06-23",
+    "categories": ["cs.LG", "cs.AI", "cs.CL"],
+    "score": 25
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "claim": "Refusal/compliance outcome is strongly predictable from the first token's hidden representation before any visible thinking begins",
+      "evidence": [
+        "Trained logistic probe on first-token hidden representations achieves 0.84-0.95 AUROC across 4 model families",
+        "~88% balanced accuracy for predicting refusal/compliance from first token alone",
+        "5-fold stratified cross-validation with Youden's J cutoff selection"
+      ],
+      "section": "2.2",
+      "confidence": "high",
+      "experiments": ["First-token probe experiment"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C2",
+      "claim": "The thinking process resembles prefix completion more than deliberative revision",
+      "evidence": [
+        "Final outcome rarely changes after approximately the first 20% of thinking",
+        "Continuation variance is very low given a fixed prefix",
+        "Qwen3-8B: 93% unchanged, Olmo-3-7B-Think: 91%, Phi-4-Reasoning: 70%, GPT-OSS-20B: 90%"
+      ],
+      "section": "3.1",
+      "confidence": "high",
+      "experiments": ["Continuation variance analysis"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C3",
+      "claim": "~74% of text-level deliberations occur when the response distribution is already locked to one refusal/compliance side",
+      "evidence": [
+        "Three-auditor stance annotation of thinking traces (GPT-5.4, Gemini 3 Pro, Sonnet 4.6)",
+        "Fleiss κ=0.67 inter-annotator agreement",
+        "Majority-vote labels show ~74% of deliberation segments occur in 'locked' state"
+      ],
+      "section": "3.2",
+      "confidence": "medium-high",
+      "experiments": ["Thinking trace stance annotation"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C4",
+      "claim": "The Fisher discriminant shows a 'valley signature': high pre-decoding separability, sustained drop through middle, re-crystallization at end",
+      "evidence": [
+        "Fisher discriminant ratio plotted across normalized thinking positions",
+        "Valley pattern reproduced across all 4 primary models and 5 supplementary models",
+        "Includes Qwen3-32B, Phi-4-Reasoning-Plus, Qwen3.5-9B, DeepSeek-R1 distills"
+      ],
+      "section": "2.2",
+      "confidence": "high",
+      "experiments": ["Fisher discriminant analysis"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B", "Qwen3-32B", "Phi-4-Reasoning-Plus", "Qwen3.5-9B", "DeepSeek-R1-Distill-Llama-8B", "DeepSeek-R1-0528-Qwen3-8B"]
+    },
+    {
+      "id": "C5",
+      "claim": "Stance oscillations in thinking traces are predominantly performative rather than meaningful",
+      "evidence": [
+        "Per-rollout and per-segment oscillation analysis",
+        "Most oscillation segments are 'Locked' (response distribution already fixed)",
+        "Only a small fraction are both 'Not Locked' and 'Significant' (meaningful)",
+        "Pattern holds across both harmful and benign prompt splits"
+      ],
+      "section": "3.2",
+      "confidence": "medium-high",
+      "experiments": ["Oscillation decomposition analysis"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C6",
+      "claim": "Existing inference-time and training-based safety interventions shift behavior along the ASR-ORR tradeoff rather than improving it",
+      "evidence": [
+        "Pareto frontier analysis of 9 defense methods × 4 base models",
+        "No defended cell improves on its base model in both ASR and ORR simultaneously",
+        "Every cell that lowers ASR does so by raising ORR; some are worse on both axes"
+      ],
+      "section": "4",
+      "confidence": "high",
+      "experiments": ["Comprehensive defense evaluation"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"],
+      "defenses_tested": ["SafePath-ZS", "PSR", "SafeRemind", "STAR-1", "SafeKey", "R1-ACT", "STAIR", "ThinkSafe", "RAPO"]
+    },
+    {
+      "id": "C7",
+      "claim": "Safety interventions suppress already-scarce deliberation signals",
+      "evidence": [
+        "First-token readability remains high or increases after defense application",
+        "Oscillation counts decrease after defense (fewer deliberation segments)",
+        "Defenses push behavior toward over-refusal"
+      ],
+      "section": "4.1-4.2",
+      "confidence": "medium",
+      "experiments": ["Defense effect on probe readability", "Defense effect on oscillation statistics"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C8",
+      "claim": "Forcing extended thinking past the natural stopping point does not meaningfully change safety behavior",
+      "evidence": [
+        "Budget-controlled experiments with early truncation and extended generation",
+        "Increasing thinking budget tends to raise compliance (higher ASR and lower ORR)",
+        "Forcing thinking past natural stopping yields little additional change"
+      ],
+      "section": "C.3",
+      "confidence": "medium",
+      "experiments": ["Thinking budget experiments"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    },
+    {
+      "id": "C9",
+      "claim": "More permissive 'no-think to think' change measures also confirm limited impact of thinking on safety",
+      "evidence": [
+        "Sign-only directional change analysis: most shifts are small",
+        "Mean signed change analysis: positive ASR improvements often come with negative ORR shifts",
+        "Phi-4-Reasoning shows a mild exception but overall conclusion holds"
+      ],
+      "section": "C.3",
+      "confidence": "medium",
+      "experiments": ["Permissive no-think-to-think change measures"],
+      "models_tested": ["Qwen3-8B", "Olmo-3-7B-Think", "Phi-4-Reasoning", "GPT-OSS-20B"]
+    }
+  ],
+  "evidence_types": {
+    "probe_based": ["C1", "C7"],
+    "statistical_analysis": ["C2", "C4", "C6", "C8", "C9"],
+    "annotation_based": ["C3", "C5"],
+    "defense_evaluation": ["C6", "C7"]
+  },
+  "claim_relationships": {
+    "C1_implies_C2": "If the outcome is predictable from the first token, subsequent thinking is likely prefix completion",
+    "C2_and_C3_imply_C5": "If thinking is prefix completion and most deliberation happens when already locked, oscillations are performative",
+    "C6_and_C7_imply_need": "Current defenses fail to induce genuine deliberation, highlighting need for new methods"
+  }
+}

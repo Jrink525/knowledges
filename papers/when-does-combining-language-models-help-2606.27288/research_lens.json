@@ -1,0 +1,139 @@
+{
+  "paper": {
+    "title": "When Does Combining Language Models Help? A Co-Failure Ceiling on Routing, Voting, and Mixture-of-Agents Across 67 Frontier Models",
+    "arxiv_id": "2606.27288",
+    "slug": "when-does-combining-language-models-help"
+  },
+
+  "problem_reconstruction": {
+    "community_question": "How much accuracy gain can multi-model orchestration (routing, voting, fusion, MoA) deliver over using a single LLM?",
+    "community_answer": "It depends on the pairwise error correlation ρ. Lower ρ means more diversity, which means better ensemble accuracy.",
+    "authors_answer": "Pairwise ρ is blind to the true ceiling. The fundamental quantity is β — the rate at which ALL models fail on the same query. No selection policy can exceed 1−β, and ρ cannot identify β for m≥3 models. You must measure β directly.",
+    "gap": "The field treats ρ as a sufficient diagnostic for orchestration value. The paper shows (i) ρ is not a sufficient statistic for β (Prop. 3), (ii) the Gaussian-copula prediction from ρ systematically underprices β (Prop. 2), and (iii) the gap grows with pool size — exactly the regime where orchestration is most relevant.",
+    "reframing": "Stop asking 'how correlated are the models?' and start asking 'how often are ALL models wrong on the same question?' One is a pairwise statistic; the other is a multivariate ceiling. They are not interchangeable."
+  },
+
+  "core_narrative": {
+    "hook": "The orchestration ceiling is not set by average pairwise agreement, but by the rare tail where every model fails together. That tail is invisible to the standard diagnostic.",
+    "escalation": [
+      "Practitioners report ρ to decide whether to orchestrate. But ρ is a pairwise statistic; the ceiling is multivariate.",
+      "The Gaussian-copula model — which the field implicitly trusts — predicts β from ρ. Empirically, it fails: β is systematically higher than predicted.",
+      "The failure worsens with pool size. The very regime where orchestration seems most useful (many models) is where ρ is most misleading.",
+      "It's not just a Gaussian artifact: even a heavy-tailed Clayton copula falls short. The driver is a common-mode atom that no pairwise statistic captures."
+    ],
+    "resolution": "Use the Clopper-Pearson certificate (Prop. 1): from a small labeled sample, get a $0 bound on maximum orchestration gain. Measure β directly, don't infer it from ρ."
+  },
+
+  "force_mapping": {
+    "problem_forces": {
+      "force-1": {
+        "name": "Ceiling vs. Diagnostic Mismatch",
+        "description": "The ceiling (β) is a multivariate quantity, but the field's diagnostic (ρ) is pairwise. They are not even identifiable from each other (Prop. 3).",
+        "symptom": "Practitioners see low ρ and assume large orchestration headroom, when actually β may already be high."
+      },
+      "force-2": {
+        "name": "Gaussian Copula Optimism",
+        "description": "The single-factor Gaussian copula — the standard model for ensemble error floors — systematically underprices co-failure because it has zero lower tail dependence when ρ<1.",
+        "symptom": "β predicted from ρ is 2.5× to 8.3× lower than empirical β on open-ended tasks."
+      },
+      "force-3": {
+        "name": "Pool Size Amplification",
+        "description": "The β/ρ gap grows with the number of models. Orchestration across large pools — the most interesting regime — is where the standard diagnostic performs worst.",
+        "symptom": "Ratio rises from 1.0 at 2 models to 2.5 at 67 models on MATH-500. More models don't dilute co-failure; they reveal it."
+      },
+      "force-4": {
+        "name": "Format Dictates Tail Structure",
+        "description": "Multiple-choice questions suppress co-failure (β≈0). Open-ended questions amplify it. The same content in different formats produces opposite regimes.",
+        "symptom": "GPQA-Diamond: β≈0 multiple-choice, β=0.127 free-response. Format, not subject, sets the regime."
+      },
+      "force-5": {
+        "name": "Quality Diversity Trade-off",
+        "description": "Diverse models help only when quality is matched. Naive heterogeneous fusion (unequal-quality models) hurts: it lets weaker members outvote a strong one.",
+        "symptom": "455 triplets: mean vote gain negative (−0.10). At matched quality: lower ρ helps (+0.027 gain, positive in all 60 resamples)."
+      },
+      "force-6": {
+        "name": "Realizability Gap",
+        "description": "Even when the ceiling is open (β≈0), deployable routers capture almost none of the oracle gain. The signal for which model will be correct on a given query is not in the prompt.",
+        "symptom": "TF-IDF+domain router: 9% of G (CI spans 0). LLM-as-router: 0%. The oracle G=0.154 on GPQA is pure resolvable disagreement no router harvests."
+      }
+    },
+    "schema": {
+      "entities": [
+        {"id": "β", "type": "quantity", "description": "All-models-wrong rate — the ceiling"},
+        {"id": "ρ", "type": "quantity", "description": "Pairwise error correlation — the standard diagnostic"},
+        {"id": "single_factor_copula", "type": "model", "description": "Gaussian copula with single common factor"},
+        {"id": "common_mode_atom", "type": "mechanism", "description": "Positive-probability event of joint failure"},
+        {"id": "oracle_gain_G", "type": "quantity", "description": "Maximum achievable gain over single-best"},
+        {"id": "realizable_gain", "type": "quantity", "description": "Gain a deployable router actually achieves"},
+        {"id": "Clopper_Pearson_certificate", "type": "method", "description": "Statistical bound on maximum orchestration gain from labeled sample"},
+        {"id": "diversification_limit_k_star", "type": "quantity", "description": "Optimal ensemble size under cost-awareness"},
+        {"id": "cascade_collapse", "type": "phenomenon", "description": "Cascade reduces to random mixing as verifier AUC → ½"},
+        {"id": "shadow_price_λ", "type": "quantity", "description": "Dual price on the inference dollar in budget-constrained routing"}
+      ],
+      "relationships": [
+        {"from": "ρ", "to": "β", "type": "cannot_identify", "condition": "m ≥ 3", "evidence": "Prop. 3"},
+        {"from": "single_factor_copula", "to": "β", "type": "systematically_underestimates", "evidence": "2.5× residual on MATH-500"},
+        {"from": "common_mode_atom", "to": "β", "type": "drives_mispricing", "evidence": "Not copula misspecification; survives Clayton copula control"},
+        {"from": "β", "to": "oracle_gain_G", "type": "caps", "mechanism": "G = Pr[single-best wrong] − β", "evidence": "Prop. 1"},
+        {"from": "oracle_gain_G", "to": "realizable_gain", "type": "upper_bound", "evidence": "9% of G captured (CI spans 0)"},
+        {"from": "Clopper_Pearson_certificate", "to": "β", "type": "measures_directly", "evidence": "Prop. 1(iii)"}
+      ]
+    },
+    "key_insight": {
+      "text": "The co-failure tail β, not pairwise correlation ρ, is the right quantity for orchestration decisions. The standard diagnostic (ρ) is blind to the ceiling, the gap grows with pool size, and a simple Clopper-Pearson certificate from a small labeled sample directly measures what matters.",
+      "unifying_principle": "Orchestration is allocation over a priced, correlated, churning pool. All three orchestration modes (routing, fusion, cascade) are governed by the same ceiling 1−β because all output member-model answers. The correct economic framing replaces the pair-correlation heuristic with a multivariate ceiling and a direct measurement tool."
+    }
+  },
+
+  "method_critique": {
+    "strengths": [
+      "67-model pool across 21 providers is genuinely market-scale",
+      "Content-controlled test (GPQA MC vs. free-response) rules out domain confound",
+      "Proper tetrachoric calibration (avoids the common Pearson trap)",
+      "Full 67×67 Gaussian copula Monte Carlo (not just single-factor)",
+      "Clayton copula control (non-Gaussian tail dependence ruled out)",
+      "Pool-size ablation (60 random k-subsets per k, monotonic rise confirmed)",
+      "Pre-registered experimental program",
+      "Full data and code release",
+      "Transparent cost accounting",
+      "5-fold held-out cascade evaluation"
+    ],
+    "weaknesses": [
+      "Programmatic grading only covers verifiable tasks — limits to tasks with known answer",
+      "Code domain: k=5 all-wrong events, strict-but-not-official judge, 18-model pool (not 67)",
+      "Unconditional ρ-slope inference inconclusive under model-clustering",
+      "G and block-ρ gap reported without seed replication",
+      "Matched-quality test rests on one provider-matched band; alternative pipeline gives smaller non-significant gain",
+      "Cascade verifier scores only cheap model L (not both L and H as optimal deferral requires)",
+      "Churn study (App. E) is observational and stylized, not controlled"
+    ],
+    "external_validity": {
+      "supported_domains": ["Open-ended mathematics (MATH-500, MATH-Hard)", "Execution-graded code contests", "Free-response science (GPQA open-ended)"],
+      "boundary_conditions": [
+        "Multiple-choice/verifiable tasks (β ≈ 0, different regime)",
+        "Saturated/undemanding benchmarks (inflate ρ)",
+        "Open-ended generative tasks beyond verifiable benchmarks (not tested)"
+      ]
+    },
+    "future_work_needed": [
+      "Tight-ratio code replication at 67-model scale with official judge",
+      "≥3 seeds and held-out model selection on matched-quality result",
+      "Extension across multiple ρ levels to fit λ and predict k* out-of-sample",
+      "Optimal cascade-routing baseline (Dekoninck et al. [3])",
+      "Human-calibrated judge on full 130 GPQA open-ended questions",
+      "Open-ended generative tasks beyond verifiable benchmarks"
+    ]
+  },
+
+  "impact_assessment": {
+    "immediate_practical_value": "The Clopper-Pearson certificate (Prop. 1) is a $0 pre-deployment test any team can run: from a small labeled sample, get a certified upper bound on the gain any router/vote/cascade can deliver. If the bound falls below overhead cost, don't build orchestration.",
+    "theoretical_impact": "Shifts the frame from pairwise to multivariate, from ρ to β. Connects LLM orchestration to portfolio theory (Markowitz), copula credit modeling (CDO base correlation smile), and common-shock models (Marshall-Olkin).",
+    "methodological_impact": "Exposes the Pearson-tetrachoric calibration trap that the LLM evaluation community routinely falls into. A century-old psychometric correction is load-bearing.",
+    "pipeline_impact": "If correct, the ceiling-bound regime (open-ended tasks) means that on the workloads where orchestration would be most valuable, it's least possible. The realizable headroom is small, and the signal for query-level routing is not in the prompt.",
+    "open_questions": [
+      "Does the co-failure signature hold on truly open-ended generative tasks (summarization, creative writing, analysis)?",
+      "Can a stronger query-level routing signal (e.g. embedding-based, learned on per-model performance prediction) realize the oracle gain on realizability-bound tasks?",
+      "Does the common-mode atom shrink or persist as frontier models improve?"
+    ]
+  }
+}

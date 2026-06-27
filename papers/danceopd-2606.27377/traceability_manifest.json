@@ -1,0 +1,265 @@
+{
+  "manifest_version": "1.0.0",
+  "paper": {
+    "title": "DanceOPD: On-Policy Generative Field Distillation",
+    "arxiv_id": "2606.27377",
+    "slug": "danceopd"
+  },
+  "claims": {
+    "C1.1": {
+      "description": "硬路由比软教师混合在 MSE 下平均提升 15.2%",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 813,
+          "line_end": 817,
+          "quote_text": "With MSE, hard routing improves the average over soft mixing by 15.2%, with gains on subject addition, background change, style change, color alteration, and subject removal. The largest gains appear on background change and subject removal, where hard routing improves by 20.8% and 26.8%, respectively.",
+          "section": "4.2 Multi-Teacher Extension"
+        }
+      ],
+      "category": "design_choice"
+    },
+    "C1.2": {
+      "description": "低噪声查询比中噪声提升 23.7%，比高噪声提升 19.5%",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 859,
+          "line_end": 863,
+          "quote_text": "At 2k steps, low-tt querying improves the GEditBench average over median-tt and high-tt querying by 23.7% and 19.5%.",
+          "section": "4.3 Ablation Study"
+        }
+      ],
+      "category": "design_choice"
+    },
+    "C1.3": {
+      "description": "单查询 (K=1) 优于所有密集查询变体 (K=2,4,8,16)",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 870,
+          "line_end": 876,
+          "quote_text": "The single-query default outperforms the weighted dense-query variants across K=2,4,8,16, improving the GEditBench average by 16.6%, 7.9%, 10.2%, and 12.2%, respectively.",
+          "section": "4.3 Ablation Study"
+        }
+      ],
+      "category": "design_choice"
+    },
+    "C1.4": {
+      "description": "Plain velocity MSE 是最稳定且表现最好的目标函数",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 878,
+          "line_end": 882,
+          "quote_text": "Plain velocity MSE gives the strongest average among the tested local matching objectives. It improves over timestep-weighted MSE and DMD-EMA hybrid by 2.8%, over consistency matching by 4.1%, and over KL-σ̄² matching by 4.5%.",
+          "section": "4.3 Ablation Study"
+        }
+      ],
+      "category": "design_choice"
+    },
+    "C2.1": {
+      "description": "DanceOPD 在现实主义吸收中关闭 85.3% 的学生-教师差距",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 783,
+          "line_end": 787,
+          "quote_text": "DanceOPD improves the realism reward over off-policy distillation by 9.9% and closes 85.3% of the student-to-teacher reward gap.",
+          "section": "4.1-C Realism Absorption"
+        }
+      ],
+      "category": "performance"
+    },
+    "C2.2": {
+      "description": "DanceOPD 在 T2I+Edit 上超越所有基线方法约 18%",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 695,
+          "line_end": 700,
+          "quote_text": "★ DanceOPD (Ours) 5.178 5.549 6.153 5.944 5.812 4.348 5.498 | 1.000 0.949 0.925 0.926 0.650 0.640 0.848",
+          "section": "4.1-A T2I and Edit Composition"
+        }
+      ],
+      "category": "performance"
+    },
+    "C2.3": {
+      "description": "局部编辑 SFT 初始化是最佳初始化选择",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 884,
+          "line_end": 888,
+          "quote_text": "At 2k steps, local edit initialization improves the GEditBench average over merged initialization by 37.2%, over global edit initialization by 112.8%, and over T2I initialization by 204.4%.",
+          "section": "4.3 Ablation Study"
+        }
+      ],
+      "category": "design_choice"
+    },
+    "C3.1": {
+      "description": "SDE 去相关恢复密集查询压力测试中 18.4% 的性能",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 831,
+          "line_end": 836,
+          "quote_text": "In the K=2, G=3 stress case, replacing ODE rollout with SDE rollout improves the average by 18.4%. The recovery is strongest on subject removal and subject addition, which improve by 62.0% and 29.0%.",
+          "section": "4.2 Multi-Teacher Extension"
+        }
+      ],
+      "category": "diagnostic"
+    },
+    "C3.2": {
+      "description": "16 步训练 rollout 在 2000 步时达到最佳 GEditBench",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 853,
+          "line_end": 856,
+          "quote_text": "At 2k steps, the 16-step rollout gives the strongest GEditBench average, improving over the 8-step, 20-step, and 28-step variants by 0.2%, 3.0%, and 0.9%, respectively.",
+          "section": "4.3 Ablation Study"
+        }
+      ],
+      "category": "performance"
+    },
+    "C3.3": {
+      "description": "有效 CFG ≈ αβ，过度组合导致性能下降 31.2%",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 795,
+          "line_end": 801,
+          "quote_text": "The best measured composition improves the GEditBench average over train-only absorption by 7.6% and over eval-only CFG by 1.4%. ... excessive composition of absorbed and external guidance reduces the score by 31.2% relative to the best measured composition.",
+          "section": "4.1-D CFG Absorption"
+        }
+      ],
+      "category": "empirical_finding"
+    },
+    "C4.1": {
+      "description": "同一步累积多个能力场导致性能下降 4.6%-22.8%",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 822,
+          "line_end": 826,
+          "quote_text": "Compared with the single-query step-alternation default, same-step accumulation with K=1 and G=3 loses 4.6% on average. ... K=2, G=3 case loses 22.8% on average, with subject addition and subject removal dropping by 28.9% and 46.0%.",
+          "section": "4.2 Multi-Teacher Extension"
+        }
+      ],
+      "category": "empirical_finding"
+    },
+    "C4.2": {
+      "description": "DanceOPD 在定性结果中保持一致的高质量编辑",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 1046,
+          "line_end": 1052,
+          "quote_text": "Across these edits, DanceOPD generally preserves the bottle identity, cap shape, upright product composition, and central placement while changing the requested visual factor",
+          "section": "9 Additional Qualitative Results"
+        },
+        {
+          "source": "paper.txt",
+          "line_start": 1036,
+          "line_end": 1039,
+          "quote_text": "Our model applies the magenta and cyan cyberpunk appearance while retaining the main face, pose, hair layout, and portrait composition more consistently than the alternatives.",
+          "section": "9 Additional Qualitative Results"
+        }
+      ],
+      "category": "qualitative"
+    },
+    "C5.1": {
+      "description": "DanceOPD 的计算成本介于 Off-Policy 和 DiffusionOPD 之间",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 912,
+          "line_end": 918,
+          "quote_text": "off-policy is cheapest but off-distribution, DanceOPD pays the rollout cost but only Kours gradient state, DiffusionOPD pays dense Kdense-state gradients, and Flow-OPD further pays the FlowGRPO micro-batch factor.",
+          "section": "8.1 Computational Complexity"
+        }
+      ],
+      "category": "analysis"
+    },
+    "C5.2": {
+      "description": "DanceOPD 在 GenEval 上同时提升，说明 T2I 基础能力未退化",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 695,
+          "line_end": 700,
+          "quote_text": "★ DanceOPD (Ours) ... 0.848",
+          "section": "4.1-A T2I and Edit Composition"
+        }
+      ],
+      "category": "performance"
+    },
+    "C6.1": {
+      "description": "DanceOPD 要求冻结能力源使用兼容的速度场参数化",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 897,
+          "line_end": 901,
+          "quote_text": "The current formulation assumes that frozen capability sources expose compatible velocity fields over a shared generative state space.",
+          "section": "6 Limitations and Discussions"
+        }
+      ],
+      "category": "limitation"
+    },
+    "C6.2": {
+      "description": "非对称 KL 与 MSE 在速度场匹配子问题中等价",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 719,
+          "line_end": 722,
+          "quote_text": "KL-style velocity matching reduces to a weighted MSE form under the same view; we provide the derivation in Appendix Sec. 7.1.",
+          "section": "3.5 Objective Design"
+        }
+      ],
+      "category": "theoretical"
+    },
+    "C7.1": {
+      "description": "Off-policy 蒸馏查询固定加噪状态而非学生访问状态",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 930,
+          "line_end": 938,
+          "quote_text": "The off-policy reproduction keeps the same hard-routed teacher and MSE loss as DanceOPD, but replaces the student-visited query state with a fixed noising distribution around offline endpoints",
+          "section": "8.4 Off-Policy"
+        }
+      ],
+      "category": "method_comparison"
+    },
+    "C7.2": {
+      "description": "Rollout 步数增加不自动提升性能，因为 Beta 分布在更多候选状态上扩散",
+      "evidence": [
+        {
+          "source": "paper.txt",
+          "line_start": 967,
+          "line_end": 972,
+          "quote_text": "Thus, a larger N gives a finer low-tt grid, but the same clean-side Beta mass is spread across more states, so the probability assigned to the single cleanest state decreases.",
+          "section": "8.5 Tab. 2 Details"
+        }
+      ],
+      "category": "analysis"
+    }
+  },
+  "claims_meta": {
+    "total_claims": 17,
+    "categories": {
+      "design_choice": 5,
+      "performance": 4,
+      "diagnostic": 1,
+      "empirical_finding": 2,
+      "qualitative": 1,
+      "analysis": 2,
+      "limitation": 1,
+      "theoretical": 1,
+      "method_comparison": 1
+    }
+  }
+}

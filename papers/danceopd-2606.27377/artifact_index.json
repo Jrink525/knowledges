@@ -1,0 +1,36 @@
+{
+  "manifest_version": "1.0.0",
+  "paper": {
+    "title": "DanceOPD: On-Policy Generative Field Distillation",
+    "arxiv_id": "2606.27377",
+    "slug": "danceopd"
+  },
+  "artifacts": [
+    {
+      "name": "report.md",
+      "description": "深度解读报告，包含 25 个章节（问题陈述、方法、实验、声明索引等）",
+      "format": "markdown",
+      "path": "report.md"
+    },
+    {
+      "name": "traceability_manifest.json",
+      "description": "声明→证据链，包含 17 条声明，每条对应到论文原文位置",
+      "format": "json",
+      "path": "traceability_manifest.json"
+    },
+    {
+      "name": "research_lens.json",
+      "description": "问题重构，包含研究方程、三遍阅读笔记、挑战→模块映射",
+      "format": "json",
+      "path": "research_lens.json"
+    },
+    {
+      "name": "direction_board.json",
+      "description": "研究方向种子排名，包含 8 个精心设计的研究方向",
+      "format": "json",
+      "path": "direction_board.json"
+    }
+  ],
+  "created_at": "2026-06-26T17:09:00Z",
+  "reading_method": "PDF available → arXiv HTML text extraction → manual reading and analysis"
+}

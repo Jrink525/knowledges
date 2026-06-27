@@ -1,0 +1,127 @@
+{
+  "manifest_version": "1.0.0",
+  "paper": {
+    "title": "DanceOPD: On-Policy Generative Field Distillation",
+    "arxiv_id": "2606.27377",
+    "slug": "danceopd"
+  },
+  "seeds": [
+    {
+      "rank": 1,
+      "id": "DS-1",
+      "seed_type": "unavailable_mechanism",
+      "name": "自适应动态路由 (Adaptive Dynamic Routing)",
+      "trigger_evidence_summary": "DanceOPD 使用固定的均匀路由概率 π, 且在同一步累积多个场时观察到性能下降（Table 7: G=3, K=1 损失 4.6%, G=3, K=2 损失 22.8%）。" ,
+      "hidden_assumption_or_gap": "论文假设均匀路由在所有训练阶段都是最优的。但不同任务的学习难度不同，梯度量级不同，学生不同阶段的能力水平也不同——固定均匀路由几乎必然不是最优的。",
+      "research_question": "能否根据样本的当前损失、梯度方向一致性、或学生当前能力水平，动态选择最优的教师场进行路由？",
+      "hypothesis": "自适应路由（如基于梯度冲突度、任务置信度、或学习进度的门控机制）能在多能力蒸馏中显著优于固定均匀路由，尤其在能力数量增加到 5+ 时。",
+      "minimum_viable_experiment": "在 3 场设置（T2I + 属性编辑 + 风格编辑）上，实现一个基于梯度方向相似性（如 PCGrad 的梯度投影）的场选择器：每步选择与学生当前梯度方向最一致（或冲突最小）的教师场。比较与均匀路由在 GEditBench 和 GenEval 上的差异。",
+      "negative_result_interpretation": "如果自适应路由不优于均匀，说明简单路由已经足够好——可能因为 Beta 分布覆盖的查询状态本身就与梯度冲突解耦。这也将是一个有意义的发现。",
+      "killer_objection": "自适应路由增加了每步的计算开销（需要评估所有场并计算梯度相似性），可能抵消 DanceOPD 比 DiffusionOPD / Flow-OPD 的效率优势。",
+      "killer_result": "如果自适应路由在 5 场设置下能同时提升 GEditBench 平均 5%+ 且保持 GenEval 不变，则足以证明价值。"
+    },
+    {
+      "rank": 2,
+      "id": "DS-2",
+      "seed_type": "proxy_mismatch",
+      "name": "单查询局限性与多查询去相关 (Beyond Single Query: Decorrelated Multi-State Supervision)",
+      "trigger_evidence_summary": "单查询 (K=1) 明确优于密集查询 (K≥2, 下降 7.9%-16.6%)。但 SDE 去相关实验（η=0.3）恢复了 18.4% 的密集查询损失（Table 7）。",
+      "hidden_assumption_or_gap": "论文认为密集查询的失败完全源于轨迹查询相关性。但 SDE 去相关只恢复了部分损失（仍低于单查询 8.6%），暗示相关性不是唯一因素——可能有其他机制（如不同时间步的场冲突）。",
+      "research_question": "能否设计一种机制，在利用多个 rollout 状态提供更密集监督的同时，避免轨迹相关性导致的梯度劣化？",
+      "hypothesis": "如果对来自同一 rollout 的多个状态应用不同的随机扰动/独立噪声增强（而非共享噪声），可以打破轨迹相关性，使多状态监督达到或超过单查询的性能。",
+      "minimum_viable_experiment": "在 DanceOPD 框架中实现：对 rollout 中的 K 个状态分别施加独立同分布的 SDE 噪声（而不是同一种子），设 K=2,4，比较与默认单查询和共享噪声密集查询的性能。",
+      "negative_result_interpretation": "如果独立噪声增强仍然无法超过单查询，说明轨迹状态间的信息冗余是根本性的——更经济的选择是使用更细粒度的查询时间点（单个最优状态），而非多个近似状态。",
+      "killer_objection": "多状态监督的主要价值可能是降低方差。如果单查询已经达到接近教师的上限，那么改进上限比降低方差更重要。",
+      "killer_result": "如果在 K=4 独立噪声增强下，GEditBench 平均超过单查询（5.751 → ~5.85+），则证明可以突破单查询的局限。"
+    },
+    {
+      "rank": 3,
+      "id": "DS-3",
+      "seed_type": "evidence_gap",
+      "name": "扩展到 5+ 能力场 (Scaling to Many Capabilities)",
+      "trigger_evidence_summary": "论文最多测试了 3 个场（T2I + 属性编辑 + 风格编辑）。多场诊断中（Table 7），G=3 同一步累积时已经出现明显性能下降。",
+      "hidden_assumption_or_gap": "论文隐含假设 DanceOPD 可以平滑扩展到更多场。但当场数量增加时，路由冲突概率、每个场的接受训练量、以及状态覆盖的范围都可能出现非线性恶化。",
+      "research_question": "DanceOPD 框架能否扩展到 10+ 个异构能力场（如添加 inpainting、outpainting、超分辨率、特定风格等）？当场数量增加时，性能是线性衰减、亚线性衰减、还是出现断崖式下降？",
+      "hypothesis": "硬路由采样 + 步交替可以扩展到 10+ 场，但每个场的训练步数随场数线性减少，导致收敛变慢。在固定总步数下，性能会亚线性衰减。",
+      "minimum_viable_experiment": "使用 Z-Image 基座，构建 10 个场（5 个编辑类型 × 2 个难度级别），用 DanceOPD 训练 50K 步。报告每个场的 GEditBench 子分数以及整体平均。检查最差场和最优场之间的差距是否随场数扩大。",
+      "negative_result_interpretation": "如果最差场分数下降至接近 off-policy 水平，说明路由频率稀释是主要瓶颈。此时可能需要"课程学习"策略（先训练子集，再逐步引入更多场）。",
+      "killer_objection": "现实中的能力组合通常不超过 3-5 种核心能力。10+ 场的场景可能学术意义大于实际意义。",
+      "killer_result": "如果 10+ 场设置下所有场保持 90%+ 的单项教师性能，将证明 DanceOPD 框架的强扩展性。"
+    },
+    {
+      "rank": 4,
+      "id": "DS-4",
+      "seed_type": "assumption_violation",
+      "name": "跨骨干 / 跨模态转移 (Cross-Backbone and Cross-Modal Transfer)",
+      "trigger_evidence_summary": "论文在局限性中承认：所有冻结能力源必须使用兼容的速度场参数化（相同骨干、潜空间、调度器）。",
+      "hidden_assumption_or_gap": "论文假设所有能力源共享相同的状态空间表示。但现实场景中，不同的生成模型（如 Stable Diffusion、DALL-E、Imagen）使用不同的潜空间和调度器。打破这个假设会彻底改变框架。",
+      "research_question": "能否通过投影层或逐步适配（adapter），将不同参数化（不同潜空间、不同调度器）的能力场对齐到共享的状态空间，从而允许跨骨干的 DanceOPD 蒸馏？",
+      "hypothesis": "使用轻量级可学习投影层（如 1-3 层 MLP）将外部教师的速度场预测映射到学生空间，可以在不匹配的参数化下实现有效的 on-policy 蒸馏。",
+      "minimum_viable_experiment": "构建场景：学生使用 Z-Image（Flow-Matching DiT），教师使用 SD3（Rectified Flow，不同调度）。添加投影层 $\phi(v_{\text{teacher}})$ 将教师输出映射到 Z-Image 的速度空间。用 DanceOPD 训练，比较与兼容参数化基线的差距。",
+      "negative_result_interpretation": "如果投影层无法有效桥接差距，说明不同调度器/潜空间下的速度场本质上是不同语义空间中的向量——语义不对齐比参数不对齐更根本。",
+      "killer_objection": "投影层可能过于灵活，使学生学会忽略教师场中的关键结构。适配器的容量和正则化需要精细调优。",
+      "killer_result": "如果 GEditBench 平均达到兼容基线的 95%+，则跨骨干蒸馏可行。"
+    },
+    {
+      "rank": 5,
+      "id": "DS-5",
+      "seed_type": "tiny_example",
+      "name": "步数压缩与 Rollout 效率 (Rollout Efficiency via Fewer Steps)",
+      "trigger_evidence_summary": "DanceOPD 使用 16 步 ODE rollout，比 off-policy 多 $N \\cdot C_{\\text{roll}}$ 成本。Table 9 显示 8 步 rollout 在 2000 步时达到 5.739（接近 16 步的 5.751）。",
+      "hidden_assumption_or_gap": "论文使用 16 步 rollout 作为默认，但 8 步的成本减半且性能接近。更关键的是，是否存在一种 rollout 压缩策略（如一致性训练或轨迹提炼），能进一步减少步数而不牺牲查询质量？",
+      "research_question": "能否将 DanceOPD 的 rollout 步数从 16 减少到 4 或 2，同时保持 on-policy 查询的质量和最终组合性能？",
+      "hypothesis": "使用一致性损失或 trajectory distillation 辅助训练，可以让学生在更少的 rollout 步数下产生足够准确的轨迹状态，从而大幅降低训练计算成本。",
+      "minimum_viable_experiment": "在 DanceOPD 框架中添加辅助一致性损失（Consistency Trajectory Model 风格），比较 4 步、8 步、16 步 rollout 下的 GEditBench 和训练时间。",
+      "negative_result_interpretation": "如果 4 步 rollout 无法维持 on-policy 查询的质量（GEditBench 下降 >5%），说明 rollout 覆盖的连续性对于场匹配至关重要——这与 DanceOPD 的"查询分布"设计是一致的。",
+      "killer_objection": "减少 rollout 步数可能改变 Beta(5,2) 查询分布的有效性——8 步时最干净状态接受概率 0.167，28 步时仅 0.017。",
+      "killer_result": "如果 4 步 rollout + 一致性辅助能匹配 16 步的 GEditBench（5.75），且训练加速 3x+，则该方向高度实用。"
+    },
+    {
+      "rank": 6,
+      "id": "DS-6",
+      "seed_type": "successor_paper_gap",
+      "name": "推理时用户控制的能力平衡 (Inference-Time Capability Steering)",
+      "trigger_evidence_summary": "论文中路由是静态的，用户无法在推理时控制能力组合的平衡。CFG 吸收实验（Fig. 6b）初步探索了训练/推理时的引导组合。",
+      "hidden_assumption_or_gap": "路由概率只在训练时有效果——推理时学生使用固定的单次前向传播。但用户可能想在推理时调节不同能力的贡献强度（如"稍微更多的编辑，少一点的 T2I"，或"更强的现实主义"）。",
+      "research_question": "能否在 DanceOPD 框架中实现推理时的连续能力控制，使用户可以按需调节不同能力的贡献（例如通过一个标量滑块或条件提示词）？",
+      "hypothesis": "如果在训练时使用可变的（而非均匀的）路由概率，且将路由概率作为额外的条件输入，学生可以在推理时通过改变输入条件来调节不同能力的相对贡献。",
+      "minimum_viable_experiment": "构造场景：训练时路由概率从 Beta(1,1) 到 Beta(5,1) 随机采样（而非固定均匀），并将路由概率或能力 ID 编码为额外的条件 token。推理时通过改变条件 token 观察 GEditBench 和 T2I 的权衡曲线。",
+      "negative_result_interpretation": "如果用户控制导致难以预测的能力混合行为（如非单调的权衡曲线），说明能力场之间存在复杂的非线性交互，简单的路由调节不够精细。",
+      "killer_objection": "引入了条件训练，增加了训练复杂度。如果用户控制带来的改善有限，则不值得额外的实现成本。",
+      "killer_result": "如果推理时一个简单的"编辑强度"滑块能连续控制属性编辑和 T2I 保真度的权衡，覆盖从 0%（纯 T2I）到 100%（纯编辑）的范围，则该方向非常实用。"
+    },
+    {
+      "rank": 7,
+      "id": "DS-7",
+      "seed_type": "negative_result",
+      "name": "教师场质量评估与自适应忽略 (Teacher Field Quality Assessment)",
+      "trigger_evidence_summary": "论文假设所有教师场都是"好的"——高质量的指导来源。但在实践中，某些教师可能在特定样本上表现不佳（过拟合、偏差、错误）。DanceOPD 没有机制识别并过滤低质量的教师输出。",
+      "hidden_assumption_or_gap": "论文隐含假设教师场总是优于或互补于学生的当前能力。但现实场景中，某些冻结模型可能在某些条件或风格上明显退化。",
+      "research_question": "能否在 DanceOPD 训练过程中动态评估教师场在特定样本上的质量，并对低质量查询给予较低权重或完全忽略？",
+      "hypothesis": "如果学生跟踪每个教师场的预测不确定性或与自身预测的偏差，可以发现并降低低质量教师场的影响，从而获得更稳健的蒸馏。",
+      "minimum_viable_experiment": "在 DanceOPD 中添加教师置信度估计：每步计算 $\|v_m - v_\theta\|$ 的滑动平均作为教师质量代理。质量低于阈值时降低该样本的路由权重或损失权重。在故意掺入低质量教师的设置中测试（如用一个过拟合编辑器作为其中一个场）。",
+      "negative_result_interpretation": "如果质量评估机制无法有效过滤低质量教师，说明速度场的质量和学生的感知之间存在不可忽略的差距——或者"低质量"教师在某些方面确实有学生可以学习的东西。",
+      "killer_objection": "学生需要先有足够的能力才能准确评估教师质量——这产生了引导（bootstrapping）问题。",
+      "killer_result": "如果教师质量评估能使 1 个"坏"教师 + 2 个"好"教师的设置恢复到 3 个"好"教师水平的 90%+，则证明了价值。"
+    },
+    {
+      "rank": 8,
+      "id": "DS-8",
+      "seed_type": "cross_domain_transfer",
+      "name": "跨模态推广：文本 + 视觉能力组合 (Cross-Modal Capability Composition)",
+      "trigger_evidence_summary": "DanceOPD 完全在视觉生成领域。但 on-policy 场蒸馏的范式是否适用于文本 + 视觉的多模态能力组合？例如，同时蒸馏文本生成（LLM）和图像生成（DiT）能力到一个多模态模型中。",
+      "hidden_assumption_or_gap": "论文假设所有场定义在相同的连续状态空间上。但在跨模态场景中，不同的模态可能使用完全不同的表示空间（token 序列 vs 潜空间网格）。",
+      "research_question": "能否将 DanceOPD 的"场查询"范式推广到跨模态场景，其中不同的能力来自不同模态的专用模型？",
+      "hypothesis": "如果不同模态的生成过程可以抽象为共享的"生成状态"（如多模态潜空间或共享的 token 序列格式），那么 on-policy 场蒸馏可以跨模态组合能力。",
+      "minimum_viable_experiment": "构建概念验证：使用一个多模态生成模型作为学生（如能生成图像和文本的模型），两个冻结的教师（一个纯文本 LLM，一个纯图像 DiT）。将在共享的 token 空间中查询教师场，观察学生是否能学会跨模态能力。",
+      "negative_result_interpretation": "如果跨模态蒸馏基本不可行，说明不同模态的"生成流"本质上是不同的数学对象（连续 ODE vs 离散自回归），不能共享一个场查询框架。",
+      "killer_objection": "跨模态的"共享状态空间"本身就是一个开放问题——目前没有成熟的理论框架。",
+      "killer_result": "如果跨模态学生能在 Caption→Image 和 Image→Caption 双向任务上取得非平凡性能（质量达到专用模型的 70%+），则是一个革命性的结果。"
+    }
+  ],
+  "seeds_meta": {
+    "total_seeds": 8,
+    "top_3_summary": "DS-1 自适应动态路由是最高优先级，因为它直接改进论文的核心设计，不依赖新态设定。DS-2 去相关多查询探索了单查询假设的边界，有理论深度。DS-3 扩展到 5+ 场测试了框架的扩展性极限。",
+    "practicality_order": ["DS-1", "DS-5", "DS-6", "DS-4", "DS-2", "DS-3", "DS-7", "DS-8"]
+  }
+}

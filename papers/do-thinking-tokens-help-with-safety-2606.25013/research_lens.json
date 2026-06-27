@@ -1,0 +1,131 @@
+{
+  "paper_metadata": {
+    "title": "Do Thinking Tokens Help with Safety?",
+    "arxiv_id": "2606.25013",
+    "slug": "do-thinking-tokens-help-with-safety"
+  },
+  "research_equation": {
+    "problem": "Current reasoning models use thinking tokens to improve benchmark performance, but it is unknown whether this 'thinking' genuinely improves safety deliberation or merely rationalizes pre-determined outcomes.",
+    "gap": "The assumption that thinking tokens enable safety deliberation remains unvalidated. No systematic study has examined whether safety decisions are actually made during the thinking process or are predetermined.",
+    "approach": "Train linear probes on first-token hidden representations → Measure Fisher discriminant across thinking traces → Analyze continuation variance given fixed prefixes → Annotate thinking trace stance → Evaluate whether defenses induce deliberation",
+    "solution": "Safety outcomes are strongly predictable from the first token before thinking begins. Thinking is prefix completion, not genuine deliberation. Current safety defenses fail to change this.",
+    "evaluation": "AUROC, balanced accuracy, Fisher discriminant ratio, majority-label flip rate, oscillation statistics, ASR-ORR Pareto analysis",
+    "limitation": "Open-weight models only; visible thinking tokens only; safety/refusal behavior only; linear probes only; frontier LLM-based annotation"
+  },
+  "tri_pass_notes": {
+    "pass1_problem_engagement": {
+      "question": "Do thinking tokens actually help with safety in reasoning models?",
+      "intuition": "The community believes that 'thinking before answering' should improve safety by giving models space to consider safety principles.",
+      "what_they_did": "Trained logistic probes on first-token hidden representations across 4 model families to see if safety outcomes are already determined before thinking.",
+      "key_numbers": "AUROC 0.84-0.95, BAcc ~88%, 91-97% of decisions unchanged given fixed prefix",
+      "core_claim": "Safety behavior is far less deliberative than commonly assumed — outcomes are already locked by the first visible token.",
+      "surprising_element": "Even text-level deliberation signals (~74%) occur when the response distribution is already locked."
+    },
+    "pass2_experiment_reconstruction": {
+      "experiment1": {
+        "name": "First-token probe experiment",
+        "setup": "Train logistic regression probe on last-layer hidden representation of first visible token across 4 model families, 5-fold stratified cross-validation, Youden's J cutoff",
+        "result": "0.84-0.95 AUROC, ~88% balanced accuracy",
+        "what_it_means": "Safety outcome is almost fully determined before the model generates any visible thinking tokens."
+      },
+      "experiment2": {
+        "name": "Continuation variance analysis",
+        "setup": "Fix prefix of thinking trace at different positions, sample multiple continuations with different random seeds",
+        "result": "70-97% of decisions unchanged; most changes are 'flipped to worse'",
+        "what_it_means": "The thinking trace functions like prefix completion — early tokens constrain subsequent generation strongly."
+      },
+      "experiment3": {
+        "name": "Thinking trace stance annotation",
+        "setup": "Three frontier LLM auditors (GPT-5.4, Gemini 3 Pro, Sonnet 4.6) annotate sentence-level stance. Fleiss κ=0.67 agreement.",
+        "result": "~74% of deliberation segments occur when the response distribution is already locked",
+        "what_it_means": "Surface-level deliberation is mostly post-hoc rationalization."
+      },
+      "experiment4": {
+        "name": "Defense evaluation",
+        "setup": "9 safety defenses (3 inference-time, 6 training-based) × 4 base models, ASR/ORR on multiple benchmarks",
+        "result": "No defense improves both ASR and ORR. All move along the tradeoff curve.",
+        "what_it_means": "Current defenses do not induce genuine deliberation; they shift the refusal threshold."
+      },
+      "experiment5": {
+        "name": "Fisher discriminant analysis",
+        "setup": "Compute Fisher discriminant ratio between refusal and compliance representations across normalized thinking positions",
+        "result": "Valley signature: high → low → high separability across all 9 models tested",
+        "what_it_means": "Early decision concentration is a universal phenomenon across model families."
+      },
+      "experiment6": {
+        "name": "Thinking budget experiments",
+        "setup": "Truncate/extend thinking to different fractions of natural length; evaluate ASR/ORR",
+        "result": "More thinking → more compliance; extended thinking past natural stopping → no additional change",
+        "what_it_means": "More thinking does not improve safety; it tends to increase compliance."
+      }
+    },
+    "pass3_synthesis_and_extension": {
+      "what_we_learned": "Thinking tokens do NOT help with safety in the way the community assumed. The safety decision is made before thinking begins, and subsequent thinking tokens are largely prefix completion that rationalizes the pre-determined outcome. This is robustly observed across 9 models from 5+ families and 2 parameter scales.",
+      "why_it_matters": "Current safety alignment approaches that rely on 'thinking' or 'deliberation' during inference may be fundamentally misguided. The research community needs new methods to induce genuine safety deliberation.",
+      "open_questions": [
+        "Can training methods be designed to make safety decisions truly deliberative rather than pre-determined?",
+        "What mechanism causes the first token to encode the safety outcome so strongly?",
+        "Do thinking tokens in non-safety domains (math, code) also function as prefix completion?",
+        "How does this interact with hidden reasoning channels (vs visible thinking)?",
+        "Can first-token probes be used as a safety early-warning system at inference time?"
+      ],
+      "broader_impact": "This work challenges a core assumption underlying safety research on reasoning models. It suggests that the 'thinking' in current reasoning models is shallower than believed, and that genuine AI safety deliberation remains an open problem."
+    }
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "Safety decisions are pre-determined before thinking begins",
+      "module_affected": "Safety alignment / deliberation process",
+      "severity": "critical",
+      "potential_approaches": [
+        "Train models to defer safety decisions until after thorough thinking",
+        "Develop training objectives that penalize early lock-in of safety outcomes",
+        "Design architectures where safety evaluation happens in a separate, late-attending module"
+      ]
+    },
+    {
+      "challenge": "Current safety defenses fail to induce genuine deliberation",
+      "module_affected": "Defense mechanism design",
+      "severity": "high",
+      "potential_approaches": [
+        "Design defenses that target first-token hidden representations rather than surface-level thinking",
+        "Develop adversarial training that rewards late-stage safety deliberation",
+        "Create probing-based feedback loops during training to encourage deliberative thinking"
+      ]
+    },
+    {
+      "challenge": "Thinking traces are predominantly post-hoc rationalization",
+      "module_affected": "Faithfulness of chain-of-thought / interpretability",
+      "severity": "medium",
+      "potential_approaches": [
+        "Use probing during training to reduce the gap between early encoding and later thinking",
+        "Design models where the thinking process causally influences the final decision"
+      ]
+    },
+    {
+      "challenge": "More thinking tends to increase compliance (both harmful and benign)",
+      "module_affected": "Safety/helpfulness tradeoff",
+      "severity": "medium",
+      "potential_approaches": [
+        "Develop thinking length regularization that penalizes compliance without genuine deliberation",
+        "Design calibrated thinking budgets per request type"
+      ]
+    },
+    {
+      "challenge": "Inter-annotator agreement on thinking stance is good but not perfect",
+      "module_affected": "Evaluation methodology",
+      "severity": "low",
+      "potential_approaches": [
+        "Develop automated stance classifiers with higher reliability",
+        "Use ground-truth from controllable experiments rather than LLM judgments"
+      ]
+    }
+  ],
+  "methodological_contribution": [
+    "First-token probing as diagnostic for deliberation depth",
+    "Fisher discriminant trajectory analysis for safety reasoning dynamics",
+    "Continuation variance as measure of thinking's causal influence",
+    "Locked/Not-Locked × Performative/Meaningful oscillation decomposition",
+    "Systematic multi-defense, multi-model ASR-ORR Pareto analysis"
+  ]
+}

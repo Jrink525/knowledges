@@ -1,0 +1,184 @@
+{
+  "paper_metadata": {
+    "title": "Do Thinking Tokens Help with Safety?",
+    "arxiv_id": "2606.25013",
+    "slug": "do-thinking-tokens-help-with-safety"
+  },
+  "research_seeds": [
+    {
+      "id": "RS1",
+      "title": "Anti-prefix-completion training for safety deliberation",
+      "score": 28,
+      "rationale": "The paper's central finding is that safety decisions are pre-determined before thinking. This seed proposes a training method that explicitly penalizes early lock-in of safety outcomes by adding an auxiliary loss that requires the thinking trace to causally influence the final decision.",
+      "minimal_viable_experiment": {
+        "compute": "4-8 H100 GPUs, 2-4 days",
+        "steps": [
+          "Collect base model thinking traces on safety prompts",
+          "Train first-token probe to measure early encoding strength",
+          "Add auxiliary loss that maximizes the difference between early probe predictions and final outcomes",
+          "Fine-tune with LoRA on safety data + auxiliary loss",
+          "Evaluate ASR/ORR and re-measure first-token predictability"
+        ],
+        "expected_cost_estimate": "$500-1000 in cloud compute"
+      },
+      "key_papers": ["STAR-1", "SafeKey", "R1-ACT (this paper's defense baseline)"],
+      "impact_potential": "high",
+      "risk": "medium"
+    },
+    {
+      "id": "RS2",
+      "title": "Inference-time safety probe as early warning system",
+      "score": 26,
+      "rationale": "Since first-token probes achieve 0.84-0.95 AUROC in predicting final safety outcomes, this can be deployed as a cheap early warning system at inference time to detect potentially harmful responses before generation completes.",
+      "minimal_viable_experiment": {
+        "compute": "1-2 GPUs, 1 week",
+        "steps": [
+          "Train first-token probes on existing safety data for target model",
+          "Integrate probe into inference pipeline at first token generation",
+          "Evaluate detection latency vs. full-generation analysis",
+          "Test probe accuracy on adversarial/jailbreak prompts unseen during training",
+          "Design intervention strategies (reject, re-sample, re-think) triggered by probe signals"
+        ],
+        "expected_cost_estimate": "$200-500 in cloud compute"
+      },
+      "key_papers": ["This paper §2.2"],
+      "impact_potential": "high",
+      "risk": "low"
+    },
+    {
+      "id": "RS3",
+      "title": "Temporal attention modification for late safety deliberation",
+      "score": 24,
+      "rationale": "Since representations re-crystallize at the end (valley signature), modifying attention patterns to allow late-stage information to influence the final decision could break the prefix-completion dynamic.",
+      "minimal_viable_experiment": {
+        "compute": "4 GPUs, 1 week",
+        "steps": [
+          "Analyze attention patterns showing early token dominance in safety decisions",
+          "Design attention biasing mechanism that downweights early tokens and upweights late thinking tokens for final decision",
+          "Implement as inference-time intervention (no training)",
+          "Evaluate ASR/ORR shift and probe readability changes"
+        ],
+        "expected_cost_estimate": "$300-700 in cloud compute"
+      },
+      "key_papers": ["Alibi", "RoPE modifications", "attention surgery techniques"],
+      "impact_potential": "medium-high",
+      "risk": "medium-high"
+    },
+    {
+      "id": "RS4",
+      "title": "Cross-model validation of first-token encoding mechanism",
+      "score": 22,
+      "rationale": "Understanding the mechanism by which the first token encodes safety outcomes could lead to targeted interventions. This mechanistic interpretability study would identify specific attention heads and MLP circuits responsible.",
+      "minimal_viable_experiment": {
+        "compute": "1-2 GPUs, 2 weeks",
+        "steps": [
+          "Use activation patching on first token representations across safety prompts",
+          "Identify attention heads that causally mediate first-token encoding of refusal/compliance",
+          "Verify across multiple model families",
+          "Design ablation experiments to test if disrupting these circuits changes thinking dynamics"
+        ],
+        "expected_cost_estimate": "$500-1000 in cloud compute"
+      },
+      "key_papers": ["Activation patching literature", "Transformer circuits"],
+      "impact_potential": "high",
+      "risk": "medium"
+    },
+    {
+      "id": "RS5",
+      "title": "Evaluating thinking token utility beyond safety (math, code, reasoning)",
+      "score": 21,
+      "rationale": "The paper focuses only on safety. A natural question is whether thinking tokens in other domains (math, code, puzzle solving) also exhibit prefix-completion behavior or whether they genuinely contribute to reasoning.",
+      "minimal_viable_experiment": {
+        "compute": "2-4 GPUs, 1-2 weeks",
+        "steps": [
+          "Select math (GSM8K, MATH), code (HumanEval, MBPP), and reasoning (MMLU-Pro) benchmarks",
+          "Apply first-token probe methodology to predict final answer correctness from first thinking token",
+          "Analyze continuation variance given fixed prefixes",
+          "Compare safety domain vs reasoning domain dynamics"
+        ],
+        "expected_cost_estimate": "$400-800 in cloud compute"
+      },
+      "key_papers": ["Boppana et al. 2026", "Cox et al. 2026", "Chain-of-thought faithfulness"],
+      "impact_potential": "high",
+      "risk": "low"
+    },
+    {
+      "id": "RS6",
+      "title": "Deliberation-aware reward modeling for RL training",
+      "score": 20,
+      "rationale": "The paper shows current RL-based safety training does not induce deliberation. Designing reward functions that explicitly reward evidence of genuine deliberation during thinking (rather than just final outcomes) could produce truly deliberative models.",
+      "minimal_viable_experiment": {
+        "compute": "8-16 GPUs, 1-2 weeks",
+        "steps": [
+          "Design deliberation metrics: (a) probe disagreement between early and late thinking, (b) oscillation meaningfulness, (c) thinking trace stance diversity",
+          "Collect thinking trace data and compute deliberation metrics",
+          "Train a deliberative reward model that scores traces on both safety outcome AND deliberation quality",
+          "Run GRPO/RLOO with deliberative reward on base model",
+          "Compare deliberation metrics after training"
+        ],
+        "expected_cost_estimate": "$1000-2000 in cloud compute"
+      },
+      "key_papers": ["RAPO (this paper)", "GRPO", "deliberative alignment"],
+      "impact_potential": "high",
+      "risk": "high"
+    },
+    {
+      "id": "RS7",
+      "title": "Dataset design for late-deciding safety traces",
+      "score": 18,
+      "rationale": "The paper analyzes existing model behavior. Creating a dataset of 'good deliberation' traces where the model genuinely changes its mind during thinking could be used for supervised fine-tuning to induce deliberation.",
+      "minimal_viable_experiment": {
+        "compute": "1-2 GPUs, 1 week",
+        "steps": [
+          "Run many rollouts with varying temperatures on safety prompts",
+          "Filter traces where probe predictions change from early to late thinking (genuine deliberation)",
+          "Verify traces via human or LLM annotation",
+          "Collect 500-1000 high-quality 'deliberation' traces",
+          "Fine-tune base model on these traces and evaluate"
+        ],
+        "expected_cost_estimate": "$300-600 in cloud compute"
+      },
+      "key_papers": ["STAR-1 data", "Self-consistency", "Chain-of-thought data generation"],
+      "impact_potential": "medium-high",
+      "risk": "low-medium"
+    },
+    {
+      "id": "RS8",
+      "title": "Multi-step adversarial attack exploiting first-token lock-in",
+      "score": 16,
+      "rationale": "If safety decisions are locked at the first token, adversarial attacks that manipulate the early context/prefill could be disproportionately effective. This has security implications for deployed reasoning models.",
+      "minimal_viable_experiment": {
+        "compute": "1 GPU, 1 week",
+        "steps": [
+          "Design prefix manipulations specifically targeting first-token representations",
+          "Evaluate attack success rate against base models",
+          "Test transferability of prefix attacks across models",
+          "Compare existing jailbreak methods vs. first-token targeted attacks"
+        ],
+        "expected_cost_estimate": "$200-400 in cloud compute"
+      },
+      "key_papers": ["Universal adversarial triggers", "jailbreak literature cited in paper"],
+      "impact_potential": "medium",
+      "risk": "low"
+    }
+  ],
+  "seed_agglomeration_clusters": {
+    "training_based": {
+      "seeds": ["RS1", "RS6", "RS7"],
+      "theme": "Train models to produce genuinely deliberative safety reasoning"
+    },
+    "inference_based": {
+      "seeds": ["RS2", "RS3"],
+      "theme": "Inference-time interventions to improve or monitor safety deliberation"
+    },
+    "mechanistic_understanding": {
+      "seeds": ["RS4", "RS5"],
+      "theme": "Understand why and how first-token encoding happens"
+    },
+    "security": {
+      "seeds": ["RS8"],
+      "theme": "Exploit findings for attack surface analysis"
+    }
+  },
+  "recommended_first_seed": "RS2 (inference-time probe as early warning system — lowest risk, highest immediate practical impact, building directly on paper's strongest finding)"
+}

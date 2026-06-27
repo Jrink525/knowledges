@@ -15,6 +15,12 @@ import json, os, re, sys, subprocess, tempfile, time
 
 WORKSPACE = sys.argv[1] if len(sys.argv) > 1 else os.path.expanduser("~/.openclaw/workspace")
 NOTEBOOK_ID = sys.argv[2] if len(sys.argv) > 2 else None
+
+# ---- 硬限：最多加前 N 篇，超过 deadline 直接跳过 ----
+MAX_SOURCES = 10          # 最多加 10 篇（之前是全部）
+DEADLINE_SECONDS = 300    # 最多花 5 分钟加 sources
+PER_PAPER_TIMEOUT = 20    # 单篇 notebooklm 调用超时（之前是 120s）
+SOURCE_START_TIME = time.time()
 PAPER_JSON = os.path.join(WORKSPACE, "papers/today-hf-papers.json")
 
 if not os.path.exists(PAPER_JSON):
@@ -41,13 +47,16 @@ def safe_str(v, maxlen=0):
     return str(v)
 
 def run_nb(args):
-    """运行 notebooklm 命令"""
+    """运行 notebooklm 命令（带严格超时）"""
     env = os.environ.copy()
     env.setdefault("NOTEBOOKLM_HOME", "/tmp/notebooklm")
     env.setdefault("PYTHONPATH", "/tmp/pip-lib")
     cmd = ["python3", "-m", "notebooklm"] + args
-    result = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=120)
-    return result.stdout, result.stderr, result.returncode
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=PER_PAPER_TIMEOUT)
+        return result.stdout, result.stderr, result.returncode
+    except subprocess.TimeoutExpired:
+        return "", "TIMEOUT after {}s".format(PER_PAPER_TIMEOUT), -1
 
 # 如果没有 notebook_id，创建一个新的
 if not NOTEBOOK_ID:
@@ -69,7 +78,14 @@ print(f"📓 Notebook: {NOTEBOOK_ID}")
 print(f"📝 添加 source...")
 
 FAILED = 0
+# ---- 限制篇数与总时长 ----
+papers = papers[:MAX_SOURCES]
+
 for i, p in enumerate(papers, 1):
+    elapsed = time.time() - SOURCE_START_TIME
+    if elapsed > DEADLINE_SECONDS:
+        print(f"  ⏰ Deadline {DEADLINE_SECONDS}s reached ({int(elapsed)}s elapsed), skipping remaining {len(papers)-i+1} papers")
+        break
     title = safe_str(p.get("title", "Unknown"))
     arxiv_id = safe_str(p.get("arxiv_id", ""))
     summary = safe_str(p.get("summary", ""))

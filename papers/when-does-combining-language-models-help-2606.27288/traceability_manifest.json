@@ -1,0 +1,279 @@
+{
+  "paper": {
+    "title": "When Does Combining Language Models Help? A Co-Failure Ceiling on Routing, Voting, and Mixture-of-Agents Across 67 Frontier Models",
+    "authors": ["Josef Chen"],
+    "affiliation": "KAIKAKU",
+    "arxiv_id": "2606.27288",
+    "date": "2026-06-26"
+  },
+  "claims": [
+    {
+      "id": "claim-1",
+      "statement": "Any selection policy whose output is a member model's answer (router, vote, cascade) has accuracy at most 1 − β, where β = Pr[all models wrong].",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper §5, Proposition 1(i); Appendix B",
+          "description": "Proof: On the all-wrong event, every member answer differs from the label; a selection policy outputs one member answer, hence is wrong. Therefore Acc(π) ≤ Pr[not all wrong] = 1 − β, attained by the per-query oracle.",
+          "confidence": "certain"
+        },
+        {
+          "type": "empirical",
+          "location": "Paper §5, Table 2, Table 3; MATH-500 β=0.052, code β=0.079, free-response GPQA β=0.127",
+          "description": "Empirical β measurements across domains confirm the ceiling is populated on open-ended tasks, with accuracy upper bounds of 1−β = 0.948 (MATH-500 oracle) through 0.921 (code contests oracle).",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-2",
+      "statement": "A Clopper-Pearson lower confidence bound on β turns one held-out query set into a $0 pre-deployment certificate on the largest gain any selection policy can deliver over single-best.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper §5, Proposition 1(iii); Appendix B",
+          "description": "K~Binomial(n,β) since queries are i.i.d. The Clopper-Pearson lower limit obeys Pr[β ≥ β_lo] ≥ 1−δ. With probability ≥ 1−δ, (1−β) ≤ (1−β_lo) and Acc−a_sb ≤ (1−β_lo)−a_sb. A union bound replaces a_sb by its upper confidence bound.",
+          "confidence": "certain"
+        },
+        {
+          "type": "software_artifact",
+          "location": "Appendix C: beta_certificate.py",
+          "description": "Standalone tool that from K/n and a_sb returns the certified $0 lower bound on maximum gain.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-3",
+      "statement": "Pairwise error correlation ρ cannot identify the co-failure rate β for m ≥ 3 models; distributions with identical 1D and 2D marginals (hence identical marginal error rates and pairwise correlations) can have different β.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper §5, Proposition 3; Appendix B",
+          "description": "Take m=3, p₁=½, p₂=¼. Both (q₀,q₁,q₂,q₃)=(¼,0,¾,0) and (0,¾,0,¼) reproduce every pairwise marginal yet have β=0 and β=¼ respectively. Padding with independent coordinates extends to any m≥3.",
+          "confidence": "certain"
+        },
+        {
+          "type": "simulation",
+          "location": "Paper §5, copula_dichotomy.py",
+          "description": "Common-shock mixture (β_∞=0.05) vs. matched-ρ̄ Gaussian copula (β_∞=0): ratio past 10⁷× at large m despite identical pairwise statistics at m=2.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-4",
+      "statement": "A correctly tetrachoric-calibrated single-factor Gaussian copula under the pairwise error correlation systematically underprices the empirical co-failure tail on open-ended tasks, with the bias growing in pool size.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper §5, Proposition 2; Appendix B",
+          "description": "Common-shock model: β(m)=π+(1−π)α₀^m → π>0 while β_sf(m) → 0 (Gaussian copula with ρ̄<1 has zero lower tail dependence). Ratio →∞ and strictly increasing in m, equalling 1 at m=2.",
+          "confidence": "certain"
+        },
+        {
+          "type": "empirical",
+          "location": "Paper §5, Figure 2, Table 3",
+          "description": "MATH-500 (67 models): β=0.052 vs. β_sf=0.021, ratio 2.5× (90% CI 1.7-3.4). Replicated on code: 3.1× (CI [1.5,6.2] excluding 1). Pool-size effect: ratio rises from 1.0 at k=2 to median 2.5 at k=67.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-5",
+      "statement": "Even the full 67×67 Gaussian copula, Monte-Carlo-integrated over all pairwise-tetrachoric correlations, underprices the empirical co-failure tail; the residual is 2.25× on MATH-500.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5; residual_decomp.py",
+          "description": "Full 67×67 pairwise-tetrachoric matrix (projected to nearest PSD: 26 negative eigenvalues, mean ρ drops 0.78→0.74), 4×10⁵ MC draws: β_full-Σ=0.023 vs. empirical 0.052 = 2.25× excess. Opposite direction of PSD artifact (which would inflate, not reduce, ratio).",
+          "confidence": "high"
+        },
+        {
+          "type": "simulation",
+          "location": "Paper §5; clayton_real.py",
+          "description": "Exchangeable Clayton copula (λ_L=0.69) calibrated to same mean co-failure: β=0.026 vs. 0.052 (1.96×). Not a Gaussian tail-dependence artifact.",
+          "confidence": "moderate"
+        }
+      ]
+    },
+    {
+      "id": "claim-6",
+      "statement": "The driver is a common-mode atom (positive-probability joint failure event), not smooth tail dependence as measured by λ_L.",
+      "type": "theoretical_insight",
+      "evidence": [
+        {
+          "type": "simulation",
+          "location": "Paper §5; copula_dichotomy.py",
+          "description": "Clayton copula (λ_L=0.71): 4.0× at m=53, smaller (2.6×) for larger λ_L=0.84 because higher λ_L raises ρ that single-factor absorbs. Common-shock with rare shared-failure atom (β_∞=0.05): ratio past 10⁷×. Distinction: pairwise ρ can absorb smooth tail dependence but not common-mode atom.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-7",
+      "statement": "Two regimes exist: ceiling-bound (open-ended math and code, where β>0 caps all policies) and realizability-bound (multiple-choice science, where β≈0 and the oracle gain is resolvable disagreement). Pairwise ρ cannot tell them apart.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5, Table 3, Figure 4",
+          "description": "MATH-500: β=0.052, ceiling-bound. Code: β=0.079, ceiling-bound. Multiple-choice GPQA: β≈0 (0/130), realizability-bound, G=0.154 resolvable. Free-response GPQA (same content): β=0.127, ceiling-bound. ρ values: 0.53, 0.27, 0.25 — overlap between regimes.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-8",
+      "statement": "Answer format (open-ended vs. multiple-choice), not subject matter, sets the regime.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5, Figure 3; Appendix G",
+          "description": "Same 79 GPQA-Diamond questions: multiple-choice → β≈0; free-response (options stripped) → β=0.127 (k=10, CP [0.062,0.220]). Mean accuracy drops 0.66→0.51, best-model 0.91→0.77. 5-judge panel κ=0.73-0.92. Robust under all aggregations.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-9",
+      "statement": "Naive heterogeneous fusion (mixing models of unequal quality) hurts: majority-vote gain over best member is negative on average.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5, Figure 7",
+          "description": "455 three-model triplets: mean vote gain −0.10 (hard), −0.02 (saturated). Robust under leave-one-model-out jackknife. Positive ρ-slope (+0.13 hard) not significant under model-clustering.",
+          "confidence": "high"
+        },
+        {
+          "type": "literature_reference",
+          "location": "Paper §2",
+          "description": "Consistent with Kuncheva & Whitaker [20] and Li et al. [24].",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-10",
+      "statement": "At matched member quality, lower error correlation buys larger diversifiable gains: heterogeneous fusion beats Self-MoA from k=3 onward.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5, Figure 8",
+          "description": "Self-MoA (ρ=0.80) vs. heterogeneous (ρ=0.42), accuracy-matched 6-model band, S=9 distinct draws each. At k=3: heterogeneous wins. Across 60 resamplings: average gain +0.027 (positive in all 60). Range +0.010 to +0.050.",
+          "confidence": "moderate"
+        }
+      ]
+    },
+    {
+      "id": "claim-11",
+      "statement": "The cascade advantage over random mixing collapses to zero as the verifier AUC falls to 1/2.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper Appendix A.3, Proposition 8",
+          "description": "Q(β) − Q_mix(β) = β[w(β) − (1−a_L)] + β[a_H(τ) − a_H]. With a_H(τ)=a_H (no tail adverse selection), ∫[w(β)−(1−a_L)] dβ ≥ 0 iff AUC ≥ ½, with equality iff AUC = ½.",
+          "confidence": "certain"
+        },
+        {
+          "type": "empirical",
+          "location": "Paper §5, Figure 6",
+          "description": "L=GPT-5-nano (a_L=0.748), H=Opus 4.8 (a_H=0.921), verifier AUC=0.899. 20 noise-injection seeds: advantage 0.121→0.012 (seed std ≤0.005) as AUC falls 0.899→0.510. 5-fold held-out: +0.114 vs. random-mixing (cross-fold sd 0.010).",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-12",
+      "statement": "The volume ceiling (price-independent escalation ratio) is 1 − a_L/a_H: relative to random mixing, a calibrated cascade needs only fraction 1−a_L/a_H as many strong-model calls at fixed quality.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper Appendix A.3, Proposition 8",
+          "description": "Under perfect calibration, escalated tail is L's errors until exhausted: β_cas = (q−a_L)/a_H. β_cas/β_mix → 1 − a_L/a_H. Measured: 1 − 0.748/0.921 = 0.188.",
+          "confidence": "certain"
+        }
+      ]
+    },
+    {
+      "id": "claim-13",
+      "statement": "A deployable learned router captures essentially none of the oracle gain G on the 2026 frontier.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5, Table 2, Figure 9",
+          "description": "TF-IDF+domain logistic: 0.906 vs. single-best 0.901 (9% of G, CI [−0.67, 0.50]). Gradient-boosted predictor: −0.09 of G. Direct multiclass best-model predictor: −1.27. LLM-as-router (GPT-5-mini): 0% of G, routes to single-best on 100% of queries. The realizable gain is near zero not because of weak routers but because prompts carry little signal about which model is correct when the frontier disagrees.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-14",
+      "statement": "The naive Pearson-of-indicators calibration overstates the co-failure gap by an order of magnitude; the correctly tetrachoric-calibrated residual is single-digit (≈2.5×).",
+      "type": "methodological_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper §5",
+          "description": "MATH-500: Pearson ρ̄=0.53 → β_sf=0.0016 (spurious 32×). Tetrachoric ρ̄_tet=0.78 → β_sf=0.021 (real 2.5×). The order-of-magnitude difference is a calibration artifact, not a co-failure effect.",
+          "confidence": "high"
+        },
+        {
+          "type": "literature_reference",
+          "location": "Paper §5",
+          "description": "Century-old psychometric point [30, 32] that the LLM evaluation literature routinely elides. The paper explicitly flags that an earlier version of this analysis fell into the same trap.",
+          "confidence": "high"
+        }
+      ]
+    },
+    {
+      "id": "claim-15",
+      "statement": "Under a dollar budget, routing is a priced assignment with a single shadow price λ_B; every optimal policy is a per-type bang-per-buck rule.",
+      "type": "theorem",
+      "evidence": [
+        {
+          "type": "mathematical_proof",
+          "location": "Paper Appendix A.1, Proposition 4; Appendix B",
+          "description": "LP dual collapses to a single scalar λ_B because per-type simplex constraints are absorbed pointwise. V(B) = min_{λ≥0} {λB + E_t max_i [qᵢ(t) − λcᵢ]}. Arg max_i [qᵢ(t) − λ_B cᵢ] bang-per-buck rule. V is nondecreasing, concave, piecewise linear; V'(B)=λ_B where differentiable.",
+          "confidence": "certain"
+        }
+      ]
+    },
+    {
+      "id": "claim-16",
+      "statement": "The co-failure signature replicates on execution-graded competitive code, a structurally independent domain: β=0.079, full-Σ residual, tetrachoric underpricing CI excluding 1.",
+      "type": "empirical_finding",
+      "evidence": [
+        {
+          "type": "empirical",
+          "location": "Paper Appendix F, Table 3",
+          "description": "18 models × 63 Codeforces problems (1900-3500 rating). β=0.079 (k=5, CP [0.026,0.176]). Pearson: 17× spurious. Tetrachoric: 3.1× (CI [1.5,6.2] excluding 1). Full-Σ: 1.7× residual. Co-failure is not a math artifact.",
+          "confidence": "high"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_claims": 16,
+    "theorems": ["claim-1", "claim-2", "claim-3", "claim-4", "claim-11", "claim-12", "claim-15"],
+    "empirical_findings": ["claim-5", "claim-7", "claim-8", "claim-9", "claim-10", "claim-13", "claim-16"],
+    "theoretical_insights": ["claim-6"],
+    "methodological_findings": ["claim-14"],
+    "highest_confidence_claims": ["claim-1", "claim-3", "claim-11", "claim-12", "claim-15"],
+    "evidence_still_needed": {
+      "claim-10": "≥3 seeds and held-out model selection; extension across multiple ρ levels to fit λ and predict k* out-of-sample",
+      "claim-16": "Precise code magnitude at 67-model scale with official hidden-test judge"
+    }
+  }
+}

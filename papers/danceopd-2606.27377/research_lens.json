@@ -1,0 +1,125 @@
+{
+  "manifest_version": "1.0.0",
+  "paper": {
+    "title": "DanceOPD: On-Policy Generative Field Distillation",
+    "arxiv_id": "2606.27377",
+    "slug": "danceopd"
+  },
+  "research_equation": {
+    "domain": "Multi-capability visual generation via flow-matching",
+    "input_capabilities": [
+      "text-to-image generation",
+      "image editing (attribute/local)",
+      "image editing (style/global)",
+      "realism enhancement",
+      "classifier-free guidance"
+    ],
+    "desired_output": "Single student model that preserves all capabilities without dilution or multi-model inference",
+    "key_constraint": "Frozen capability sources may use incompatible parameterizations; student state distribution shifts during training",
+    "proposed_mechanism": "Treat each capability as a velocity field → compose via on-policy field querying on student rollout states → hard route each sample to one field → query at one low-noise state → match with plain MSE",
+    "why_existing_fails": "Joint training averages conflicting gradients (capability dilution). Weight merging assumes parameter-space linearity. Off-policy distillation suffers from state-distribution mismatch. Dense on-policy trajectory queries suffer from within-trajectory gradient correlation."
+  },
+  "tri_pass_notes": {
+    "first_pass_overview": {
+      "what": "DanceOPD is a framework for composing multiple generative capabilities into a single flow-matching student by treating frozen sources as velocity fields and querying them on student rollout states.",
+      "key_contributions": [
+        "Hard-routed field matching preserves semantic sample identity",
+        "On-policy querying addresses state-distribution mismatch",
+        "Single semantic-side query avoids trajectory correlation",
+        "Plain MSE objective suffices for field alignment"
+      ],
+      "target_audience": "Researchers in generative models, knowledge distillation, multi-task learning, and image editing",
+      "method_category": "On-policy distillation for flow matching generative models"
+    },
+    "second_pass_reading": {
+      "assumptions": [
+        "All frozen capability sources share the same state space, scheduler convention, and velocity parameterization",
+        "Routing probabilities are known and uniform over active buckets",
+        "Low-noise trajectory states contain higher density of capability-specific signal",
+        "Velocity prediction error follows an isotropic Gaussian distribution"
+      ],
+      "key_design_choices": {
+        "routing_strategy": "Hard routing vs soft teacher mixing — hard preserves semantic identity",
+        "query_location": "On-policy (student rollout) vs off-policy (fixed noised states) — on-policy addresses covariate shift",
+        "query_density": "Single (K=1) vs dense (K≥2) — single avoids trajectory correlation",
+        "objective": "Plain MSE vs KL/consistency/DMD2 — MSE is simplest and most stable",
+        "initialization": "Best related SFT checkpoint vs merged/unrelated — stronger initial rollout helps"
+      },
+      "evidence_reliability": {
+        "strong": [
+          "Table 2 with 11 competing methods across 6 edit categories",
+          "Comprehensive ablation across 5+ design dimensions",
+          "Multiple diagnostic experiments isolating each design choice"
+        ],
+        "limited": [
+          "Realism reward model is proprietary (not reproducible)",
+          "Only tested on Z-Image backbone (generalizability unverified)",
+          "Maximum 3 fields tested simultaneously"
+        ]
+      }
+    },
+    "third_pass_critique": {
+      "hidden_assumptions": {
+        "A1": "Frozen sources are 'good enough' to be worth imitating — no mechanism for detecting when a teacher field is of low quality.",
+        "A2": "Uniform routing is optimal — no adaptive weighting based on sample difficulty or student capability.",
+        "A3": "MSE on a single state captures all necessary information from the teacher field.",
+        "A4": "CED (capacity) and training time scale linearly with number of fields."
+      },
+      "methodological_concerns": [
+        "The routing mechanism is pre-defined and static — does not handle novel unseen task categories at inference time.",
+        "CFG absorption has subtle effective-CFG multiplication effect that complicates evaluation.",
+        "No theoretical guarantee that on-policy states are always better than off-policy — only bounded by Lipschitz constant + Wasserstein distance.",
+        "SDE as diagnostic for trajectory correlation: stochastic noise also changes the underlying field being queried, not just correlation structure."
+      ],
+      "alternative_interpretations": [
+        "The success might be partly due to the strong base student (Z-Image LoRA) rather than the OPD mechanism itself.",
+        "Single-query superiority over dense could also result from optimization variance (less gradient noise) rather than solely correlation.",
+        "Hard routing's advantage might diminish if teachers are closely aligned (e.g., two fine-tuned edit models on similar tasks)."
+      ]
+    }
+  },
+  "challenge_module_map": [
+    {
+      "challenge": "目标场歧义 (Which field supervises which sample?)",
+      "module": "Hard-Routed Sample-Wise Field Matching (Sec. 3.2)",
+      "mitigation": "Route each sample to exactly one capability field, preserving semantic identity of each query",
+      "ablation_evidence": "Hard routing beats soft mixing by 15.2% in MSE setting"
+    },
+    {
+      "challenge": "状态分布不匹配 (Where to query the field?)",
+      "module": "On-Policy Field Querying (Sec. 3.3)",
+      "mitigation": "Query frozen fields on student's own rollout states with stop-gradient",
+      "ablation_evidence": "Off-policy distillation consistently underperforms across all metrics"
+    },
+    {
+      "challenge": "轨迹查询相关性 (How many states to query?)",
+      "module": "Semantic-Side Single Query (Sec. 3.4)",
+      "mitigation": "One low-noise state per rollout; avoid densely sampled correlated states",
+      "ablation_evidence": "Single query (K=1) beats K=2,4,8,16; SDE decorrelation recovers 18.4% of dense loss"
+    },
+    {
+      "challenge": "CFG 引导与基础能力的交互",
+      "module": "CFG Field Absorption (Sec. 4.1-D)",
+      "mitigation": "Treat CFG-guided velocity as a field; absorb via MSE; evaluate with adjusted effective CFG (α×β)",
+      "ablation_evidence": "Best at α=3.5, β=2; over-guidance at effective CFG=49 reduces score by 31.2%"
+    },
+    {
+      "challenge": "多场同步累积时的冲突",
+      "module": "Step Alternation vs Same-Step (Sec. 4.2)",
+      "mitigation": "Alternate between capability fields across optimizer steps rather than accumulating within one step",
+      "ablation_evidence": "Same-step with G=3, K=2 loses 22.8%; subject removal drops 46.0%"
+    },
+    {
+      "challenge": "初始学生质量影响",
+      "module": "Initialization Strategy (Sec. 4.3)",
+      "mitigation": "Initialize from the checkpoint with the strongest relevant capability",
+      "ablation_evidence": "Local edit init beats merged by 37.2%, T2I init by 204.4%"
+    }
+  ],
+  "problem_reconstruction": {
+    "original_problem_statement": "如何将多个异构生成式视觉能力组合到一个流匹配学生模型中？",
+    "reframed_problem": "如何设计一个场查询策略（包括路由、查询位置、查询密度），使得学生在 on-policy rollout 状态上对齐冻结的能力场，同时避免能力稀释和梯度冲突？",
+    "key_insight": "能力组合不是参数或数据的组合，而是状态空间上场的对齐。通过精心设计在哪些状态上查询哪个场，可以避免传统方法的所有三方面问题。",
+    "simplest_expression": "DanceOPD = Hard Routing + On-Policy Query + Single Low-t Query + MSE"
+  }
+}

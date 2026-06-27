@@ -1,0 +1,206 @@
+{
+  "paper": {
+    "title": "When Does Combining Language Models Help? A Co-Failure Ceiling on Routing, Voting, and Mixture-of-Agents Across 67 Frontier Models",
+    "arxiv_id": "2606.27288",
+    "slug": "when-does-combining-language-models-help"
+  },
+
+  "research_directions": [
+    {
+      "id": "RD-1",
+      "title": "Co-Failure on Open-Ended Generative Tasks (beyond verifiable benchmarks)",
+      "seed_question": "Does the co-failure ceiling (β > 0) hold on tasks without verifiable answers: summarization, creative writing, long-form analysis, dialogue?",
+      "motivation": "The paper's strongest empirical claim (β caps orchestration) is currently limited to programmatically verifiable tasks. If the ceiling generalizes to open-ended generation, the practical implications are much wider.",
+      "approach_suggestion": "Develop reliable automated or human-in-the-loop grading for open-ended generation quality. Measure β across a panel of frontier models on diverse generative tasks. Use the content-controlled technique from §5 (same task in verifiable vs. open-ended format) to test transfer.",
+      "iceberg_rating": 9,
+      "payoff": "Either confirms the ceiling is universal (massive practical implications) or identifies a boundary where open-ended generation diverges from verifiable tasks (sharpens the theory).",
+      "leveraged_artifact": "Prop. 1 ceiling identity, content-controlled methodology (Fig. 3), Clopper-Pearson certificate",
+      "competition_risk": "Low — the paper is the first to measure β at market scale on verifiable tasks; others may follow on generative",
+      "dependency": "Reliable automated quality judging for non-verifiable outputs"
+    },
+    {
+      "id": "RD-2",
+      "title": "The Common-Mode Atom: What Causes All Models to Fail Together?",
+      "seed_question": "What specific mechanisms drive the common-mode atom? Is it shared training data contamination, shared architecture biases, shared RLHF alignment, or shared safety filters?",
+      "motivation": "The paper identifies a common-mode atom but does not explain its source. Understanding the mechanism could inform model procurement (prefer uncorrelated failure modes) and training (explicitly target niche of non-co-failing queries).",
+      "approach_suggestion": "Ablation studies on model families from the same provider vs. cross-provider pairs. Analyze co-failure queries to identify patterns: are they ambiguous, adversarial, culturally specific, or critically dependent on certain knowledge? Trace to training data overlap. Test models before and after fine-tuning/RLAIF.",
+      "iceberg_rating": 8,
+      "payoff": "Could enable a theory of model complementarity — which model combinations minimize β, not just ρ.",
+      "leveraged_artifact": "Common-mode atom analysis (Fig. 2, Prop. 2-3), 67-model full-Σ residual decomposition",
+      "competition_risk": "Moderate — several groups are studying model error correlations [15, 35]",
+      "dependency": "Access to training data provenance across providers"
+    },
+    {
+      "id": "RD-3",
+      "title": "Query-Level Routing Signal: What Makes a Router Work?",
+      "seed_question": "When the oracle gain G is large (realizability-bound regime), what signal — if any — can a router use to capture it? Are there query features that predict which model will be correct when the best model is wrong?",
+      "motivation": "The paper shows deployable routers capture almost none of G (9%, CI spans 0). This is arguably the most important open problem: the ceiling is open on science MC tasks, but no existing router can exploit it.",
+      "approach_suggestion": "Systematic exploration of routing architectures: embedding-space similarity to training examples, difficulty estimators (e.g. entropy, perplexity), model-specific confidence calibration, few-shot characterization of per-model error patterns. Use GPQA-Diamond (G=0.154) as the testbed. Compare against the cost-aware oracle frontier.",
+      "iceberg_rating": 9,
+      "payoff": "If router signal exists, unlocks large accuracy gains on realizability-bound tasks. If it provably doesn't, the ceiling on multiple-choice tasks is architectural, not fundamental.",
+      "leveraged_artifact": "Pillar A routing results (Fig. 9), TF-IDF+domain, gradient-boosted, and LLM-as-router baselines",
+      "competition_risk": "High — routing is an active area [4, 31]; Dekoninck et al. [3] unify routing and cascading",
+      "dependency": "Logged prompts (not currently released for the market-scale matrix)"
+    },
+    {
+      "id": "RD-4",
+      "title": "Optimal Ensemble Design Under Cost-Aware Diversification",
+      "seed_question": "What is the optimal ensemble cardinality and composition across ρ levels at matched member quality, validated out-of-sample?",
+      "motivation": "The diversification limit k*(ρ, c) is derived (Prop. 6, 7) with sensitivity λ as a decision-rule Jacobian. But the empirical fit of λ across ρ levels and out-of-sample prediction of k* remains open. The matched-quality test rests on one provider-matched band.",
+      "approach_suggestion": "Scale the matched-quality experiment to multiple provider-matched bands across different ρ levels. Fit λ empirically using the Jacobian formula (Prop. 7). Predict k* out-of-sample on held-out bands. Test the cost-aware rule against the oracle frontier.",
+      "iceberg_rating": 7,
+      "payoff": "Actionable guidance for practitioners: given a budget and set of models, what's the optimal ensemble?",
+      "leveraged_artifact": "Props. 5-7, the sensitivity λ derivation, matched-quality test methodology",
+      "competition_risk": "Low — few papers connect cost-aware diversification to LLM orchestration",
+      "dependency": "≥3 seeds for matched-quality; multiple ρ-level bands"
+    },
+    {
+      "id": "RD-5",
+      "title": "Joint Routing-Cascade Optimality on the Frontier",
+      "seed_question": "Can the optimal cascade-routing policy of Dekoninck et al. [3] outperform the naive confidence cascade used in this paper, and by how much?",
+      "motivation": "The cascade result (Pillar C) is measured against a naive confidence cascade. The optimal policy conditions on both L and H confidences [14], which this paper did not log. The upper bound may be higher.",
+      "approach_suggestion": "Replicate the cascade experiment with full logging of both L and H confidences. Implement the optimal two-model deferral rule [14] and the optimal cascade-routing policy [3]. Compare against the cost-aware oracle frontier. Test across different (L, H) pairs varying a_H, a_L, price ratio.",
+      "iceberg_rating": 6,
+      "payoff": "Either validates the existing cascade results as near-optimal or identifies a gap worth closing.",
+      "leveraged_artifact": "Prop. 8 cascade collapse identity, 5-fold held-out evaluation, cost-aware oracle frontier",
+      "competition_risk": "Moderate — [3] and [14] are actively pursuing this",
+      "dependency": "Full confidence logging for both L and H models"
+    },
+    {
+      "id": "RD-6",
+      "title": "The Format Effect: Why Does Open-Endedness Create Co-Failure?",
+      "seed_question": "What is the mechanism by which open-ended (free-response) format induces co-failure while multiple-choice suppresses it? Is it the reduced guessing floor, the broader output space, or something else?",
+      "motivation": "The content-controlled GPQA experiment (Fig. 3) shows that format alone flips the regime. Understanding why could inform evaluation design and model training.",
+      "approach_suggestion": "Systematic format ablation: vary number of MC options (2→5→10), add open-ended with hinted structure (fill-in-blank, single-word answer, short phrase). Test whether co-failure is continuous (appears gradually as options are removed) or discrete (threshold effect). Analyze whether it's a guessing-floor phenomenon (MC gives 1/n chance of random correct).",
+      "iceberg_rating": 7,
+      "payoff": "Could separate co-failure into content-driven vs. format-driven components, enabling targeted mitigation.",
+      "leveraged_artifact": "GPQA content-controlled test (Fig. 3, App. G), regime classification (Fig. 4)",
+      "competition_risk": "Low — the format effect is uniquely demonstrated in this paper",
+      "dependency": "Additional format-ablated benchmarks across multiple domains"
+    },
+    {
+      "id": "RD-7",
+      "title": "The Calibration Trap: Systematic Impact of Pearson-vs-Tetrachoric in LLM Evaluation",
+      "seed_question": "How widespread is the Pearson-of-indicators calibration error across the broader LLM evaluation literature, and to what extent does it inflate reported diversity benefits?",
+      "motivation": "The paper documents that an earlier version of its own analysis fell into this trap, and that the naive Pearson calibration inflates the gap by an order of magnitude (32× vs. 2.5×). This is likely not unique to this paper.",
+      "approach_suggestion": "Survey papers reporting ensemble/fusion/routing gains. Recompute co-failure and diversity metrics using tetrachoric (latent) correlation vs. Pearson-of-indicators. Measure the magnitude of the artifact across benchmarks (MC, open-ended, code) and task families.",
+      "iceberg_rating": 5,
+      "payoff": "Methodological cleanup that could materially change reported diversity results. High citation potential as a cautionary note.",
+      "leveraged_artifact": "Pearson vs. tetrachoric comparison (§5), the paper's own calibration correction",
+      "competition_risk": "Low — few researchers are aware of this specific trap",
+      "dependency": "Access to published outcome matrices or model responses"
+    },
+    {
+      "id": "RD-8",
+      "title": "Market Churn and the Option Value of Breadth",
+      "seed_question": "How does the option value of broad model access change under different churn regimes (fast frontier vs. plateau), and how should buyers dynamically allocate across epochs?",
+      "motivation": "The paper's secondary churn analysis (App. E) is observational and stylized. A proper dynamic allocation model with calibrated churn primitives could guide multi-year procurement strategy.",
+      "approach_suggestion": "Extend the real-options framework (Prop. 9) with empirically estimated churn rates ν and capability gap parameters (μ, η) from the 2024-2026 release history. Solve the full Bellman system linking the static allocation (App. A) to the dynamic option (App. E). Test sensitivity of the build-vs-route threshold.",
+      "iceberg_rating": 6,
+      "payoff": "Operational guidance for enterprise LLM procurement: when to commit (self-host) vs. when to route (broad access).",
+      "leveraged_artifact": "Prop. 9, Cor. 2, churn measurement on the 2024-2026 timeline (Fig. 11)",
+      "competition_risk": "Low — the combination of churn economics + LLM orchestration is novel",
+      "dependency": "Sustained cost-quality tracking across future model releases"
+    },
+    {
+      "id": "RD-9",
+      "title": "Pre-Deployment Orchestration Audit Tooling",
+      "seed_question": "Can the Clopper-Pearson certificate (Prop. 1) be developed into a production-ready tool that enterprises use to decide whether to orchestrate, and if so, what adoption patterns emerge?",
+      "motivation": "The paper ships `beta_certificate.py` but it's a research tool. Productionizing it — with CI integration, cost-aware bounds, and domain-specific calibration — could substantially reduce wasted orchestration engineering.",
+      "approach_suggestion": "Build a library/tool: (1) input: small labeled sample (n=100-300) from target workload, (2) output: certified upper bound on orchestration gain over SOTA single model. Add cost-aware extension (compare bound against orchestration overhead of extra API calls / routing latency). Validate on enterprise production workloads.",
+      "iceberg_rating": 4,
+      "payoff": "Direct practical impact. Every team evaluating orchestration should run this test.",
+      "leveraged_artifact": "Prop. 1(iii) Clopper-Pearson certificate, $0 bound, beta_certificate.py",
+      "competition_risk": "Low — the paper is first to propose this specific pre-deployment test",
+      "dependency": "Enterprise adoption; integration with API gateways"
+    },
+    {
+      "id": "RD-10",
+      "title": "Training Models to Not Co-Fail: Diversity by Design",
+      "seed_question": "Can models be explicitly trained (via data selection, architecture, or RL) to have complementary failure modes, i.e., to minimize β rather than maximizing individual accuracy?",
+      "motivation": "Current training maximizes individual model accuracy, which may inadvertently increase co-failure (if all models converge to the same correct answers and same failure patterns). Could a diversity-aware objective reduce β without sacrificing individual performance?",
+      "approach_suggestion": "Train variants of an open-weight model (e.g., Llama-3, DeepSeek) with objectives that penalize correlated errors against a reference model. Alternatively, use ensemble distillation with explicit diversity regularization. Measure β on MATH-500 and other open-ended tasks. Feasibility check: does β reduce faster than individual accuracy?",
+      "iceberg_rating": 9,
+      "payoff": "If positive: a new axis for model improvement (failure diversity). If negative: confirms that co-failure is fundamental and unavoidable.",
+      "leveraged_artifact": "Prop. 2 (common-shock model prediction), common-mode atom framing",
+      "competition_risk": "Moderate — mixture-of-agents work [24, 37] touches on quality-diversity trade-off",
+      "dependency": "Access and compute to train/fine-tune models with diversity objectives"
+    },
+    {
+      "id": "RD-11",
+      "title": "Scalable Code-Failure Measurement with Official Judges",
+      "seed_question": "Does the co-failure signature (β=0.079, 3.1× tetrachoric underpricing) replicate at full 67-model scale with an official Codeforces/LiveCodeBench hidden-test judge?",
+      "motivation": "The code result is the only one with a CI excluding 1, but rests on 18 models and k=5 events. A precise magnitude at full scale is the one remaining sharpening the paper explicitly calls for.",
+      "approach_suggestion": "Run the full 67-model pool on a code benchmark suite with official hidden-test judge (e.g., LiveCodeBench, HumanEval-plus). Measure β, the Pearson/tetrachoric gap, and the full-Σ residual. If the signature holds at scale, it definitively establishes that co-failure generalizes beyond math.",
+      "iceberg_rating": 5,
+      "payoff": "Definitive cross-domain replication; addresses the paper's own top limitation.",
+      "leveraged_artifact": "App. F code contest methodology, full-Σ residual decomposition pipeline",
+      "competition_risk": "Low — the paper explicitly calls for this, and its data/code are released",
+      "dependency": "Official judge access; execution sandbox for 67 models × problems"
+    },
+    {
+      "id": "RD-12",
+      "title": "Optimal Delegation Under Co-Failure: When to Stop Multi-Model Orchestration?",
+      "seed_question": "Given a measured β and a cost-aware diversification limit k*(ρ, c), what is the optimal multi-model orchestration policy across routing, voting, and cascading — and when should one just use the single best model?",
+      "motivation": "The paper identifies individual constraints (Prop. 1 ceiling, Prop. 6 k*, Prop. 8 cascade limit) but stops short of a unified multi-mode policy. Combining them into a single optimal policy is the natural endpoint.",
+      "approach_suggestion": "Formulate a joint optimization: given query distribution, model prices, qualities, and measured β, choose among (a) single-best, (b) cascade, (c) fusion, or (d) routing with the option to escalate. Solve the joint policy (Bellman over modes). Calibrate to the 67-model pool. Compare against each individual mode.",
+      "iceberg_rating": 8,
+      "payoff": "The single algorithmic result that subsumes the paper's three pillars. 'Optimal orchestration in the co-failure era.'",
+      "leveraged_artifact": "Props. 1, 4, 6, 8; two-regime classification (Fig. 4); cost-aware oracle frontier",
+      "competition_risk": "Moderate — Dekoninck et al. [3] already unify routing and cascading",
+      "dependency": "Full logged prompts and confidences from all modes"
+    }
+  ],
+
+  "rankings": {
+    "by_iceberg_rating": [
+      {"id": "RD-1", "title": "Co-Failure on Open-Ended Generative Tasks", "iceberg": 9},
+      {"id": "RD-3", "title": "Query-Level Routing Signal", "iceberg": 9},
+      {"id": "RD-10", "title": "Training Models to Not Co-Fail", "iceberg": 9},
+      {"id": "RD-2", "title": "The Common-Mode Atom", "iceberg": 8},
+      {"id": "RD-12", "title": "Optimal Delegation Under Co-Failure", "iceberg": 8},
+      {"id": "RD-4", "title": "Optimal Ensemble Design Under Cost-Aware Diversification", "iceberg": 7},
+      {"id": "RD-6", "title": "Why Open-Endedness Creates Co-Failure", "iceberg": 7},
+      {"id": "RD-5", "title": "Joint Routing-Cascade Optimality", "iceberg": 6},
+      {"id": "RD-8", "title": "Market Churn and Option Value", "iceberg": 6},
+      {"id": "RD-11", "title": "Scalable Code-Failure Measurement", "iceberg": 5},
+      {"id": "RD-7", "title": "The Calibration Trap", "iceberg": 5},
+      {"id": "RD-9", "title": "Pre-Deployment Orchestration Audit Tool", "iceberg": 4}
+    ],
+    "by_payoff_potential": [
+      {"id": "RD-1", "title": "Co-Failure on Open-Ended Generative Tasks", "payoff": "Confirms or limits the universality of the co-failure ceiling"},
+      {"id": "RD-3", "title": "Query-Level Routing Signal", "payoff": "Unlocks large accuracy gains on realizability-bound tasks"},
+      {"id": "RD-9", "title": "Pre-Deployment Orchestration Audit Tool", "payoff": "Direct practical impact for every team evaluating orchestration"},
+      {"id": "RD-12", "title": "Optimal Delegation Under Co-Failure", "payoff": "Unified optimal policy subsuming all three pillars"},
+      {"id": "RD-2", "title": "The Common-Mode Atom", "payoff": "Theory of model complementarity for minimal β"},
+      {"id": "RD-10", "title": "Training Models to Not Co-Fail", "payoff": "New axis for model improvement if feasible"},
+      {"id": "RD-4", "title": "Optimal Ensemble Design", "payoff": "Actionable ensemble design guidance"},
+      {"id": "RD-11", "title": "Scalable Code-Failure Measurement", "payoff": "Definitive cross-domain replication"},
+      {"id": "RD-6", "title": "Why Open-Endedness Creates Co-Failure", "payoff": "Separates format from content effects"},
+      {"id": "RD-8", "title": "Market Churn and Option Value", "payoff": "Operational procurement guidance"},
+      {"id": "RD-5", "title": "Joint Routing-Cascade Optimality", "payoff": "Validates or raises the cascade upper bound"},
+      {"id": "RD-7", "title": "The Calibration Trap", "payoff": "Methodological cleanup; likely high citation"}
+    ],
+    "by_immediate_actionability": [
+      {"id": "RD-9", "title": "Pre-Deployment Orchestration Audit Tool", "actionability": "Can be built and adopted today"},
+      {"id": "RD-7", "title": "The Calibration Trap", "actionability": "Survey of existing papers; recompute using tetrachoric"},
+      {"id": "RD-11", "title": "Scalable Code-Failure Measurement", "actionability": "Reuse released pipeline; add more models + official judge"},
+      {"id": "RD-6", "title": "Why Open-Endedness Creates Co-Failure", "actionability": "Format ablation on existing benchmarks"},
+      {"id": "RD-4", "title": "Optimal Ensemble Design", "actionability": "Extend matched-quality experiment; fit λ across ρ levels"},
+      {"id": "RD-5", "title": "Joint Routing-Cascade Optimality", "actionability": "Log confidences; implement [3, 14]"},
+      {"id": "RD-8", "title": "Market Churn and Option Value", "actionability": "Calibrate churn primitives from release history"},
+      {"id": "RD-3", "title": "Query-Level Routing Signal", "actionability": "Systematic embedding/router exploration"},
+      {"id": "RD-1", "title": "Co-Failure on Open-Ended Generative Tasks", "actionability": "Requires reliable generative quality metrics"},
+      {"id": "RD-2", "title": "The Common-Mode Atom", "actionability": "Requires training data provenance"},
+      {"id": "RD-12", "title": "Optimal Delegation Under Co-Failure", "actionability": "Requires all preceding results as building blocks"},
+      {"id": "RD-10", "title": "Training Models to Not Co-Fail", "actionability": "Requires substantial compute and model access"}
+    ]
+  },
+
+  "summary": {
+    "num_directions": 12,
+    "top_iceberg": "RD-1 (Co-Failure on Open-Ended Generative Tasks), RD-3 (Routing Signal), RD-10 (Diversity by Design)",
+    "most_actionable": "RD-9 (Audit Tool), RD-7 (Calibration Survey), RD-11 (Code Replication)",
+    "highest_payoff": "RD-1 (Generative Domain Test), RD-3 (Routing Signal), RD-9 (Audit Tool)"
+  }
+}
