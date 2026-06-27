@@ -1,0 +1,712 @@
+\chapter{Systems Foundations for LLMs}
+\label{systems-foundations-for-llms}
+
+\section{GPU Architecture -- From Silicon to LLM Training}
+\label{gpu-architecture-from-silicon-to-llm-training}
+
+Modern large language models are trained and served almost exclusively on GPUs (Graphics Processing Units). Understanding GPU architecture is essential for making informed decisions about parallelism strategies, memory management, kernel optimization, and infrastructure sizing. This section provides a comprehensive introduction to GPU hardware as it relates to LLM workloads.
+
+\subsection{Why GPUs for Deep Learning?}
+\label{why-gpus-for-deep-learning}
+
+GPUs and CPUs represent fundamentally different hardware philosophies. Understanding this difference explains why LLM training is 100--1000$\times$ faster on GPUs.
+
+\begin{intuitionbox}[CPUs vs. GPUs – Fundamental Design Philosophy]
+\begin{itemize}
+  \item \textbf{CPUs} are optimized for \emph{latency} -- they execute a few threads as fast as possible, with large caches, branch predictors, and out-of-order execution. A modern CPU has 8--96 cores.
+  \item \textbf{GPUs} are optimized for \emph{throughput} -- they execute thousands of threads in parallel, each doing simple work. A modern GPU has thousands of ``cores'' (execution units) grouped into Streaming Multiprocessors (SMs).
+\end{itemize}
+
+Deep learning workloads are dominated by matrix multiplications ($O(n^3)$ operations on $O(n^2)$ data), which are embarrassingly parallel. A single transformer forward pass for a 70B model requires $\sim$140 TFLOP of compute per token -- perfect for GPU throughput.
+\end{intuitionbox}
+
+\subsection{NVIDIA GPU Microarchitecture Generations}
+\label{nvidia-gpu-microarchitecture-generations}
+
+NVIDIA has released a series of GPU architectures, each bringing key innovations for deep learning:
+
+\begin{table}[ht!]
+\centering
+\caption{NVIDIA GPU microarchitecture timeline for deep learning.}
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Architecture} & \textbf{Year} & \textbf{Flagship} & \textbf{Key Deep Learning Innovation} \\
+\midrule
+Pascal & 2016 & P100 & First HBM GPU; FP16 support; NVLink 1 \\
+Volta & 2017 & V100 & \textbf{Tensor Cores} (first generation); mixed-precision training \\
+Turing & 2018 & T4 & INT8 inference; RT cores (not for ML) \\
+Ampere & 2020 & A100 & BF16 Tensor Cores; TF32; 3rd-gen NVLink; MIG \\
+Hopper & 2022 & H100 & FP8 Tensor Cores; TMA; Transformer Engine; NVLink 4 \\
+Blackwell & 2024 & B200 & 2nd-gen Transformer Engine; NVLink 5 (1.8 TB/s); FP4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Common GPUs for LLM Training and Inference}
+\label{common-gpus-for-llm-training-and-inference}
+
+\begin{table}[ht!]
+\centering
+\caption{GPU specifications relevant to LLM workloads. All bandwidth figures are bidirectional.}
+\footnotesize
+\begin{tabular}{@{}lllllll@{}}
+\toprule
+\textbf{GPU} & \textbf{Arch} & \textbf{HBM} & \textbf{BF16 TF} & \textbf{HBM BW} & \textbf{NVLink} & \textbf{LLM Role} \\
+\midrule
+V100-32GB & Volta & 32 GB & 125 TF* & 900 GB/s & 300 GB/s & Legacy; small model fine-tune \\
+A100-40GB & Ampere & 40 GB & 312 TF & 1.5 TB/s & 600 GB/s & Budget training/inference \\
+A100-80GB & Ampere & 80 GB & 312 TF & 2.0 TB/s & 600 GB/s & Standard RLHF (8--64 for 70B) \\
+H100 SXM & Hopper & 80 GB & 990 TF & 3.35 TB/s & 900 GB/s & 3$\times$ faster training \\
+H200 SXM & Hopper & 141 GB & 990 TF & 4.8 TB/s & 900 GB/s & Fits 70B policy+ref on fewer GPUs \\
+B200 SXM & Blackwell & 192 GB & 2250 TF & 8.0 TB/s & 1800 GB/s & Next-gen; 2$\times$ over H100 \\
+\midrule
+\multicolumn{7}{@{}l}{\emph{AMD and Google alternatives:}} \\
+MI300X & CDNA3 & 192 GB & 1300 TF & 5.3 TB/s & N/A & Most memory; ROCm \\
+TPU v5e & Google & 16 GB & 197 TF & 1.6 TB/s & ICI 1.6 TB/s & Cloud-only; JAX/XLA \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warningbox}[Which GPU to Choose?]
+\begin{itemize}
+  \item \textbf{Training 70B+ models}: H100/B200 nodes with NVLink (need fast interconnect for tensor parallelism). Minimum 8$\times$H100 per instance.
+  \item \textbf{Inference (latency-sensitive)}: H100/H200 for high BW; MI300X for memory-bound (huge KV caches).
+  \item \textbf{Fine-tuning 7B--13B}: A100-80GB is cost-effective. Single GPU with LoRA.
+  \item \textbf{Budget}: A100-40GB or even A10 (24GB) for LoRA on 7B models.
+\end{itemize}
+\end{warningbox}
+
+\subsection{GPU Internal Architecture -- The Streaming Multiprocessor (SM)}
+\label{gpu-internal-architecture-the-streaming-multiprocessor-sm}
+
+A GPU is organized as an array of \textbf{Streaming Multiprocessors (SMs)}, each of which is an independent processor with its own register file, shared memory, and execution units. Understanding SMs is key to understanding GPU performance.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_016_fig16.png}
+\caption{Left: Internal structure of a single Streaming Multiprocessor (SM) on A100 --- 64 FP32 CUDA cores, 4 Tensor Cores, 4 warp schedulers, 256 KB register file, and 192 KB shared memory/L1 cache. Right: The full A100 chip contains 108 SMs with shared 40 MB L2 cache and 80 GB HBM2e. Bandwidth annotations (left margin) show the dramatic drop from registers to HBM.}
+\end{figure}
+
+\begin{keybox}[Key SM Components]
+\begin{itemize}
+  \item \textbf{CUDA Cores:} Scalar ALUs for FP32/INT32 operations. 64 per SM on A100. Used for element-wise ops, reductions, and non-matrix operations.
+  \item \textbf{Tensor Cores:} Specialized matrix-multiply-accumulate (MMA) units. Each performs a $4{\times}4{\times}4$ fused multiply-add per cycle. 4 per SM on A100, delivering $16\times$ throughput over CUDA cores for supported precisions.
+  \item \textbf{Register File:} Fastest storage (1 cycle latency). Shared among all active threads. Spilling to L1 causes significant slowdown.
+  \item \textbf{Shared Memory / L1:} On-chip SRAM explicitly managed by the programmer. The key to Flash Attention’s performance (tiles fit entirely in shared memory).
+  \item \textbf{Warp Schedulers:} Each SM has 4 warp schedulers (A100). A \emph{warp} = 32 threads executing in lockstep (SIMT model). Schedulers hide memory latency by switching between warps.
+\end{itemize}
+\end{keybox}
+
+\begin{intuitionbox}[The SIMT Execution Model]
+GPUs use Single Instruction, Multiple Threads (SIMT) execution. Within a warp (32 threads), all threads execute the same instruction but on different data. When threads diverge (e.g., \texttt{if/else}), both paths are serialized -- called \emph{warp divergence}. This is why GPU kernels must minimize branching.
+
+For LLM workloads, the main operations (GEMM, attention, softmax) have uniform control flow across threads, making them ideal for SIMT execution.
+\end{intuitionbox}
+
+\subsection{GPU Chip Scaling Across Generations}
+\label{gpu-chip-scaling-across-generations}
+
+The evolution of NVIDIA's GPU architectures shows consistent scaling of compute density, on-chip memory, and specialized units for deep learning:
+
+\begin{table}[ht!]
+\centering
+\caption{SM-level scaling across NVIDIA architectures.}
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Architecture} & \textbf{SMs} & \textbf{TCs/SM} & \textbf{SRAM/SM} & \textbf{L2} & \textbf{Key Change} \\
+\midrule
+Volta (V100) & 80 & 8 & 128 KB & 6 MB & Introduced Tensor Cores \\
+Ampere (A100) & 108 & 4 & 192 KB & 40 MB & BF16/TF32; larger L2 \\
+Hopper (H100) & 132 & 4 & 256 KB & 50 MB & TMA; FP8; Thread Block Clusters \\
+Blackwell (B200) & 148 & 4 & 256 KB & 128 MB & 2$\times$ die; FP4; TMEM; NVLink 5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{GPU Memory Hierarchy and Bandwidth}
+\label{gpu-memory-hierarchy-and-bandwidth}
+
+Modern GPU training and inference performance is almost entirely determined by \emph{how well you manage data movement} across the memory hierarchy. Understanding the hierarchy is not optional -- it is the foundation for every optimization technique discussed in later sections.
+
+\begin{keybox}[GPU Memory Hierarchy -- A100 80GB Reference Numbers]
+\small
+\begin{tabular}{@{}lllll@{}}
+\toprule
+\textbf{Level} & \textbf{Capacity} & \textbf{Bandwidth} & \textbf{Latency} & \textbf{Location} \\
+\midrule
+Registers & $\sim$256 KB/SM & $>$100 TB/s & 1 cycle & On-chip, per-thread \\
+SRAM (shared) & 164 KB/SM & $\sim$19 TB/s & $\sim$20 cy & On-chip, per-SM \\
+L2 Cache & 40 MB total & $\sim$5 TB/s & $\sim$200 cy & On-chip, shared \\
+HBM2e (VRAM) & 80 GB & 2 TB/s & $\sim$200 ns & On-package (5 stacks) \\
+CPU DRAM & 512 GB+ & $\sim$25 GB/s & $\sim$10 $\mu$s & Host (PCIe 4) \\
+NVMe SSD & TBs & 7 GB/s & $\sim$100 $\mu$s & Host storage \\
+\bottomrule
+\end{tabular}
+\end{keybox}
+
+\begin{intuitionbox}[Why the Gaps Are So Large]
+Each level of the hierarchy is roughly \textbf{10$\times$ slower and 100--1000$\times$ larger} than the one above it. The A100 has 312 TFLOP/s of BF16 tensor-core throughput but only 2 TB/s of HBM bandwidth. That means for every byte loaded from HBM you can do $312 \times 10^{12} / (2 \times 10^{12}) \approx 156$ floating-point operations before the next byte arrives. If your kernel does fewer than 156 FLOPs per byte, it is \emph{memory-bound} -- the compute units are idle waiting for data.
+\end{intuitionbox}
+
+\paragraph{Registers.}
+\label{registers.}
+
+Each CUDA thread has access to a private register file. Registers are the fastest storage on the chip -- reads and writes happen in a single clock cycle with no arbitration. The A100 has 65,536 32-bit registers per SM. Spilling registers to local memory (L1/L2) is a major performance hazard.
+
+\paragraph{SRAM -- Shared Memory / L1.}
+\label{sram-shared-memory-l1.}
+
+Each SM has a combined L1/shared memory pool of 192 KB on A100 (256 KB on H100), with up to 164 KB configurable as shared memory on A100. Shared memory is explicitly managed by the programmer (or by the compiler in newer CUDA versions). Flash Attention, for example, is entirely built around the insight that the attention tile computation fits in SRAM.
+
+\paragraph{L2 Cache.}
+\label{l2-cache.}
+
+The 40 MB L2 on A100 is shared across all 108 SMs. It acts as a staging area between SRAM and HBM. For workloads with good spatial locality (e.g., weight matrices accessed repeatedly across a batch), L2 hit rates can dramatically reduce effective HBM traffic.
+
+\paragraph{HBM -- High Bandwidth Memory.}
+\label{hbm-high-bandwidth-memory.}
+
+HBM is stacked DRAM mounted directly on the GPU package, connected via a wide interposer. The A100 SXM has 80 GB of HBM2e at 2 TB/s. The H100 SXM5 has 80 GB of HBM3 at 3.35 TB/s. This is the primary working memory for model weights, KV caches, activations, and optimizer states.
+
+\paragraph{CPU DRAM via PCIe.}
+\label{cpu-dram-via-pcie.}
+
+Data transfer between GPU HBM and CPU DRAM traverses the PCIe bus. PCIe Gen4 $\times$16 provides $\sim$32 GB/s per direction (64 GB/s bidirectional); Gen5 doubles this. This is a $\sim$60$\times$ bandwidth reduction compared to HBM (per-direction). CPU offloading (ZeRO-Infinity, DeepSpeed) exploits this link but must be used carefully to avoid becoming the bottleneck.
+
+\paragraph{NVMe.}
+\label{nvme.}
+
+NVMe SSDs (e.g., Samsung 990 Pro) reach $\sim$7 GB/s sequential read. ZeRO-Infinity can offload optimizer states to NVMe, but this is only viable when the compute-to-IO ratio is very high (large batch sizes, slow training steps).
+
+\subsection{Arithmetic Intensity and the Roofline Model}
+\label{arithmetic-intensity-and-the-roofline-model}
+
+\begin{keybox}[Arithmetic Intensity]
+\[
+I = \frac{\text{FLOPs}}{\text{Bytes accessed from HBM}}
+  \quad \text{(FLOPs / Byte)}
+\]
+ A kernel is \textbf{memory-bound} when $I < I_{\text{ridge}}$ and \textbf{compute-bound} when $I > I_{\text{ridge}}$, where 
+\[
+I_{\text{ridge}} = \frac{\text{Peak FLOP/s}}{\text{Peak Bandwidth}}
+  = \frac{312 \times 10^{12}}{2 \times 10^{12}} = 156 \text{ FLOP/Byte (A100 BF16)}
+\]
+\end{keybox}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_017_fig17.png}
+\caption{Roofline model for A100 BF16. Attention is deep in the memory-bound regime; large GEMMs (FFN layers) are compute-bound.}
+\end{figure}
+
+\begin{examplebox}[Attention Arithmetic Intensity]
+For a single attention head with sequence length $n=4096$, head dim $d=128$:
+
+\textbf{FLOPs}: $QK^T$ costs $2n^2d$, softmax is $O(n^2)$, $\text{Attn} \times V$ costs $2n^2d$. Total: $\approx 4n^2 d = 4 \times 4096^2 \times 128 \approx 8.6$ GFLOP.
+
+\textbf{Memory traffic} (standard, non-Flash implementation):
+
+\begin{itemize}
+  \item Read $Q, K$: $2 \times n \times d \times 2 = 2$ MB
+  \item Write attention scores $S = QK^T$: $n^2 \times 2 = 33.5$ MB
+  \item Read $S$ for softmax: $n^2 \times 2 = 33.5$ MB
+  \item Write softmax output $P$: $n^2 \times 2 = 33.5$ MB
+  \item Read $P$ and $V$ for final matmul: $n^2 \times 2 + n \times d \times 2 = 34.5$ MB
+  \item Write output $O$: $n \times d \times 2 = 1$ MB
+\end{itemize}
+
+\textbf{Total memory}: $\approx 138$ MB (dominated by 4 passes over the $n^2$ attention matrix).
+
+\textbf{Arithmetic intensity}: 
+\[
+I = \frac{8.6 \times 10^9}{138 \times 10^6} \approx 62 \text{ FLOP/Byte}
+\]
+
+This is $62/156 = 40\%$ of the A100 ridge point --- \textbf{firmly memory-bound}. The GPU is 60\% idle waiting for memory.
+
+\textbf{Flash Attention fix}: By never materializing the $n \times n$ matrix (tiling $Q, K, V$ in SRAM), Flash Attention reduces HBM traffic to just reading $Q, K, V$ and writing $O$: $4 \times n \times d \times 2 = 4$ MB. Each byte loaded is reused in $O(n)$ computations (every query attends to every key), so: 
+\[
+I = \frac{4n^2 d}{4 \cdot n \cdot d \cdot 2} = \frac{n}{2} = \frac{4096}{2} = 2048 \text{ FLOP/Byte}
+\]
+
+This is $13\times$ above the ridge point (156) --- \textbf{deeply compute-bound}. The GPU hits its peak 312 TFLOPS, needing only $312\text{T}/2048 \approx 152$ GB/s of bandwidth (7.6\% of HBM capacity). Memory is no longer the bottleneck.
+\end{examplebox}
+
+\subsection{Attention is Memory-Bound; FFN is Compute-Bound}
+\label{attention-is-memory-bound-ffn-is-compute-bound}
+
+\begin{intuitionbox}[Two Regimes in a Transformer]
+A transformer block has two main components with very different arithmetic intensities:
+
+\begin{itemize}
+  \item \textbf{Attention:} Operates on $n \times d$ tensors. The $QK^T$ product is $O(n^2 d)$ FLOPs but requires $O(n^2)$ memory for the attention scores. At long sequences, memory traffic dominates -- attention is \emph{memory-bound}.
+  \item \textbf{FFN (MLP):} Two large linear layers with weight matrices of shape $[d_{\text{model}}, 4d_{\text{model}}]$. These are large GEMMs with high arithmetic intensity -- FFN is \emph{compute-bound}.
+\end{itemize}
+
+This is why Flash Attention (memory optimization) helps attention but not FFN, while quantization (reducing weight size) helps FFN more than attention.
+\end{intuitionbox}
+
+\subsection{Tensor Cores}
+\label{tensor-cores}
+
+\begin{keybox}[What Are Tensor Cores?]
+Tensor Cores are specialized matrix-multiply-accumulate (MMA) units introduced in Volta (2017). Each Tensor Core performs a $4\times4\times4$ matrix multiply in a single clock cycle: 
+\[
+D = A \times B + C \quad (4\times4 \text{ matrices})
+\]
+ The A100 has \textbf{432 Tensor Cores} across 108 SMs (4 per SM, one per sub-partition). At BF16 precision, they deliver 312 TFLOP/s -- roughly $16\times$ the throughput of FP32 CUDA cores.
+\end{keybox}
+
+\begin{itemize}
+  \item \textbf{Supported precisions:} FP64, TF32, BF16, FP16, INT8, FP8 (H100+).
+  \item \textbf{Accumulation:} Always in FP32 internally, even for BF16 inputs. This prevents catastrophic cancellation during the dot product.
+  \item \textbf{Requirement:} Tensor Cores are most efficient when matrix dimensions are multiples of 8 (BF16) or 16 (FP8). Padding to these multiples is often worthwhile.
+  \item \textbf{WGMMA (H100):} Hopper introduces warpgroup-level MMA instructions that operate on larger tiles (64$\times$256$\times$16) and can be pipelined with TMA (Tensor Memory Accelerator) data movement.
+\end{itemize}
+
+\begin{warningbox}[The Tensor Core Trap]
+Tensor Cores only help if your kernel is \emph{compute-bound}. If you are running a small batch (batch size 1, inference), the GEMM tiles are tiny, Tensor Core utilization is low, and you are back in the memory-bound regime. This is why inference engines batch requests aggressively.
+\end{warningbox}
+
+\subsection{Communication Architecture -- NVLink, InfiniBand, and PCIe}
+\label{communication-architecture-nvlink-infiniband-and-pcie}
+
+Distributed LLM training and inference require moving enormous amounts of data between GPUs, nodes, and storage. The communication fabric is often the bottleneck for large-scale training.
+
+\paragraph{PCIe -- The Host-Device Link.}
+\label{pcie-the-host-device-link.}
+
+\begin{keybox}[PCIe Generations]
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Generation} & \textbf{x16 BW (each dir.)} & \textbf{Bidirectional} & \textbf{Notes} \\
+\midrule
+PCIe Gen3 & 16 GB/s & 32 GB/s & Common in older servers \\
+PCIe Gen4 & 32 GB/s & 64 GB/s & A100 PCIe, most current servers \\
+PCIe Gen5 & 64 GB/s & 128 GB/s & H100 PCIe, emerging \\
+\bottomrule
+\end{tabular}
+\end{keybox}
+
+PCIe is used for:
+
+\begin{itemize}
+  \item CPU $\leftrightarrow$ GPU data transfers (model loading, CPU offloading)
+  \item Cross-node GPU communication when NVLink is unavailable (rare, very slow)
+  \item NVMe storage access (via CPU)
+\end{itemize}
+
+\begin{warningbox}[PCIe is Not for GPU-GPU Communication]
+Never route GPU-GPU communication through PCIe if NVLink is available. PCIe bandwidth (32 GB/s) is 28$\times$ lower than NVLink 4 (900 GB/s). In a multi-GPU server without NVLink (e.g., consumer GPUs), inter-GPU bandwidth is limited to PCIe, making tensor parallelism extremely slow.
+\end{warningbox}
+
+\newpage
+\paragraph{NVLink -- Intra-Node High-Speed Interconnect.}
+\label{nvlink-intra-node-high-speed-interconnect.}
+\nopagebreak
+\begin{keybox}[NVLink Generations]
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Generation} & \textbf{Links} & \textbf{Total BW} & \textbf{GPU} \\
+\midrule
+NVLink 2 & 6 & 300 GB/s & V100 \\
+NVLink 3 & 12 & 600 GB/s & A100 \\
+NVLink 4 & 18 & 900 GB/s & H100 \\
+NVLink 5 & 18 & 1800 GB/s & B200 (Blackwell) \\
+\bottomrule
+\end{tabular}
+\end{keybox}
+
+NVLink is a point-to-point interconnect between GPUs on the same node. Each link is bidirectional. The H100 SXM5 has 18 NVLink 4 links, each providing 50 GB/s bidirectional, for a total of 900 GB/s.
+
+\paragraph{NVSwitch.}
+\label{nvswitch.}
+
+In DGX H100 systems, all 8 GPUs are connected via NVSwitch -- a dedicated switching chip that provides \emph{full bisection bandwidth}. This means any GPU can communicate with any other GPU at full NVLink speed simultaneously, not just neighbors in a ring.
+
+\begin{intuitionbox}[Ring vs. Full Bisection]
+In a ring topology (8 GPUs), an AllReduce requires data to travel around the ring. Each link must carry $\frac{2(N-1)}{N}$ of the total data, so the algorithm bandwidth is $B_{\text{link}} \times \frac{N}{2(N-1)}$ (about $0.57 \times B_{\text{link}}$ for $N=8$). With NVSwitch full bisection, AllReduce can use all links simultaneously with tree-based algorithms, achieving near-peak bandwidth. In practice on DGX H100: ring achieves $\sim$700 GB/s bus bandwidth, NVSwitch achieves $\sim$900 GB/s.
+\end{intuitionbox}
+
+\paragraph{InfiniBand -- Inter-Node Communication.}
+\label{infiniband-inter-node-communication.}
+
+For communication between nodes (servers), InfiniBand provides high-bandwidth, low-latency networking with direct GPU memory access.
+
+\begin{keybox}[InfiniBand NDR]
+\begin{itemize}
+  \item \textbf{NDR 400Gb/s} = 50 GB/s per port (unidirectional)
+  \item \textbf{HDR 200Gb/s} = 25 GB/s per port (previous generation)
+  \item \textbf{RDMA:} Remote Direct Memory Access -- GPU can read/write remote GPU memory without involving the remote CPU
+  \item \textbf{GPUDirect RDMA:} Data goes directly HBM $\to$ NIC $\to$ network $\to$ NIC $\to$ HBM, bypassing CPU and system DRAM entirely
+  \item \textbf{Latency:} $\sim$1--2 $\mu$s for small messages (vs.~$\sim$100 $\mu$s for TCP/IP)
+\end{itemize}
+\end{keybox}
+
+\paragraph{Fat-Tree Topology.}
+\label{fat-tree-topology.}
+
+Large GPU clusters use fat-tree network topologies. A 3-level fat-tree with $k$-port switches supports $k^3/4$ nodes with full bisection bandwidth. For 400Gb/s NDR switches with $k=64$ ports: $64^3/4 = 65{,}536$ nodes.
+
+\paragraph{Rail-Optimized Topology.}
+\label{rail-optimized-topology.}
+
+In practice, clusters use \emph{rail-optimized} topologies where each GPU in a node connects to a different top-of-rack switch. This ensures that AllReduce operations (which involve all GPUs) use all network links simultaneously, maximizing bandwidth.
+
+\paragraph{Communication Patterns in Distributed LLM Training.}
+\label{communication-patterns-in-distributed-llm-training.}
+
+Distributed training relies on collective communication primitives. The choice of primitive determines bandwidth requirements and scaling behavior.
+
+\begin{keybox}[Communication Primitives]
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Primitive} & \textbf{Use Case} & \textbf{Volume} \\
+\midrule
+AllReduce & Gradient sync (DDP, FSDP) & $2(N-1)/N \times$ param size \\
+AllGather & Collect sharded weights (FSDP) & $(N-1)/N \times$ param size \\
+ReduceScatter & Scatter gradients (FSDP) & $(N-1)/N \times$ param size \\
+AllGather & Tensor parallel activation & activation size \\
+Point-to-Point & Pipeline parallel (send/recv) & micro-batch activation \\
+Broadcast & Weight sync (new workers) & full model size \\
+\bottomrule
+\end{tabular}
+\end{keybox}
+
+\begin{examplebox}[Bandwidth Calculation – Gradient AllReduce for 70B Model]
+\textbf{Setup:} 70B parameter model, BF16 gradients, 8 nodes $\times$ 8 GPUs = 64 GPUs. Data parallel degree = 64.
+
+\textbf{Gradient size:} $70 \times 10^9 \times 2$ bytes $= 140$ GB.
+
+\textbf{AllReduce volume per GPU} (ring): $2 \times (64-1)/64 \times 140 \approx 275$ GB.
+
+\textbf{Available inter-node bandwidth:} 8 GPUs/node $\times$ 50 GB/s/GPU $= 400$ GB/s (with rail-optimized topology, all 8 NICs active).
+
+\textbf{AllReduce time:} $275 / 400 \approx 0.69$ seconds per step.
+
+\textbf{Implication:} For a 1-second compute step, communication adds 0.69 seconds (41\% of total step time). This is why gradient compression, mixed precision, and FSDP (which overlaps communication with computation) are critical.
+\end{examplebox}
+
+\paragraph{Network Topology Diagram.}
+\label{network-topology-diagram.}
+
+The following diagram illustrates a typical two-node GPU cluster topology showing both intra-node (NVLink) and inter-node (InfiniBand) communication paths.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_018_fig18.png}
+\caption{Two-node 8-GPU topology. Intra-node: NVLink 4 via NVSwitch (900 GB/s total). Inter-node: InfiniBand NDR 400Gb/s via top-of-rack switch. Each node has 8 IB NICs (one per GPU) for rail-optimized AllReduce.}
+\end{figure}
+
+\begin{intuitionbox}[Choosing Parallelism Based on Bandwidth]
+\begin{itemize}
+  \item \textbf{Tensor Parallelism (TP):} Requires all-reduce every layer -- use only within a node over NVLink. TP=8 is standard for H100 DGX nodes.
+  \item \textbf{Pipeline Parallelism (PP):} Point-to-point between stages -- can cross nodes, but adds pipeline bubble overhead. Use when model is too large for TP alone.
+  \item \textbf{Data Parallelism (DP):} AllReduce of gradients -- can cross nodes via IB. Scales well with fast IB.
+  \item \textbf{FSDP/ZeRO:} AllGather + ReduceScatter -- similar to DP but shards optimizer states. Preferred over DP for large models.
+\end{itemize}
+\end{intuitionbox}
+
+\section{vLLM -- PagedAttention and High-Throughput Inference}
+\label{vllm-pagedattention-and-high-throughput-inference}
+
+vLLM~\cite{kwon2023efficient} introduced PagedAttention, which borrows the paging abstraction that operating systems use for RAM and applies it to the GPU’s KV cache. During LLM inference, the \emph{KV cache} -- the stored key and value tensors for all previous tokens -- is the dominant memory consumer. Managing it efficiently is the central challenge of high-throughput inference.
+
+\subsection{The KV Cache Fragmentation Problem}
+\label{the-kv-cache-fragmentation-problem}
+
+\begin{keybox}[KV Cache Memory Formula]
+For a model with $L$ layers, $H$ heads, head dimension $d$, and a sequence of $n$ tokens: 
+\[
+\text{KV cache size} = 2 \times L \times H \times d \times n \times \text{bytes\_per\_element}
+\]
+ For Llama-3 70B (BF16): $L=80$, $H=8$ (GQA), $d=128$: 
+\[
+= 2 \times 80 \times 8 \times 128 \times n \times 2 = 327{,}680 \times n \text{ bytes}
+\]
+ At $n=4096$ tokens: $\approx 1.3$ GB per sequence.
+\end{keybox}
+
+\begin{intuitionbox}[Internal and External Fragmentation]
+Traditional inference systems pre-allocate a contiguous memory block for each sequence’s KV cache, sized to the \emph{maximum possible sequence length}. This causes two types of waste:
+
+\textbf{Internal fragmentation:} A sequence that generates only 500 tokens still holds a block reserved for 4096 tokens. The unused 3596 token slots are wasted.
+
+\textbf{External fragmentation:} After many sequences complete, the free memory consists of many small non-contiguous gaps. A new long sequence cannot be allocated even if total free memory is sufficient, because no single contiguous block is large enough.
+
+In practice, GPU memory utilization with naive allocation is often only 20--40\%.
+\end{intuitionbox}
+
+\subsection{PagedAttention -- Virtual Memory for KV Caches}
+\label{pagedattention-virtual-memory-for-kv-caches}
+
+PagedAttention (Kwon et al., 2023) borrows the \emph{paging} abstraction from operating systems. Instead of one contiguous block per sequence, the KV cache is carved into fixed-size \textbf{pages} (blocks), and an indirection table---analogous to a CPU page table---translates each sequence’s logical token positions into scattered physical GPU memory addresses.
+
+\begin{keybox}[PagedAttention Core Concepts]
+\begin{itemize}
+  \item \textbf{Block size:} Typically 16 tokens per block (tunable). Each block stores $16 \times 2 \times L \times H \times d$ elements.
+  \item \textbf{Block table:} A per-sequence mapping from logical block index to physical block index in the GPU memory pool.
+  \item \textbf{Physical block pool:} A pre-allocated pool of fixed-size blocks. Allocation is $O(1)$ -- just pop from a free list.
+  \item \textbf{Attention kernel:} Modified to gather KV blocks from non-contiguous physical locations using the block table during attention computation.
+\end{itemize}
+\end{keybox}
+
+\begin{examplebox}[Block Table Example]
+Suppose block size = 4 tokens, and we have two sequences:
+
+\begin{itemize}
+  \item Sequence A (7 tokens): logical blocks [0,1] $\to$ physical blocks [3, 7]
+  \item Sequence B (5 tokens): logical blocks [0,1] $\to$ physical blocks [1, 5]
+\end{itemize}
+
+Physical block 3 holds tokens 0--3 of sequence A. Physical block 7 holds tokens 4--6 of sequence A (partially filled). The attention kernel for sequence A reads from physical blocks 3 and 7 in order, using the block table as an indirection layer.
+\end{examplebox}
+
+\subsection{Benefits of PagedAttention}
+\label{benefits-of-pagedattention}
+
+\paragraph{Near-zero waste.}
+\label{near-zero-waste.}
+
+Internal fragmentation is bounded by at most one partially-filled block per sequence (the last block). With block size 16, worst-case waste is 15 tokens per sequence -- negligible. External fragmentation is eliminated because blocks are fixed-size and interchangeable.
+
+\paragraph{Dynamic allocation.}
+\label{dynamic-allocation.}
+
+Blocks are allocated on demand as the sequence grows. No need to know the final sequence length in advance. This is critical for generation, where output length is unknown.
+
+\paragraph{Prefix sharing (copy-on-write).}
+\label{prefix-sharing-copy-on-write.}
+
+Multiple sequences sharing a common prefix (e.g., a system prompt) can share the \emph{same physical blocks} for that prefix. The block table simply points multiple sequences to the same physical blocks. When a sequence needs to write to a shared block (diverging from the prefix), a copy-on-write is triggered.
+
+\begin{intuitionbox}[Prefix Sharing Savings]
+In a chatbot with a 1000-token system prompt serving 128 concurrent users:
+
+\begin{itemize}
+  \item Without prefix sharing: $128 \times 1000 \times 327{,}680 / 10^9 \approx 42$ GB just for system prompt KV cache
+  \item With prefix sharing: $1 \times 1000 \times 327{,}680 / 10^9 \approx 0.33$ GB
+  \item Savings: $\sim$128$\times$ for the shared prefix portion
+\end{itemize}
+\end{intuitionbox}
+
+\paragraph{Preemption via swap.}
+\label{preemption-via-swap.}
+
+When GPU memory is exhausted, vLLM can \emph{preempt} a sequence by swapping its KV blocks to CPU DRAM (or simply discarding them and recomputing later). This is only feasible because blocks are self-contained and non-contiguous -- swapping a contiguous allocation would require copying the entire buffer.
+
+\subsection{Continuous Batching}
+\label{continuous-batching}
+
+Traditional batching (``static batching``) waits until \emph{all} sequences in a batch finish before starting new ones. If one sequence generates 500 tokens and another generates 10, the GPU is idle for 490 steps on the short sequence. This is extremely wasteful.
+
+\begin{keybox}[Continuous Batching]
+Continuous batching (also called iteration-level scheduling) processes one \emph{decode step} at a time. After each step:
+
+\begin{enumerate}
+  \item Check which sequences have finished (generated EOS token)
+  \item Remove finished sequences from the batch, freeing their KV blocks
+  \item Add new waiting sequences to fill the freed slots
+  \item Run the next decode step with the updated batch
+\end{enumerate}
+
+The batch composition changes every step --- sequences join and leave dynamically. This keeps GPU utilization near 100\% and dramatically improves throughput (1.5--3$\times$ over static batching). PagedAttention is essential here: adding/removing sequences mid-batch requires dynamic KV block allocation/deallocation, which is only efficient with paged memory.
+\end{keybox}
+
+\subsection{Speculative Decoding in vLLM}
+\label{speculative-decoding-integration}
+
+Speculative decoding uses a small \emph{draft model} (e.g., 1B parameters) to propose $k$ candidate tokens quickly, which the large \emph{target model} verifies in a single forward pass. All tokens up to the first rejection are accepted (expected acceptance: 3--5 tokens per verification step). This yields 2--3$\times$ speedup for latency-sensitive single-sequence generation without any quality loss.
+
+vLLM integrates speculative decoding with PagedAttention:
+
+\begin{itemize}
+  \item Draft tokens are allocated speculative KV blocks
+  \item On rejection, speculative blocks are freed (cheap with paged allocation)
+  \item On acceptance, speculative blocks are promoted to the main sequence
+  \item The block table update is $O(k)$ -- just updating a few table entries
+\end{itemize}
+
+\subsection{Concrete Memory Savings -- 70B Model at Scale}
+\label{concrete-memory-savings-70b-model-at-scale}
+
+\begin{examplebox}[Memory Budget – 70B BF16 Inference]
+\textbf{Setup:} Llama-3 70B, BF16, single A100 80GB node (8 GPUs, tensor parallel).
+
+\textbf{Model weights:} $70 \times 10^9 \times 2$ bytes $= 140$ GB $\div$ 8 GPUs $= 17.5$ GB/GPU.
+
+\textbf{Remaining for KV cache:} $80 - 17.5 - 3$ (overhead) $= 59.5$ GB/GPU.
+
+\textbf{KV cache per token per GPU} (with TP=8, each GPU holds $1/8$ of heads): $2 \times 80 \times 1 \times 128 \times 2 = 40{,}960$ bytes $\approx 40$ KB/token.
+
+\textbf{Max tokens in KV cache:} $59.5 \times 10^9 / 40{,}960 \approx 1.45$ million tokens.
+
+\textbf{With 128 concurrent sequences of 4096 tokens each:} $128 \times 4096 = 524{,}288$ tokens -- well within budget.
+
+\textbf{Without PagedAttention} (pre-allocating max length 4096 for each): Same math, but fragmentation wastes $\sim$50\% on average $\to$ only 64 sequences fit.
+\end{examplebox}
+
+\begin{warningbox}[Block Size Tradeoff]
+Larger block sizes reduce the overhead of the block table and improve memory access locality (fewer scattered reads). Smaller block sizes reduce internal fragmentation and enable finer-grained prefix sharing. vLLM defaults to 16 tokens/block, which is a good balance. For very long sequences (100K+ tokens), larger blocks (32--64) may be preferable.
+\end{warningbox}
+
+\subsection{vLLM: End-to-End System}
+\label{vllm-end-to-end-system}
+
+vLLM wraps PagedAttention inside a full serving stack: continuous batching, prefix caching, speculative decoding, and tensor-parallel model sharding all work together to maximize throughput per GPU dollar.
+
+\subsection{Architecture Overview}
+\label{architecture-overview}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_019_fig19.png}
+\caption{vLLM architecture: Requests flow top-down. The Scheduler manages admission and preemption, the Block Manager handles virtual-to-physical KV cache mapping (like OS page tables), and the Model Executor runs batched inference reading from the pre-allocated block pool in GPU HBM.}
+\end{figure}
+
+\subsection{Core Components}
+\label{core-components}
+
+\begin{itemize}
+  \item \textbf{API Server}: Accepts OpenAI-compatible requests (completions, chat). Tokenizes inputs and creates ``sequence groups'' (for beam search or multiple samples).
+  \item \textbf{Scheduler}: The brain of vLLM. Maintains three queues:
+
+\begin{itemize}
+  \item \texttt{waiting}: New requests not yet started (prefill pending)
+  \item \texttt{running}: Actively generating tokens (decode phase)
+  \item \texttt{swapped}: Preempted requests whose KV cache was offloaded to CPU
+\end{itemize}
+
+Each iteration, the scheduler decides which requests to run based on available GPU memory blocks.
+  \item \textbf{Block Manager}: Implements the virtual memory abstraction for KV caches. Maps logical blocks (per-sequence) to physical blocks (in GPU memory pool). Handles:
+
+\begin{itemize}
+  \item Allocation (new tokens generated $\rightarrow$ new blocks needed)
+  \item Copy-on-write (for beam search: multiple beams share prefix blocks, copy only on divergence)
+  \item Swap (GPU $\leftrightarrow$ CPU migration when preempting/resuming)
+  \item Prefix caching (reuse cached blocks when prompts share common prefixes)
+\end{itemize}
+  \item \textbf{Model Executor}: Runs the actual LLM forward pass. Manages tensor parallelism across GPUs, dispatches attention kernels that read from paged KV cache blocks.
+  \item \textbf{KV Cache Pool}: Pre-allocated GPU memory divided into fixed-size blocks (default: 16 tokens $\times$ num\_heads $\times$ head\_dim $\times$ 2 bytes per block). No dynamic allocation at runtime $\rightarrow$ zero fragmentation.
+\end{itemize}
+
+\subsection{Request Lifecycle (End-to-End Flow)}
+\label{request-lifecycle-end-to-end-flow}
+
+\begin{enumerate}
+  \item \textbf{Arrival}: Client sends prompt. API server tokenizes it, creates a \texttt{SequenceGroup}, places it in the \texttt{waiting} queue.
+  \item \textbf{Scheduling}: At each step, the scheduler runs:
+
+\begin{enumerate}
+  \item Check if any \texttt{swapped} sequences can be resumed (enough free blocks).
+  \item Check if any \texttt{waiting} sequences can start prefill (enough blocks for the full prompt).
+  \item Budget remaining blocks across \texttt{running} sequences (need 1 new block per sequence per step if current block is full).
+  \item If over budget: \textbf{preempt} lowest-priority running sequences (swap KV to CPU or recompute later).
+\end{enumerate}
+  \item \textbf{Prefill} (first iteration for a request): The entire prompt is processed in one forward pass. KV cache is computed for all prompt tokens and stored in allocated blocks. This is compute-bound (large batch of tokens).
+  \item \textbf{Decode} (subsequent iterations): One new token generated per sequence per step. All running sequences are batched together (continuous batching). This is memory-bound (reads full KV cache, generates 1 token).
+  \item \textbf{Block Allocation}: After each decode step, if the last block for a sequence is full, the Block Manager allocates a new physical block and maps it to the next logical block.
+  \item \textbf{Completion}: When a sequence hits EOS or max length, it’s removed from \texttt{running}. Its physical blocks are freed immediately $\rightarrow$ available for other sequences. Response is streamed back to client.
+\end{enumerate}
+
+\subsection{Prefix Caching (Automatic Prompt Caching)}
+\label{prefix-caching-automatic-prompt-caching}
+
+When multiple requests share a common prefix (system prompt, few-shot examples):
+
+\begin{enumerate}
+  \item Hash the token content of each logical block.
+  \item On new request arrival, check if any prefix blocks are already in the cache.
+  \item If hit: skip prefill for those tokens, directly reuse physical KV blocks. Time-to-first-token drops dramatically.
+  \item Eviction: LRU policy. Cached blocks are freed only when memory pressure requires it.
+\end{enumerate}
+
+\textbf{Impact}: For chat applications with long system prompts (2K+ tokens shared across all users), prefix caching reduces TTFT by 60--80\%.
+
+\subsection{Guided (Constrained) Decoding in vLLM}
+\label{sec:vllm-guided-decoding}
+
+vLLM natively supports constrained decoding (Section~\ref{sec:constrained-decoding}) through pluggable backends, enabling \emph{guaranteed} structured output at serving time with minimal performance overhead.
+
+\paragraph{Supported constraint types.}
+\label{supported-constraint-types.}
+
+The OpenAI-compatible API accepts constraints via the \texttt{guided\_*} parameters or the \texttt{response\_format} field:
+
+\begin{lstlisting}[style=pythonstyle]
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8000/v1")
+
+# --- JSON Schema constraint ---
+response = client.chat.completions.create(
+    model="meta-llama/Llama-3-70B-Instruct",
+    messages=[{"role": "user",
+               "content": "Extract: name, age, city from: "
+                          "'John is 30 and lives in NYC'"}],
+    extra_body={
+        "guided_json": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "age": {"type": "integer"},
+                "city": {"type": "string"}
+            },
+            "required": ["name", "age", "city"]
+        }
+    }
+)
+# Output is guaranteed valid JSON matching the schema
+
+# --- Regex constraint ---
+response = client.completions.create(
+    model="meta-llama/Llama-3-70B-Instruct",
+    prompt="Generate an IPv4 address: ",
+    extra_body={
+        "guided_regex": r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    }
+)
+
+# --- Choice constraint ---
+response = client.completions.create(
+    model="meta-llama/Llama-3-70B-Instruct",
+    prompt="Sentiment: ",
+    extra_body={"guided_choice": ["positive", "negative", "neutral"]}
+)
+\end{lstlisting}
+
+\paragraph{Backend architecture.}
+\label{backend-architecture.}
+
+vLLM delegates mask computation to a backend engine:
+
+\begin{itemize}
+  \item \textbf{XGrammar} (default since v0.7): Pushdown-automaton engine supporting JSON schemas, regexes, and arbitrary EBNF grammars. Fastest for complex schemas due to efficient C++ core.
+  \item \textbf{Outlines}~\cite{willard2023outlines}: FSM-based; supports JSON and regex. Used as fallback when XGrammar is unavailable.
+\end{itemize}
+
+The mask is applied \emph{after} the model’s forward pass produces logits and \emph{before} sampling---adding $<$1 ms per step in practice, since the FSM/PDA state transition and precomputed index lookup are $O(1)$.
+
+\paragraph{Performance impact.}
+\label{performance-impact.}
+
+Because the constraint only masks logits (no recomputation of attention or FFN), throughput loss is negligible ($<$2\% in benchmarks). The main cost is \emph{compilation} of the schema into an FSM/PDA index, which takes 0.5--5 s depending on schema complexity. vLLM caches compiled schemas across requests, so this cost is paid once per unique schema.
+
+\begin{warningbox}[Structured Output $\neq$ Correct Output]
+Constrained decoding guarantees the output is \emph{syntactically} valid (parses as JSON, matches the schema types). It does \emph{not} guarantee \emph{semantic} correctness---the model may still hallucinate values that parse correctly but are factually wrong. Always validate business logic downstream.
+\end{warningbox}
+
+\begin{table}[ht!]
+\centering
+\caption{vLLM performance vs. alternatives (70B model, A100 $\times$ 4, TP=4).}
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{vLLM} & \textbf{HF Generate} & \textbf{Why} \\
+\midrule
+Throughput (tok/s) & 2,500--4,000 & 300--600 & Continuous batching + PagedAttention \\
+Memory utilization & 90--95\% & 50--60\% & Zero fragmentation, dynamic block alloc \\
+Max concurrent seqs & 200--500 & 16--32 & Paged KV eliminates per-seq reservation \\
+Time-to-first-token & 100--300ms & 500--2000ms & Prefix caching for repeated system prompts \\
+\bottomrule
+\end{tabular}
+\end{table}
+

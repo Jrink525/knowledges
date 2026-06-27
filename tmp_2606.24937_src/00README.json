@@ -1,0 +1,21 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "book.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "book.bbl"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "book.bib"
+      }
+   ],
+   "spec_version" : 1,
+   "texlive_version" : "2025",
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

@@ -1,0 +1,386 @@
+\chapter{Quick Reference}
+\label{quick-reference}
+
+This chapter consolidates key equations, architecture specifications, API references, and failure mode diagnostics for rapid lookup during development and debugging.
+
+\section{Core RL \& Alignment Equations}
+\label{core-rl-alignment-equations}
+
+\begin{align}
+\text{PPO Clip:}&\quad L = \mathbb{E}[\min(r_t\hat{A}_t, \text{clip}(r_t,1{\pm}\epsilon)\hat{A}_t)], \quad r_t = \pi_\theta(a_t|s_t)/\pi_{\text{old}}(a_t|s_t) \\
+\text{DPO:}&\quad L = -\mathbb{E}[\log\sigma(\beta\log\tfrac{\pi_\theta(y_w|x)}{\pi_\text{ref}(y_w|x)} - \beta\log\tfrac{\pi_\theta(y_l|x)}{\pi_\text{ref}(y_l|x)})] \\
+\text{GRPO:}&\quad \hat{A}_i = (r_i - \mu_G)/\sigma_G, \quad \text{then PPO clip update (no critic)} \\
+\text{KTO:}&\quad L = \lambda_w(1 - v(y_w)) + \lambda_l \cdot v(y_l), \quad v = \sigma(\beta\log(\pi_\theta/\pi_\text{ref}) - z) \\
+\text{IPO:}&\quad L = \mathbb{E}[(\log(\pi_\theta(y_w)/\pi_\text{ref}(y_w)) - \log(\pi_\theta(y_l)/\pi_\text{ref}(y_l)) - 1/(2\beta))^2] \\
+\text{ORPO:}&\quad L = L_\text{SFT}(y_w) - \lambda\log\sigma(\log(\text{odds}(y_w)/\text{odds}(y_l))) \\
+\text{GAE:}&\quad \hat{A}_t = \textstyle\sum_{l=0}^{T-t}(\gamma\lambda)^l\delta_{t+l}, \quad \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t) \\
+\text{KL Penalty:}&\quad R_\text{total} = r_\phi(x,y) - \beta D_\text{KL}[\pi_\theta(y|x)\|\pi_\text{ref}(y|x)] \\
+\text{RM (Bradley-Terry):}&\quad L = -\mathbb{E}[\log\sigma(r_\phi(x,y_w)-r_\phi(x,y_l))] \\
+\text{Best-of-N:}&\quad y^* = \arg\max_{y_i \sim \pi_\theta(\cdot|x),\, i=1..N} r_\phi(x, y_i)
+\end{align}
+
+\section{Transformer \& Architecture Formulas}
+\label{transformer-architecture-formulas}
+
+\begin{align}
+\text{Self-Attention:}&\quad \text{Attn}(Q,K,V) = \text{softmax}(QK^\top / \sqrt{d_k}) \cdot V \\
+\text{Multi-Head:}&\quad \text{MHA}(X) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W^O,\quad \text{head}_i = \text{Attn}(XW_i^Q, XW_i^K, XW_i^V) \\
+\text{RoPE:}&\quad f(x_m, m) = x_m e^{im\theta_j}, \quad \theta_j = 10000^{-2j/d} \\
+\text{LoRA:}&\quad W' = W_0 + (\alpha/r) \cdot BA, \quad B \in \mathbb{R}^{d \times r},\; A \in \mathbb{R}^{r \times k} \\
+\text{KD (soft targets):}&\quad L_\text{KD} = (1{-}\alpha)L_\text{CE}(y, \hat{y}) + \alpha\, T^2 \cdot \text{KL}(p_T^\text{teacher} \| p_T^\text{student}) \\
+\text{FFN (SwiGLU):}&\quad \text{FFN}(x) = (\text{Swish}(xW_1) \odot xW_3) W_2
+\end{align}
+
+\section{Decoding Methods}
+\label{decoding-methods}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Formula / Rule} & \textbf{Key Param} \\
+\midrule
+Greedy & $y_t = \arg\max_v P(v|y_{<t})$ & --- \\
+Beam search & Keep top-$B$ partial sequences by joint probability & $B=4$--$8$ \\
+Temperature & $P'(v) = \text{softmax}(\text{logit}_v / T)$ & $T \in [0.1, 1.5]$ \\
+Top-$k$ & Zero out all but top-$k$ logits, renormalize & $k=40$--$100$ \\
+Top-$p$ (nucleus) & Keep smallest set $V'$ s.t.~$\sum_{v \in V'} P(v) \geq p$ & $p=0.9$--$0.95$ \\
+Min-$p$ & Keep tokens with $P(v) \geq p_\text{min} \cdot P(v_\text{max})$ & $p_\text{min}=0.05$--$0.1$ \\
+Repetition penalty & $\text{logit}_v \leftarrow \text{logit}_v / \theta$ if $v$ appeared before & $\theta=1.1$--$1.3$ \\
+\bottomrule
+\end{tabular}
+
+\section{Systems \& Parallelism}
+\label{systems-parallelism}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Formula} & \textbf{Value (70B, BF16)} & \textbf{Description} \\
+\midrule
+Model memory & $2P$ bytes & $140$ GB (weights only) \\
+Adam optimizer & $2P \times 4$ bytes (m + v) & $280$ GB \\
+Full training footprint & $\sim 8P$ bytes & $560$ GB (weights + opt + grad) \\
+FSDP memory/GPU & $8P / N_\text{GPUs}$ & $70$ GB with 8 GPUs \\
+Gen arithmetic intensity & $2P / 2P = 1$ FLOP/byte & Heavily memory-bound \\
+Token rate (gen) & HBM\_BW $/ (2P)$ & $\sim$14 tok/s (A100, batch=1) \\
+TP AllReduce / layer & $2 \times 2 \cdot \frac{T-1}{T} \cdot bsd$ bytes & $\sim$188 MB (70B, TP=8) \\
+PP bubble fraction & $(P-1)/(P+M-1)$ & $P$=stages, $M$=micro-batches \\
+MFU & observed\_toks $\times$ 6$P$ / peak\_FLOPS & Target: $>40\%$ \\
+\bottomrule
+\end{tabular}
+
+\section{GPU Hardware Specs}
+\label{gpu-hardware-specs}
+
+{\footnotesize
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{GPU} & \textbf{Memory} & \textbf{BW (HBM)} & \textbf{BF16 TFLOPS} & \textbf{NVLink} & \textbf{Notes} \\
+\midrule
+A100-80GB & 80 GB HBM2e & 2.0 TB/s & 312 & 600 GB/s & Workhorse, widely available \\
+H100-80GB & 80 GB HBM3 & 3.35 TB/s & 989 & 900 GB/s & Current gen, FP8 support \\
+H200-141GB & 141 GB HBM3e & 4.8 TB/s & 989 & 900 GB/s & Large context / fewer GPUs \\
+B200 & 192 GB HBM3e & 8.0 TB/s & 2250 & 1800 GB/s & Next gen (2025) \\
+\bottomrule
+\end{tabular}
+}
+
+\section{Hyperparameter Ranges}
+\label{hyperparameter-ranges}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Parameter} & \textbf{Typical Range} & \textbf{Default} & \textbf{Notes} \\
+\midrule
+$\beta$ (DPO/KTO) & 0.05--0.5 & 0.1 & Higher = more conservative \\
+$\epsilon$ (PPO clip) & 0.1--0.3 & 0.2 & Higher = more aggressive updates \\
+$\gamma$ (GAE discount) & 0.99--1.0 & 1.0 & Use 1.0 for episodic tasks \\
+$\lambda$ (GAE) & 0.9--0.99 & 0.95 & Lower = more biased, less variance \\
+KL coeff ($\beta_\text{KL}$) & 0.01--0.2 & 0.05 & Auto-adapt to target KL $\approx$ 5--8 \\
+LR (RLHF) & 1e-7 -- 5e-6 & 5e-7 & Much lower than pre-training \\
+LR (SFT) & 1e-5 -- 5e-5 & 2e-5 & Standard fine-tuning range \\
+LoRA rank $r$ & 8--128 & 16--64 & Higher $r$ = more capacity, more memory \\
+LoRA alpha $\alpha$ & $r$ -- $2r$ & $2r$ & Scaling factor; $\alpha/r$ is the effective scale \\
+Temperature (gen) & 0.6--1.0 & 0.7 & Lower = less diverse candidates \\
+Num generations $K$ & 4--64 & 4--16 & For GRPO/Online DPO/Best-of-N \\
+Grad clip norm & 0.5--2.0 & 1.0 & Prevents gradient explosion \\
+\bottomrule
+\end{tabular}
+
+\section{TRL API Quick Reference}
+\label{trl-api-quick-reference}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Trainer} & \textbf{Method} & \textbf{Key Config} & \textbf{Data Format} \\
+\midrule
+\texttt{SFTTrainer} & Supervised FT & \texttt{packing, max\_seq\_length} & prompt + completion \\
+\texttt{RewardTrainer} & Reward model & \texttt{center\_rewards\_coefficient} & prompt + chosen + rejected \\
+\texttt{PPOTrainer} & PPO & \texttt{init\_kl\_coef, target\_kl, cliprange} & prompts (online gen) \\
+\texttt{DPOTrainer} & DPO/IPO & \texttt{beta, loss\_type="sigmoid"/"ipo"} & prompt + chosen + rejected \\
+\texttt{GRPOTrainer} & GRPO & \texttt{num\_generations, beta, use\_vllm} & prompts + reward\_fn \\
+\texttt{OnlineDPOTrainer} & Online DPO & \texttt{num\_generations, reward\_model\_path} & prompts (online gen) \\
+\texttt{KTOTrainer} & KTO & \texttt{desirable\_weight, undesirable\_weight} & prompt + completion + label \\
+\texttt{ORPOTrainer} & ORPO & \texttt{beta} & prompt + chosen + rejected \\
+\texttt{Best-of-N (manual)} & Best-of-N & \texttt{n\_samples} & prompts (inference) \\
+\bottomrule
+\end{tabular}
+
+\section{RAG Pipeline Formulas}
+\label{rag-pipeline-formulas}
+
+\begin{align}
+\text{Cosine similarity:}&\quad \text{sim}(q, d) = \frac{q \cdot d}{\|q\| \cdot \|d\|} \\
+\text{Retrieval:}&\quad \mathcal{D}_k = \text{top-}k_{d \in \mathcal{C}} \; \text{sim}(\text{embed}(q),\; \text{embed}(d)) \\
+\text{RAG generation:}&\quad P(y|q) = P_\text{LLM}(y \;|\; q, \mathcal{D}_k) \\
+\text{Chunking overlap:}&\quad \text{stride} = \text{chunk\_size} - \text{overlap} \\
+\text{Reranker (cross-enc):}&\quad \text{score}(q, d) = \text{MLP}(\text{BERT}([q; d]))
+\end{align}
+
+\section{Agentic Design Patterns}
+\label{agentic-design-patterns}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Pattern} & \textbf{Structure} & \textbf{Best For} \\
+\midrule
+ReAct & Think $\to$ Act $\to$ Observe $\to$ loop & General tool-use agents \\
+Plan-and-Execute & Plan $\to$ Execute steps $\to$ Revise & Long-horizon, structured tasks \\
+Supervisor & Router $\to$ specialist agents & Multi-domain, clear subtask boundaries \\
+Swarm (handoffs) & Agent transfers control + context & Customer service, escalation flows \\
+Hierarchical & Tree of delegating agents & Complex decomposition \\
+Human-in-the-loop & Agent $\to$ Approval gate $\to$ Continue & High-stakes, irreversible actions \\
+\bottomrule
+\end{tabular}
+
+\section{Agent Communication Protocols}
+\label{agent-communication-protocols}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Protocol} & \textbf{Scope} & \textbf{Transport} & \textbf{Key Concept} \\
+\midrule
+MCP & Tool integration & stdio / HTTP+SSE & Server exposes tools; client discovers \& calls \\
+A2A & Agent-to-agent & HTTP + JSON-RPC & Tasks with lifecycle (submitted$\to$working$\to$done) \\
+OpenAI Function Calling & Tool use & API payload & JSON schema in \texttt{tools[]} array \\
+\bottomrule
+\end{tabular}
+
+\section{Context Window Budget}
+\label{context-window-budget}
+
+\begin{equation}
+C \geq \underbrace{S}_{\text{system}} + \underbrace{M}_{\text{memory/RAG}} + \underbrace{T}_{\text{tool defs}} + \underbrace{H}_{\text{history}} + \underbrace{R}_{\text{reserved output}}
+\end{equation}
+
+\textbf{Rule of thumb} for 128K context:
+
+\begin{itemize}
+  \item System prompt: 1--4K tokens (fixed)
+  \item Tool definitions: 2--8K (scales with \# tools)
+  \item RAG context: 4--16K (top-$k$ chunks)
+  \item History: grows unbounded $\rightarrow$ summarize/truncate
+  \item Reserved output: 2--8K
+\end{itemize}
+
+\section{Common Failure Modes \& Fixes}
+\label{common-failure-modes-fixes}
+
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Symptom} & \textbf{Likely Cause} & \textbf{Fix} \\
+\midrule
+Reward up, quality down & Reward hacking & RM ensemble, length penalty, increase $\beta$ \\
+KL exploding ($>$15) & LR too high or mode collapse & Reduce LR, checkpoint rollback \\
+Entropy collapse & Premature convergence & Increase entropy coeff, raise temperature \\
+Training loss NaN & Gradient explosion & Reduce LR, increase grad clip, check data \\
+No improvement after 5K steps & Bad prompt distribution & Goldilocks filter (20--80\% pass rate) \\
+Benchmark regression & Alignment tax & Reduce RL budget, use LoRA, mix SFT data \\
+Length increasing monotonically & Length exploit in RM & Length penalty, retrain RM with length control \\
+OOM during generation & KV cache overflow & Reduce batch, increase TP, PagedAttention \\
+Agent loops forever & No max-iteration guard & Set \texttt{max\_iterations}, add loop detection \\
+Tool call parse failures & Inconsistent output format & Few-shot examples, constrained decoding \\
+RAG returns irrelevant docs & Poor embedding / chunking & Reranker, hybrid search, smaller chunks \\
+Multi-agent deadlock & Circular dependencies & DAG enforcement, timeout per agent \\
+\bottomrule
+\end{tabular}}
+
+\section{Method Selection Decision Tree}
+\label{method-selection-decision-tree}
+
+\begin{enumerate}
+  \item \textbf{Have paired preferences (chosen + rejected)?}
+
+\begin{itemize}
+  \item Noisy labels $\rightarrow$ \textbf{IPO}
+  \item Memory-constrained, no SFT done yet $\rightarrow$ \textbf{ORPO}
+  \item Clean data, limited compute $\rightarrow$ \textbf{DPO}
+  \item DPO plateaus, want exploration $\rightarrow$ \textbf{Online DPO}
+\end{itemize}
+  \item \textbf{Have only binary feedback (thumbs up/down)?} $\rightarrow$ \textbf{KTO}
+  \item \textbf{Have verifiable rewards (math/code)?} $\rightarrow$ \textbf{GRPO}
+  \item \textbf{Need maximum quality, any cost?} $\rightarrow$ \textbf{PPO}
+  \item \textbf{Want training-free improvement?} $\rightarrow$ \textbf{Best-of-N}
+\end{enumerate}
+
+\section{Evaluation Metrics}
+\label{evaluation-metrics}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{Range} & \textbf{What It Measures} \\
+\midrule
+Perplexity & $[1, \infty)$ & Model’s surprise; lower = better language modeling \\
+Win Rate (vs.~baseline) & $[0, 1]$ & Fraction of outputs preferred by judge/human \\
+BLEU & $[0, 1]$ & $n$-gram overlap with reference (precision-focused) \\
+ROUGE-L & $[0, 1]$ & Longest common subsequence with reference \\
+Pass@$k$ & $[0, 1]$ & Probability $\geq$1 of $k$ code samples passes tests \\
+MMLU / GPQA & $[0, 1]$ & Multi-choice accuracy on knowledge/reasoning benchmarks \\
+HumanEval & $[0, 1]$ & Functional correctness of generated code \\
+Faithfulness (RAG) & $[0, 1]$ & Fraction of claims supported by retrieved context \\
+Context Relevancy & $[0, 1]$ & Fraction of retrieved content relevant to query \\
+Answer Relevancy & $[0, 1]$ & Degree to which answer addresses the question \\
+\bottomrule
+\end{tabular}
+
+\section{Reasoning \& Test-Time Scaling}
+\label{reasoning-test-time-scaling}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Compute Cost} & \textbf{Mechanism} \\
+\midrule
+Chain-of-Thought (CoT) & 1.5--3$\times$ tokens & ``Think step by step'' in prompt \\
+Self-Consistency & $N \times$ generation & Sample $N$ CoT paths, majority vote on final answer \\
+Tree-of-Thought (ToT) & $B \times D \times$ generation & BFS/DFS over reasoning tree; evaluate branches \\
+Best-of-$N$ & $N \times$ generation & Sample $N$, score with RM, pick highest \\
+Beam search (on reasoning) & $B \times$ generation & Maintain top-$B$ partial reasoning chains \\
+Budget forcing & Variable & Allocate more tokens to harder problems dynamically \\
+Verification (ORM/PRM) & $N \times$ gen + scoring & Generate $N$ solutions, rank by outcome/process RM \\
+\bottomrule
+\end{tabular}
+
+\section{Memory System Types}
+\label{memory-system-types}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Type} & \textbf{Storage} & \textbf{Use Case} \\
+\midrule
+Working memory & Context window & Current conversation, immediate tool results \\
+Episodic memory & Vector store & Past interactions, user preferences, session history \\
+Semantic memory & Knowledge graph / embeddings & Facts, concepts, domain knowledge \\
+Procedural memory & Skill library / code & How-to procedures, learned workflows \\
+\bottomrule
+\end{tabular}
+
+\section{MCP Quick Reference}
+\label{mcp-quick-reference}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Primitive} & \textbf{Direction} & \textbf{Side Effects?} & \textbf{Purpose} \\
+\midrule
+Tools & Client $\to$ Server & Yes & Execute actions (create, modify, delete) \\
+Resources & Client $\to$ Server & No (read-only) & Read data (files, DB records, configs) \\
+Prompts & Client $\to$ Server & No & Reusable templates for common tasks \\
+Sampling & Server $\to$ Client & No & Server requests LLM generation from client \\
+\bottomrule
+\end{tabular}
+
+\textbf{Transport}: \texttt{stdio} (local subprocess) or \texttt{HTTP+SSE} (remote, streamable).\\
+
+\textbf{Discovery}: Client calls \texttt{tools/list}, \texttt{resources/list}, \texttt{prompts/list} at connection init.\\
+
+\textbf{Tool annotations}: \texttt{readOnlyHint}, \texttt{destructiveHint}, \texttt{idempotentHint}, \texttt{openWorldHint}.
+
+\section{A2A Protocol Quick Reference}
+\label{a2a-protocol-quick-reference}
+
+\begin{tabular}{@{}lp{11cm}@{}}
+\toprule
+\textbf{Concept} & \textbf{Description} \\
+\midrule
+Agent Card & JSON at \texttt{/.well-known/agent.json} --- name, skills, supported content types \\
+Task & Unit of work: \texttt{id}, \texttt{status}, \texttt{artifacts}. Lifecycle: submitted $\to$ working $\to$ completed/failed \\
+Message & Communication unit within a task (role: user/agent, parts: text/file/data) \\
+Artifact & Output produced by the agent (structured data, files, generated content) \\
+Push Notifications & Webhook-based updates for long-running tasks (via \texttt{tasks/pushNotification/set}) \\
+\bottomrule
+\end{tabular}
+
+\textbf{Key endpoints}: \texttt{tasks/send} (create/update), \texttt{tasks/get} (poll status), \texttt{tasks/sendSubscribe} (SSE stream).
+
+\section{Agent Framework Comparison}
+\label{agent-framework-comparison}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Framework} & \textbf{Orchestration} & \textbf{Multi-Agent} & \textbf{Best For} \\
+\midrule
+LangGraph & Explicit state graph & Conditional routing & Production: persistence, HITL, fine control \\
+OpenAI Agents SDK & Declarative handoffs & Handoff-based & Simplicity: guardrails, tracing, fast start \\
+AutoGen (AG2) & Conversation-driven & GroupChat & Prototyping: code execution, research \\
+CrewAI & Role-based teams & Sequential/parallel & Low-code: quick demos, simple pipelines \\
+Google ADK & Session + events & A2A native & Enterprise: artifact mgmt, multi-modal \\
+\bottomrule
+\end{tabular}
+
+\section{Agentic RL Formulas}
+\label{agentic-rl-formulas}
+
+\begin{align}
+\text{Trajectory GRPO:}&\quad \hat{A}_i = (R(\tau_i) - \mu_G)/\sigma_G, \quad R(\tau_i) = \sum_{t} r_t^{(\tau_i)} \\
+\text{Agent reward:}&\quad R = w_1 R_\text{task} + w_2 R_\text{efficiency} + w_3 R_\text{safety}, \quad R_\text{eff} = \max(0, 1 - \text{steps}/N_\text{max}) \\
+\text{Masking:}&\quad \mathcal{L} = \sum_{t \in \text{agent tokens}} \min(r_t \hat{A}_t,\; \text{clip}(r_t) \hat{A}_t) \quad \text{(mask env outputs)} \\
+\text{Pass@}k:&\quad 1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}, \quad n = \text{total samples},\; c = \text{correct}
+\end{align}
+
+\section{Agent Security Checklist}
+\label{agent-security-checklist}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Threat} & \textbf{Layer} & \textbf{Mitigation} \\
+\midrule
+Prompt injection (direct) & Input & Input validation, instruction hierarchy, delimiters \\
+Prompt injection (indirect) & Tool output & Treat tool output as untrusted; don’t follow instructions in retrieved docs \\
+Tool misuse & Execution & Least-privilege permissions; \texttt{destructiveHint} gates; sandboxing \\
+Data exfiltration & Output & Output filtering; restrict tool access to allowed domains \\
+Excessive autonomy & Architecture & Max iterations; cost budgets; human approval gates \\
+Confused deputy & Multi-agent & Verify task origin; capability-based access control \\
+\bottomrule
+\end{tabular}
+
+\section{Agent Evaluation Metrics}
+\label{agent-evaluation-metrics}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{Formula / Definition} & \textbf{Target} \\
+\midrule
+Task Success Rate (TSR) & Correct completions / total tasks & $>85\%$ (production) \\
+Steps to completion & Avg agent actions per successful task & Lower = more efficient \\
+Cost per task & Total tokens $\times$ price/token & Budget-dependent \\
+Latency (TTFC) & Time from request to first useful output & $<5$s for interactive \\
+Tool call accuracy & Correct tool selections / total calls & $>90\%$ \\
+Recovery rate & Successful retries / initial failures & $>60\%$ \\
+Human escalation rate & Tasks requiring human / total tasks & $<15\%$ \\
+\bottomrule
+\end{tabular}
+
+\section{Key Agentic Benchmarks}
+\label{key-agentic-benchmarks}
+
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Benchmark} & \textbf{Domain} & \textbf{Metric} & \textbf{SOTA (2025)} \\
+\midrule
+SWE-bench Verified & Software engineering & \% resolved issues & $\sim$70\% \\
+WebArena & Web browsing & Task success rate & $\sim$40\% \\
+OSWorld & Desktop computer use & Task success rate & $\sim$25\% \\
+GAIA & General AI assistant & Exact match accuracy & $\sim$75\% (L1) \\
+Tau-bench & Tool-use reliability & Pass rate (5 trials) & $\sim$65\% \\
+HumanEval / MBPP & Code generation & Pass@1 & $>95\%$ \\
+\bottomrule
+\end{tabular}
+

@@ -1,0 +1,790 @@
+\chapter{DPO --- Direct Preference Optimization}
+\label{dpo-direct-preference-optimization}
+
+\section{Motivation}
+\label{motivation}
+
+PPO requires 4 models in memory (policy, reference, reward model, value head), complex RL infrastructure, and is notoriously unstable. DPO~\cite{rafailov2023direct} asks: \emph{can we skip the RL and learn directly from preferences?}
+
+\textbf{Key insight}: The optimal policy under the RLHF objective (reward maximization + KL penalty) has a \textbf{closed-form solution}. We can derive a supervised loss that implicitly optimizes the same objective.
+
+\section{Mathematical Derivation}
+\label{mathematical-derivation}
+
+\textbf{Step 1}: RLHF objective: $\max_\pi \mathbb{E}_{x,y\sim\pi}[r(x,y)] - \beta D_\text{KL}[\pi\|\pi_\text{ref}]$
+
+\textbf{Step 2}: The optimal solution is: $\pi^*(y|x) = \frac{1}{Z(x)} \pi_\text{ref}(y|x) \exp\left(\frac{r(x,y)}{\beta}\right)$
+
+\textbf{Step 3}: Rearrange to express reward in terms of policy: $r(x,y) = \beta \log \frac{\pi^*(y|x)}{\pi_\text{ref}(y|x)} + \beta \log Z(x)$
+
+\textbf{Step 4}: Substitute into Bradley-Terry preference model $P(y_w \succ y_l) = \sigma(r(y_w) - r(y_l))$. The $Z(x)$ cancels!
+
+\begin{equation}
+\boxed{\mathcal{L}_\text{DPO}(\theta) = -\mathbb{E}_{(x, y_w, y_l)}\left[\log\sigma\left(\beta\log\frac{\pi_\theta(y_w|x)}{\pi_\text{ref}(y_w|x)} - \beta\log\frac{\pi_\theta(y_l|x)}{\pi_\text{ref}(y_l|x)}\right)\right]}
+\end{equation}
+
+\begin{intuitionbox}[What DPO Actually Does]
+Define the \textbf{implicit reward} as $\hat{r}(x,y) = \beta\log\frac{\pi_\theta(y|x)}{\pi_\text{ref}(y|x)}$.
+
+DPO minimizes the cross-entropy loss where the ``label'' is: chosen should have higher implicit reward than rejected. The margin is controlled by $\beta$:
+
+\begin{itemize}
+  \item Large $\beta$: need large margin $\rightarrow$ policy moves aggressively $\rightarrow$ risk forgetting
+  \item Small $\beta$: small margin suffices $\rightarrow$ policy stays close to reference $\rightarrow$ conservative
+\end{itemize}
+
+The reference model acts as a regularizer: the policy must ``justify'' any deviation from it by showing preference alignment.
+\end{intuitionbox}
+
+\section{Gradient Analysis}
+\label{gradient-analysis}
+
+The DPO gradient decomposes as: 
+\begin{equation}
+\nabla_\theta \mathcal{L} = -\beta \cdot \underbrace{\sigma(-\hat{r}_w + \hat{r}_l)}_{\text{weight: higher when model is wrong}} \cdot \left[\nabla_\theta \log\pi_\theta(y_w|x) - \nabla_\theta \log\pi_\theta(y_l|x)\right]
+\end{equation}
+ \textbf{Interpretation}: The gradient increases probability of chosen and decreases rejected. The weight is largest when the model currently prefers the wrong answer --- it focuses learning on ``confusing'' pairs.
+
+\begin{examplebox}[Concrete DPO Example]
+\textbf{Prompt}: ``Explain quantum entanglement to a 10-year-old.''
+
+\textbf{Chosen} ($y_w$): ``Imagine you have two magic coins. When you flip one and it’s heads, the other one instantly becomes tails, no matter how far apart they are!''\\
+
+$\log\pi_\theta(y_w|x) = -15.3$, $\log\pi_\text{ref}(y_w|x) = -16.1$
+
+\textbf{Rejected} ($y_l$): ``Quantum entanglement is a phenomenon where two particles become correlated such that the quantum state of one particle cannot be described independently.''\\
+
+$\log\pi_\theta(y_l|x) = -12.8$, $\log\pi_\text{ref}(y_l|x) = -12.5$
+
+\textbf{Implicit rewards}: $\hat{r}_w = 0.1 \times ((-15.3) - (-16.1)) = 0.08$, $\hat{r}_l = 0.1 \times ((-12.8) - (-12.5)) = -0.03$
+
+\textbf{Loss input}: $\sigma(0.08 - (-0.03)) = \sigma(0.11) = 0.527$
+
+\textbf{Loss}: $-\log(0.527) = 0.64$ --- The model barely prefers the chosen. Gradient will push hard.
+
+After training: chosen probability increases, rejected decreases, until margin stabilizes around $1/(2\beta)$.
+\end{examplebox}
+
+\section{TRL Implementation}
+\label{trl-implementation}
+
+The following shows a minimal working example using HuggingFace TRL.
+
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig
+from datasets import load_dataset
+
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.1-8B-Instruct",
+    torch_dtype=torch.bfloat16, attn_implementation="flash_attention_2")
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+
+# Dataset format: {"prompt": str, "chosen": str, "rejected": str}
+dataset = load_dataset("argilla/ultrafeedback-binarized-preferences")
+
+lora_config = LoraConfig(r=64, lora_alpha=16, lora_dropout=0.05,
+    target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"])
+
+dpo_config = DPOConfig(
+    output_dir="./dpo_output",
+    beta=0.1,                    # KL regularization strength
+    learning_rate=5e-7,          # Very low LR for stability
+    loss_type="sigmoid",         # Standard DPO loss
+    max_length=2048,             # Max sequence length
+    max_prompt_length=1024,      # Truncation for prompts
+    per_device_train_batch_size=2,
+    gradient_accumulation_steps=8,  # Effective batch = 16
+    gradient_checkpointing=True,
+    bf16=True,
+    num_train_epochs=1,          # DPO overfits fast - 1 epoch!
+    warmup_ratio=0.1,
+    logging_steps=10,
+    eval_strategy="steps",
+    eval_steps=200,
+    save_strategy="steps",
+    save_steps=500,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=None,             # With LoRA, ref = base model (no copy needed!)
+    args=dpo_config,
+    train_dataset=dataset["train"],
+    eval_dataset=dataset["test"],
+    tokenizer=tokenizer,
+    peft_config=lora_config,
+)
+trainer.train()
+# Key metrics to monitor: train/rewards/chosen, train/rewards/rejected, train/rewards/margins
+\end{lstlisting}
+
+\section{How DPO Works: Full Mechanics}
+\label{how-dpo-works-full-mechanics}
+
+This section provides the complete computational details of DPO --- what happens at the token level during training.
+
+\subsection{Sequence-Level Log-Probabilities}
+\label{sequence-level-log-probabilities}
+
+The key quantity in DPO is the log-probability of an \textbf{entire sequence} $y = (y_1, y_2, \ldots, y_T)$ given prompt $x$. This is computed as the \textbf{sum of per-token log-probabilities}:
+
+\begin{equation}
+\boxed{\log \pi_\theta(y|x) = \sum_{t=1}^{T} \log \pi_\theta(y_t \mid x, y_{<t})}
+\end{equation}
+
+Each term $\log \pi_\theta(y_t | x, y_{<t})$ is the log-softmax output at position $t$ for the \emph{actual} token $y_t$ in the sequence. This is identical to the cross-entropy loss used in standard language modeling --- but here we \textbf{sum} rather than average.
+
+\textbf{Critical detail}: The gradient flows through \textbf{every token position} in both $y_w$ and $y_l$. There is no masking of intermediate tokens --- every token contributes to the sequence-level log-probability.
+
+\subsection{The DPO Loss Decomposed}
+\label{the-dpo-loss-decomposed}
+
+Starting from the loss: 
+\begin{equation}
+\mathcal{L}_{\text{DPO}}(\theta) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}\!\left[\log \sigma\!\left(\beta \cdot h_\theta(x, y_w, y_l)\right)\right]
+\end{equation}
+ where the ``implicit reward margin'' $h_\theta$ is: 
+\begin{equation}
+h_\theta(x, y_w, y_l) = \underbrace{\log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)}}_{\text{chosen reward proxy}} - \underbrace{\log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}}_{\text{rejected reward proxy}}
+\end{equation}
+
+Expanding into token-level terms: 
+\begin{equation}
+\boxed{h_\theta = \sum_{t=1}^{|y_w|}\!\left[\log\pi_\theta(y_w^t | x, y_w^{<t}) - \log\pi_{\text{ref}}(y_w^t | x, y_w^{<t})\right] - \sum_{t=1}^{|y_l|}\!\left[\log\pi_\theta(y_l^t | x, y_l^{<t}) - \log\pi_{\text{ref}}(y_l^t | x, y_l^{<t})\right]}
+\end{equation}
+
+\subsection{Forward Pass: Step by Step}
+\label{forward-pass-step-by-step}
+
+For one training example $(x, y_w, y_l)$:
+
+\begin{enumerate}
+  \item \textbf{Concatenate}: Form two sequences: $[x; y_w]$ and $[x; y_l]$. Pad to equal length within the batch.
+  \item \textbf{Forward pass (policy $\pi_\theta$)}: Run both sequences through the model. Collect logits at every response position.
+  \item \textbf{Extract log-probs}: At each position $t$ in the response, take $\log\text{softmax}(\text{logits}_t)[y_t]$ --- the log-probability of the actual token.
+  \item \textbf{Sum over tokens}: 
+\begin{align}
+\text{logp\_chosen} &= \sum_{t \in \text{response positions}} \log\pi_\theta(y_w^t | x, y_w^{<t}) \\
+\text{logp\_rejected} &= \sum_{t \in \text{response positions}} \log\pi_\theta(y_l^t | x, y_l^{<t})
+\end{align}
+  \item \textbf{Subtract reference} (pre-computed or from second forward pass): 
+\begin{align}
+\text{ratio\_w} &= \text{logp\_chosen} - \text{ref\_logp\_chosen} \\
+\text{ratio\_l} &= \text{logp\_rejected} - \text{ref\_logp\_rejected}
+\end{align}
+  \item \textbf{Compute loss}: $\mathcal{L} = -\log\sigma(\beta \cdot (\text{ratio\_w} - \text{ratio\_l}))$
+  \item \textbf{Backward pass}: Gradients flow back through steps 5 $\rightarrow$ 4 $\rightarrow$ 3 $\rightarrow$ 2 to update $\theta$.
+\end{enumerate}
+
+\subsection{Token-Level Gradient Analysis}
+\label{token-level-gradient-analysis}
+
+\textbf{Does every token get a gradient?} Yes. The gradient with respect to the logits at position $t$ in the chosen sequence is:
+
+\begin{equation}
+\frac{\partial \mathcal{L}}{\partial \text{logits}_t^{(w)}} = -\underbrace{\sigma(-\beta \cdot h_\theta)}_{\text{scaling factor}} \cdot \beta \cdot \frac{\partial \log\pi_\theta(y_w^t | \cdot)}{\partial \text{logits}_t^{(w)}}
+\end{equation}
+
+\textbf{Key insight}: The scaling factor $\sigma(-\beta \cdot h_\theta)$ is \textbf{shared across all tokens} in both sequences. It acts as an adaptive learning rate:
+
+\begin{itemize}
+  \item When $h_\theta$ is small (model can’t distinguish chosen from rejected): scaling $\approx 0.5$ --- strong gradient, learn aggressively.
+  \item When $h_\theta$ is large (model already prefers chosen): scaling $\approx 0$ --- negligible gradient, don’t over-fit.
+\end{itemize}
+
+\textbf{Effect on chosen tokens}: Probability is \emph{increased} (log-prob pushed up).\\
+
+\textbf{Effect on rejected tokens}: Probability is \emph{decreased} (log-prob pushed down).\\
+
+\textbf{Relative to reference}: Only the \emph{difference} from $\pi_{\text{ref}}$ matters. If the model already assigns high probability to the chosen response (matching the reference), there’s little gradient.
+
+\subsection{Per-Token vs. Sequence-Level: Length Normalization}
+\label{per-token-vs.-sequence-level-length-normalization}
+
+A subtle issue: longer sequences naturally have lower log-probabilities (more terms summed, each $\leq 0$). If $|y_w| \gg |y_l|$, the loss can be biased toward preferring shorter responses.
+
+\textbf{Solutions}:
+
+\begin{itemize}
+  \item \textbf{Length-normalized DPO}: Replace $\log\pi_\theta(y|x)$ with $\frac{1}{|y|}\sum_t \log\pi_\theta(y_t|\cdot)$. Used in some implementations (SimPO adopts this).
+  \item \textbf{Standard DPO}: Uses raw sum (no normalization). This \emph{implicitly} penalizes verbosity --- the model must assign high probability to every token in the chosen response.
+  \item \textbf{Practical impact}: On benchmarks, length-normalized DPO reduces length gaming but can hurt instruction-following quality. Standard (unnormalized) is more common in production.
+\end{itemize}
+
+\subsection{Label Masking: What Gets Gradients}
+\label{label-masking-what-gets-gradients}
+
+\begin{keybox}[Which Tokens Receive Gradient in DPO]
+\begin{itemize}
+  \item \textbf{Prompt tokens} ($x$): \textbf{NO gradient}. The loss is computed only over response positions. Prompt tokens provide context but their logits don’t contribute to $\log\pi(y|x)$.
+  \item \textbf{Chosen response tokens} ($y_w$): \textbf{ALL tokens get gradient}. Each $y_w^t$ contributes to the sum. Gradient pushes their probabilities up.
+  \item \textbf{Rejected response tokens} ($y_l$): \textbf{ALL tokens get gradient}. Each $y_l^t$ contributes to the sum. Gradient pushes their probabilities down.
+  \item \textbf{Padding tokens}: \textbf{NO gradient}. Masked out with attention mask.
+\end{itemize}
+\end{keybox}
+
+\subsection{Pseudocode: DPO Training Step}
+\label{pseudocode-dpo-training-step}
+
+\begin{examplebox}[DPO Forward + Backward (PyTorch-style)]
+\begin{lstlisting}[style=pythonstyle]
+def dpo_loss(model, ref_model, batch, beta=0.1):
+    """One DPO training step."""
+    # batch contains: input_ids_chosen, input_ids_rejected,
+    #                 labels_chosen, labels_rejected (prompt masked to -100)
+    
+    # 1. Forward pass: get per-token log-probs
+    logps_chosen = get_sequence_logprob(model, batch["chosen"])
+    logps_rejected = get_sequence_logprob(model, batch["rejected"])
+    
+    # 2. Reference log-probs (pre-computed or computed here)
+    with torch.no_grad():
+        ref_logps_chosen = get_sequence_logprob(ref_model, batch["chosen"])
+        ref_logps_rejected = get_sequence_logprob(ref_model, batch["rejected"])
+    
+    # 3. Compute implicit reward margins
+    chosen_rewards = beta * (logps_chosen - ref_logps_chosen)
+    rejected_rewards = beta * (logps_rejected - ref_logps_rejected)
+    
+    # 4. DPO loss = -log(sigmoid(chosen_reward - rejected_reward))
+    loss = -F.logsigmoid(chosen_rewards - rejected_rewards).mean()
+    return loss
+
+def get_sequence_logprob(model, sequences):
+    """Sum of log-probs over response tokens only."""
+    outputs = model(sequences["input_ids"], attention_mask=sequences["mask"])
+    logits = outputs.logits[:, :-1, :]  # Shift for next-token prediction
+    
+    # Gather log-prob of actual tokens
+    labels = sequences["labels"][:, 1:]  # Shifted labels
+    log_probs = F.log_softmax(logits, dim=-1)
+    token_logps = log_probs.gather(-1, labels.unsqueeze(-1)).squeeze(-1)
+    
+    # Mask: only sum over response tokens (labels != -100)
+    mask = (labels != -100).float()
+    return (token_logps * mask).sum(dim=-1)  # Shape: [batch_size]
+\end{lstlisting}
+\end{examplebox}
+
+\subsection{Common Pitfalls}
+\label{common-pitfalls}
+
+\begin{warningbox}[DPO Implementation Pitfalls]
+\begin{itemize}
+  \item \textbf{Forgetting to mask the prompt}: If prompt tokens are included in the log-prob sum, the model optimizes for prompt likelihood (useless) and the effective $\beta$ is wrong.
+  \item \textbf{Using mean instead of sum}: $\frac{1}{T}\sum_t \log\pi$ vs. $\sum_t \log\pi$ --- these give different implicit length penalties. Must be consistent between $\pi_\theta$ and $\pi_{\text{ref}}$.
+  \item \textbf{Stale reference model}: If $\pi_{\text{ref}}$ is too far from $\pi_\theta$ (e.g., base model vs. fine-tuned), the KL term dominates and gradients vanish. Solution: use the SFT checkpoint (not base) as reference.
+  \item \textbf{$\beta$ too large}: Magnifies log-prob differences $\rightarrow$ sigmoid saturates $\rightarrow$ zero gradients. Start with $\beta = 0.1$, tune in $[0.05, 0.5]$.
+  \item \textbf{$\beta$ too small}: Theoretically allows more freedom from reference (weaker KL constraint), but the gradient $\propto \beta \cdot \sigma(-\beta h)$ becomes vanishingly small $\rightarrow$ loss landscape is flat $\rightarrow$ extremely slow convergence. The model has ``permission'' to move far but receives almost no signal telling it \emph{where} to move.
+\end{itemize}
+\end{warningbox}
+
+\section{DPO Variants and When Each Fails}
+\label{dpo-variants-and-when-each-fails}
+
+\begin{warningbox}[When DPO Fails]
+\textbf{1. Distribution shift}: Preference data from old model. Current policy generates different text $\rightarrow$ loss is optimizing on irrelevant examples.
+
+\textbf{2. No exploration}: Can’t discover behaviors not in dataset. Stuck in local optimum.
+
+\textbf{3. Reference collapse}: If reference is too strong, policy can’t move. If too weak, no regularization.
+
+\textbf{4. Data quality}: Noisy labels poison training. Unlike PPO which averages over many samples, DPO memorizes individual pairs.
+
+\textbf{5. Preference data diversity}: Ensure chosen/rejected pairs cover the full spectrum of quality differences (not just good-vs-terrible). Pairs that differ in \emph{approach}, not just quality, teach richer policy distinctions.
+\end{warningbox}
+
+\section{$\beta$ Selection Guide}
+\label{beta-selection-guide}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+$\beta$ & \textbf{Regime} & \textbf{When to Use} \\
+\midrule
+0.01 & Very aggressive & Only if data is extremely clean and you need large distributional shift \\
+0.05 & Aggressive & Good data, want noticeable improvement over SFT \\
+0.1 & Standard & Default starting point. Good balance of quality vs stability \\
+0.2 & Conservative & Noisy data, or model already close to desired behavior \\
+0.5 & Very conservative & Safety fine-tuning where you must not break capabilities \\
+\bottomrule
+\end{tabular}
+
+\section{DPO Batch Size Configuration and Scaling}
+\label{dpo-batch-size-configuration-and-scaling}
+
+Unlike standard SFT which operates on single-sequence token predictions, DPO leverages a \textbf{pairwise loss} comparing a preferred sequence against a dispreferred sequence. This fundamentally alters memory utilization and optimization stability.
+
+\subsection{Global Batch Size Target}
+\label{global-batch-size-target}
+
+Empirical evidence across DPO implementations establishes an optimal global batch size range: 
+\begin{equation}
+\boxed{B_{\text{global}} \in [32, 128]}
+\end{equation}
+
+\begin{itemize}
+  \item $B_{\text{global}} < 32$: Severe gradient noise in implicit reward estimation $\rightarrow$ policy oscillates destructively between alignment goals (helpfulness vs. safety).
+  \item $B_{\text{global}} > 128$: Diminishing returns on convergence velocity; high communication overhead across distributed compute.
+\end{itemize}
+
+\subsection{Mathematical Decomposition}
+\label{mathematical-decomposition}
+
+Because DPO loads \textbf{two} model copies simultaneously (active policy $\pi_\theta$ + frozen reference $\pi_{\text{ref}}$), per-sequence memory is doubled. The global batch size is decomposed as: 
+\begin{equation}
+\boxed{B_{\text{global}} = B_{\text{micro}} \times N_{\text{GPUs}} \times K_{\text{accum}}}
+\end{equation}
+
+\begin{itemize}
+  \item $B_{\text{micro}}$: Per-device micro-batch size (preference pairs per forward pass).
+  \item $N_{\text{GPUs}}$: Number of parallel data-processing devices.
+  \item $K_{\text{accum}}$: Gradient accumulation steps before weight update.
+\end{itemize}
+
+\textbf{The pairing multiplier}: A single DPO data instance contains a prompt ($x$), chosen ($y_w$), and rejected ($y_l$). The actual tensor load per micro-batch: 
+\begin{equation}
+T_{\text{sequences}} = 2 \times B_{\text{micro}}
+\end{equation}
+
+For models $>$7B parameters on 80GB GPUs with context lengths 4096--8192 tokens, the physical limit is rigidly constrained to $B_{\text{micro}} \in [1, 2]$.
+
+\subsection{Distributed Scaling Configurations}
+\label{distributed-scaling-configurations}
+
+\begin{table}[ht!]
+\centering
+\caption{Distributed scaling profiles for DPO training ($B_{\text{global}} = 64$ target).}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Configuration} & \textbf{Single GPU} & \textbf{8-GPU Node} \\
+\midrule
+$B_{\text{global}}$ & 64 & 64 \\
+$B_{\text{micro}}$ & 2 (4 sequences) & 2 (4 sequences) \\
+$N_{\text{GPUs}}$ & 1 & 8 \\
+$K_{\text{accum}}$ & 32 steps & 4 steps \\
+Throughput & Sequential/slow & High parallel throughput \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{VRAM Optimization: Pre-computing Reference Log-Probabilities}
+\label{vram-optimization-pre-computing-reference-log-probabilities}
+
+The DPO loss: 
+\begin{equation}
+\mathcal{L}_{\text{DPO}}(\theta) = -\mathbb{E}_{(x, y_w, y_l)}\!\left[\log \sigma\!\left(\beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)}\right)\right]
+\end{equation}
+
+Because $\pi_{\text{ref}}$ is \textbf{completely static} throughout training, its outputs can be pre-computed:
+
+\begin{keybox}[Reference Model Eviction Strategy]
+\begin{enumerate}
+  \item Execute a forward pass over dataset $\mathcal{D}$ using only $\pi_{\text{ref}}$ before training begins.
+  \item Cache the scalars $\log \pi_{\text{ref}}(y_w|x)$ and $\log \pi_{\text{ref}}(y_l|x)$ to disk.
+  \item \textbf{Evict $\pi_{\text{ref}}$ completely from GPU memory.}
+\end{enumerate}
+
+\textbf{Result}: Available GPU memory doubles $\rightarrow$ can increase $B_{\text{micro}}$ from 1--2 to 4--8, maximizing hardware utilization and training throughput.
+
+\emph{Implementation}: In TRL, set \texttt{precompute\_ref\_log\_probs=True} in \texttt{DPOConfig}. For 70B models, this saves $\sim$140GB of GPU memory across the cluster.
+\end{keybox}
+
+\section{DPO Extensions and Variants}
+\label{sec:dpo-variants}
+
+Direct Preference Optimization (DPO) reformulates RLHF as a supervised learning problem by deriving a closed-form mapping between the reward function and the optimal policy. The standard DPO loss is:
+
+\[
+\mathcal{L}_{\text{DPO}}(\theta) = -\mathbb{E}_{(q,y_w,y_l)}\!\left[
+    \log \sigma\!\left(
+      \beta \log \frac{\pi_\theta(y_w|q)}{\pi_{\text{ref}}(y_w|q)}
+      - \beta \log \frac{\pi_\theta(y_l|q)}{\pi_{\text{ref}}(y_l|q)}
+    \right)
+  \right],
+\]
+
+where $y_w$ is the preferred (winning) response, $y_l$ is the dispreferred (losing) response, and $\beta$ controls the strength of the KL penalty. The following subsections cover the most important extensions and variants.
+
+\subsection{f-DPO -- Generalised f-Divergence DPO}
+\label{sec:fdpo}
+
+\begin{intuitionbox}[Beyond Reverse KL]
+Standard DPO uses reverse KL divergence as the regulariser between policy and reference. Reverse KL is \emph{mode-seeking}: it prefers to concentrate probability mass on a few high-reward responses. Forward KL is \emph{mode-covering}: it spreads probability mass to cover all plausible responses. f-DPO~\cite{wang2023fdpo} generalises to any f-divergence, allowing practitioners to trade off these behaviours.
+\end{intuitionbox}
+
+The f-DPO loss replaces the log-ratio with the derivative of the f-divergence generator:
+
+\[
+\mathcal{L}_{f\text{-DPO}} = -\mathbb{E}\!\left[
+    f'\!\left(\frac{\pi_\theta(y_w|q)}{\pi_{\text{ref}}(y_w|q)}\right)
+    - f'\!\left(\frac{\pi_\theta(y_l|q)}{\pi_{\text{ref}}(y_l|q)}\right)
+  \right],
+\]
+
+where $f'$ is the derivative of the f-divergence generator function.
+
+\begin{keybox}[f-Divergence Options in TRL]
+\begin{itemize}
+  \item \textbf{reverse\_kl}: $f'(u) = \log u$. Standard DPO. Mode-seeking.
+  \item \textbf{forward\_kl}: $f'(u) = -1/u$. Mode-covering. Better diversity.
+  \item \textbf{js\_divergence}: $f'(u) = \log(2u/(u+1))$. Balanced mode-seeking/covering.
+  \item \textbf{alpha\_divergence}: $f'(u) = u^{\alpha-1}$. Interpolates between forward and reverse KL.
+\end{itemize}
+\end{keybox}
+
+\begin{examplebox}[f-DPO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+# Jensen-Shannon divergence (balanced)
+config = DPOConfig(
+    f_divergence_type="js_divergence",
+    beta=0.1,
+)
+
+# Alpha divergence (alpha=0: forward KL, alpha=1: reverse KL)
+config_alpha = DPOConfig(
+    f_divergence_type="alpha_divergence",
+    f_alpha_divergence_coef=0.5,   # alpha parameter
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{keybox}[When to Use f-DPO]
+\begin{itemize}
+  \item Use \textbf{JS divergence} when you want a balance between diversity and quality.
+  \item Use \textbf{forward KL} for creative tasks where diversity is paramount.
+  \item Use \textbf{reverse KL} (standard DPO) for tasks with a single correct answer.
+  \item Use \textbf{alpha divergence} to continuously interpolate and tune the trade-off.
+\end{itemize}
+\end{keybox}
+
+\subsection{Robust DPO}
+\label{sec:robust-dpo}
+
+\begin{intuitionbox}[Noisy Labels in Preference Data]
+Human preference annotations are noisy. Annotators disagree, make mistakes, and sometimes flip the preferred/dispreferred labels. Standard DPO treats all labels as ground truth, which can cause the model to overfit to noise. Robust DPO~\cite{chowdhury2024robustdpo} analytically debiases the loss under a known noise model.
+\end{intuitionbox}
+
+Assume each label is flipped with probability $\epsilon$ (the noise rate). The debiased loss is:
+
+\[
+\boxed{
+    \mathcal{L}_{\text{robust}} =
+    \frac{(1-\epsilon)\,\mathcal{L}_{\text{DPO}}(y_w, y_l)
+          - \epsilon\,\mathcal{L}_{\text{DPO}}(y_l, y_w)}{1 - 2\epsilon},
+  }
+\]
+
+where $\mathcal{L}_{\text{DPO}}(y_w, y_l)$ is the standard DPO loss treating $y_w$ as preferred, and $\mathcal{L}_{\text{DPO}}(y_l, y_w)$ is the loss with labels flipped. This correction removes the bias introduced by label noise.
+
+\begin{keybox}[Intuition for Robust DPO]
+The formula is a linear combination that ``subtracts out'' the contribution of flipped labels. When $\epsilon=0$, it reduces to standard DPO. When $\epsilon=0.5$, the denominator goes to zero -- the labels are pure noise and no learning is possible. In practice, $\epsilon \in [0.05, 0.2]$ covers most real annotation noise levels.
+\end{keybox}
+
+\begin{examplebox}[Robust DPO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="robust",
+    label_smoothing=0.1,   # corresponds to epsilon = 0.1
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\subsection{TR-DPO -- Trust Region DPO}
+\label{sec:tr-dpo}
+
+\begin{intuitionbox}[Stale Reference Model Problem]
+Standard DPO uses a fixed reference model $\pi_{\text{ref}}$ throughout training. As the policy $\pi_\theta$ improves, the KL penalty $\beta \log(\pi_\theta/\pi_{\text{ref}})$ grows, eventually dominating the loss and preventing further improvement. TR-DPO~\cite{gorbatenko2024trdpo} periodically updates the reference model to track the current policy.
+\end{intuitionbox}
+
+TR-DPO updates the reference model using an exponential moving average (EMA):
+
+\[
+\pi_{\text{ref}}^{(t+1)} \leftarrow
+    \alpha \cdot \pi_\theta^{(t)} + (1-\alpha) \cdot \pi_{\text{ref}}^{(t)},
+\]
+
+where $\alpha \in (0,1)$ is the mixup coefficient. This is applied every $T_{\text{sync}}$ gradient steps.
+
+\begin{examplebox}[TR-DPO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="sigmoid",        # standard DPO loss
+    sync_ref_model=True,        # enable TR-DPO
+    ref_model_mixup_alpha=0.6,  # alpha: how much of current policy to mix in
+    ref_model_sync_steps=512,   # T_sync: sync every 512 steps
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{keybox}[When to Use TR-DPO]
+\begin{itemize}
+  \item Long training runs where the policy drifts far from the initial reference.
+  \item When you observe the DPO loss plateauing early due to KL penalty domination.
+  \item Iterative DPO pipelines where new preference data is collected from the current policy.
+  \item Set $\alpha$ close to 1 for fast reference updates; close to 0 for slow updates.
+\end{itemize}
+\end{keybox}
+
+\subsection{EXO -- Exact Optimisation}
+\label{sec:exo}
+
+\begin{intuitionbox}[DPO’s KL Direction Problem]
+DPO is derived by solving for the optimal policy under a reverse KL constraint. However, the resulting loss actually optimises a \emph{forward} KL objective in the reward space, which is the wrong direction. EXO~\cite{ji2024exo} corrects this by using reverse KL probability matching, which is the theoretically correct objective for alignment.
+\end{intuitionbox}
+
+EXO minimises the reverse KL between the model distribution and the target (reward-optimal) distribution:
+
+\[
+\mathcal{L}_{\text{EXO}} = \mathbb{E}_{y \sim \pi_\theta}\!\left[
+    \log \frac{\pi_\theta(y|q)}{p^*(y|q)}
+  \right],
+\]
+
+where $p^*(y|q) \propto \pi_{\text{ref}}(y|q) \exp(r(y,q)/\beta)$ is the optimal policy. In practice, EXO approximates this using the available preference pairs:
+
+\[
+\mathcal{L}_{\text{EXO}} \approx -\mathbb{E}\!\left[
+    \log \sigma\!\left(
+      \beta \log \frac{\pi_{\text{ref}}(y_w|q)}{\pi_\theta(y_w|q)}
+      - \beta \log \frac{\pi_{\text{ref}}(y_l|q)}{\pi_\theta(y_l|q)}
+    \right)
+  \right].
+\]
+
+Note the \emph{swapped} roles of $\pi_\theta$ and $\pi_{\text{ref}}$ compared to DPO.
+
+\begin{examplebox}[EXO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="exo_pair",
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\subsection{NCA -- Noise Contrastive Alignment}
+\label{sec:nca}
+
+\begin{intuitionbox}[Likelihood Collapse in DPO]
+A known failure mode of DPO is \emph{likelihood collapse}: the model learns to decrease the probability of the losing response but also decreases the probability of the winning response (since the loss only cares about the \emph{difference}). NCA~\cite{chen2024nca} adds an absolute likelihood term to prevent this.
+\end{intuitionbox}
+
+NCA reframes alignment as noise-contrastive estimation. The loss has three terms:
+
+\[
+\boxed{
+    \mathcal{L}_{\text{NCA}} =
+      -\log \sigma(r_w)
+      - \tfrac{1}{2}\log \sigma(-r_w)
+      - \tfrac{1}{2}\log \sigma(-r_l),
+  }
+\]
+
+where $r_y = \beta \log(\pi_\theta(y|q)/\pi_{\text{ref}}(y|q))$ is the implicit reward. The first term encourages high reward for $y_w$; the second and third terms penalise high reward for both $y_w$ and $y_l$ (preventing collapse).
+
+\begin{examplebox}[NCA in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="nca_pair",
+    beta=0.01,   # small beta: absolute likelihood term dominates
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{keybox}[When to Use NCA]
+\begin{itemize}
+  \item When you observe the winning response probability decreasing during DPO training.
+  \item For tasks where absolute response quality matters, not just relative ranking.
+  \item Use small $\beta$ (e.g., 0.01) to give the absolute likelihood term more weight.
+\end{itemize}
+\end{keybox}
+
+\subsection{SLiC-HF -- Sequence Likelihood Calibration}
+\label{sec:slic}
+
+\begin{intuitionbox}[Hinge Loss as a Simpler Alternative]
+The log-sigmoid loss in DPO is smooth but can be slow to converge when the margin is large. SLiC-HF~\cite{zhao2023slichf} uses a hinge loss, which is zero when the margin exceeds a threshold and linear otherwise. This is simpler, faster, and surprisingly competitive.
+\end{intuitionbox}
+
+The SLiC-HF loss is:
+
+\[
+\mathcal{L}_{\text{SLiC}} = \max\!\left(0,\;
+    \delta - \beta\log\frac{\pi_\theta(y_w|q)}{\pi_{\text{ref}}(y_w|q)}
+    + \beta\log\frac{\pi_\theta(y_l|q)}{\pi_{\text{ref}}(y_l|q)}
+  \right),
+\]
+
+where $\delta$ is the margin threshold. When the model already assigns a margin of $\delta$ between winning and losing responses, the loss is zero.
+
+\begin{examplebox}[SLiC-HF in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="hinge",
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\subsection{Iterative RPO -- Reasoning Preference Optimisation}
+\label{sec:rpo}
+
+\begin{intuitionbox}[DPO Forgets How to Generate]
+Standard DPO trains the model to \emph{discriminate} between winning and losing responses. But for reasoning tasks, the model also needs to \emph{generate} correct reasoning traces. A model that can discriminate but not generate is useless at inference time. RPO adds an NLL (negative log-likelihood) term on the winning response to ensure the model learns to generate it.
+\end{intuitionbox}
+
+The RPO loss combines DPO and SFT:
+
+\[
+\mathcal{L}_{\text{RPO}} =
+    \lambda_1 \mathcal{L}_{\text{DPO}}(y_w, y_l)
+    + \lambda_2 \mathcal{L}_{\text{NLL}}(y_w),
+\]
+
+where $\mathcal{L}_{\text{NLL}}(y_w) = -\log \pi_\theta(y_w|q)$ is the standard language modelling loss on the winning response.
+
+\begin{examplebox}[Iterative RPO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="sigmoid",            # Standard DPO loss
+    rpo_alpha=1.0,                  # NLL regularisation weight (RPO)
+    beta=0.1,
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=ref_model,
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{keybox}[When to Use RPO]
+\begin{itemize}
+  \item Reasoning tasks (math, code, logic) where the model must generate step-by-step solutions.
+  \item When DPO training causes the model to lose fluency or generation quality.
+  \item Iterative pipelines: generate rollouts, label them, train with RPO, repeat.
+  \item The NLL term acts as a regulariser, preventing the policy from collapsing.
+\end{itemize}
+\end{keybox}
+
+\subsection{SimPO -- Simple Preference Optimisation}
+\label{sec:simpo}
+
+\begin{intuitionbox}[Reference-Free Preference Learning]
+DPO requires a reference model to compute the implicit reward. This doubles memory usage and adds complexity. SimPO~\cite{meng2024simpo} eliminates the reference model by using the \emph{average log-probability} of the response as an implicit reward, with a length normalisation term to prevent the model from preferring short responses.
+\end{intuitionbox}
+
+SimPO defines the implicit reward as:
+
+\[
+r_{\text{SimPO}}(y|q) = \frac{\beta}{|y|} \log \pi_\theta(y|q),
+\]
+
+and the loss as:
+
+\[
+\boxed{
+    \mathcal{L}_{\text{SimPO}} = -\mathbb{E}\!\left[
+      \log \sigma\!\left(
+        \frac{\beta}{|y_w|}\log\pi_\theta(y_w|q)
+        - \frac{\beta}{|y_l|}\log\pi_\theta(y_l|q)
+        - \gamma
+      \right)
+    \right],
+  }
+\]
+
+where $\gamma > 0$ is a target reward margin that ensures the winning response has strictly higher reward than the losing response by at least $\gamma$.
+
+\begin{keybox}[SimPO vs DPO vs ORPO]
+\begin{itemize}
+  \item \textbf{DPO}: uses reference model; ratio-based implicit reward.
+  \item \textbf{ORPO}: reference-free; adds odds-ratio term to SFT loss.
+  \item \textbf{SimPO}: reference-free; length-normalised log-prob reward + margin.
+  \item SimPO is simpler than DPO (no reference model) and more principled than ORPO.
+  \item The length normalisation in SimPO is critical: without it, the model prefers long responses.
+\end{itemize}
+\end{keybox}
+
+\begin{examplebox}[SimPO in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import DPOConfig, DPOTrainer
+
+config = DPOConfig(
+    loss_type="simpo",
+    simpo_gamma=0.5,   # target reward margin gamma
+    beta=2.5,          # length normalisation coefficient
+    # No ref_model needed!
+)
+
+trainer = DPOTrainer(
+    model=model,
+    ref_model=None,    # SimPO is reference-free
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+

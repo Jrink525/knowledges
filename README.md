@@ -10,6 +10,7 @@
   - `ai-tools/autoresearch/21-mistakes-building-ai-agents-gkisokay.md`
   - `ai-tools/autoresearch/claude-research-agent-morning-brief.md`
   - `ai-tools/autoresearch/evo-self-improving-agent-harness-autoresearch.md`
+  - `ai-tools/autoresearch/gbrain-agent-brain-deep-dive.md`
   - `ai-tools/autoresearch/how-to-be-good-at-research.md`
   - `ai-tools/autoresearch/report.md`
 
@@ -76,6 +77,7 @@
   - `ai-tools/harness/build-your-own-mcp-server.md`
   - `ai-tools/harness/claude-code-steering-skills-hooks-rules-subagents.md`
   - `ai-tools/harness/claude-code-tool-architecture.md`
+  - `ai-tools/harness/claude-tag-org-agent-harness.md`
   - `ai-tools/harness/cloud-agent-infrastructure-creao-peter-pang.md`
   - `ai-tools/harness/design-agent-loop-guide.md`
   - `ai-tools/harness/dynamic-workflows-claude-code-thariq.md`
@@ -85,6 +87,7 @@
   - `ai-tools/harness/harness-is-everything-rohit.md`
   - `ai-tools/harness/how-teams-scale-claude-code-across-monorepos.md`
   - `ai-tools/harness/how-to-build-ai-agents-2026-full-guide.md`
+  - `ai-tools/harness/human-in-the-loop-agent-coding.md`
   - `ai-tools/harness/langsmith-engine-building-agent-for-improving-agents.md`
   - `ai-tools/harness/loop-engineering-addy-osmani.md`
   - `ai-tools/harness/mattpocock-skills-workbook.md`
@@ -135,6 +138,7 @@
   - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
   - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
   - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
+  - `ai-tools/inference/kv-caching-in-llms.md`
   - `ai-tools/inference/learning-path-llm-agent.md`
   - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
   - `ai-tools/inference/llm-engineering-roadmap-2026.md`
@@ -277,6 +281,7 @@
 
 ### spring/security/ (`spring/security`)
   - `spring/security/06-spring-security-complete-guide.md`
+  - `spring/security/spring-ai-tool-multi-format-response.md`
 
 ### spring/testing/ (`spring/testing`)
   - `spring/testing/11-spring-testing-complete-guide.md`
@@ -363,8 +368,14 @@
 ### papers/critique-of-agent-model-2606.23991/ (`papers/critique-of-agent-model-2606.23991`)
   - `papers/critique-of-agent-model-2606.23991/report.md`
 
+### papers/danceopd-2606.27377/ (`papers/danceopd-2606.27377`)
+  - `papers/danceopd-2606.27377/report.md`
+
 ### papers/dive-into-claude-code-2604.14228/ (`papers/dive-into-claude-code-2604.14228`)
   - `papers/dive-into-claude-code-2604.14228/report.md`
+
+### papers/do-thinking-tokens-help-with-safety-2606.25013/ (`papers/do-thinking-tokens-help-with-safety-2606.25013`)
+  - `papers/do-thinking-tokens-help-with-safety-2606.25013/report.md`
 
 ### papers/dragmesh-2-2606.15133/ (`papers/dragmesh-2-2606.15133`)
   - `papers/dragmesh-2-2606.15133/report.md`
@@ -423,15 +434,28 @@
 ### papers/verifiable-search-not-learnable-cot-2606.21884/ (`papers/verifiable-search-not-learnable-cot-2606.21884`)
   - `papers/verifiable-search-not-learnable-cot-2606.21884/report.md`
 
+### papers/when-does-combining-language-models-help-2606.27288/ (`papers/when-does-combining-language-models-help-2606.27288`)
+  - `papers/when-does-combining-language-models-help-2606.27288/report.md`
+
 ### skills/paper-deep-reading/ (`skills/paper-deep-reading`)
   - `skills/paper-deep-reading/SKILL.md`
 
 ### skills/read-content-from-web/ (`skills/read-content-from-web`)
   - `skills/read-content-from-web/SKILL.md`
 
+### tmp_2606.24937_translated/
+  - `tmp_2606.24937_translated/02_Systems_Foundations_for_LLMs.md`
+  - `tmp_2606.24937_translated/08_Preference_Optimization_Variants.md`
+  - `tmp_2606.24937_translated/09_Reward_Model_Training.md`
+  - `tmp_2606.24937_translated/10_SFT_Best_Practices_and_Techniques.md`
+  - `tmp_2606.24937_translated/14_LLM_Evaluation.md`
+  - `tmp_2606.24937_translated/15_Introduction_to_Agentic_AI.md`
+  - `tmp_2606.24937_translated/21_Model_Context_Protocol_MCP.md`
+  - `tmp_2606.24937_translated/22_Agent_Skills.md`
+
 ---
 
-总计 **314** 篇知识文档
+总计 **341** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -443,5 +467,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-26 16:12 UTC]_
+_[自动生成于 2026-06-27 16:11 UTC]_
 

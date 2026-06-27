@@ -1,0 +1,1087 @@
+\chapter{Multi-Agent Systems}
+\label{sec:multi-agent-systems}
+
+\section{Motivation: Why Multiple Agents?}
+\label{subsec:mas-motivation}
+
+The history of artificial intelligence is, in many ways, a history of scale. Early AI systems were monolithic: a single program, a single knowledge base, a single inference engine. As problems grew more complex, researchers discovered that no single agent---however capable---could efficiently handle every aspect of a rich, open-ended task. This insight, long established in distributed AI and multi-agent systems (MAS) research~\cite{weiss1999multiagent, wooldridge2009introduction}, has found renewed urgency in the era of large language models.
+
+\begin{intuitionbox}[The Core Intuition]
+A single LLM, no matter how large, is a generalist. A team of specialized LLMs, each focused on a narrow sub-problem and communicating their results, can outperform the generalist on complex, multi-faceted tasks---just as a team of human specialists outperforms a single generalist on a complex engineering project.
+\end{intuitionbox}
+
+Four fundamental motivations drive the shift from monolithic agents to \emph{agent societies}:
+
+\paragraph{Specialization.}
+\label{specialization.}
+
+Different sub-tasks benefit from different capabilities, prompting strategies, and even different base models. A code-generation agent can be fine-tuned on programming corpora; a fact-checking agent can be grounded with retrieval tools; a creative-writing agent can be prompted for stylistic diversity. Forcing a single agent to excel at all of these simultaneously is both inefficient and often impossible.
+
+\paragraph{Parallelism.}
+\label{parallelism.}
+
+Many real-world tasks decompose into independent sub-tasks that can be executed concurrently. A research pipeline that requires literature review, data analysis, and report writing can run all three in parallel, dramatically reducing wall-clock time. Sequential single-agent processing is a bottleneck that multi-agent parallelism eliminates.
+
+\paragraph{Robustness.}
+\label{robustness.}
+
+A single agent is a single point of failure. If it hallucinates, gets stuck in a loop, or produces a subtly wrong answer, there is no check. Multi-agent systems introduce redundancy: a second agent can verify, critique, or independently re-derive results. Adversarial agents can probe for weaknesses before outputs are trusted.
+
+\paragraph{Emergent Capabilities.}
+\label{emergent-capabilities.}
+
+Perhaps most intriguingly, agent collectives can exhibit capabilities that no individual agent possesses. Through debate, negotiation, and iterative refinement, multi-agent systems can arrive at solutions that transcend what any single agent could produce alone---a computational analog to the emergent intelligence of social organisms.
+
+\begin{keybox}[Historical Context]
+Multi-agent systems research dates to the 1980s, with foundational work on distributed problem solving~\cite{durfee1989distributed}, the Contract Net Protocol~\cite{smith1980contract}, and FIPA agent communication standards~\cite{fipa2002acl}. The shift to LLM-based agents reanimates these classical ideas with a new substrate: instead of hand-coded agents with symbolic reasoning, we now have agents whose ``cognition'' emerges from learned neural representations. The core architectural patterns---hierarchies, markets, blackboards, message passing---remain remarkably relevant.
+\end{keybox}
+
+The transition from monolithic agents to agent societies mirrors a broader pattern in complex systems: as the problem space grows, distributed, modular architectures consistently outperform centralized, monolithic ones. The question is no longer \emph{whether} to use multiple agents, but \emph{how} to organize them.
+
+\section{Multi-Agent Architectures}
+\label{subsec:mas-architectures}
+
+The topology of a multi-agent system---how agents are connected and how authority flows among them---is the most consequential architectural decision. Four canonical patterns have emerged, each with distinct trade-offs.
+
+\subsection{Centralized (Supervisor/Manager) Architecture}
+\label{subsubsec:centralized}
+
+In a centralized architecture, a single \emph{orchestrator} agent (variously called supervisor, manager, or planner) holds global state, decomposes tasks, delegates sub-tasks to worker agents, and aggregates their results. The topology is a \textbf{hub-and-spoke}: all communication flows through the central node.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.65\textwidth]{figures/fig_069_centralized-arch.png}
+\caption{Centralized (Supervisor) architecture. The manager delegates tasks to specialized workers and aggregates their outputs. All communication flows through the central hub.}
+\label{fig:centralized-arch}
+\end{figure}
+
+The manager’s responsibilities include:
+
+\begin{itemize}
+  \item \textbf{Task routing}: deciding which worker is best suited for each sub-task
+  \item \textbf{Context management}: providing each worker with the relevant subset of global context
+  \item \textbf{Result aggregation}: synthesizing worker outputs into a coherent whole
+  \item \textbf{Error handling}: detecting worker failures and re-routing or retrying
+\end{itemize}
+
+\begin{examplebox}[Supervisor Pattern in LangGraph]
+\begin{lstlisting}[style=pythonstyle]
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict, Literal
+
+class TeamState(TypedDict):
+    task: str
+    plan: str
+    code: str
+    tests: str
+    review: str
+    next_agent: str
+    final_output: str
+
+def supervisor_node(state: TeamState) -> TeamState:
+    """Central orchestrator: decides which agent to invoke next."""
+    messages = [
+        {"role": "system", "content": SUPERVISOR_PROMPT},
+        {"role": "user",   "content": f"Task: {state['task']}\n"
+                                      f"Plan: {state.get('plan','')}\n"
+                                      f"Code: {state.get('code','')}\n"
+                                      f"Tests: {state.get('tests','')}\n"
+                                      "Which agent should act next? "
+                                      "Options: planner, coder, tester, reviewer, FINISH"}
+    ]
+    response = llm.invoke(messages)
+    return {**state, "next_agent": response.content.strip()}
+
+def route(state: TeamState) -> Literal["planner","coder","tester","reviewer","__end__"]:
+    return state["next_agent"] if state["next_agent"] != "FINISH" else END
+
+builder = StateGraph(TeamState)
+builder.add_node("supervisor", supervisor_node)
+builder.add_node("planner",    planner_node)
+builder.add_node("coder",      coder_node)
+builder.add_node("tester",     tester_node)
+builder.add_node("reviewer",   reviewer_node)
+
+builder.add_edge(START, "supervisor")
+builder.add_conditional_edges("supervisor", route)
+for agent in ["planner", "coder", "tester", "reviewer"]:
+    builder.add_edge(agent, "supervisor")   # always return to supervisor
+
+graph = builder.compile()
+\end{lstlisting}
+\end{examplebox}
+
+\begin{warningbox}[Centralized Architecture Trade-offs]
+\textbf{Pros:} Simple control flow; clear accountability; easy to debug (all decisions in one place); straightforward to implement.\\
+
+\textbf{Cons:} Single point of failure---if the manager hallucinates or gets confused, the entire system fails; the manager becomes a bottleneck under high load; the manager’s context window must hold the global state, limiting scalability.
+\end{warningbox}
+
+\subsection{Decentralized (Peer-to-Peer) Architecture}
+\label{subsubsec:decentralized}
+
+In a decentralized architecture, agents interact directly with one another without a central coordinator. The topology is a \textbf{mesh}: any agent can communicate with any other. Coordination emerges from local interactions rather than global planning.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.65\textwidth]{figures/fig_070_decentralized-arch.png}
+\caption{Decentralized (peer-to-peer) architecture. Agents communicate directly; coordination emerges from local interactions.}
+\label{fig:decentralized-arch}
+\end{figure}
+
+Emergent coordination in peer-to-peer systems arises through mechanisms such as:
+
+\begin{itemize}
+  \item \textbf{Negotiation}: agents bid for tasks or resources
+  \item \textbf{Stigmergy}: agents modify shared state that others observe (see Section~\ref{subsubsec:stigmergy})
+  \item \textbf{Gossip protocols}: agents propagate information through the network
+  \item \textbf{Local consensus}: small groups of agents reach agreement without global coordination
+\end{itemize}
+
+\begin{warningbox}[Decentralized Architecture Trade-offs]
+\textbf{Pros:} Resilient to individual agent failures; scales naturally as agents are added; no bottleneck.\\
+
+\textbf{Cons:} Hard to debug---emergent behavior is difficult to trace; potential for conflicts when agents have inconsistent views of state; coordination overhead grows as $O(n^2)$ with naive message passing; difficult to guarantee global consistency.
+\end{warningbox}
+
+\subsection{Hierarchical Architecture}
+\label{subsubsec:hierarchical}
+
+Hierarchical architectures generalize the centralized pattern into a \textbf{tree structure} with multiple levels of management. A top-level orchestrator delegates to domain-specific sub-managers, who in turn delegate to specialized workers. This mirrors the organizational structure of large enterprises.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_071_hierarchical-arch.png}
+\caption{Hierarchical architecture. A top-level orchestrator delegates to domain sub-managers, who delegate to specialized workers. Dashed arrow shows an escalation path.}
+\label{fig:hierarchical-arch}
+\end{figure}
+
+Key features of hierarchical systems:
+
+\begin{itemize}
+  \item \textbf{Delegation chains}: authority and context flow down the tree; results flow up
+  \item \textbf{Escalation paths}: workers can escalate unresolvable issues to their manager
+  \item \textbf{Domain isolation}: sub-managers maintain domain-specific context, reducing the cognitive load on the top-level orchestrator
+  \item \textbf{Scope limitation}: each agent only needs to know about its immediate superiors and subordinates
+\end{itemize}
+
+The enterprise analogy is apt: a CEO (top orchestrator) sets strategy; VPs (sub-managers) translate strategy into domain plans; individual contributors (workers) execute. The hierarchy enables scale while preserving accountability.
+
+\subsection{Swarm Architecture}
+\label{subsubsec:swarm}
+
+Swarm architectures, inspired by biological systems (ant colonies, bird flocking), consist of many \textbf{loosely coupled agents} that follow simple local rules, producing complex global behavior without any central coordinator or global state.
+
+OpenAI’s \textbf{Swarm} framework~\cite{openai2024swarm} (now superseded by the OpenAI Agents SDK, but its conceptual primitives remain influential) operationalizes this with two primitives:
+
+\begin{itemize}
+  \item \textbf{Routines}: sequences of instructions an agent follows to complete a sub-task
+  \item \textbf{Handoffs}: an agent transferring control (and relevant context) to another agent
+\end{itemize}
+
+\begin{examplebox}[OpenAI Swarm: Routines and Handoffs]
+\begin{lstlisting}[style=pythonstyle]
+from swarm import Swarm, Agent
+
+client = Swarm()
+
+def transfer_to_billing():
+    """Handoff: transfer control to the billing specialist."""
+    return billing_agent
+
+def transfer_to_technical():
+    """Handoff: transfer control to the technical support agent."""
+    return technical_agent
+
+triage_agent = Agent(
+    name="Triage Agent",
+    instructions="""You are a customer service triage agent.
+    Determine the nature of the customer's issue:
+    - For billing questions, transfer to billing.
+    - For technical issues, transfer to technical support.
+    - For general questions, answer directly.""",
+    functions=[transfer_to_billing, transfer_to_technical],
+)
+
+billing_agent = Agent(
+    name="Billing Specialist",
+    instructions="You handle billing inquiries. "
+                 "Access account data and resolve payment issues.",
+    functions=[lookup_account, process_refund],
+)
+
+technical_agent = Agent(
+    name="Technical Support",
+    instructions="You resolve technical issues. "
+                 "Diagnose problems and provide step-by-step solutions.",
+    functions=[run_diagnostics, escalate_to_engineering],
+)
+
+# No global state --- each agent operates on its local context
+response = client.run(
+    agent=triage_agent,
+    messages=[{"role": "user", "content": "My invoice is wrong"}]
+)
+\end{lstlisting}
+\end{examplebox}
+
+\begin{keybox}[Swarm Properties]
+\begin{itemize}
+  \item \textbf{No global state}: each agent maintains only its local context window
+  \item \textbf{Local decisions}: routing decisions are made by the current agent, not a central planner
+  \item \textbf{Task completion through collective behavior}: complex tasks are completed through a chain of handoffs, each agent contributing its specialty
+  \item \textbf{Lightweight}: no orchestration overhead; agents are stateless between handoffs
+\end{itemize}
+\end{keybox}
+
+\section{Coordination Mechanisms}
+\label{subsec:coordination-mechanisms}
+
+How agents coordinate---how they share information, divide work, and resolve conflicts---is as important as the topology. Six canonical coordination mechanisms apply to LLM-based multi-agent systems.
+
+\subsection{Shared State (Global Blackboard)}
+\label{subsubsec:shared-state}
+
+The \textbf{blackboard architecture}~\cite{hayes1985blackboard} provides a shared data structure that all agents can read from and write to. In LLM systems, this is typically implemented as a shared dictionary, database, or structured document.
+
+\begin{lstlisting}[style=pythonstyle, caption={Shared blackboard with conflict resolution}]
+import threading
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List
+
+@dataclass
+class BlackboardEntry:
+    value: Any
+    author: str
+    timestamp: float
+    confidence: float = 1.0
+
+class Blackboard:
+    """Thread-safe shared state for multi-agent coordination."""
+
+    def __init__(self):
+        self._data: Dict[str, BlackboardEntry] = {}
+        self._lock = threading.RLock()
+        self._subscribers: Dict[str, List[Callable]] = {}
+
+    def write(self, key: str, value: Any, author: str,
+              confidence: float = 1.0) -> bool:
+        """Write to blackboard; higher-confidence entries win conflicts."""
+        with self._lock:
+            existing = self._data.get(key)
+            if existing and existing.confidence > confidence:
+                return False  # Conflict: existing entry wins
+            import time
+            self._data[key] = BlackboardEntry(
+                value=value, author=author,
+                timestamp=time.time(), confidence=confidence
+            )
+            self._notify(key, value)
+            return True
+
+    def read(self, key: str) -> Any:
+        with self._lock:
+            entry = self._data.get(key)
+            return entry.value if entry else None
+
+    def subscribe(self, key: str, callback: Callable):
+        """Agents subscribe to changes on specific keys."""
+        self._subscribers.setdefault(key, []).append(callback)
+
+    def _notify(self, key: str, value: Any):
+        for cb in self._subscribers.get(key, []):
+            cb(key, value)
+\end{lstlisting}
+
+\subsection{Message Passing}
+\label{subsubsec:message-passing}
+
+Message passing is the most natural coordination mechanism for LLM agents: agents communicate by sending structured text messages to one another. Key design decisions include:
+
+\begin{itemize}
+  \item \textbf{Message format}: structured (JSON schema) vs. natural language vs. hybrid
+  \item \textbf{Routing}: direct (agent-to-agent) vs. broadcast vs. topic-based pub/sub
+  \item \textbf{Conversation threads}: maintaining context across multi-turn exchanges
+  \item \textbf{Acknowledgment}: whether senders require confirmation of receipt/processing
+\end{itemize}
+
+\subsection{Planning and Decomposition}
+\label{subsubsec:planning-decomp}
+
+A manager agent decomposes a high-level task into a \textbf{directed acyclic graph (DAG)} of sub-tasks, assigns each to an appropriate worker, and tracks dependencies. This is the multi-agent analog of classical hierarchical task network (HTN) planning.
+
+\begin{lstlisting}[style=pythonstyle, caption={Task DAG decomposition}]
+from dataclasses import dataclass, field
+from typing import List, Optional
+import asyncio
+
+@dataclass
+class Task:
+    id: str
+    description: str
+    assigned_to: str
+    dependencies: List[str] = field(default_factory=list)
+    status: str = "pending"   # pending | running | done | failed
+    result: Optional[str] = None
+
+class TaskDAG:
+    def __init__(self):
+        self.tasks: dict[str, Task] = {}
+
+    def add_task(self, task: Task):
+        self.tasks[task.id] = task
+
+    def ready_tasks(self) -> List[Task]:
+        """Return tasks whose dependencies are all completed."""
+        return [
+            t for t in self.tasks.values()
+            if t.status == "pending"
+            and all(self.tasks[d].status == "done"
+                    for d in t.dependencies)
+        ]
+
+    async def execute(self, agent_pool: dict):
+        while any(t.status != "done" for t in self.tasks.values()):
+            ready = self.ready_tasks()
+            if not ready:
+                await asyncio.sleep(0.1)
+                continue
+            # Execute ready tasks in parallel
+            await asyncio.gather(*[
+                self._run_task(t, agent_pool[t.assigned_to])
+                for t in ready
+            ])
+
+    async def _run_task(self, task: Task, agent):
+        task.status = "running"
+        try:
+            task.result = await agent.execute(task.description)
+            task.status = "done"
+        except Exception as e:
+            task.status = "failed"
+            raise
+\end{lstlisting}
+
+\subsection{Voting and Consensus}
+\label{subsubsec:voting}
+
+When multiple agents produce conflicting outputs, voting mechanisms aggregate their responses into a single decision. Common schemes include:
+
+\begin{itemize}
+  \item \textbf{Majority voting}: the most common answer wins; effective for factual questions
+  \item \textbf{Weighted voting}: agents with higher track records or confidence scores receive more weight
+  \item \textbf{Debate-based resolution}: agents argue for their positions; a judge agent decides
+  \item \textbf{Delphi method}: iterative rounds where agents revise their answers after seeing others’ reasoning
+\end{itemize}
+
+Formally, given $n$ agents producing outputs $\{o_1, \ldots, o_n\}$ with weights $\{w_1, \ldots, w_n\}$, the weighted consensus is: 
+\begin{equation}
+  o^* = \arg\max_{o} \sum_{i=1}^{n} w_i \cdot \mathbf{1}[o_i = o]
+\end{equation}
+ For continuous outputs (e.g., probability estimates), weighted averaging applies: 
+\begin{equation}
+  \hat{p} = \frac{\sum_{i=1}^{n} w_i \cdot p_i}{\sum_{i=1}^{n} w_i}
+\end{equation}
+
+\subsection{Market-Based Coordination}
+\label{subsubsec:market-based}
+
+Market mechanisms allocate tasks and resources through \textbf{auctions and bidding}. The Contract Net Protocol~\cite{smith1980contract}, one of the oldest multi-agent coordination mechanisms, is a task auction:
+
+\begin{enumerate}
+  \item A \emph{manager} broadcasts a task announcement with requirements
+  \item \emph{Contractor} agents submit bids (capability declarations + cost estimates)
+  \item The manager awards the contract to the best bidder
+  \item The winning contractor executes and reports results
+\end{enumerate}
+
+In LLM systems, bids can be expressed in natural language (``I can complete this in 3 steps with high confidence'') or structured formats. Market mechanisms are particularly effective for resource-constrained settings where API costs must be minimized.
+
+\subsection{Stigmergy: Indirect Communication Through Environment}
+\label{subsubsec:stigmergy}
+
+\textbf{Stigmergy}~\cite{grassé1959reconstruction} replaces explicit agent-to-agent messaging with a simpler mechanism: each agent modifies the shared environment as a side effect of its work, and other agents react to those modifications rather than to direct signals. The classic illustration is a foraging ant depositing pheromone on its return path; subsequent ants amplify successful routes without any ant ``talking'' to another.
+
+In LLM multi-agent systems, stigmergy manifests as:
+
+\begin{itemize}
+  \item \textbf{Shared documents}: agents write to a shared document; others read and build upon it
+  \item \textbf{Code repositories}: one agent commits code; another reads and extends it
+  \item \textbf{Annotation layers}: agents annotate shared artifacts (highlight errors, add comments)
+  \item \textbf{Task queues}: agents add and consume tasks from a shared queue
+\end{itemize}
+
+Stigmergy enables coordination without explicit communication overhead---agents simply observe the state of the shared environment and act accordingly.
+
+\section{Communication Protocols}
+\label{subsec:communication-protocols}
+
+Effective multi-agent systems require well-defined communication protocols: agreed-upon formats, semantics, and patterns for agent-to-agent messages. (For the standardized inter-agent protocol, see Chapter~\ref{sec:a2a}.)
+
+\subsection{Structured Message Formats}
+\label{structured-message-formats}
+
+Messages between LLM agents should be structured to enable reliable parsing and routing. A minimal message schema:
+
+\begin{lstlisting}[style=pythonstyle, caption={Agent message schema}]
+from pydantic import BaseModel, Field
+from typing import Literal, Optional, Dict, Any
+from datetime import datetime, timezone
+import uuid
+
+PerformativeType = Literal[
+    "inform",    # Share information
+    "request",   # Request an action
+    "propose",   # Propose a course of action
+    "accept",    # Accept a proposal
+    "reject",    # Reject a proposal
+    "query",     # Ask a question
+    "confirm",   # Confirm receipt/completion
+    "failure",   # Report a failure
+]
+
+class AgentMessage(BaseModel):
+    message_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str          # Groups related messages
+    sender: str                   # Agent identifier
+    receiver: str                 # Target agent (or "broadcast")
+    performative: PerformativeType
+    content: str                  # Natural language content
+    metadata: Dict[str, Any] = {} # Structured payload
+    reply_to: Optional[str] = None  # message_id being replied to
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def to_llm_prompt(self) -> str:
+        """Render message as a prompt fragment for the receiving agent."""
+        return (
+            f"[MESSAGE from {self.sender}]\n"
+            f"Type: {self.performative}\n"
+            f"Content: {self.content}\n"
+            + (f"Metadata: {self.metadata}\n" if self.metadata else "")
+        )
+\end{lstlisting}
+
+\subsection{Performative Types (FIPA-ACL Inspired)}
+\label{performative-types-fipa-acl-inspired}
+
+Drawing from the FIPA Agent Communication Language~\cite{fipa2002acl}, modernized for LLM agents:
+
+\begin{table}[ht!]
+\centering
+\caption{FIPA-ACL-inspired performative types for LLM agent messages.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Performative} & \textbf{Semantics} & \textbf{Example Use} \\
+\midrule
+\texttt{inform} & Sender believes $\phi$ is true & Share research findings \\
+\texttt{request} & Sender wants receiver to do $\alpha$ & Delegate a sub-task \\
+\texttt{propose} & Sender proposes plan $\pi$ & Suggest an approach \\
+\texttt{accept} & Receiver agrees to proposal & Confirm task assignment \\
+\texttt{reject} & Receiver declines proposal & Refuse incompatible task \\
+\texttt{query} & Sender wants to know $\phi$ & Ask for clarification \\
+\texttt{confirm} & Sender confirms $\phi$ occurred & Acknowledge completion \\
+\texttt{failure} & Sender failed to achieve $\alpha$ & Report error \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Context Sharing Strategies}
+\label{context-sharing-strategies}
+
+A critical challenge in multi-agent communication is \textbf{context management}: how much history does each agent need? Three strategies:
+
+\begin{itemize}
+  \item \textbf{Full history}: pass the entire conversation history to each agent. Maximally informative but expensive; context windows fill quickly.
+  \item \textbf{Summary}: a summarizer agent condenses prior exchanges into a compact summary. Efficient but lossy; important details may be dropped.
+  \item \textbf{Relevant excerpt}: retrieve only the most relevant prior messages using semantic search. Balances cost and informativeness; requires a retrieval mechanism.
+\end{itemize}
+
+\begin{keybox}[Context Sharing Rule of Thumb]
+Use \textbf{full history} for short conversations ($<$10 turns); \textbf{summaries} for medium-length conversations; \textbf{retrieval-augmented excerpts} for long-running agent sessions. Always include the most recent $k$ messages verbatim to preserve immediate context.
+\end{keybox}
+
+\section{Role Design and Specialization}
+\label{subsec:role-design}
+
+The design of agent roles---their capabilities, personas, and responsibilities---is as much an art as a science. Well-designed roles enable specialization; poorly designed roles create confusion and redundancy.
+
+\subsection{Defining Agent Roles}
+\label{defining-agent-roles}
+
+Common roles in LLM multi-agent systems:
+
+\begin{table}[ht!]
+\centering
+\caption{Common agent roles in LLM multi-agent systems.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Role} & \textbf{Primary Capability} & \textbf{Typical Tools} \\
+\midrule
+Researcher & Information gathering, synthesis & Web search, RAG, databases \\
+Planner & Task decomposition, scheduling & None (reasoning only) \\
+Coder & Code generation, debugging & Code interpreter, linter \\
+Reviewer & Quality assessment, critique & None (reasoning only) \\
+Tester & Test generation, execution & Test runner, coverage tools \\
+Writer & Prose generation, editing & Grammar checker, style guide \\
+Critic & Adversarial evaluation & None (reasoning only) \\
+Orchestrator & Coordination, delegation & All agent interfaces \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Capability-Based vs.~Role-Based Assignment}
+\label{capability-based-vs.-role-based-assignment}
+
+Two philosophies for task assignment:
+
+\begin{itemize}
+  \item \textbf{Role-based}: tasks are assigned based on predefined role labels. Simple and predictable; may be suboptimal when a task spans multiple roles.
+  \item \textbf{Capability-based}: tasks are assigned based on a dynamic assessment of each agent’s capabilities relative to the task requirements. More flexible; requires a capability registry and matching mechanism.
+\end{itemize}
+
+\subsection{Dynamic Role Reassignment}
+\label{dynamic-role-reassignment}
+
+In long-running systems, static role assignments become suboptimal. Dynamic reassignment allows agents to take on new roles based on:
+
+\begin{itemize}
+  \item Current workload (load balancing)
+  \item Demonstrated performance on recent tasks
+  \item Changing task requirements
+  \item Agent failures requiring coverage
+\end{itemize}
+
+\subsection{Persona Design for Diversity of Thought}
+\label{persona-design-for-diversity-of-thought}
+
+A subtle but powerful technique: give agents \textbf{distinct personas} that encourage diverse perspectives. Rather than five identical ``assistant'' agents, design:
+
+\begin{itemize}
+  \item An \emph{optimist} who emphasizes opportunities
+  \item A \emph{skeptic} who challenges assumptions
+  \item A \emph{pragmatist} who focuses on implementation
+  \item A \emph{visionary} who thinks long-term
+  \item A \emph{devil’s advocate} who argues the opposite position
+\end{itemize}
+
+This diversity of thought, inspired by techniques like Six Thinking Hats~\cite{debono1985six}, reduces groupthink and produces more robust collective reasoning.
+
+\begin{warningbox}[Role Conflict Resolution]
+When agents have overlapping responsibilities, conflicts arise. Resolve them with explicit \textbf{priority rules}: define which role takes precedence for each task type. Alternatively, use a \textbf{meta-agent} whose sole responsibility is conflict arbitration. Never leave role conflicts implicit---they will manifest as contradictory outputs or infinite loops.
+\end{warningbox}
+
+\section{Multi-Agent Patterns for LLMs}
+\label{subsec:mas-patterns}
+
+Beyond architectural topologies, several \textbf{interaction patterns} have proven particularly effective for LLM-based multi-agent systems. (These complement the single-agent design patterns in Chapter~\ref{sec:agent-design-patterns}.)
+
+\subsection{Debate Pattern}
+\label{debate-pattern}
+
+Multiple agents argue for different positions; a judge agent evaluates the arguments and decides. Debate has been shown to improve factual accuracy and reduce hallucinations~\cite{du2023improving}.
+
+\begin{lstlisting}[style=pythonstyle, caption={Debate pattern implementation}]
+async def debate_round(question: str, agents: list, judge: Agent,
+                       rounds: int = 2) -> str:
+    """Run a multi-agent debate and return the judge's verdict."""
+    positions = {a.name: await a.generate_position(question)
+                 for a in agents}
+
+    for round_num in range(rounds):
+        # Each agent sees others' positions and can rebut
+        rebuttals = {}
+        for agent in agents:
+            others = {k: v for k, v in positions.items()
+                      if k != agent.name}
+            rebuttals[agent.name] = await agent.rebut(
+                question, positions[agent.name], others
+            )
+        positions = rebuttals
+
+    # Judge evaluates all final positions
+    verdict = await judge.evaluate(question, positions)
+    return verdict
+\end{lstlisting}
+
+\subsection{Reflection Pattern}
+\label{reflection-pattern}
+
+One agent generates an output; a second agent critiques it; the first agent revises based on the critique. This implements a generate-critique-revise loop that iteratively improves quality.
+
+\begin{lstlisting}[style=pythonstyle, caption={Reflection pattern}]
+async def reflection_loop(task: str, generator: Agent,
+                          critic: Agent, max_rounds: int = 3) -> str:
+    draft = await generator.generate(task)
+
+    for _ in range(max_rounds):
+        critique = await critic.critique(task, draft)
+        if critique.is_satisfactory:
+            break
+        draft = await generator.revise(task, draft, critique.feedback)
+
+    return draft
+\end{lstlisting}
+
+\subsection{Division of Labor Pattern}
+\label{division-of-labor-pattern}
+
+The task is decomposed into independent sub-tasks executed in parallel. Results are aggregated by a synthesis agent. This pattern maximizes throughput for embarrassingly parallel tasks.
+
+\subsection{Pipeline Pattern}
+\label{pipeline-pattern}
+
+Agents form a sequential processing chain: each agent transforms the output of the previous agent. Analogous to Unix pipes. Effective for tasks with clear sequential dependencies (e.g., research $\to$ outline $\to$ draft $\to$ edit $\to$ format).
+
+\subsection{Ensemble Pattern}
+\label{ensemble-pattern}
+
+Multiple agents independently solve the same problem; a selection mechanism picks the best answer (best-of-$N$) or aggregates answers (mixture-of-experts style). Improves reliability at the cost of compute.
+
+\begin{equation}
+  o^* = \arg\max_{o \in \{o_1,\ldots,o_N\}} \text{score}(o, \text{task})
+\end{equation}
+
+where $\text{score}$ can be a reward model, a judge LLM, or a verifier.
+
+\subsection{Teacher-Student Pattern}
+\label{teacher-student-pattern}
+
+A more capable agent (teacher) guides a less capable agent (student) through a task, providing hints, corrections, and explanations. This pattern enables knowledge distillation at inference time and can be used to fine-tune the student agent.
+
+\subsection{Red Team Pattern}
+\label{red-team-pattern}
+
+An adversarial agent (red team) actively tries to find weaknesses, errors, or safety violations in the outputs of other agents. The red team agent is prompted to be maximally critical and creative in its attacks. This pattern is essential for safety-critical applications.
+
+\begin{examplebox}[Red Team Agent Prompt]
+\begin{lstlisting}[style=pythonstyle]
+RED_TEAM_PROMPT = """You are a red team agent. Your job is to find
+flaws, errors, biases, safety violations, and failure modes in the
+following output. Be adversarial, creative, and thorough.
+
+Consider:
+1. Factual errors or hallucinations
+2. Logical inconsistencies
+3. Safety and ethical concerns
+4. Edge cases the solution doesn't handle
+5. Ways a malicious user could exploit this output
+6. Unintended consequences
+
+Output: {agent_output}
+
+Provide a detailed critique with specific examples of each flaw found."""
+\end{lstlisting}
+\end{examplebox}
+
+\section{Training Multi-Agent Systems with Reinforcement Learning}
+\label{subsec:mas-rl-training}
+
+Training multi-agent systems with RL introduces challenges that go beyond single-agent RL. The fundamental difficulty is that each agent’s environment includes other learning agents, making the environment \textbf{non-stationary} from any single agent’s perspective.
+
+\subsection{Mathematical Formulation}
+\label{mathematical-formulation}
+
+A multi-agent system is formalized as a \textbf{Markov Game} (also called a stochastic game)~\cite{shapley1953stochastic}:
+
+\begin{equation}
+  \mathcal{G} = \langle \mathcal{N}, \mathcal{S}, \{\mathcal{A}^i\}_{i \in \mathcal{N}}, \mathcal{T}, \{R^i\}_{i \in \mathcal{N}}, \gamma \rangle
+\end{equation}
+
+where $\mathcal{N} = \{1, \ldots, n\}$ is the set of agents, $\mathcal{S}$ is the shared state space, $\mathcal{A}^i$ is agent $i$’s action space, $\mathcal{T}: \mathcal{S} \times \mathcal{A}^1 \times \cdots \times \mathcal{A}^n \to \Delta(\mathcal{S})$ is the transition function, $R^i: \mathcal{S} \times \mathcal{A}^1 \times \cdots \times \mathcal{A}^n \to \mathbb{R}$ is agent $i$’s reward function, and $\gamma$ is the discount factor.
+
+Each agent $i$ seeks to maximize its expected discounted return: 
+\begin{equation}
+  J^i(\pi^1, \ldots, \pi^n) = \mathbb{E}_{\pi^1,\ldots,\pi^n}\left[\sum_{t=0}^{\infty} \gamma^t R^i(s_t, a_t^1, \ldots, a_t^n)\right]
+\end{equation}
+
+\subsection{Independent Learning}
+\label{independent-learning}
+
+The simplest approach: each agent $i$ treats other agents as part of its environment and optimizes its own policy $\pi^i$ independently using standard single-agent RL (e.g., PPO, REINFORCE).
+
+\begin{equation}
+  \nabla_{\theta^i} J^i \approx \mathbb{E}\left[\nabla_{\theta^i} \log \pi^i(a^i_t | o^i_t) \cdot \hat{A}^i_t\right]
+\end{equation}
+
+\begin{warningbox}[Non-Stationarity Problem]
+Independent learning violates the Markov assumption: as other agents update their policies, the transition and reward distributions seen by agent $i$ change. This can cause training instability, oscillation, and failure to converge. Independent learning works in practice for simple cooperative tasks but struggles in competitive or complex cooperative settings.
+\end{warningbox}
+
+\subsection{Centralized Training, Decentralized Execution (CTDE)}
+\label{centralized-training-decentralized-execution-ctde}
+
+CTDE~\cite{lowe2017multi, rashid2018qmix} is the dominant paradigm for cooperative multi-agent RL. During training, a centralized critic has access to the global state $s$ and all agents’ actions $\mathbf{a} = (a^1, \ldots, a^n)$. During execution, each agent acts using only its local observation $o^i$.
+
+The centralized critic for agent $i$: 
+\begin{equation}
+  Q^i_\phi(s, \mathbf{a}) = Q^i_\phi(s, a^1, \ldots, a^n)
+\end{equation}
+
+The decentralized actor for agent $i$: 
+\begin{equation}
+  \pi^i_{\theta^i}(a^i | o^i)
+\end{equation}
+
+The policy gradient with centralized critic: 
+\begin{equation}
+  \nabla_{\theta^i} J^i = \mathbb{E}\left[\nabla_{\theta^i} \log \pi^i(a^i | o^i) \cdot Q^i_\phi(s, \mathbf{a})\right]
+\end{equation}
+
+CTDE resolves non-stationarity during training (the centralized critic sees the full joint state) while preserving decentralized execution (no communication required at inference time).
+
+\subsection{Communication Learning}
+\label{communication-learning}
+
+Rather than using fixed communication protocols, agents can \textbf{learn what to communicate}. In differentiable communication frameworks~\cite{sukhbaatar2016learning, das2019tarmac}, agents produce continuous communication vectors $m^i_t$ that are passed to other agents:
+
+\begin{equation}
+  a^i_t, m^i_t = \pi^i_{\theta^i}(o^i_t, \{m^j_{t-1}\}_{j \neq i})
+\end{equation}
+
+The communication vectors are optimized end-to-end via backpropagation through the joint reward signal. For LLM agents, this is approximated by training agents to produce structured natural language messages that maximize task performance.
+
+\subsection{Emergent Communication}
+\label{emergent-communication}
+
+When agents are trained from scratch with only a reward signal (no predefined language), they can develop \textbf{emergent communication protocols}~\cite{lazaridou2020emergent}: shared symbol systems that encode task-relevant information. While fascinating scientifically, emergent communication in LLM systems is typically undesirable---we want agents to communicate in human-interpretable language.
+
+\subsection{Self-Play}
+\label{self-play}
+
+In competitive or mixed-motive settings, \textbf{self-play}~\cite{silver2017mastering} trains agents by having them compete against copies of themselves. This generates an automatic curriculum: as the agent improves, its opponent (a previous version of itself) becomes harder to beat.
+
+For LLM agents, self-play is used in:
+
+\begin{itemize}
+  \item Red team vs.~blue team training
+  \item Debate training (agents argue against each other)
+  \item Negotiation training (agents negotiate with each other)
+\end{itemize}
+
+\subsection{Population-Based Training}
+\label{population-based-training}
+
+\textbf{Population-Based Training (PBT)}~\cite{jaderberg2019human} maintains a diverse population of agents with different policies, hyperparameters, and specializations. Agents are periodically evaluated; underperforming agents are replaced by mutated copies of high-performing agents.
+
+For multi-agent LLM systems, PBT enables:
+
+\begin{itemize}
+  \item Automatic discovery of effective role specializations
+  \item Robustness to individual agent failures (diverse population)
+  \item Avoidance of local optima through population diversity
+\end{itemize}
+
+\subsection{Social Welfare and Nash Equilibrium}
+\label{social-welfare-and-nash-equilibrium}
+
+In multi-agent settings, the notion of optimality is more complex than in single-agent settings. Two key solution concepts:
+
+\textbf{Nash Equilibrium}: a joint policy $(\pi^{1*}, \ldots, \pi^{n*})$ such that no agent can improve its expected return by unilaterally deviating: 
+\begin{equation}
+  J^i(\pi^{i*}, \pi^{-i*}) \geq J^i(\pi^i, \pi^{-i*}) \quad \forall i, \forall \pi^i
+\end{equation}
+ where $\pi^{-i}$ denotes the joint policy of all agents except $i$.
+
+\textbf{Social Welfare Maximization}: optimize the sum of all agents’ returns: 
+\begin{equation}
+  \max_{\pi^1,\ldots,\pi^n} \sum_{i=1}^{n} J^i(\pi^1, \ldots, \pi^n)
+\end{equation}
+
+In fully cooperative settings (all agents share the same reward), social welfare maximization is the appropriate objective. In competitive settings, Nash equilibrium is the relevant solution concept. Most real-world multi-agent LLM systems are \textbf{mixed-motive}: agents have partially aligned, partially conflicting objectives.
+
+\begin{keybox}[Further Reading: Game Theory for Multi-Agent RL]
+For readers interested in the game-theoretic foundations of multi-agent systems:
+
+\begin{itemize}
+  \item \textbf{Shoham \& Leyton-Brown}~\cite{shoham2008multiagent} --- comprehensive textbook covering Nash equilibria, mechanism design, and social choice theory for agent systems.
+  \item \textbf{Zhang et al.}~\cite{zhang2021multiagent} --- survey of multi-agent RL algorithms with convergence guarantees under cooperative, competitive, and mixed settings.
+  \item \textbf{Nisan et al.}~\cite{nisan2007algorithmic} --- the definitive reference on algorithmic game theory, covering auctions, equilibria computation, and price of anarchy.
+\end{itemize}
+\end{keybox}
+
+\section{Challenges and Solutions}
+\label{subsec:mas-challenges}
+
+\subsection{Coordination Overhead}
+\label{coordination-overhead}
+
+Every inter-agent message consumes tokens---and therefore time and money. In a naive implementation, agents communicate constantly, even when unnecessary.
+
+\begin{keybox}[When NOT to Communicate]
+\begin{itemize}
+  \item When the information is already in the shared blackboard
+  \item When the receiving agent doesn’t need the information for its current task
+  \item When the message would duplicate information already sent
+  \item When the task is simple enough for a single agent
+\end{itemize}
+
+\textbf{Rule}: communicate only when the expected value of the information exceeds the cost of the message.
+\end{keybox}
+
+Quantifying communication cost: if a message costs $c$ tokens and the receiving agent’s task has value $v$, communicate only if the expected improvement in task value $\Delta v > c \cdot \text{cost\_per\_token}$.
+
+\subsection{Redundancy vs.~Efficiency}
+\label{redundancy-vs.-efficiency}
+
+Multiple agents may independently solve the same sub-problem, wasting compute. Solutions:
+
+\begin{itemize}
+  \item \textbf{Duplicate detection}: before starting a task, check the blackboard for existing results
+  \item \textbf{Result caching}: store completed sub-task results with semantic keys for retrieval
+  \item \textbf{Task locking}: mark tasks as ``in progress'' to prevent duplicate execution
+\end{itemize}
+
+\subsection{Attribution}
+\label{attribution}
+
+When a multi-agent system succeeds or fails, which agent is responsible? Attribution is critical for:
+
+\begin{itemize}
+  \item RL reward assignment (credit assignment problem)
+  \item Debugging and improvement
+  \item Trust calibration (which agents to rely on)
+\end{itemize}
+
+The \textbf{counterfactual credit assignment} approach estimates each agent’s contribution by asking: ``How much would the outcome have changed if this agent had acted differently?''
+
+\begin{equation}
+  \text{credit}^i = J(\pi^1, \ldots, \pi^n) - J(\pi^1, \ldots, \pi^{i}_{\text{default}}, \ldots, \pi^n)
+\label{eq:counterfactual-credit}
+\end{equation}
+
+\subsection{Scalability}
+\label{scalability}
+
+Naive message passing scales as $O(n^2)$ with the number of agents. Solutions:
+
+\begin{itemize}
+  \item \textbf{Hierarchical communication}: agents communicate only within their subtree
+  \item \textbf{Topic-based pub/sub}: agents subscribe only to relevant message topics
+  \item \textbf{Sparse communication graphs}: only connect agents that need to interact
+  \item \textbf{Asynchronous communication}: agents don’t block waiting for responses
+\end{itemize}
+
+\subsection{Emergent Behavior and Safety}
+\label{emergent-behavior-and-safety}
+
+Multi-agent systems can exhibit unexpected emergent behaviors---interactions between agents that produce outcomes no individual agent was designed to produce. This is both a feature (emergent capabilities) and a risk (emergent failures).
+
+\begin{warningbox}[Safety Concerns in Multi-Agent Systems]
+\begin{itemize}
+  \item \textbf{Prompt injection cascades}: a malicious input to one agent propagates through the system
+  \item \textbf{Reward hacking}: agents find unexpected ways to maximize reward that violate intent
+  \item \textbf{Collusion}: in competitive settings, agents may develop implicit collusion strategies
+  \item \textbf{Amplification}: errors or biases in one agent are amplified by downstream agents
+\end{itemize}
+
+Always include a \textbf{safety monitor agent} that observes all inter-agent communications and can halt the system if unsafe behavior is detected.
+\end{warningbox}
+
+\subsection{Evaluation}
+\label{evaluation}
+
+Evaluating multi-agent systems requires metrics at multiple levels:
+
+\begin{table}[ht!]
+\centering
+\caption{Multi-level evaluation metrics for multi-agent systems.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Level} & \textbf{Metric} & \textbf{Example} \\
+\midrule
+System & Task completion rate & \% of tasks completed correctly \\
+System & End-to-end latency & Time from task to final output \\
+System & Total token cost & Tokens consumed across all agents \\
+Agent & Individual accuracy & Per-agent task success rate \\
+Agent & Communication efficiency & Useful messages / total messages \\
+Agent & Contribution score & Counterfactual credit (Eq.~\ref{eq:counterfactual-credit}) \\
+Emergent & Coordination quality & Degree of task overlap / gaps \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Real-World Multi-Agent Applications}
+\label{subsec:mas-applications}
+
+\subsection{Software Development Team}
+\label{software-development-team}
+
+A multi-agent software development team mirrors a real engineering organization:
+
+\begin{lstlisting}[style=pythonstyle]
+from dataclasses import dataclass
+from typing import Optional
+import asyncio
+
+@dataclass
+class SoftwareTeamState:
+    requirements: str
+    architecture: Optional[str] = None
+    code: Optional[str] = None
+    tests: Optional[str] = None
+    review_feedback: Optional[str] = None
+    final_code: Optional[str] = None
+    approved: bool = False
+
+class SoftwareDevelopmentTeam:
+    """
+    Multi-agent software team:
+      Architect -> Coder -> Tester -> Reviewer -> (iterate or ship)
+    """
+
+    def __init__(self, llm_factory):
+        self.architect = llm_factory(
+            system_prompt="""You are a software architect. Given requirements,
+            produce a clear technical design: components, interfaces, data
+            structures, and implementation plan."""
+        )
+        self.coder = llm_factory(
+            system_prompt="""You are an expert software engineer. Given a
+            technical design, write clean, well-documented, production-ready
+            code. Follow best practices for the language."""
+        )
+        self.tester = llm_factory(
+            system_prompt="""You are a QA engineer. Given code, write
+            comprehensive tests: unit tests, edge cases, integration tests.
+            Identify potential bugs and failure modes."""
+        )
+        self.reviewer = llm_factory(
+            system_prompt="""You are a senior code reviewer. Evaluate code
+            for correctness, security, performance, and maintainability.
+            Provide specific, actionable feedback. Approve only if excellent."""
+        )
+
+    async def build(self, requirements: str,
+                    max_iterations: int = 3) -> SoftwareTeamState:
+        state = SoftwareTeamState(requirements=requirements)
+
+        # Phase 1: Architecture
+        state.architecture = await self.architect.invoke(
+            f"Requirements:\n{requirements}\n\nProduce technical design."
+        )
+
+        for iteration in range(max_iterations):
+            # Phase 2: Implementation
+            prompt = (f"Design:\n{state.architecture}\n\n"
+                      + (f"Previous feedback:\n{state.review_feedback}\n\n"
+                         if state.review_feedback else "")
+                      + "Write the implementation.")
+            state.code = await self.coder.invoke(prompt)
+
+            # Phase 3: Testing
+            state.tests = await self.tester.invoke(
+                f"Code:\n{state.code}\n\nWrite comprehensive tests."
+            )
+
+            # Phase 4: Review
+            review = await self.reviewer.invoke(
+                f"Code:\n{state.code}\n\nTests:\n{state.tests}\n\n"
+                "Review this code. End with APPROVED or NEEDS_REVISION."
+            )
+
+            if "APPROVED" in review:
+                state.final_code = state.code
+                state.approved = True
+                break
+            else:
+                state.review_feedback = review
+
+        return state
+
+    async def run(self, requirements: str) -> str:
+        state = await self.build(requirements)
+        if state.approved:
+            return f"# Final Implementation\n\n{state.final_code}"
+        else:
+            return f"# Best Attempt (not approved)\n\n{state.code}"
+\end{lstlisting}
+
+\subsection{Research Team}
+\label{research-team}
+
+A research team agent society mirrors academic collaboration:
+
+\begin{itemize}
+  \item \textbf{Literature Reviewer}: searches and synthesizes existing work
+  \item \textbf{Hypothesis Generator}: proposes novel research directions
+  \item \textbf{Experimentalist}: designs and runs experiments (via code execution)
+  \item \textbf{Statistician}: analyzes results and assesses significance
+  \item \textbf{Writer}: synthesizes findings into a coherent report
+\end{itemize}
+
+\subsection{Customer Service System}
+\label{customer-service-system}
+
+A tiered customer service system:
+
+\begin{itemize}
+  \item \textbf{Router}: classifies incoming requests and routes to specialists
+  \item \textbf{Billing Specialist}: handles payment and account issues
+  \item \textbf{Technical Specialist}: resolves product/service issues
+  \item \textbf{Escalation Agent}: handles complex cases requiring human judgment
+\end{itemize}
+
+\subsection{Creative Team}
+\label{creative-team}
+
+A creative production pipeline:
+
+\begin{itemize}
+  \item \textbf{Brainstormer}: generates diverse ideas without self-censorship
+  \item \textbf{Drafter}: develops the most promising ideas into full drafts
+  \item \textbf{Editor}: refines drafts for clarity, style, and coherence
+  \item \textbf{Critic}: provides adversarial feedback to strengthen the work
+\end{itemize}
+
+\section{Architecture Comparison}
+\label{subsec:mas-comparison}
+
+\begin{table}[ht!]
+\centering
+\caption{Multi-agent architecture patterns compared across key dimensions. Ratings: \textbf{H}igh / \textbf{M}edium / \textbf{L}ow.}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{@{}llllll@{}}
+\toprule
+\textbf{Architecture} & \textbf{Scalability} & \textbf{Debug} & \textbf{Coord.~Cost} & \textbf{Fault Tol.} & \textbf{Best For} \\
+\midrule
+Centralized (Supervisor) & M & H & L & L & Simple pipelines; clear task decomposition; small teams \\
+Decentralized (P2P) & H & L & H & H & Dynamic environments; resilience-critical; large-scale \\
+Hierarchical & H & M & M & M & Enterprise workflows; complex multi-domain tasks \\
+Swarm & H & L & L & H & Customer service routing; simple handoff chains \\
+Pipeline & M & H & L & L & Sequential processing; clear stage dependencies \\
+Ensemble & L & H & H & H & High-stakes decisions; reliability over efficiency \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{keybox}[Choosing an Architecture]
+\begin{itemize}
+  \item \textbf{Independent sub-tasks} $\rightarrow$ parallel architectures (division of labor, ensemble).
+  \item \textbf{Sequential with clear dependencies} $\rightarrow$ pipeline.
+  \item \textbf{Fault tolerance required} $\rightarrow$ avoid centralized; prefer hierarchical or decentralized.
+  \item \textbf{Debuggability critical} $\rightarrow$ centralized or pipeline (all decisions traceable).
+  \item \textbf{$<$5 agents} $\rightarrow$ centralized is simplest. \textbf{$>$20 agents} $\rightarrow$ hierarchical or swarm.
+\end{itemize}
+
+In practice, most production systems use \textbf{hierarchical} architectures: a top-level supervisor delegates to domain-specific sub-supervisors, who manage small teams of specialized workers.
+\end{keybox}
+
+\section{Summary}
+\label{subsec:mas-summary}
+
+Multi-agent systems represent a fundamental shift in how we deploy LLMs: from isolated assistants to collaborative societies of specialized agents. The key insights from this section:
+
+\begin{keybox}[Multi-Agent Systems: Key Takeaways]
+\begin{enumerate}
+  \item \textbf{Architecture matters}: the topology of agent connections determines scalability, debuggability, and fault tolerance. Choose based on task structure and operational requirements.
+  \item \textbf{Coordination is expensive}: every inter-agent message costs tokens. Design communication protocols to minimize overhead while preserving necessary information flow.
+  \item \textbf{Specialization enables quality}: agents with focused roles and tailored prompts consistently outperform generalist agents on complex tasks.
+  \item \textbf{RL training is hard}: multi-agent RL introduces non-stationarity, credit assignment challenges, and emergent behaviors. CTDE is the current best practice for cooperative settings.
+  \item \textbf{Safety requires explicit design}: multi-agent systems can amplify errors and exhibit unexpected emergent behaviors. Safety monitoring must be a first-class architectural concern.
+  \item \textbf{Start simple}: begin with a centralized supervisor pattern, measure its limitations, and evolve toward more complex architectures only when necessary.
+\end{enumerate}
+\end{keybox}
+
+The field of multi-agent LLM systems is evolving rapidly. The patterns and techniques described here represent the current state of the art, but new architectures, coordination mechanisms, and training algorithms are emerging continuously. The foundational principles---specialization, coordination, emergent behavior, and the tension between efficiency and robustness---will remain relevant regardless of how the specific implementations evolve.
+

@@ -1,0 +1,781 @@
+\chapter{Agentic Environments and Benchmarks}
+\label{sec:agentic-environments}
+
+\section{Motivation: Why Agents Need Environments}
+\label{sec:env-motivation}
+
+The evaluation of a conversational language model is, in principle, straightforward: present a prompt, collect a response, and score it against a reference or via human judgment. Agent evaluation is fundamentally different. An agent must \emph{act} in a world, observe consequences, and adapt its behavior over a sequence of steps. No single response captures this; only a structured \emph{environment} can.
+
+\textbf{Scope.} We use \emph{environment} in the reinforcement-learning sense: a world the agent interacts with for training or evaluation---not the production infrastructure (harness, orchestrator) that hosts the agent at serving time. Execution sandboxes appear here because they \emph{enable} such environments, but the agent harness itself is covered in Chapter~18.
+
+\begin{keybox}[The Chatbot–Agent Evaluation Gap]
+\textbf{Chatbot evaluation} measures the quality of a single generation: fluency, factuality, helpfulness. \textbf{Agent evaluation} measures the quality of a \emph{policy}: does the agent reliably achieve goals across diverse, long-horizon tasks? The gap is not merely quantitative---it requires a different infrastructure.
+\end{keybox}
+
+Three forces drive the need for dedicated agentic environments:
+
+\paragraph{Safe Exploration.}
+\label{safe-exploration.}
+
+Real-world systems---production databases, live websites, financial APIs---cannot absorb the exploratory behavior of an agent under training. A sandboxed environment provides a faithful replica in which the agent can fail, recover, and learn without causing irreversible harm. Security isolation (e.g., Docker containers, network-restricted VMs) is not optional; it is a first-class design requirement.
+
+\paragraph{Reproducible Evaluation.}
+\label{reproducible-evaluation.}
+
+Benchmarking requires that every agent faces the same task under the same conditions. Environments must be deterministic on demand, version-controlled, and distributable so that results reported in one lab can be reproduced in another. The absence of this property has historically made agent benchmarks difficult to compare.
+
+\paragraph{Curriculum Learning.}
+\label{curriculum-learning.}
+
+Training an agent from scratch on hard tasks is sample-inefficient. Environments that expose a \emph{difficulty curriculum}---gradually increasing task complexity as the agent improves---dramatically reduce the number of environment interactions required to reach a target performance level. This mirrors how humans learn: mastery of sub-skills precedes mastery of the whole.
+
+\begin{intuitionbox}[Environments as the RL ``Gym'' for LLMs]
+Just as OpenAI Gym~\cite{brockman2016openai} standardized the interface between RL algorithms and simulated control tasks, agentic environments standardize the interface between LLM-based agents and the diverse tasks they must solve. The analogy is tight: \texttt{reset()} initializes a new episode, \texttt{step(action)} advances the world and returns an observation and reward, and \texttt{render()} produces a human-readable view of the current state.
+\end{intuitionbox}
+
+\section{Environment Design Principles}
+\label{sec:env-design}
+
+A well-designed agentic environment exposes four orthogonal design axes: the \emph{observation space}, the \emph{action space}, the \emph{reward signal}, and the \emph{episode structure}. Getting each right is necessary; getting all four right simultaneously is the craft of environment engineering.
+
+\subsection{Observation Space Design}
+\label{observation-space-design}
+
+The observation is what the agent \emph{sees} at each step. For LLM-based agents the observation is almost always rendered as text, but the source material varies widely:
+
+\begin{itemize}
+  \item \textbf{Pure text}: terminal output, file contents, API responses, error messages. Maximally compatible with any LLM but loses spatial and visual structure.
+  \item \textbf{Structured (JSON/XML)}: machine-readable state representations. Enables precise grounding but requires the agent to parse structure rather than read prose.
+  \item \textbf{Multimodal}: screenshots, accessibility trees, rendered HTML. Necessary for GUI and web tasks; requires a vision-capable model or a separate perception module.
+  \item \textbf{Hybrid}: a screenshot paired with an accessibility tree (used in OSWorld and VisualWebArena) gives both visual context and structured element identifiers, combining the strengths of both modalities.
+\end{itemize}
+
+\begin{warningbox}[Observation Leakage]
+A common design mistake is including information in the observation that the agent should not have access to---for example, the ground truth answer, the reward value, or future task steps. Observation leakage inflates benchmark scores and produces agents that fail catastrophically when deployed in real environments where such information is absent.
+\end{warningbox}
+
+\subsection{Action Space Design}
+\label{action-space-design}
+
+The action space defines what the agent can \emph{do}. For LLM agents the action is typically a text string that is parsed and executed by the environment. Common action types include:
+
+\begin{itemize}
+  \item \textbf{Tool calls}: structured invocations of external functions (search, calculator, calendar). Often formatted as JSON or XML function-call syntax.
+  \item \textbf{Code execution}: the agent writes code that is run in a sandbox; the stdout/stderr is returned as the next observation. This is the most expressive action type.
+  \item \textbf{API interactions}: HTTP requests to web services, database queries, shell commands.
+  \item \textbf{GUI actions}: \texttt{click(x,y)}, \texttt{type("text")}, \texttt{scroll(direction)}, \texttt{key("Enter")}. Used in computer-use environments.
+  \item \textbf{Natural language}: free-form text directed at another agent, a human, or a sub-task planner.
+\end{itemize}
+
+\subsection{Reward Signal Design}
+\label{reward-signal-design}
+
+Reward design is the hardest part of environment engineering. The reward must be:
+
+\begin{enumerate}
+  \item \textbf{Aligned}: high reward should correspond to genuine task completion, not to superficial proxies.
+  \item \textbf{Learnable}: the signal must be dense enough that the agent can make progress; pure sparse rewards on long-horizon tasks are often unlearnable without additional shaping.
+  \item \textbf{Tamper-proof}: the agent must not be able to achieve high reward without actually completing the task (reward hacking).
+\end{enumerate}
+
+\begin{table}[ht!]
+\centering
+\caption{Reward signal types for agentic environments with trade-offs.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Reward Type} & \textbf{Pros} & \textbf{Cons} \\
+\midrule
+Sparse (0/1 at end) & Aligned, hard to hack & Hard to learn \\
+Dense (step-level) & Easy to learn & Prone to shaping artifacts \\
+Intrinsic (curiosity) & Drives exploration & May diverge from task \\
+LLM-as-judge & Flexible, nuanced & Expensive, inconsistent \\
+Execution-based & Ground truth & Only for verifiable tasks \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Episode Structure}
+\label{episode-structure}
+
+Episodes can be structured in several ways:
+
+\begin{itemize}
+  \item \textbf{Fixed-length}: the agent takes exactly $T$ steps. Simple to implement; wastes compute on already-solved tasks.
+  \item \textbf{Early termination}: the episode ends when the agent signals completion or a terminal state is reached. More efficient but requires a reliable termination detector.
+  \item \textbf{Open-ended}: no fixed horizon; the agent operates until a resource budget (tokens, API calls, wall time) is exhausted. Closest to real deployment but hardest to evaluate.
+\end{itemize}
+
+\paragraph{Adaptive episode length and early termination.}
+\label{adaptive-episode-length-and-early-termination.}
+
+Recent work challenges the assumption that episode length must be fixed before training begins:
+
+\begin{itemize}
+  \item \textbf{Curriculum over horizon.} AELA~\cite{yoo2025aela} starts with short episodes and gradually extends the horizon as agent competence grows, measured by policy-entropy convergence. Short early episodes expose more diverse initial states per training sample.
+  \item \textbf{Truncation as RL penalty.} DLER~\cite{liu2025dler} shows that the simplest length control---hard truncation---works well for reasoning models when paired with batch-wise reward normalization and dynamic sampling to avoid losing the reward signal from cut-off rollouts.
+  \item \textbf{Learned stopping.} Rather than a fixed budget, the model itself can learn when to stop reasoning. \cite{liu2025answerstop} propose three strategies: stop when successive reasoning steps converge to the same answer, boost the end-of-thinking token probability, or train a lightweight classifier on hidden-state activations to predict the optimal stopping point.
+  \item \textbf{Partial-rollout recycling.} APRIL~\cite{april2025} over-provisions rollout requests and terminates once the target batch count is reached; incomplete responses are recycled as warm-start prefixes in future steps, eliminating the long-tail stall where a few slow samples block the entire batch (20--35\% throughput gain). TLT~\cite{hu2025tlt} addresses the same bottleneck by training an adaptive draft model on-the-fly for speculative decoding of stragglers (1.7$\times$ end-to-end speedup, lossless).
+\end{itemize}
+
+\subsection{Difficulty Curriculum and Adaptive Environments}
+\label{difficulty-curriculum-and-adaptive-environments}
+
+Static benchmarks measure a fixed snapshot of agent capability. Adaptive environments go further: they monitor agent performance online and adjust task difficulty to keep the agent in the ``zone of proximal development''---hard enough to learn from, easy enough to succeed occasionally. Techniques include:
+
+\begin{itemize}
+  \item \textbf{Procedural generation}: tasks are sampled from a parameterized distribution; difficulty parameters are tuned based on recent success rate. Prioritized Level Replay~\cite{jiang2021plr} scores each generated level by its estimated learning potential (e.g.~GAE magnitude) and replays high-value levels more often.
+  \item \textbf{Self-play / adversarial environment design}: PAIRED~\cite{dennis2020paired} trains an adversary to propose environments that maximize the \emph{regret} between a protagonist and antagonist agent, producing a natural curriculum of increasing complexity without hand-designed difficulty schedules.
+  \item \textbf{Hindsight relabeling}: failed trajectories are relabeled with the goal the agent \emph{did} achieve, providing a learning signal even from failures (Hindsight Experience Replay, HER)~\cite{andrychowicz2017hindsight}.
+  \item \textbf{Difficulty-targeted data selection for LLMs}: in RLVR training, not all problems provide equal signal. Recent work prioritizes moderate-difficulty questions---those the model solves roughly 30--70\% of the time---which yield the highest gradient information~\cite{wang2025dataefficiency}. ADCL~\cite{liu2025adcl} periodically re-estimates difficulty as the model improves, avoiding stale curricula.
+\end{itemize}
+
+\section{Types of Agentic Environments}
+\label{sec:env-types}
+
+\subsection{Code Execution Sandboxes}
+\label{code-execution-sandboxes}
+
+The most fundamental agentic environment for LLMs is a code execution sandbox: the agent writes code, the sandbox runs it, and the output is returned. This simple loop underlies a surprising fraction of real-world agent deployments.
+
+\textbf{Docker-based isolation} is the most common approach. Each episode spawns a fresh container from a known image, executes the agent’s code inside it, and destroys the container at episode end. Network access, filesystem writes, and process spawning can all be controlled at the container level.1
+
+\textbf{E2B} (Environments to Benchmarks)2 provides a managed cloud sandbox API: the agent sends code over HTTP, E2B executes it in an isolated Firecracker microVM that boots in under 200 ms, and returns stdout/stderr. E2B handles the infrastructure complexity of container lifecycle management, making it easy to integrate into agent training loops.
+
+\textbf{Modal}3 offers a similar managed execution model with stronger GPU support, making it suitable for agents that need to run ML workloads as part of their task.
+
+\begin{warningbox}[Sandbox Escape and Security]
+Code execution sandboxes are a primary attack surface. A sufficiently capable agent (or a prompt-injected payload) may attempt to escape the sandbox via kernel exploits, network exfiltration, or resource exhaustion. Defense-in-depth is essential: combine container isolation with seccomp profiles, read-only root filesystems, network egress filtering, and CPU/memory cgroups. Never run agent-generated code with host-level privileges.
+\end{warningbox}
+
+\subsection{Web Environments}
+\label{web-environments}
+
+Web environments present the agent with a browser and ask it to complete tasks on real or simulated websites.
+
+\textbf{WebArena}~\cite{zhou2024webarena} provides a self-hosted testbed of four functional web applications---an e-commerce store, a social forum, a GitLab instance, and a CMS---plus a map service, totalling 812 long-horizon tasks. The agent interacts via a browser automation API; tasks require multi-step navigation, form filling, and information retrieval. Human performance is approximately 78\%; state-of-the-art LLM agents achieve around 35--45\%.
+
+\textbf{VisualWebArena}~\cite{koh2024visualwebarena} extends WebArena with visually grounded tasks that require interpreting images on web pages. The observation is a screenshot paired with an accessibility tree; the agent must ground its actions in both modalities.
+
+\textbf{Mind2Web}~\cite{deng2024mind2web} is a large-scale dataset of 2,000 tasks across 137 real websites, collected via human demonstrations. Unlike WebArena, Mind2Web focuses on generalization to unseen websites, making it a harder out-of-distribution test.
+
+\begin{examplebox}[WebArena Task Example]
+\textbf{Task}: ``Find the cheapest red dress under \$50 on the e-commerce site and add it to the cart.''
+
+\textbf{Agent trajectory}:
+
+\begin{enumerate}
+  \item Navigate to the clothing category.
+  \item Apply color filter: red.
+  \item Sort by price ascending.
+  \item Identify the first item under \$50.
+  \item Click ``Add to Cart''.
+  \item Verify cart contents.
+\end{enumerate}
+
+The environment checks the final cart state against the ground truth item; reward is 1 if correct, 0 otherwise.
+\end{examplebox}
+
+\subsection{Computer Use Environments}
+\label{computer-use-environments}
+
+Computer use environments give the agent control of a full desktop operating system, observed through screenshots and/or accessibility APIs.
+
+\textbf{OSWorld}~\cite{xie2024osworld} tests desktop automation across three operating systems (Ubuntu, Windows, macOS) with 369 tasks spanning productivity apps (LibreOffice, VS Code, Chrome, GIMP, etc.). The agent observes screenshots and acts via \texttt{pyautogui}-style mouse and keyboard commands. The human--agent gap is stark: annotators succeed on roughly 72\% of tasks while the strongest LLM agent manages only $\sim$18\%, underscoring the difficulty of pixel-level GUI control.
+
+\textbf{WindowsAgentArena}~\cite{bonatti2024windows} focuses specifically on Windows 11, with 154 tasks across 19 applications. It emphasizes enterprise workflows: Excel formulas, PowerPoint editing, Outlook email management.
+
+\begin{keybox}[The Screenshot Bottleneck]
+Computer use agents face a fundamental challenge: screenshots are high-dimensional (typically $1920 \times 1080 \times 3$ pixels) but most of the information is irrelevant to the current action. Efficient agents learn to attend to small regions of the screen, use accessibility trees to identify interactive elements by name rather than pixel coordinate, and maintain a compact working memory of previously visited UI states.
+\end{keybox}
+
+\subsection{Software Engineering Environments}
+\label{software-engineering-environments}
+
+Software engineering (SWE) environments ask the agent to solve real-world programming tasks: fixing bugs, implementing features, writing tests.
+
+\textbf{SWE-bench}~\cite{jimenez2024swebench} draws on 2,294 real pull requests from 12 widely-used Python projects (Django, Flask, scikit-learn, among others). Each instance pairs an issue description with a held-out test suite that passes only after the correct patch is applied. The agent must understand the repository structure, locate the relevant code, implement a fix, and verify it with the test suite. The \textbf{SWE-bench Verified} subset (500 issues) has been human-validated for correctness and is the standard evaluation target.
+
+\textbf{SWE-agent}~\cite{yang2024sweagent} is both a benchmark environment and an agent framework. It introduces the \emph{Agent-Computer Interface} (ACI): a set of shell commands optimized for LLM agents (e.g., \texttt{search\_file}, \texttt{open}, \texttt{edit}) that reduce the action space complexity compared to raw bash.
+
+\begin{examplebox}[SWE-bench Workflow]
+\textbf{Input}: A GitHub issue description and the full repository at the commit where the issue was filed.
+
+\textbf{Agent actions}: \texttt{find\_file}, \texttt{view}, \texttt{edit}, \texttt{python -m pytest tests/}.
+
+\textbf{Reward}: 1 if all target tests pass after the agent’s patch; 0 otherwise. No partial credit.
+\end{examplebox}
+
+\subsection{Scientific Research Environments}
+\label{scientific-research-environments}
+
+Scientific research environments push agents toward autonomous knowledge generation: reading papers, forming hypotheses, designing experiments, and interpreting results.
+
+\textbf{PaperQA2}~\cite{lala2023paperqa} is a retrieval-augmented agent that answers scientific questions by searching a corpus of PDFs, extracting relevant passages, and synthesizing an answer with citations. It serves as both a tool and a benchmark for literature-grounded reasoning.
+
+\textbf{AI Scientist}~\cite{lu2024aiscientist} is an end-to-end research automation system: given a research direction, the agent generates hypotheses, writes and runs experiments, interprets results, and produces a draft paper. The environment includes a Python execution sandbox, a literature search API, and a LaTeX compiler.
+
+\textbf{MLAgentBench}~\cite{huang2024mlagentbench} evaluates agents on machine learning engineering tasks: improving model accuracy on a given dataset within a compute budget. The agent can read data, write training scripts, run experiments, and iterate.
+
+\subsection{Game and Simulation Environments}
+\label{game-and-simulation-environments}
+
+Games provide rich, long-horizon environments with well-defined reward signals and no real-world consequences.
+
+\textbf{NetHack}~\cite{kuttler2020nethack} is a procedurally generated roguelike with an enormous state space, requiring long-term planning, inventory management, and adaptation to unexpected events. The NetHack Learning Environment (NLE) provides a Gym-compatible interface.
+
+\textbf{Voyager / Minecraft}~\cite{wang2023voyager} uses the Minecraft game engine as an open-ended environment. Voyager introduces a curriculum of progressively harder tasks (collect wood $\to$ craft tools $\to$ build shelter $\to$ explore the Nether) and a skill library that accumulates reusable code snippets across episodes.
+
+\textbf{GAIA}~\cite{mialon2023gaia} poses 466 questions that demand chained tool use---web search, code execution, file parsing---graded into three difficulty levels by the number of reasoning steps involved. The benchmark starkly exposes the gap between human capability ($\sim$92\% accuracy) and current LLM agents (GPT-4 with plugins scored $\sim$15\% at launch; later systems reach $\sim$30\%).
+
+\subsection{Multi-Agent Environments}
+\label{multi-agent-environments}
+
+Multi-agent environments involve two or more LLM agents interacting with each other and/or a shared world.
+
+\begin{itemize}
+  \item \textbf{Negotiation}: agents with private utility functions must reach a deal through dialogue. Classic environments include DealOrNoDeal~\cite{lewis2017dealornodeal} and CaSiNo~\cite{chawla2021casino}.
+  \item \textbf{Debate}: two agents argue opposing positions; a judge agent (or human) evaluates the quality of arguments. Used to elicit truthful reasoning via adversarial pressure.
+  \item \textbf{Collaborative task completion}: agents with complementary capabilities (planner, executor, critic) must coordinate to complete a task neither could solve alone. Frameworks include AutoGen~\cite{wu2023autogen}, CrewAI~\cite{moura2023crewai}, and MetaGPT~\cite{hong2023metagpt}.
+  \item \textbf{Competitive games}: agents play zero-sum games (chess, Go, poker) where the opponent is itself an LLM agent. Self-play in these environments has produced superhuman performance in narrow domains.
+\end{itemize}
+
+\section{OpenEnv: Standardized Agentic Environment Interfaces}
+\label{sec:openenv}
+
+The proliferation of agentic environments has created a fragmentation problem: each environment exposes a different API, uses different observation formats, and requires different scaffolding. \textbf{OpenEnv}~\cite{huggingface2025openenv} is a recent open-source framework by Hugging Face that addresses this directly: it provides a Gymnasium-style~\cite{towers2024gymnasium} interface (\texttt{step()}, \texttt{reset()}, \texttt{state()}) for agentic execution environments, with isolated Docker-based deployments communicating over WebSocket. OpenEnv complements broader standardization efforts such as AgentGym~\cite{xi2024agentgym}, which offers a uni-format platform for LLM agents across diverse environments, and BrowserGym~\cite{drouin2024browsergym}, which standardizes observation and action spaces for web-agent benchmarks. The design principles below capture the converging best practices from these projects.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_064_openenv-arch.png}
+\caption{OpenEnv architecture with an LLM agent. The agent reasons via a harness loop, which calls the typed \texttt{EnvClient}. The client communicates over WebSocket to an \texttt{HTTPEnvServer} running inside a Docker container. An RL trainer (dashed) optionally wraps the loop to collect rollouts and reward signals for policy optimization.}
+\label{fig:openenv-arch}
+\end{figure}
+
+\subsection{Standardized Agent--Environment Interface}
+\label{standardized-agentenvironment-interface}
+
+OpenEnv defines a typed interface for agentic execution environments. The design mirrors Gymnasium’s simplicity but targets LLM agents interacting with tools over HTTP/WebSocket:
+
+\begin{itemize}
+  \item \texttt{env.reset()} $\to$ \texttt{StepResult}: start a new episode; returns the initial observation.
+  \item \texttt{env.step(action)} $\to$ \texttt{StepResult(observation, reward, done)}: execute one action and return the resulting observation, scalar reward, and termination flag.
+  \item \texttt{env.state()} $\to$ current environment state (episode ID, step count, environment-specific fields).
+  \item \texttt{env.close()}: release resources (stop containers, close connections).
+\end{itemize}
+
+Actions and observations are strongly typed Python dataclasses, specific to each environment. For example, a coding environment defines \texttt{CodeAction(code=...)} and returns an observation with \texttt{stdout}, \texttt{stderr}, and \texttt{exit\_code}; a game environment defines its own action/observation types. This per-environment typing gives agents structured, predictable interfaces while keeping the three core methods (\texttt{reset}, \texttt{step}, \texttt{state}) universal.
+
+\paragraph{Architecture.}
+\label{architecture.}
+
+Each environment is a Python class inheriting from \texttt{Environment} (implementing \texttt{reset()} and \texttt{step()}). It is served inside a Docker container via \texttt{HTTPEnvServer}, which exposes a FastAPI/WebSocket endpoint. Clients use environment-specific subclasses of \texttt{EnvClient} that handle serialization and connection lifecycle. Containers can be launched locally via \texttt{from\_docker\_image()} or connected to remotely via a base URL:
+
+\begin{lstlisting}[style=pythonstyle]
+from coding_env import CodeAction, CodingEnv
+
+# Option 1: Launch a local Docker container
+client = CodingEnv.from_docker_image("coding-env:latest")
+
+# Option 2: Connect to a remote deployment
+# client = CodingEnv(base_url="http://localhost:8000")
+
+# Interact with the environment
+result = client.reset()
+print(result.observation.stdout)
+print(result.observation.stderr)
+print(result.observation.exit_code)
+
+result = client.step(CodeAction(code="print(2 + 2)"))
+print(result.observation.stdout)       # "4\n"
+print(result.observation.exit_code)    # 0
+print(result.reward, result.done)
+
+# Check state
+state = client.state()
+print(state.episode_id, state.step_count)
+
+client.close()
+\end{lstlisting}
+
+\paragraph{Environment as a server.}
+\label{environment-as-a-server.}
+
+Creating a new environment requires only implementing the \texttt{Environment} base class:
+
+\begin{lstlisting}[style=pythonstyle]
+from openenv.core.env_server import Environment, create_app
+from dataclasses import dataclass
+
+@dataclass
+class MyAction:
+    text: str
+
+@dataclass
+class MyObservation:
+    response: str
+    reward: float = 0.0
+    done: bool = False
+
+class MyEnvironment(Environment):
+    def reset(self) -> MyObservation:
+        return MyObservation(response="Ready")
+
+    def step(self, action: MyAction) -> MyObservation:
+        return MyObservation(response=f"Echo: {action.text}",
+                             reward=1.0, done=False)
+
+app = create_app(MyEnvironment(), MyAction, MyObservation)
+# Run: uvicorn module:app --host 0.0.0.0 --port 8000
+\end{lstlisting}
+
+\paragraph{Harness integration (experimental).}
+\label{harness-integration-experimental.}
+
+RFC~0054 introduces a harness-facing layer where RL training frameworks interact with environments through MCP-style tool calls. A \texttt{build\_harness\_rollout\_func()} helper produces a TRL-compatible rollout function, bridging OpenEnv directly into existing training pipelines like TorchForge~\cite{meta2025torchforge}.
+
+\paragraph{Governance.}
+\label{governance.}
+
+OpenEnv is openly governed by a technical committee including Meta-PyTorch, NVIDIA, Unsloth, Modal, Prime Intellect, Reflection, and Hugging Face---ensuring that the standard evolves with broad industry input rather than a single vendor’s agenda.
+
+\subsection{Environment Registries and Discovery}
+\label{environment-registries-and-discovery}
+
+OpenEnv environments can be deployed as Hugging Face Spaces or local Docker images, enabling discovery and use without manual installation. The same client interface works regardless of deployment target:
+
+\begin{lstlisting}[style=pythonstyle]
+from echo_env import EchoAction, EchoEnv
+
+# Connect to a remote HF Space deployment
+client = EchoEnv(base_url="https://openenv-echo-env.hf.space")
+result = client.reset()
+print(result.observation.echoed_message)  # "Echo environment ready!"
+
+result = client.step(EchoAction(message="Hello!"))
+print(result.observation.echoed_message)  # "Hello!"
+print(result.reward)
+client.close()
+\end{lstlisting}
+
+The OpenEnv ecosystem already spans 70+ environments (OpenSpiel games, Atari, BrowserGym, coding sandboxes, financial RL, traffic simulation, and more). RFC~0025 proposes a formal \emph{tool discovery} protocol so agents can query which actions an unfamiliar environment accepts at runtime.
+
+\subsection{Compositional Environments}
+\label{compositional-environments}
+
+Real agent deployments rarely use a single tool. OpenEnv supports rich environments that expose multiple capabilities through typed actions. For example, a coding environment supports code execution, file I/O, and shell commands within a single sandboxed session:
+
+\begin{lstlisting}[style=pythonstyle]
+from coding_env import CodeAction, CodingEnv
+
+client = CodingEnv.from_docker_image("coding-env:latest")
+result = client.reset()
+
+# Execute code
+result = client.step(CodeAction(code="x = 42\nprint(x)"))
+print(result.observation.stdout)   # "42"
+print(result.observation.exit_code)  # 0
+
+# State persists across steps within an episode
+result = client.step(CodeAction(code="print(x + 1)"))
+print(result.observation.stdout)   # "43"
+
+state = client.state()
+print(state.step_count)  # 2
+
+client.close()
+\end{lstlisting}
+
+For agents requiring diverse tool access (code + web + files), OpenEnv’s RFC~0036 proposes MCP integration, allowing any MCP-compatible tool server to be wrapped as an OpenEnv environment. Additionally, the \texttt{openenv} CLI can scaffold, build, and deploy new environments to Hugging Face Spaces with a single command.
+
+\subsection{Environment Versioning and Reproducibility}
+\label{environment-versioning-and-reproducibility}
+
+Benchmark integrity requires that environment behavior is frozen at evaluation time. Best practices include:
+
+\begin{itemize}
+  \item \textbf{Semantic versioning}: \texttt{WebArena-v1.2.0} guarantees backward compatibility within a minor version.
+  \item \textbf{Docker image pinning}: the environment runtime is packaged as a Docker image with a content-addressed hash.
+  \item \textbf{Seed-based determinism}: all stochastic elements (procedural generation, network responses) are seeded and logged so that any trajectory can be exactly replayed.
+  \item \textbf{Leaderboard snapshots}: public leaderboards record the environment version alongside the score, preventing silent benchmark drift.
+\end{itemize}
+
+\section{Building Custom Environments}
+\label{sec:custom-env}
+
+\subsection{Gymnasium-Style API for LLM Agents}
+\label{gymnasium-style-api-for-llm-agents}
+
+The Gymnasium API~\cite{towers2024gymnasium}7 (successor to OpenAI Gym) is the de facto standard for RL environments. Adapting it for LLM agents requires two modifications: (1) observations and actions are strings (or dicts containing strings) rather than numeric arrays, and (2) the \texttt{step} method must handle asynchronous tool execution.
+
+\subsection{Reward Function Engineering}
+\label{reward-function-engineering}
+
+Reward functions for LLM agent environments are typically \emph{execution-based}: the environment runs a verifier after each episode and returns 1 if the task is solved, 0 otherwise. For tasks without a clear verifier, options include:
+
+\begin{itemize}
+  \item \textbf{LLM-as-judge}: a separate LLM scores the agent’s final state against the task description.
+  \item \textbf{Rubric-based scoring}: a structured rubric decomposes the task into sub-criteria, each scored independently.
+  \item \textbf{Human annotation}: a human evaluator scores a random sample of trajectories; the scores are used to calibrate an automated proxy.
+\end{itemize}
+
+\subsection{State Management and Checkpointing}
+\label{state-management-and-checkpointing}
+
+Long-horizon tasks may require hours of wall time. Environments should support:
+
+\begin{itemize}
+  \item \textbf{State serialization}: the full environment state (filesystem, browser cookies, database contents) can be serialized to disk and restored.
+  \item \textbf{Mid-episode checkpointing}: the agent can save a checkpoint at any step and resume from it, enabling tree-search-style exploration.
+  \item \textbf{Trajectory logging}: every observation, action, and reward is logged to a structured file for offline analysis and reward model training.
+\end{itemize}
+
+\subsection{Parallelization for Training Data Collection}
+\label{parallelization-for-training-data-collection}
+
+Training LLM agents via RL requires millions of environment interactions. Parallelization strategies include:
+
+\begin{itemize}
+  \item \textbf{Process-level parallelism}: spawn $N$ independent environment processes; collect trajectories in parallel.
+  \item \textbf{Async rollout workers}: use an async event loop (e.g., \texttt{asyncio}) to overlap LLM inference latency with environment execution.
+  \item \textbf{Vectorized environments}: batch multiple environments into a single \texttt{step} call, amortizing Python overhead.
+  \item \textbf{Cloud-native scaling}: use a job scheduler (Ray, SLURM) to distribute environment workers across a cluster, with a central replay buffer aggregating trajectories.
+\end{itemize}
+
+\section{Environment--Agent Interface Patterns}
+\label{sec:interface-patterns}
+
+Figure~\ref{fig:env-agent-interface} illustrates the four main interface patterns used in practice.
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_065_env-agent-interface.png}
+\caption{Four agent--environment interface patterns. (a) Text-based is the most common for LLMs. (b) Structured JSON enables precise parsing. (c) Multimodal combines screenshots with accessibility trees for GUI tasks. (d) Streaming supports real-time interaction without discrete turn boundaries.}
+\label{fig:env-agent-interface}
+\end{figure}
+
+\paragraph{Text-Based Observation/Action.}
+\label{text-based-observationaction.}
+
+The agent receives a string observation and produces a string action. The environment parses the action (e.g., extracts a tool call from a \texttt{<tool>...</tool>} block) and returns the result as a string. This is the most compatible pattern: any LLM can participate without special architecture.
+
+\paragraph{Structured JSON Observation/Action.}
+\label{structured-json-observationaction.}
+
+Observations and actions are JSON objects with a defined schema. This enables strict validation (reject malformed actions before execution), structured logging, and easier programmatic analysis of trajectories. The tradeoff is that the agent must reliably produce valid JSON, which requires either fine-tuning or constrained decoding.
+
+\paragraph{Multimodal (Screenshot + Accessibility Tree).}
+\label{multimodal-screenshot-accessibility-tree.}
+
+Used in computer-use and web environments. The observation is a tuple \texttt{(screenshot: PIL.Image, a11y\_tree: dict)}. The screenshot provides visual context; the accessibility tree provides element identifiers that can be used in actions without pixel-level coordinate specification. This hybrid approach is more robust than pure screenshot-based control.
+
+\paragraph{Streaming vs.~Turn-Based Interaction.}
+\label{streaming-vs.-turn-based-interaction.}
+
+Most current environments use a turn-based model: the agent produces a complete action, the environment executes it, and the next observation is returned. Streaming environments allow the agent to receive partial observations as they arrive (e.g., the output of a long-running command) and to interrupt or redirect execution mid-stream. This is closer to how humans interact with computers but requires more complex agent architectures.
+
+\section{Evaluation Harness Design}
+\label{sec:eval-harness}
+
+An evaluation harness is the infrastructure that runs an agent across a benchmark suite, collects results, and produces summary statistics. Good harness design is as important as good environment design.
+
+\subsection{Deterministic vs.~Stochastic Environments}
+\label{deterministic-vs.-stochastic-environments}
+
+\begin{itemize}
+  \item \textbf{Deterministic environments} produce the same observation sequence for the same action sequence. They are easy to debug and reproduce but may not reflect real-world variability.
+  \item \textbf{Stochastic environments} introduce randomness (procedural generation, network latency, user simulation). They require multiple runs per task to estimate mean performance and confidence intervals.
+\end{itemize}
+
+\begin{questionbox}[How Many Runs Are Enough?]
+For a benchmark with $N$ tasks and binary rewards, the standard error of the mean success rate is $\sqrt{p(1-p)/N}$. With $N=500$ tasks and $p=0.4$, the 95\% confidence interval is approximately $\pm 4.3\%$. For stochastic environments, multiply by $\sqrt{k}$ where $k$ is the number of independent runs per task. A common practice is 3--5 runs per task for stochastic benchmarks.
+\end{questionbox}
+
+\subsection{Held-Out Test Environments}
+\label{held-out-test-environments}
+
+Benchmark integrity requires a strict train/test split at the \emph{environment} level, not just the task level. An agent that has been trained on WebArena tasks should be evaluated on a held-out set of tasks that were not used during training. Ideally, the held-out set covers different websites, task types, and difficulty levels than the training set.
+
+\subsection{Cross-Environment Generalization}
+\label{cross-environment-generalization}
+
+The ultimate test of an agent is whether skills learned in one environment transfer to another. Cross-environment evaluation protocols measure:
+
+\begin{itemize}
+  \item \textbf{Zero-shot transfer}: train on environment A, test on environment B with no fine-tuning.
+  \item \textbf{Few-shot adaptation}: provide $k$ demonstrations from environment B before evaluation.
+  \item \textbf{Continual learning}: train sequentially on environments A, B, C; measure performance on all three after training on C.
+\end{itemize}
+
+\subsection{Human Baseline Collection}
+\label{human-baseline-collection}
+
+Every benchmark should include human performance as a reference point. Human baselines serve three purposes:
+
+\begin{enumerate}
+  \item They establish an upper bound on task difficulty.
+  \item They reveal whether a task is solvable at all (some benchmark tasks turn out to be ambiguous or impossible).
+  \item They provide a calibration point for interpreting agent scores (``the agent achieves 40\% of human performance'').
+\end{enumerate}
+
+Human baselines should be collected from workers with domain expertise (e.g., software engineers for SWE-bench, not crowdworkers) and should include time-on-task measurements to enable efficiency comparisons.
+
+\section{Code Example: Minimal Custom LLM Agent Environment}
+\label{sec:code-example}
+
+\begin{examplebox}[Minimal Custom Environment for LLM Agent Training]
+The following Python class implements a file-editing environment where the agent must modify a Python file to make a failing test pass. It follows the Gymnasium API adapted for LLM agents.
+\end{examplebox}
+
+\begin{lstlisting}[style=pythonstyle, caption={Minimal LLM agent environment following the Gymnasium API.}]
+"""
+minimal_env.py  --  A minimal file-editing environment for LLM agents.
+
+The agent receives a Python file with a bug and a failing test.
+It must edit the file until the test passes.
+Reward: 1.0 if all tests pass, 0.0 otherwise.
+"""
+
+from __future__ import annotations
+import subprocess, shutil, tempfile, textwrap
+from pathlib import Path
+from dataclasses import dataclass, field
+from typing import Any
+
+# ---------------------------------------------------------------------------
+# Data structures
+# ---------------------------------------------------------------------------
+
+@dataclass
+class StepResult:
+    observation: str          # Text fed to the LLM
+    reward: float             # 0.0 or 1.0
+    terminated: bool          # Episode over (task solved or max steps)
+    truncated: bool           # Episode cut short (budget exceeded)
+    info: dict[str, Any] = field(default_factory=dict)
+
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+
+class FileEditEnv:
+    """
+    A Gymnasium-style environment for LLM-based code repair.
+
+    Observation space : str  (file contents + test output)
+    Action space      : str  (one of: view, edit, run_tests, submit)
+    Reward            : 1.0 on passing all tests, 0.0 otherwise
+    """
+
+    MAX_STEPS = 20          # Hard episode limit
+    TIMEOUT   = 30          # Seconds per test run
+
+    def __init__(self, buggy_code: str, test_code: str,
+                 task_description: str):
+        self.buggy_code       = buggy_code
+        self.test_code        = test_code
+        self.task_description = task_description
+        self._workdir: Path | None = None
+        self._step_count = 0
+
+    # ------------------------------------------------------------------
+    # Core API
+    # ------------------------------------------------------------------
+
+    def reset(self, seed: int | None = None) -> tuple[str, dict]:
+        """Initialise a fresh episode; return (observation, info)."""
+        if self._workdir and self._workdir.exists():
+            shutil.rmtree(self._workdir)
+
+        self._workdir    = Path(tempfile.mkdtemp(prefix="fileenv_"))
+        self._step_count = 0
+
+        # Write initial files
+        (self._workdir / "solution.py").write_text(self.buggy_code)
+        (self._workdir / "test_solution.py").write_text(self.test_code)
+
+        obs = self._build_observation(
+            action_taken="[Episode start]",
+            test_output=self._run_tests()
+        )
+        return obs, {"step": 0}
+
+    def step(self, action: str) -> StepResult:
+        """Execute one agent action; return StepResult."""
+        self._step_count += 1
+        action = action.strip()
+
+        # --- Parse and dispatch action ---
+        if action.startswith("view"):
+            result_text = self._action_view()
+        elif action.startswith("edit"):
+            result_text = self._action_edit(action)
+        elif action.startswith("run_tests"):
+            result_text = self._run_tests()
+        elif action.startswith("submit"):
+            result_text = self._run_tests()
+        else:
+            result_text = (
+                f"Unknown action: {action!r}\n"
+                "Valid actions: view | edit <new_content> | "
+                "run_tests | submit"
+            )
+
+        test_output = self._run_tests()
+        passed      = "passed" in test_output and "failed" not in test_output
+        reward      = 1.0 if passed else 0.0
+        terminated  = passed or action.startswith("submit")
+        truncated   = self._step_count >= self.MAX_STEPS
+
+        obs = self._build_observation(action, test_output)
+        return StepResult(obs, reward, terminated, truncated,
+                          {"step": self._step_count,
+                           "passed": passed})
+
+    def render(self) -> str:
+        """Return a human-readable summary of the current state."""
+        if self._workdir is None:
+            return "[Environment not initialised]"
+        code = (self._workdir / "solution.py").read_text()
+        return f"=== solution.py ===\n{code}\n"
+
+    def close(self) -> None:
+        """Release resources."""
+        if self._workdir and self._workdir.exists():
+            shutil.rmtree(self._workdir)
+            self._workdir = None
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _action_view(self) -> str:
+        code = (self._workdir / "solution.py").read_text()
+        return f"Current solution.py:\n```python\n{code}\n```"
+
+    def _action_edit(self, action: str) -> str:
+        # Expect: edit\n```python\n<code>\n```
+        try:
+            new_code = action.split("```python")[1].split("```")[0]
+            (self._workdir / "solution.py").write_text(new_code)
+            return "File updated successfully."
+        except IndexError:
+            return "Edit failed: wrap new code in ```python ... ```"
+
+    def _run_tests(self) -> str:
+        result = subprocess.run(
+            ["python", "-m", "pytest", "test_solution.py",
+             "-v", "--tb=short", "--no-header"],
+            cwd=self._workdir,
+            capture_output=True, text=True,
+            timeout=self.TIMEOUT
+        )
+        return result.stdout + result.stderr
+
+    def _build_observation(self, action_taken: str,
+                           test_output: str) -> str:
+        code = (self._workdir / "solution.py").read_text()
+        return textwrap.dedent(f"""
+            TASK: {self.task_description}
+            STEP: {self._step_count}/{self.MAX_STEPS}
+
+            --- Last action ---
+            {action_taken}
+
+            --- Current solution.py ---
+            {code}
+
+            --- Test output ---
+            {test_output}
+
+            --- Available actions ---
+            view                          # show current file
+            edit\n```python\n<code>\n```  # replace file contents
+            run_tests                     # run pytest
+            submit                        # finalise and end episode
+        """).strip()
+
+# ---------------------------------------------------------------------------
+# Example usage
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    BUGGY = "def add(a, b):\n    return a - b\n"   # bug: minus not plus
+    TESTS = (
+        "from solution import add\n"
+        "def test_add(): assert add(2, 3) == 5\n"
+    )
+
+    env = FileEditEnv(BUGGY, TESTS, "Fix the add() function.")
+    obs, _ = env.reset(seed=0)
+    print(obs)
+
+    # Simulate one correct edit
+    fix = "edit\n```python\ndef add(a, b):\n    return a + b\n```"
+    result = env.step(fix)
+    print(f"\nReward: {result.reward}  |  Terminated: {result.terminated}")
+    env.close()
+\end{lstlisting}
+
+\begin{keybox}[Design Decisions in the Example Environment]
+\begin{itemize}
+  \item \textbf{Text-only interface}: observations and actions are plain strings, compatible with any LLM.
+  \item \textbf{Execution-based reward}: the reward is derived from running the actual test suite, not from an LLM judge. This makes it tamper-proof and perfectly aligned.
+  \item \textbf{Isolated subprocess}: tests run in a separate process with a timeout, preventing infinite loops from crashing the training loop.
+  \item \textbf{Gymnasium-compatible}: \texttt{reset}/\texttt{step}/ \texttt{render}/\texttt{close} follow the standard API, enabling drop-in use with RL training frameworks.
+\end{itemize}
+\end{keybox}
+
+\section{Comparison of Major Agentic Environments}
+\label{sec:env-comparison}
+
+Table~\ref{tab:env-comparison} summarizes the key properties of the major agentic environments discussed in this section.
+
+\begin{table}[ht!]
+\centering
+\caption{Comparison of major agentic environments for LLM agents. ``SoTA'' refers to the best published LLM agent result at the time of writing. Human performance is shown where available.}
+\label{tab:env-comparison}
+\begin{tabular}{@{}lp{2.1cm}p{2.1cm}p{2.1cm}p{2.1cm}p{2.1cm}p{2.1cm}@{}}
+\toprule
+\textbf{Environment} & \textbf{Obs.~Type} & \textbf{Action Space} & \textbf{Domain} & \textbf{\# Tasks} & \textbf{Human} & \textbf{SoTA LLM} \\
+\midrule
+WebArena & Text + DOM & Browser API & Web navigation & 812 & 78\% & $\sim$45\% \\
+VisualWebArena & Screenshot + DOM & Browser API & Visual web & 910 & 88\% & $\sim$35\% \\
+Mind2Web & Screenshot + DOM & Browser API & Real websites & 2,000 & --- & $\sim$30\% \\
+OSWorld & Screenshot & Mouse + keyboard & Desktop OS & 369 & 72\% & $\sim$18\% \\
+WindowsAgentArena & Screenshot & Mouse + keyboard & Windows apps & 154 & 75\% & $\sim$20\% \\
+SWE-bench Verified & Text (repo) & Shell + editor & Code repair & 500 & 100\% & $\sim$50\% \\
+GAIA (Level 1) & Text + files & Tool calls & General QA & 165 & 92\% & $\sim$55\% \\
+GAIA (Level 3) & Text + files & Tool calls & Hard QA & 42 & 92\% & $\sim$10\% \\
+NetHack (NLE) & Text + glyphs & Discrete actions & Roguelike game & --- & $>$10k score & $\sim$5k score \\
+Voyager (Minecraft) & Text + code & Code execution & Open-world game & Curriculum & --- & 15+ tech tree \\
+MLAgentBench & Text + code & Shell + editor & ML engineering & 13 & --- & $\sim$40\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{intuitionbox}[Reading the Comparison Table]
+The gap between human performance and SoTA LLM performance is largest for \emph{computer use} tasks (OSWorld: 72\% vs.~18\%) and smallest for \emph{code repair} (SWE-bench: 100\% vs.~50\%). This pattern reflects the maturity of the action space: LLMs have been trained on vast amounts of code but relatively little screenshot-based interaction data. As computer-use training data accumulates, the gap is expected to narrow.
+\end{intuitionbox}
+
+\section{Summary}
+\label{sec:env-summary}
+
+Agentic environments are the substrate on which LLM agents are trained and evaluated. The key takeaways from this section are:
+
+\begin{enumerate}
+  \item \textbf{Environments are not optional.} Safe exploration, reproducible evaluation, and curriculum learning all require a structured environment. The gap between chatbot and agent evaluation cannot be bridged without one.
+  \item \textbf{Design all four axes carefully.} Observation space, action space, reward signal, and episode structure each have failure modes that can invalidate an entire benchmark.
+  \item \textbf{The landscape is rich but fragmented.} Code sandboxes, web environments, computer-use environments, SWE environments, scientific environments, games, and multi-agent arenas each test different capabilities. No single environment is sufficient.
+  \item \textbf{Standardization matters.} OpenEnv~\cite{huggingface2025openenv} provides a Gymnasium-style API with Docker isolation and Hugging Face Spaces as a registry---reducing the cost of building new environments and comparing agents across them.
+  \item \textbf{The human gap is real and closing.} Current LLM agents achieve 20--50\% of human performance on most benchmarks. The fastest progress is in domains with abundant training data (code) and the slowest in domains requiring fine-grained perception (GUI control).
+\end{enumerate}
+
+\begin{questionbox}[Open Research Questions in Agentic Environments]
+\begin{itemize}
+  \item How do we design reward functions for tasks where correctness is subjective or context-dependent?
+  \item Can a single agent architecture generalize across text-based and multimodal environments without task-specific fine-tuning?
+  \item What is the right level of environment fidelity for training? Does training on simplified simulators transfer to real deployments?
+  \item How do we prevent benchmark contamination as LLMs are trained on ever-larger web corpora that may include benchmark solutions?
+\end{itemize}
+\end{questionbox}
+

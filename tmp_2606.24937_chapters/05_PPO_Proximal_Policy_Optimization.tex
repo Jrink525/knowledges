@@ -1,0 +1,451 @@
+\chapter{PPO --- Proximal Policy Optimization}
+\label{ppo-proximal-policy-optimization}
+
+\section{Motivation and History}
+\label{motivation-and-history}
+
+\textbf{Problem}: Vanilla policy gradient updates have no constraint on step size. A single unlucky batch can push the policy into a region where it generates garbage $\rightarrow$ garbage gets low rewards $\rightarrow$ next gradient makes things worse $\rightarrow$ unrecoverable collapse.
+
+\textbf{Solution history}:
+
+\begin{enumerate}
+  \item \textbf{TRPO}~\cite{schulman2015trust} (2015): Constrain KL divergence between old and new policy. Works perfectly but requires expensive second-order optimization (Fisher information matrix, conjugate gradients).
+  \item \textbf{PPO} (2017)~\cite{schulman2017proximal}: Achieve similar stability with a simple first-order clipped objective. 10$\times$ simpler to implement, works almost as well, scales to distributed training trivially.
+\end{enumerate}
+
+\section{The Clipped Objective}
+\label{the-clipped-objective}
+
+The core innovation of PPO is a clipped surrogate objective that prevents destructively large policy updates while remaining simple to implement.
+
+\begin{equation}
+\boxed{L^{\text{CLIP}}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t,\; \text{clip}(r_t(\theta), 1{-}\epsilon, 1{+}\epsilon)\hat{A}_t\right)\right]}
+\end{equation}
+ where $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_\text{old}}(a_t|s_t)}$ is the probability ratio.
+
+\begin{intuitionbox}[Clipping Intuition — The Key Insight]
+The $\min$ operator creates a \textbf{pessimistic bound}:
+
+\begin{itemize}
+  \item \textbf{Good action ($\hat{A} > 0$)}: We want to increase its probability. The surrogate $r\hat{A}$ grows as $r$ increases. But clip caps benefit at $r = 1 + \epsilon$. \emph{``Don’t get greedy on one good example.''}
+  \item \textbf{Bad action ($\hat{A} < 0$)}: We want to decrease its probability. $r\hat{A}$ improves as $r$ decreases. But clip caps benefit at $r = 1 - \epsilon$. \emph{``Don’t forget too aggressively based on one bad example.''}
+\end{itemize}
+
+Net effect: policy changes by at most $\pm$20\% per update step. Prevents both catastrophic collapse and overconfident specialization.
+\end{intuitionbox}
+
+\section{Full PPO Loss}
+\label{full-ppo-loss}
+
+\begin{equation}
+L = L^{\text{CLIP}} - c_1 \underbrace{(V_\theta(s_t) - V^{\text{target}}_t)^2}_{\text{value loss}} + c_2 \underbrace{H[\pi_\theta(\cdot|s_t)]}_{\text{entropy bonus}}
+\end{equation}
+
+\begin{itemize}
+  \item \textbf{Value loss} ($c_1 = 0.1$): Trains the critic to predict returns. Also clipped for stability.
+  \item \textbf{Entropy bonus} ($c_2 = 0.01$): Prevents premature convergence to deterministic policy. Critical for exploration.
+\end{itemize}
+
+\section{Derivation of the PPO Gradient and Update Rule}
+\label{derivation-of-the-ppo-gradient-and-update-rule}
+
+This section traces the mathematical path from the RL objective to the PPO update rule, showing \emph{why} the clipped surrogate works.
+
+\subsection{Step 1: The RL Objective}
+\label{step-1-the-rl-objective}
+
+The goal is to maximize expected cumulative reward under the policy: 
+\begin{equation}
+J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=0}^T r_t\right]
+\end{equation}
+
+\subsection{Step 2: Policy Gradient Theorem}
+\label{step-2-policy-gradient-theorem}
+
+The gradient of $J(\theta)$ with respect to policy parameters: 
+\begin{equation}
+\boxed{\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}\left[\sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot \hat{A}_t\right]}
+\end{equation}
+
+where $\hat{A}_t$ is the advantage function (how much better action $a_t$ was compared to the average action in state $s_t$). This replaces the full return with the advantage to reduce variance.
+
+\subsection{Step 3: Importance Sampling for Off-Policy Data}
+\label{step-3-importance-sampling-for-off-policy-data}
+
+PPO collects data using $\pi_{\theta_{\text{old}}}$ but updates $\pi_\theta$. To correct for this distribution mismatch, apply importance sampling: 
+\begin{equation}
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_{\theta_{\text{old}}}}\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)} \nabla_\theta \log \pi_\theta(a_t|s_t) \cdot \hat{A}_t\right]
+\end{equation}
+
+Define the probability ratio $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{\text{old}}}(a_t|s_t)}$. Using the identity $\nabla_\theta \log f = \frac{\nabla_\theta f}{f}$, we get: 
+\begin{equation}
+\nabla_\theta J(\theta) = \mathbb{E}_{\pi_{\theta_{\text{old}}}}\left[\nabla_\theta\, r_t(\theta) \cdot \hat{A}_t\right]
+\end{equation}
+
+This means maximizing the \textbf{surrogate objective}: 
+\begin{equation}
+L^{\text{CPI}}(\theta) = \mathbb{E}_t\left[r_t(\theta) \cdot \hat{A}_t\right]
+\end{equation}
+
+\subsection{Step 4: The Problem with Unconstrained Surrogates}
+\label{step-4-the-problem-with-unconstrained-surrogates}
+
+$L^{\text{CPI}}$ is a valid objective, but without constraints, a single gradient step can push $r_t(\theta)$ far from 1.0, causing:
+
+\begin{itemize}
+  \item Importance weights become extreme $\rightarrow$ high variance
+  \item Policy enters untested regions $\rightarrow$ reward model gives unreliable scores
+  \item Catastrophic collapse: policy generates garbage, can’t recover
+\end{itemize}
+
+\textbf{TRPO solution}: Constrain $D_{\text{KL}}(\pi_{\theta_{\text{old}}} \| \pi_\theta) \leq \delta$. Requires second-order methods (expensive).
+
+\subsection{Step 5: PPO’s Clipped Surrogate (First-Order Approximation)}
+\label{step-5-ppos-clipped-surrogate-first-order-approximation}
+
+PPO replaces the hard KL constraint with a \textbf{clipped objective} that achieves similar behavior using only first-order gradients:
+
+\begin{equation}
+\boxed{L^{\text{CLIP}}(\theta) = \mathbb{E}_t\left[\min\!\left(r_t(\theta)\hat{A}_t,\;\text{clip}(r_t(\theta), 1{-}\epsilon, 1{+}\epsilon)\hat{A}_t\right)\right]}
+\end{equation}
+
+\textbf{Derivation of the gradient}:
+
+Let $L_t = \min(r_t \hat{A}_t,\; \bar{r}_t \hat{A}_t)$ where $\bar{r}_t = \text{clip}(r_t, 1{-}\epsilon, 1{+}\epsilon)$.
+
+\begin{equation}
+\nabla_\theta L_t = \begin{cases}
+\nabla_\theta r_t(\theta) \cdot \hat{A}_t & \text{if } r_t \hat{A}_t < \bar{r}_t \hat{A}_t \text{ (unclipped term is smaller)} \\
+0 & \text{if } r_t \hat{A}_t \geq \bar{r}_t \hat{A}_t \text{ (clipped term is smaller, gradient = 0)}
+\end{cases}
+\end{equation}
+
+Expanding the conditions:
+
+\begin{itemize}
+  \item \textbf{When $\hat{A}_t > 0$ and $r_t < 1+\epsilon$}: Gradient flows normally --- policy is encouraged to increase $\pi_\theta(a_t|s_t)$.
+  \item \textbf{When $\hat{A}_t > 0$ and $r_t \geq 1+\epsilon$}: Gradient is \textbf{zero} --- policy has already increased enough, stop pushing.
+  \item \textbf{When $\hat{A}_t < 0$ and $r_t > 1-\epsilon$}: Gradient flows normally --- policy is encouraged to decrease $\pi_\theta(a_t|s_t)$.
+  \item \textbf{When $\hat{A}_t < 0$ and $r_t \leq 1-\epsilon$}: Gradient is \textbf{zero} --- policy has already decreased enough, stop pushing.
+\end{itemize}
+
+\subsection{Step 6: The Complete PPO Update Rule}
+\label{step-6-the-complete-ppo-update-rule}
+
+Combining the clipped policy loss, value loss, and entropy bonus: 
+\begin{equation}
+\boxed{\theta_{k+1} = \theta_k + \alpha \cdot \nabla_\theta \left[L^{\text{CLIP}}(\theta) - c_1 L^{\text{VF}}(\theta) + c_2 H[\pi_\theta]\right]}
+\end{equation}
+
+where: 
+\begin{align}
+L^{\text{VF}}(\theta) &= \left(V_\theta(s_t) - V_t^{\text{target}}\right)^2 & &\text{(value function regression loss)} \\
+H[\pi_\theta] &= -\sum_a \pi_\theta(a|s_t)\log\pi_\theta(a|s_t) & &\text{(entropy of the policy)}
+\end{align}
+
+\begin{intuitionbox}[Summary: Why This Works]
+\begin{enumerate}
+  \item \textbf{Policy gradient theorem} gives us the direction to improve the policy.
+  \item \textbf{Importance sampling} lets us reuse data from $\pi_{\theta_{\text{old}}}$ across multiple epochs.
+  \item \textbf{Clipping} prevents the importance weights from becoming extreme, keeping updates safe.
+  \item \textbf{The min operator} ensures we always take the more conservative of (clipped, unclipped) --- a pessimistic lower bound on improvement.
+  \item \textbf{Result}: Monotonic improvement with probability 1, using only first-order gradients. No Hessians, no conjugate gradients, no line searches.
+\end{enumerate}
+\end{intuitionbox}
+
+\section{Rollout Buffer and Rollouts}
+\label{rollout-buffer-and-rollouts}
+
+In PPO, data management relies on a specialized, short-term storage system known as a \textbf{Rollout Buffer}. Unlike off-policy algorithms (DQN) that store experiences indefinitely in a replay buffer, PPO requires an ephemeral structure to satisfy its on-policy mathematical constraints.
+
+\subsection{What is a Rollout?}
+\label{what-is-a-rollout}
+
+A \textbf{rollout} (trajectory) is a sequence of interactions generated by the agent running its current policy in the environment:
+
+\begin{itemize}
+  \item \textbf{The process}: The agent observes a state, selects an action, receives a reward, and moves to the next state. It repeats for a fixed number of steps or until the episode ends.
+  \item \textbf{In LLMs/RLHF}: A rollout consists of taking a prompt from a dataset and letting the language model generate a complete sequence of tokens token-by-token until an end-of-text marker is hit. Each token is one ``step.''
+\end{itemize}
+
+\subsection{The Rollout Buffer}
+\label{the-rollout-buffer}
+
+The rollout buffer temporarily stores all data collected during the rollout phase. For every generated token/step, it records: 
+\begin{equation}
+\boxed{\mathcal{B} = \left\{ \left(s_t,\; a_t,\; \log\pi_{\theta_{\text{old}}}(a_t|s_t),\; r_t,\; V(s_t)\right) \right\}_{t=1}^{T}}
+\end{equation}
+
+\begin{itemize}
+  \item $s_t, a_t, r_t$: State, action taken, and reward at step $t$.
+  \item $\log\pi_{\theta_{\text{old}}}(a_t|s_t)$: Log-probability of taking that action under the exact policy that generated it (needed for ratio computation).
+  \item $V(s_t)$: Value function’s baseline prediction (needed for GAE advantage computation).
+\end{itemize}
+
+\subsection{The Rollout Buffer Lifecycle}
+\label{the-rollout-buffer-lifecycle}
+
+The buffer operates in a strict three-phase clockwork cycle:
+
+\begin{enumerate}
+  \item \textbf{Collect}: The active policy interacts with the environment to fill the buffer with fresh trajectories (for a 70B model with batch=128, max\_tokens=512: up to 65K token-level transitions per rollout).
+  \item \textbf{Train}: Compute GAE advantages across trajectories. Run $K$ epochs (typically 3--10) of mini-batch gradient descent to update policy weights using the clipped objective.
+  \item \textbf{Purge}: The entire buffer is \textbf{completely wiped clean}. Because PPO is on-policy, data generated by the old policy cannot be safely reused for the next update cycle --- the ratio $r_t(\theta)$ would become stale and the clipping guarantees would break.
+\end{enumerate}
+
+\begin{warningbox}[Rollout Buffer vs Replay Buffer]
+\textbf{Replay Buffer} (DQN, SAC): Off-policy. Stores millions of transitions indefinitely. Random sampling. Data reused across many updates.
+
+\textbf{Rollout Buffer} (PPO, GRPO): On-policy. Stores one batch of trajectories. Used for a few epochs, then discarded entirely. Fresh data required every cycle.
+
+This is why PPO requires continuous generation --- the buffer is emptied after every update, demanding fresh rollouts. This makes the generation bottleneck (60--70\% of wall-clock time) particularly painful.
+\end{warningbox}
+
+\begin{intuitionbox}[vLLM in RLHF Context]
+In RLHF training, vLLM is used for the \textbf{generation phase} (60--70\% of wall-clock time). The policy model generates rollouts that are then scored by the reward model. Key benefits:
+
+\begin{itemize}
+  \item \textbf{Batched generation}: Generate 256+ responses in parallel across prompts.
+  \item \textbf{Memory efficiency}: Fit more concurrent generations $\rightarrow$ higher GPU utilization during the generation bottleneck.
+  \item \textbf{Prefix sharing}: When generating $N=8$ responses per prompt (GRPO), the prompt KV is computed once and shared across all 8 --- no redundant prefill.
+  \item \textbf{Integration}: Frameworks like OpenRLHF and TRL use vLLM as the generation backend, separating generation workers (vLLM) from training workers (DeepSpeed/FSDP).
+\end{itemize}
+\end{intuitionbox}
+
+\section{PPO for RLHF: The Full Loop}
+\label{ppo-for-rlhf-the-full-loop}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_025_fig25.png}
+\end{figure}
+
+\begin{examplebox}[Concrete PPO Step for a 70B Chat Model]
+\textbf{Setup}: Batch of 128 prompts, Llama-3-70B policy, 512 max tokens.
+
+\textbf{Step 1 --- Generate}: Sample 128 responses (temperature=0.7, top-p=0.9). This takes 60\% of time.
+
+\textbf{Step 2 --- Score}: Reward model scores each (prompt, response) pair. Range: 0.2--0.95.
+
+\textbf{Step 3 --- KL}: Compute per-token KL: $\text{KL}_t = \log\pi_\theta(y_t|y_{<t}) - \log\pi_\text{ref}(y_t|y_{<t})$. Mean KL across tokens: typically 3--8.
+
+\textbf{Step 4 --- Final reward}: $R = r_\text{RM} - 0.05 \times \text{mean\_KL}$ (only at last token).
+
+\textbf{Step 5 --- GAE}: Compute $\hat{A}_t$ for each token position using value head predictions. Whiten advantages (zero mean, unit variance).
+
+\textbf{Step 6 --- Update}: 4 epochs of SGD on mini-batches of 16. Clip ratio $\epsilon = 0.2$. Gradient norm clipping at 1.0.
+
+\textbf{Result}: Policy improves by $\sim$0.005 win-rate per step. After 10K steps: 5--10\% absolute improvement over SFT.
+\end{examplebox}
+
+\begin{warningbox}[Tokenization Pitfalls in RL for LLMs]
+When computing per-token KL penalties and advantages, remember that tokenization determines what a ``step'' is. A single conceptual action (e.g., outputting ``2024'') might span 1--4 tokens depending on the tokenizer. This creates subtle issues:
+
+\begin{itemize}
+  \item \textbf{KL accounting}: Per-token KL sums to different totals for the same semantic content tokenized differently (e.g., rare words split into more subwords get higher total KL penalty).
+  \item \textbf{Credit assignment}: GAE assigns advantage per token position---but semantic ``decisions'' often span multiple tokens. The model only truly ``decides'' at the first token of a word; subsequent subword tokens are largely deterministic.
+  \item \textbf{Reward placement}: Placing reward only at the final token means all preceding tokens must propagate credit backward through GAE---longer responses suffer from more diluted signal.
+\end{itemize}
+
+\textbf{Mitigation}: Some systems normalize KL by sequence length, use word-level reward shaping, or apply reward at semantic boundaries rather than the final token.
+\end{warningbox}
+
+\section{Detailed Mechanics: Logits and Policy Updates}
+\label{detailed-mechanics-logits-and-policy-updates}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_026_fig26.png}
+\caption{PPO end-to-end: from prompt batch through generation, reward scoring, KL computation, advantage estimation, to clipped policy update. The feedback loop shows the updated policy being used for the next generation step.}
+\end{figure}
+
+PPO manages two distinct parameter states in memory, which share the same neural network topology but hold different weight values during optimization:
+
+\begin{keybox}[Core Architecture: Two Networks]
+\begin{enumerate}
+  \item \textbf{The Policy Network ($\pi_\theta$):} The active, live network parameterized by weights $\theta$. Continuously updated via backpropagation during optimization.
+  \item \textbf{The Old Policy Network ($\pi_{\theta_{\text{old}}}$):} A frozen snapshot parameterized by weights $\theta_{\text{old}}$. Acts as a static anchor during a single optimization cycle to prevent the policy from shifting too drastically.
+\end{enumerate}
+\end{keybox}
+
+\subsection{Phase 1: Rollout (Data Collection)}
+\label{phase-1-rollout-data-collection}
+
+During data collection, the agent interacts with the environment for $T$ steps. At each time-step $t$:
+
+\begin{enumerate}
+  \item The environment yields the current state/observation $s_t$ (for LLMs: prompt + tokens generated so far).
+  \item State $s_t$ is passed through the current network snapshot ($\theta_{\text{old}}$).
+  \item The network outputs raw unnormalized values --- \textbf{logits} $z_{\text{old}}$ --- a vector of size $|V|$ (vocabulary size 32K--128K).
+  \item Probabilities are computed via Softmax: 
+\begin{equation}
+\boxed{P(a \mid s_t) = \text{Softmax}(z_{\text{old}}) = \frac{\exp(z_{\text{old}, a})}{\sum_{j=1}^{|V|} \exp(z_{\text{old}, j})}}
+\end{equation}
+  \item An action $a_t$ (next token) is sampled from $P(a \mid s_t)$, and the transition tuple $\langle s_t, a_t, r_t, s_{t+1} \rangle$ along with $\log \pi_{\theta_{\text{old}}}(a_t \mid s_t)$ is stored in the rollout buffer.
+\end{enumerate}
+
+\begin{intuitionbox}[Why Store Log-Probabilities?]
+Storing $\log \pi_{\theta_{\text{old}}}(a_t \mid s_t)$ as a scalar during rollout avoids re-running the frozen network during optimization. This saves one full forward pass per mini-batch --- significant for 70B models.
+\end{intuitionbox}
+
+\subsection{Phase 2: Optimization Loop (Mini-Batch Updates)}
+\label{phase-2-optimization-loop-mini-batch-updates}
+
+Once the rollout buffer is full, PPO runs $K$ epochs (typically 3--10) over mini-batches. For every gradient step, logits are generated for both policies using the stored state $s_t$:
+
+\textbf{Old Policy Evaluation} (frozen): 
+\begin{equation}
+z_{\text{old}} = f(s_t; \theta_{\text{old}}) \quad \longrightarrow \quad \log \pi_{\theta_{\text{old}}}(a_t \mid s_t) = \text{LogSoftmax}(z_{\text{old}})[a_t]
+\end{equation}
+
+\emph{Implementation shortcut: reuse the stored scalar from rollout instead of re-computing.}
+
+\textbf{Live Policy Evaluation} (updating): 
+\begin{equation}
+z_{\text{new}} = f(s_t; \theta) \quad \longrightarrow \quad \log \pi_\theta(a_t \mid s_t) = \text{LogSoftmax}(z_{\text{new}})[a_t]
+\end{equation}
+
+Because $\theta$ updates after every mini-batch gradient step, $z_{\text{new}}$ changes continuously throughout the optimization loop, whereas $z_{\text{old}}$ remains perfectly static.
+
+\subsection{From Logits to Probability Ratio}
+\label{from-logits-to-probability-ratio}
+
+The core PPO ratio measures how much more or less likely an action is under the new policy vs the old: 
+\begin{equation}
+\boxed{r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta_{\text{old}}}(a_t \mid s_t)}}
+\end{equation}
+
+To avoid catastrophic numerical underflow/overflow from dividing raw probabilities, the calculation is performed in \textbf{log-space}: 
+\begin{align}
+\log \pi_\theta(a_t \mid s_t) &= \text{LogSoftmax}(z_{\text{new}})[a_t] \\
+\log \pi_{\theta_{\text{old}}}(a_t \mid s_t) &= \text{LogSoftmax}(z_{\text{old}})[a_t]
+\end{align}
+
+The ratio is recovered via exponentiation of the difference: 
+\begin{equation}
+\boxed{r_t(\theta) = \exp\!\left(\log \pi_\theta(a_t \mid s_t) - \log \pi_{\theta_{\text{old}}}(a_t \mid s_t)\right)}
+\end{equation}
+
+This ratio is injected into the PPO clipping objective: 
+\begin{equation}
+\boxed{\mathcal{L}^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\!\left(r_t(\theta)\hat{A}_t, \;\text{clip}(r_t(\theta),\, 1{-}\epsilon,\, 1{+}\epsilon)\,\hat{A}_t\right) \right]}
+\end{equation}
+
+\begin{intuitionbox}[How Clipping Works]
+\begin{itemize}
+  \item If $\hat{A}_t > 0$ (good action): ratio is clipped at $1+\epsilon$ --- cannot over-exploit good actions.
+  \item If $\hat{A}_t < 0$ (bad action): ratio is clipped at $1-\epsilon$ --- cannot over-penalize bad actions.
+  \item The $\min(\cdot)$ ensures we always take the more conservative estimate.
+\end{itemize}
+
+Result: monotonic improvement within a trust region --- no catastrophic collapses.
+\end{intuitionbox}
+
+\subsection{The PPO Weight Lifecycle}
+\label{the-ppo-weight-lifecycle}
+
+\begin{table}[ht!]
+\centering
+\caption{Evolution of $\theta$ and $\theta_{\text{old}}$ across PPO training phases.}
+\begin{tabular}{@{}lp{3.5cm}p{3.5cm}p{6cm}@{}}
+\toprule
+\textbf{Phase} & \textbf{Live $\theta$} & \textbf{Old $\theta_{\text{old}}$} & \textbf{Ratio $r_t(\theta)$} \\
+\midrule
+1. Rollout Start & Active copy & Same active copy & Always $1.0$ (by identity) \\
+2. Batch Step 1 & Computes gradients & Frozen & $1.0$ (initial step) \\
+3. Batch Step $N$ & Modifying ($\theta \neq \theta_{\text{old}}$) & Frozen & Deviates from $1.0$ (e.g., $1.06$, $0.94$) \\
+4. Clipping Active & Bounded by $\epsilon$ & Frozen & Trapped at bound ($1 \pm \epsilon$) \\
+5. Optimization End & Highly optimized & Discarded & N/A \\
+6. Next Cycle & $\theta \rightarrow \theta_{\text{old}}$ & Receives fresh $\theta$ & Resets back to $1.0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Continuous Action Spaces Extension}
+\label{continuous-action-spaces-extension}
+
+For continuous action spaces (not typical for LLMs, but important for robotics RL), the network outputs distribution parameters instead of discrete logits:
+
+\begin{itemize}
+  \item Predicted mean vector $\mu$
+  \item Predicted standard deviation vector $\sigma$
+\end{itemize}
+
+Log-probabilities are computed via the Gaussian log-PDF: 
+\begin{equation}
+\boxed{\log \pi(a_t \mid s_t) = -\frac{1}{2}\left(\frac{a_t - \mu}{\sigma}\right)^{\!2} - \log(\sigma) - \frac{1}{2}\log(2\pi)}
+\end{equation}
+
+The ratio $r_t(\theta) = \exp(\log \pi_\theta - \log \pi_{\theta_{\text{old}}})$ is then computed identically and fed into the same clipping objective.
+
+\section{TRL Implementation}
+\label{trl-implementation}
+
+The HuggingFace TRL library~\cite{vonwerra2022trl} provides production-ready implementations of all major RL methods for LLMs.
+
+\begin{lstlisting}[style=pythonstyle]
+from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
+from transformers import AutoTokenizer
+from peft import LoraConfig
+
+# Model setup
+model = AutoModelForCausalLMWithValueHead.from_pretrained(
+    "meta-llama/Llama-3.1-8B-Instruct",
+    torch_dtype=torch.bfloat16, device_map="auto",
+    peft_config=LoraConfig(r=64, lora_alpha=16, target_modules=["q_proj","v_proj","k_proj","o_proj"])
+)
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+
+# PPO config with all critical hyperparameters
+ppo_config = PPOConfig(
+    learning_rate=1.5e-6,        # Low LR for stability
+    batch_size=128,              # Prompts per step
+    mini_batch_size=16,          # Gradient accumulation unit
+    ppo_epochs=4,                # Epochs per batch (reuse data)
+    gamma=1.0,                   # No discounting (single turn)
+    lam=0.95,                    # GAE lambda
+    cliprange=0.2,               # PPO epsilon
+    cliprange_value=0.2,         # Value function clipping
+    vf_coef=0.1,                 # Value loss coefficient
+    init_kl_coef=0.05,           # Initial KL penalty
+    target_kl=6.0,               # Adaptive KL target
+    whiten_rewards=True,         # Normalize advantages
+    gradient_accumulation_steps=4,
+    max_grad_norm=1.0,
+)
+
+ppo_trainer = PPOTrainer(config=ppo_config, model=model, tokenizer=tokenizer,
+    dataset=prompt_dataset, data_collator=collator)
+
+# Training loop
+for batch in ppo_trainer.dataloader:
+    # 1. Generate responses
+    query_tensors = batch["input_ids"]
+    response_tensors = ppo_trainer.generate(
+        query_tensors, max_new_tokens=512, temperature=0.7, top_p=0.9, do_sample=True
+    )
+    # 2. Score with reward model
+    texts = [tokenizer.decode(r, skip_special_tokens=True) for r in response_tensors]
+    rewards = [torch.tensor(reward_model.score(q, r)) for q, r in zip(batch["query"], texts)]
+    # 3. PPO update (handles KL, GAE, clipping internally)
+    stats = ppo_trainer.step(query_tensors, response_tensors, rewards)
+    # Monitor: stats["ppo/mean_scores"], stats["ppo/policy/approx_kl"]
+\end{lstlisting}
+
+\section{Critical Hyperparameters}
+\label{critical-hyperparameters}
+
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Parameter} & \textbf{Typical} & \textbf{Effect of Getting It Wrong} \\
+\midrule
+\texttt{cliprange} & 0.2 & Too low: no learning. Too high: instability. \\
+\texttt{init\_kl\_coef} & 0.01--0.1 & Too low: reward hacking. Too high: stuck at SFT. \\
+\texttt{target\_kl} & 4--8 & Adaptive controller target. Lower = conservative. \\
+\texttt{ppo\_epochs} & 4 & Too many: overfits to batch. Too few: wastes gen compute. \\
+\texttt{learning\_rate} & $1{-}5 \times 10^{-6}$ & Too high: catastrophic forgetting. \\
+\texttt{batch\_size} & 64--256 & Larger = smoother gradients, more gen compute. \\
+\texttt{temperature} & 0.7--1.0 & Lower: less exploration. Higher: noisier advantages. \\
+\bottomrule
+\end{tabular}
+

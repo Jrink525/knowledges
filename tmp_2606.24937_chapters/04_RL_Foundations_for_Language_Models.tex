@@ -1,0 +1,94 @@
+\chapter{RL Foundations for Language Models}
+\label{rl-foundations-for-language-models}
+
+Supervised fine-tuning (SFT) teaches a model to imitate demonstrations, but imitation has a ceiling: the model can never exceed the quality of its training data. Reinforcement learning breaks this barrier. By generating novel text, receiving reward feedback, and updating toward higher-reward behaviours, an RL-trained model can \emph{discover} strategies that no human demonstrator wrote---producing outputs that are more helpful, more accurate, and better aligned with human preferences~\cite{ouyang2022training}.
+
+This is the mechanism behind every frontier model: GPT-4~\cite{openai2023gpt4}, Claude, Llama-3~\cite{grattafiori2024llama3}, and DeepSeek-R1~\cite{deepseek2025r1} all apply RL after SFT as the critical step that transforms a capable but unsteered model into an aligned assistant.
+
+\section{Two Paradigms for RL in LLMs}
+\label{two-paradigms-rl-llms}
+
+RL methods for language models fall into two broad paradigms, each suited to different goals:
+
+\paragraph{Paradigm 1: Alignment via Human Preferences (RLHF/DPO).}
+The original motivation for applying RL to LLMs was \textbf{alignment}---making models helpful, harmless, and honest. \textbf{Reinforcement Learning from Human Feedback (RLHF)}~\cite{ouyang2022training, ziegler2019fine, christiano2017deep} trains a reward model from pairwise human judgments (``which response is better?'') and then optimizes the policy to maximize that learned reward. \textbf{DPO}~\cite{rafailov2023direct} simplifies this by eliminating the reward model entirely, converting preferences directly into a supervised loss. Both approaches produce aligned assistants that follow instructions and respect safety constraints.
+
+\paragraph{Paradigm 2: Capability Enhancement via Verifiable Rewards (RLVR).}
+More recently, RL has been used not just for alignment but for \textbf{teaching new capabilities}---particularly reasoning, mathematics, and code generation. Here the reward comes not from human preferences but from \textbf{verifiable outcomes}: did the model produce the correct answer? Did the code pass all tests? DeepSeek-R1~\cite{deepseek2025r1} demonstrated that GRPO with rule-based rewards (format correctness + answer accuracy) can train models to develop sophisticated chain-of-thought reasoning \emph{without any human preference data}. This paradigm---RL from Verifiable Rewards (RLVR)---is now the dominant approach for building reasoning models and agentic systems.
+
+\begin{keybox}[The Shared Foundation]
+Despite their different goals, both paradigms share the same core machinery:
+\begin{itemize}
+  \item A \textbf{policy} $\pi_\theta$ (the LLM) that generates text autoregressively
+  \item A \textbf{reward signal} $r(x, y)$ (learned from preferences or computed from verification)
+  \item A \textbf{KL constraint} against a reference policy to prevent degenerate solutions
+  \item \textbf{Policy gradient optimization} (PPO or GRPO) to update the model toward higher reward
+\end{itemize}
+The chapters in this part develop each component in detail.
+\end{keybox}
+
+\section{Text Generation as an MDP}
+\label{text-generation-as-mdp}
+
+The key insight that makes RL applicable to language models is recasting autoregressive generation as a Markov Decision Process:
+
+\begin{intuitionbox}[The LLM-as-Agent Analogy]
+Think of the LLM as an \textbf{agent} writing a response one token at a time. At each step, it looks at everything written so far (the \emph{state}), chooses the next word (the \emph{action}), and the page grows by one token (the \emph{transition}). When the response is complete, a judge scores it (the \emph{reward}). The goal: learn a writing strategy (a \emph{policy}) that consistently earns high scores.
+\end{intuitionbox}
+
+Formally, the MDP for text generation is:
+
+\begin{itemize}
+  \item \textbf{State} $s_t = (x, y_1, \ldots, y_{t-1})$: the prompt concatenated with all tokens generated so far.
+  \item \textbf{Action} $a_t \in \{1, \ldots, |\mathcal{V}|\}$: choosing the next token from the vocabulary (32K--128K options).
+  \item \textbf{Transition} $P(s_{t+1}|s_t, a_t)$: deterministic---just append the chosen token. No environment stochasticity.
+  \item \textbf{Reward} $r$: typically given only at the end of generation (sparse). For RLHF: the reward model score. For RLVR: correctness of the final answer.
+  \item \textbf{Policy} $\pi_\theta(a_t|s_t)$: the LLM's next-token probability distribution---exactly what the softmax output already computes.
+  \item \textbf{Discount} $\gamma = 1.0$: episodes are finite (one response), so no discounting needed.
+\end{itemize}
+
+This mapping is powerful because the LLM \emph{already is} a policy---its softmax output defines $\pi_\theta(a_t|s_t)$ for every state. We don't need to build a separate policy network; we just need to adjust the weights $\theta$ so the model assigns higher probability to token sequences that earn higher reward.
+
+\section{The RLHF Pipeline}
+\label{the-rlhf-pipeline}
+
+The classic RLHF pipeline~\cite{ouyang2022training} consists of four stages:
+
+\begin{enumerate}
+  \item \textbf{Supervised Fine-Tuning (SFT)}: Train a base model on high-quality demonstrations to produce a policy $\pi_{\text{SFT}}$ that can follow instructions.
+  \item \textbf{Reward Model Training}: Collect human preference comparisons ($y_w \succ y_l$ for the same prompt) and train a reward model $R_\phi(x, y)$ using the Bradley-Terry objective.
+  \item \textbf{RL Optimization}: Use the reward model as a signal to optimize the policy via PPO or GRPO, subject to a KL constraint against $\pi_{\text{SFT}}$.
+  \item \textbf{Evaluation and Iteration}: Evaluate the aligned model, collect new failure cases, and iterate.
+\end{enumerate}
+
+For RLVR (reasoning/agentic training), stages 1--2 are replaced: the SFT model is trained on reasoning traces, and the reward model is replaced by a verifier (e.g., checking mathematical correctness). Stage 3 remains the same---PPO or GRPO optimization against the reward signal.
+
+\begin{intuitionbox}[How LLM RL Differs from Classical RL]
+The LLM setting differs from classical RL in important ways:
+
+\begin{itemize}
+  \item \textbf{Deterministic transitions}: The ``next state'' is just the concatenation of previous tokens---no stochastic environment.
+  \item \textbf{Sparse reward}: Feedback is typically given once at the end of generation (outcome reward) or at key steps (process reward).
+  \item \textbf{Massive action space}: 32K--128K possible tokens at every step, but exploration is implicit via temperature sampling.
+  \item \textbf{KL anchor}: LLM RL is constrained to stay close to the SFT policy, preventing reward hacking at the cost of reduced exploration.
+  \item \textbf{No value function needed}: GRPO eliminates the critic network entirely, using group-relative normalization of rewards instead.
+\end{itemize}
+
+These differences explain why PPO and GRPO dominate over DQN-style approaches for LLMs.
+\end{intuitionbox}
+
+\section{Roadmap of This Part}
+\label{what-this-part-covers}
+
+The chapters ahead build the complete RL-for-LLMs toolkit:
+
+\begin{enumerate}
+  \item \textbf{PPO} (Chapter~5) --- The clipped surrogate objective, GAE for advantage estimation, the critic network, and the full RLHF training loop. The workhorse behind GPT-4 and Claude.
+  \item \textbf{DPO} (Chapter~6) --- Bypassing RL entirely by converting preferences into a contrastive supervised loss. Simpler but less flexible than online RL.
+  \item \textbf{GRPO} (Chapter~7) --- DeepSeek's critic-free algorithm that uses group-level reward normalization. The method behind DeepSeek-R1 and the dominant choice for reasoning model training.
+  \item \textbf{Preference optimization variants} (Chapter~8) --- Online DPO, KTO, Best-of-N, and guidance on method selection.
+  \item \textbf{Reward modeling} (Chapter~9) --- Bradley-Terry models, process vs.~outcome rewards, rule-based rewards for RLVR, and multi-objective combinations.
+  \item \textbf{SFT best practices} (Chapter~10) --- Sequence packing, chat templates, data mixing, and how SFT quality determines the RL ceiling.
+  \item \textbf{Systems engineering} (Chapter~11) --- Distributed training at scale: parallelism strategies, generation--training decoupling, and infrastructure for hundreds of GPUs.
+\end{enumerate}
+

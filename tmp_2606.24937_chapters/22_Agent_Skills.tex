@@ -1,0 +1,240 @@
+\chapter{Agent Skills}
+\label{sec:agent-skills}
+
+As agents evolve from monolithic prompt-and-tool systems into modular architectures, a key design question emerges: \emph{how should an agent’s capabilities be organized, discovered, and composed?} The answer increasingly converges on the concept of \textbf{skills} --- discrete, reusable units of behaviour that can be loaded, combined, and swapped without retraining.
+
+The idea was popularized by Voyager~\cite{wang2023voyager}, which demonstrated that an LLM agent in Minecraft could accumulate a growing library of executable code skills, each verified and stored for later reuse. The same principle applies to production agents: skills encapsulate domain expertise in a composable, versionable format that scales beyond what any single prompt can hold. Skills frequently wrap MCP servers (Chapter~\ref{sec:mcp}) for tool access, connecting the skill abstraction to the standardized tool layer.
+
+\section{What Is a Skill?}
+\label{what-is-a-skill}
+
+A \textbf{skill} is a self-contained capability module that gives an agent expertise in a specific domain or task. Unlike a raw tool (which exposes a single function), a skill encompasses:
+
+\begin{itemize}
+  \item \textbf{System prompt augmentation}: Domain-specific instructions, constraints, and persona elements injected into the agent’s context.
+  \item \textbf{Tool bindings}: One or more tools the skill requires (APIs, MCP servers, local commands).
+  \item \textbf{Knowledge}: Reference material, examples, or few-shot demonstrations the agent needs to execute the skill correctly.
+  \item \textbf{Workflow logic}: Multi-step procedures, decision trees, or conditional flows that guide the agent through complex tasks.
+  \item \textbf{Guardrails}: Skill-specific safety constraints, output format requirements, and validation rules.
+\end{itemize}
+
+\begin{keybox}[Skill vs. Tool vs. Agent]
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Concept} & \textbf{Scope} & \textbf{Example} \\
+\midrule
+\textbf{Tool} & Single function call & \texttt{web\_search(query)} \\
+\textbf{Skill} & Coherent capability (prompts + tools + knowledge) & ``Research Analyst'' skill \\
+\textbf{Agent} & Autonomous entity with multiple skills & A coding assistant \\
+\bottomrule
+\end{tabular}
+
+A tool is a hammer. A skill is knowing \emph{how to frame a house}. An agent is the carpenter who selects which skills to apply.
+\end{keybox}
+
+\section{Skill Architecture Patterns}
+\label{skill-architecture-patterns}
+
+\subsection{Static Skill Loading}
+\label{static-skill-loading}
+
+The simplest pattern: skills are loaded at agent initialization based on configuration. The agent always has access to all its skills.
+
+\begin{lstlisting}[style=pythonstyle]
+# Pseudocode -- framework-agnostic pattern
+agent = Agent(
+    model="claude-sonnet-4-20250514",
+    skills=["code-review", "documentation", "testing"],
+    # Each skill adds prompts, tools, and knowledge to the agent
+)
+\end{lstlisting}
+
+\textbf{Pros:} Simple, predictable, low latency.\\
+
+\textbf{Cons:} Context window waste when skills are unused; doesn’t scale to hundreds of skills.
+
+\subsection{Dynamic Skill Discovery}
+\label{dynamic-skill-discovery}
+
+The agent selects which skills to activate based on the current task. A skill router (often a lightweight classifier or embedding-based matcher) determines relevance:
+
+\begin{lstlisting}[style=pythonstyle]
+# Pseudocode -- framework-agnostic pattern
+relevant_skills = skill_router.match(
+    user_request=message,
+    available_skills=skill_registry,
+    max_skills=3
+)
+agent.activate(relevant_skills)
+\end{lstlisting}
+
+\textbf{Pros:} Scales to large skill libraries; context-efficient.\\
+
+\textbf{Cons:} Routing errors can miss relevant skills; adds latency.
+
+\subsection{Hierarchical Skill Composition}
+\label{hierarchical-skill-composition}
+
+Skills can depend on other skills, forming a DAG. A high-level skill (e.g., ``Deploy Application'') may invoke sub-skills (``Run Tests'', ``Build Docker Image'', ``Update DNS''):
+
+\begin{itemize}
+  \item Skills declare dependencies explicitly
+  \item The orchestrator resolves the dependency graph before execution
+  \item Sub-skills can be shared across multiple parent skills
+\end{itemize}
+
+\section{Case Study: Anthropic’s Agent Design}
+\label{case-study-anthropics-agent-design}
+
+Anthropic’s approach to agent architecture~\cite{anthropic2024buildingagents} provides one of the clearest articulations of skill-based agent design in production. Their philosophy emphasizes \textbf{simplicity over complexity} and \textbf{composable building blocks over monolithic frameworks}. (These patterns are also covered from an orchestration perspective in Chapter~\ref{sec:agent-design-patterns}.)
+
+\subsection{Core Principles}
+\label{core-principles}
+
+\begin{enumerate}
+  \item \textbf{Start with the simplest solution.} Don’t reach for agentic patterns until simpler approaches (single LLM call, retrieval + generation) have been tried and found insufficient.
+  \item \textbf{Workflows vs.~agents.} Anthropic distinguishes between:
+
+\begin{itemize}
+  \item \textbf{Workflows}: Predefined orchestration of LLM calls --- deterministic control flow with LLM steps at specific nodes. More predictable, easier to debug.
+  \item \textbf{Agents}: The LLM dynamically decides what to do next --- tool selection, iteration count, and stopping criteria are all model-driven. More flexible, harder to control.
+\end{itemize}
+  \item \textbf{Augmented LLM as the atomic unit.} The primitive is never a bare model---it is always a model bundled with its retrieval sources, callable tools, and persistent memory. This composite unit is, in practice, a skill-equipped model.
+\end{enumerate}
+
+\subsection{Building Block Patterns}
+\label{building-block-patterns}
+
+Anthropic identifies five composable workflow patterns that function as skill templates:
+
+\begin{table}[ht!]
+\centering
+\caption{Anthropic’s composable agent patterns.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Pattern} & \textbf{Mechanism} & \textbf{When to Use} \\
+\midrule
+\textbf{Prompt Chaining} & Sequential LLM calls where each step’s output feeds the next. Gates between steps validate intermediate results. & Multi-step transformations with clear decomposition \\
+\textbf{Routing} & A classifier or LLM directs input to a specialized handler (skill) based on task type. & Distinct task categories requiring different expertise \\
+\textbf{Parallelization} & Multiple LLM calls run simultaneously --- either sectioning (split task) or voting (same task, aggregate). & Independent subtasks; or confidence via consensus \\
+\textbf{Orchestrator--Workers} & A central LLM breaks the task into subtasks, delegates to worker LLMs, then synthesizes results. & Complex tasks where subtasks aren’t predictable in advance \\
+\textbf{Evaluator--Optimizer} & One LLM generates, another evaluates; iterate until quality threshold is met. & Tasks with clear quality criteria (code, writing) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Augmented LLM}
+\label{the-augmented-llm}
+
+In Anthropic’s framing, the fundamental unit is not the bare model but the \textbf{augmented LLM}:
+
+\[
+\text{Augmented LLM} = \text{Model} + \text{Retrieval} + \text{Tools} + \text{Memory}
+\]
+
+This maps directly to the skill concept: each skill configures which retrieval sources, tools, and memory stores the model has access to for a specific task. The skill boundary defines what the model \emph{can see and do} within a particular invocation.
+
+\subsection{Practical Implications}
+\label{practical-implications}
+
+\begin{intuitionbox}[Anthropic’s Key Insight]
+The most effective agents aren’t the most complex ones. They are \textbf{simple loops with good tools}:
+
+\begin{lstlisting}[style=pythonstyle]
+while not done:
+    action = llm.decide(context, tools)
+    result = execute(action)
+    context.append(result)
+    done = llm.should_stop(context)
+\end{lstlisting}
+
+The intelligence comes from (1) the model’s capability, (2) the quality of tool descriptions, and (3) the clarity of the task framing --- not from elaborate orchestration logic. Skills provide the structure for (2) and (3).
+\end{intuitionbox}
+
+\paragraph{Design recommendations from Anthropic’s approach:}
+\label{design-recommendations-from-anthropics-approach}
+
+\begin{itemize}
+  \item \textbf{Keep agent loops simple}: Avoid over-engineering the control flow. Let the model decide.
+  \item \textbf{Invest in tool quality}: Detailed, unambiguous tool descriptions are more valuable than complex routing logic.
+  \item \textbf{Use structured outputs}: Force the model to output decisions in parseable formats (JSON, function calls) --- reduces skill execution errors.
+  \item \textbf{Build in recovery}: Skills should handle errors gracefully --- retry with different parameters, ask for clarification, or escalate to a human.
+  \item \textbf{Limit scope per skill}: A skill that tries to do everything will do nothing well. Narrow, well-defined skills compose better than broad ones.
+\end{itemize}
+
+\section{Skill Lifecycle}
+\label{skill-lifecycle}
+
+\begin{enumerate}
+  \item \textbf{Discovery}: The system identifies which skills are available (registry, marketplace, local definitions).
+  \item \textbf{Selection}: Based on the user request, relevant skills are matched and loaded.
+  \item \textbf{Activation}: Skill prompts, tools, and knowledge are injected into the agent’s context.
+  \item \textbf{Execution}: The agent uses the skill’s capabilities to accomplish the task.
+  \item \textbf{Deactivation}: Skill context is removed to free context window space for subsequent tasks.
+  \item \textbf{Learning}: Execution results may update the skill’s few-shot examples or fine-tune routing.
+\end{enumerate}
+
+\section{Skill Registries and Marketplaces}
+\label{skill-registries-and-marketplaces}
+
+Production skill systems require infrastructure:
+
+\begin{itemize}
+  \item \textbf{Skill manifest}: A structured description (name, capabilities, required tools, input/output schema) enabling automatic discovery and routing.
+  \item \textbf{Version control}: Skills evolve; agents need to pin specific versions for reproducibility.
+  \item \textbf{Dependency resolution}: Skills may require specific MCP servers, API keys, or other skills.
+  \item \textbf{Permission model}: Not all agents should have access to all skills (security, cost, capability boundaries).
+  \item \textbf{Marketplace}: Organizations can publish, share, and install skills --- analogous to package managers for code.
+\end{itemize}
+
+\begin{examplebox}[Skill Manifest Example]
+A skill manifest declares everything an orchestrator needs to load and invoke a skill. No industry-standard schema exists yet; below is an illustrative format that captures common fields across real implementations (Anthropic MCP, OpenAI function specs, LangChain tool definitions):
+
+\begin{lstlisting}[style=pythonstyle]
+// Illustrative schema -- not a specific SDK format
+{
+  "name": "code-review",
+  "description": "Review code changes for bugs, style, and security issues",
+  "version": "2.1.0",
+  "requires": {
+    "tools": ["file_read", "grep", "git_diff"],
+    "mcp_servers": ["github"],
+    "models": ["claude-sonnet-4-20250514"]
+  },
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "repo": {"type": "string"},
+      "pr_number": {"type": "integer"}
+    }
+  },
+  "prompts": ["skills/code-review/system.md"],
+  "knowledge": ["skills/code-review/style-guide.md"]
+}
+\end{lstlisting}
+\end{examplebox}
+
+\section{Skills vs.~Fine-Tuning}
+\label{skills-vs.-fine-tuning}
+
+A natural question: why use runtime skill injection instead of fine-tuning the model?
+
+\begin{table}[ht!]
+\centering
+\caption{Skills (in-context) vs.~fine-tuning for adding capabilities.}
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Dimension} & \textbf{Skills (In-Context)} & \textbf{Fine-Tuning} \\
+\midrule
+Deployment speed & Instant & Hours--days \\
+Flexibility & Swap/combine at runtime & Fixed at training time \\
+Context cost & Uses context window & Zero runtime cost \\
+Deep behavior change & Limited by context length & Deep parametric change \\
+Multi-tenant & Different skills per user & Same model for all \\
+Maintenance & Update text files & Retrain on new data \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+In practice, the two approaches are complementary: fine-tuning provides \emph{base capabilities} (instruction following, tool use format, reasoning), while skills provide \emph{task-specific expertise} layered on top at runtime.
+

@@ -1,0 +1,415 @@
+\chapter{Reward Model Training}
+\label{sec:reward-models}
+
+Reward models are the bridge between human preferences and the RL training signal. A well-trained reward model is essential for successful RLHF; a poorly trained one leads to reward hacking and misaligned behaviour. This section covers the theoretical foundations, practical training techniques, and architectural choices for reward models.
+
+\section{Bradley-Terry Model -- Full Derivation}
+\label{sec:bradley-terry}
+
+The Bradley-Terry model~\cite{bradley1952rank} is the standard probabilistic framework for pairwise preference learning. Given two responses $y_1$ and $y_2$ to a prompt $q$, the model assumes:
+
+\[
+P(y_1 \succ y_2 \mid q) = \sigma(r(y_1, q) - r(y_2, q))
+    = \frac{e^{r(y_1,q)}}{e^{r(y_1,q)} + e^{r(y_2,q)}},
+\]
+
+where $r: \mathcal{Y} \times \mathcal{Q} \to \mathbb{R}$ is the scalar reward function and $\sigma$ is the sigmoid function.
+
+\subsubsection*{Maximum Likelihood Estimation}
+\label{maximum-likelihood-estimation}
+
+Given a dataset $\mathcal{D} = \{(q^{(k)}, y_w^{(k)}, y_l^{(k)})\}_{k=1}^N$ of preference pairs, the MLE objective is:
+
+\[
+\mathcal{L}_{\text{BT}}(\phi) =
+    -\frac{1}{N}\sum_{k=1}^N \log \sigma\!\bigl(r_\phi(y_w^{(k)}, q^{(k)}) - r_\phi(y_l^{(k)}, q^{(k)})\bigr),
+\]
+
+where $r_\phi$ is a neural network parameterised by $\phi$. This is a binary cross-entropy loss where the ``positive'' class is the preferred response.
+
+\begin{keybox}[Bradley-Terry Assumptions]
+\begin{enumerate}
+  \item Preferences are \emph{transitive}: if $y_1 \succ y_2$ and $y_2 \succ y_3$, then $y_1 \succ y_3$.
+  \item Preferences are determined by a \emph{scalar} reward (no multi-dimensional preferences).
+  \item The preference probability depends only on the \emph{difference} in rewards.
+  \item Preferences are \emph{independent} across pairs (no annotator effects).
+\end{enumerate}
+
+These assumptions are often violated in practice, motivating extensions like Plackett-Luce models for ranking and multi-dimensional reward models.
+\end{keybox}
+
+\subsubsection*{Margin Loss Extension}
+\label{margin-loss-extension}
+
+A common extension adds a margin $m$ to ensure a minimum gap between winning and losing rewards:
+
+\[
+\mathcal{L}_{\text{margin}} =
+    -\frac{1}{N}\sum_{k=1}^N \log \sigma\!\bigl(r_\phi(y_w^{(k)}, q^{(k)}) - r_\phi(y_l^{(k)}, q^{(k)}) - m\bigr).
+\]
+
+\section{Reward Model Architectures}
+\label{sec:rm-architectures}
+
+\begin{intuitionbox}[Classification Head on LLM]
+The standard reward model architecture takes a pretrained LLM and replaces the language modelling head (which maps hidden states to vocabulary logits) with a scalar regression head (which maps the final hidden state to a single reward value).
+\end{intuitionbox}
+
+The architecture is:
+
+\begin{enumerate}
+  \item \textbf{Backbone}: a pretrained LLM (e.g., Llama, Mistral) that encodes the prompt-response pair into a sequence of hidden states.
+  \item \textbf{Pooling}: extract the hidden state at the last token position (for decoder-only models) or the \texttt{[CLS]} token (for encoder models).
+  \item \textbf{Regression head}: a linear layer $W \in \mathbb{R}^{d \times 1}$ that maps the pooled hidden state to a scalar reward.
+\end{enumerate}
+
+\begin{examplebox}[Reward Model Training in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import RewardConfig, RewardTrainer
+from transformers import AutoModelForSequenceClassification
+
+# Load model with scalar head (num_labels=1)
+model = AutoModelForSequenceClassification.from_pretrained(
+    "meta-llama/Llama-3.1-8B-Instruct",
+    num_labels=1,
+)
+
+config = RewardConfig(
+    output_dir="reward_model",
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=4,
+    learning_rate=1e-5,
+    num_train_epochs=1,
+    # Margin loss
+    center_rewards_coefficient=0.01,
+)
+
+trainer = RewardTrainer(
+    model=model,
+    args=config,
+    train_dataset=dataset,  # must have chosen/rejected columns
+)
+trainer.train()
+\end{lstlisting}
+\end{examplebox}
+
+\section{Reward Model Training Tricks}
+\label{sec:rm-tricks}
+
+\subsubsection*{Reward Centering}
+\label{reward-centering}
+
+Raw reward model outputs can have arbitrary scale and offset. Centering the rewards (subtracting the mean) stabilises RL training:
+
+\[
+r_{\text{centered}}(y, q) = r_\phi(y, q) - \mathbb{E}_{y' \sim \pi_\theta}[r_\phi(y', q)].
+\]
+
+In TRL, this is implemented via the \texttt{center\_rewards\_coefficient} parameter, which adds a regularisation term to the reward model loss that penalises non-zero mean rewards.
+
+\subsubsection*{Length Bias Correction}
+\label{length-bias-correction}
+
+Reward models are known to exhibit \emph{length bias}: they tend to assign higher rewards to longer responses, regardless of quality. This can be corrected by:
+
+\begin{enumerate}
+  \item \textbf{Length normalisation}: divide the reward by the response length.
+  \item \textbf{Length-controlled training}: include length as a feature and train the model to be length-invariant.
+  \item \textbf{Calibration}: post-hoc regression to remove the length effect.
+\end{enumerate}
+
+\subsubsection*{Margin Losses}
+\label{margin-losses}
+
+Adding a margin $m$ to the Bradley-Terry loss ensures the reward model assigns meaningfully different scores to preferred and dispreferred responses:
+
+\[
+\mathcal{L}_{\text{margin}} = \max\!\bigl(0,\; m - (r_w - r_l)\bigr).
+\]
+
+\section{Process Reward Models vs Outcome Reward Models}
+\label{sec:prm-orm}
+
+\begin{keybox}[PRM vs ORM Comparison]
+\begin{tabular}{@{}lp{5cm}p{8cm}@{}}
+\toprule
+\textbf{Property} & \textbf{ORM} & \textbf{PRM} \\
+\midrule
+Reward signal & Final answer only & Each reasoning step \\
+Training data & (prompt, answer, correct?) & (prompt, steps, step labels) \\
+Annotation cost & Low & High \\
+Credit assignment & Sparse & Dense \\
+Reward hacking & Easier to hack & Harder to hack \\
+Best for & Simple tasks & Multi-step reasoning \\
+Inference cost & Low & High (score each step) \\
+\bottomrule
+\end{tabular}
+\end{keybox}
+
+\begin{intuitionbox}[When to Use PRMs]
+Process Reward Models are most valuable when:
+
+\begin{itemize}
+  \item The task requires multi-step reasoning (math, code, logic).
+  \item The final answer is binary (correct/incorrect) but intermediate steps vary in quality.
+  \item You want to use the reward model for \emph{search} (e.g., beam search with step scores).
+  \item You have access to step-level annotations (or can generate them automatically).
+\end{itemize}
+
+For simple tasks (sentiment, toxicity, factuality), ORMs are sufficient and much cheaper.
+\end{intuitionbox}
+
+\begin{examplebox}[PBRS in RLHF for LLMs]
+\textbf{Original reward}: Binary correctness (1 if final answer is right, 0 otherwise) --- extremely sparse for multi-step reasoning.
+
+\textbf{Potential function}: $\Phi(s) =$ partial credit from a verifier (e.g., fraction of intermediate reasoning steps that are logically valid).
+
+\textbf{Shaped reward}: Agent gets incremental signal for each valid reasoning step while preserving the guarantee that the optimal policy still maximizes final-answer correctness.
+
+\textbf{Practical implementations}:
+
+\begin{itemize}
+  \item Process reward models (PRMs) that score each step in a chain-of-thought
+  \item Intermediate compilation checks in code generation
+  \item Partial match scores for multi-part answers
+\end{itemize}
+
+This is a direct application of Potential-Based Reward Shaping (PBRS)~\cite{ng1999policy} to the LLM setting---the theoretical guarantee that shaped rewards preserve the optimal policy makes PRMs a principled approach to dense reward in reasoning tasks.
+\end{examplebox}
+
+\subsubsection*{Automatic PRM Annotation}
+\label{automatic-prm-annotation}
+
+Step-level annotations can be generated automatically using:
+
+\begin{enumerate}
+  \item \textbf{Monte Carlo rollouts}: for each intermediate step, sample multiple completions and use the fraction that reach the correct answer as the step reward.
+  \item \textbf{LLM-as-judge}: use a strong LLM to evaluate each step.
+  \item \textbf{Formal verification}: for math/code, use a verifier to check each step.
+\end{enumerate}
+
+\section{Rule-Based Rewards for RLVR}
+\label{sec:rule-based-rewards}
+
+Reinforcement Learning from Verifiable Rewards (RLVR) uses deterministic, rule-based reward functions instead of learned reward models. This substantially reduces reward hacking (though models can still exploit format tricks, edge cases, or test memorization) and is the approach used in DeepSeek-R1~\cite{deepseek2025r1}.
+
+\begin{examplebox}[Rule-Based Reward Functions in TRL]
+\begin{lstlisting}[style=pythonstyle]
+import re
+
+def format_reward(completions, **kwargs):
+    """Reward for using <think>...</think><answer>...</answer> format."""
+    rewards = []
+    pattern = r"<think>.*?</think>\s*<answer>.*?</answer>"
+    for completion in completions:
+        text = completion[0]["content"]
+        rewards.append(1.0 if re.fullmatch(pattern, text, re.DOTALL) else 0.0)
+    return rewards
+
+def correctness_reward(completions, ground_truth, **kwargs):
+    """Reward for correct final answer."""
+    rewards = []
+    for completion, gt in zip(completions, ground_truth):
+        text = completion[0]["content"]
+        match = re.search(r"<answer>(.*?)</answer>", text, re.DOTALL)
+        if match:
+            answer = match.group(1).strip()
+            rewards.append(1.0 if answer == gt else 0.0)
+        else:
+            rewards.append(0.0)
+    return rewards
+
+def code_execution_reward(completions, test_cases, **kwargs):
+    """Reward for code that passes test cases."""
+    import subprocess, tempfile, os
+    rewards = []
+    for completion, tests in zip(completions, test_cases):
+        code = completion[0]["content"]
+        passed = 0
+        for test in tests:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".py", delete=False
+            ) as f:
+                f.write(code + "\n" + test)
+                fname = f.name
+            try:
+                result = subprocess.run(
+                    ["python", fname], capture_output=True,
+                    timeout=5, text=True
+                )
+                passed += int(result.returncode == 0)
+            except Exception:
+                pass
+            finally:
+                os.unlink(fname)
+        rewards.append(passed / len(tests))
+    return rewards
+\end{lstlisting}
+\end{examplebox}
+
+\begin{warningbox}[Rule-Based Reward Pitfalls]
+\begin{itemize}
+  \item \textbf{Format gaming}: models learn to produce the correct format without correct content. Always combine format and correctness rewards.
+  \item \textbf{Test case leakage}: if test cases are in the training data, the model memorises them.
+  \item \textbf{Timeout exploitation}: models may generate code that times out (avoiding failure). Use strict timeouts and penalise timeouts explicitly.
+  \item \textbf{Reward sparsity}: binary rewards (0/1) can be too sparse for complex tasks. Consider partial credit or intermediate rewards.
+\end{itemize}
+\end{warningbox}
+
+\section{Multi-Objective Rewards -- Combination Strategies}
+\label{sec:multi-objective-rewards}
+
+When training with multiple reward signals, the combination strategy significantly affects the final policy.
+
+\begin{keybox}[Multi-Reward Combination Strategies]
+\begin{enumerate}
+  \item \textbf{Weighted sum}: $r = \sum_n w_n r_n$. Simple but sensitive to scale.
+  \item \textbf{Normalise then sum (GDPO)}: normalise each reward to zero mean and unit variance within the group, then sum with weights. Scale-invariant.
+  \item \textbf{Lexicographic}: optimise rewards in priority order; only consider lower-priority rewards when higher-priority ones are tied.
+  \item \textbf{Constrained}: maximise primary reward subject to constraints on secondary rewards.
+  \item \textbf{Pareto}: maintain a Pareto front of policies and select based on preference.
+\end{enumerate}
+\end{keybox}
+
+\begin{examplebox}[Multi-Reward Training in TRL]
+\begin{lstlisting}[style=pythonstyle]
+from trl import GRPOConfig, GRPOTrainer
+
+config = GRPOConfig(
+    # GDPO: normalise each reward independently
+    multi_objective_aggregation="normalize_then_sum",
+    reward_weights=[1.0, 0.3, 0.1],  # correctness, format, length
+    num_generations=8,
+)
+
+trainer = GRPOTrainer(
+    model=model,
+    reward_funcs=[
+        correctness_reward,
+        format_reward,
+        length_penalty_reward,
+    ],
+    args=config,
+    train_dataset=dataset,
+)
+\end{lstlisting}
+\end{examplebox}
+
+\section{Listwise Rank-Based Rewards}
+\label{listwise-rank-based-rewards}
+
+While the Bradley-Terry model handles \emph{pairwise} preferences ($y_w \succ y_l$), many practical scenarios involve ranking multiple responses simultaneously. Listwise reward models learn from complete orderings, providing richer training signal and enabling better calibration.
+
+\subsubsection*{Motivation: Beyond Pairwise}
+\label{motivation-beyond-pairwise}
+
+\begin{intuitionbox}[Why Listwise?]
+\begin{itemize}
+  \item \textbf{Richer signal}: A ranking of $K$ responses contains $\binom{K}{2}$ implicit pairwise comparisons, but also captures \emph{relative margins} (how much better rank 1 is vs.~rank 3).
+  \item \textbf{Better calibration}: Pairwise BT models only learn \emph{differences} in reward; listwise models learn absolute reward scale.
+  \item \textbf{Natural fit for GRPO}: GRPO generates $N$ responses per prompt and ranks them --- listwise rewards align directly with this workflow.
+  \item \textbf{Annotator efficiency}: Ranking 5 responses is faster than labeling all 10 possible pairs independently.
+\end{itemize}
+\end{intuitionbox}
+
+\subsubsection*{Plackett-Luce Model}
+\label{plackett-luce-model}
+
+The Plackett-Luce (PL) model~\cite{plackett1975analysis} is the standard extension of Bradley-Terry to full rankings. Given $K$ responses $y_1, \ldots, y_K$ with ranking $\pi$ (where $\pi(1)$ is the best):
+
+\begin{keybox}[Plackett-Luce Likelihood]
+\[
+P(\pi \mid q) = \prod_{i=1}^{K} \frac{e^{r_\phi(y_{\pi(i)}, q)}}{\sum_{j=i}^{K} e^{r_\phi(y_{\pi(j)}, q)}}
+\]
+ \textbf{Intuition}: Sequentially select the best remaining item. At each step, the probability of selecting item $\pi(i)$ is softmax over the remaining items.
+
+\textbf{Loss function}: 
+\[
+\mathcal{L}_{\text{PL}}(\phi) = -\frac{1}{|\mathcal{D}|} \sum_{(q, \pi) \in \mathcal{D}} \sum_{i=1}^{K-1} \left[ r_\phi(y_{\pi(i)}, q) - \log \sum_{j=i}^{K} e^{r_\phi(y_{\pi(j)}, q)} \right]
+\]
+\end{keybox}
+
+\begin{intuitionbox}[Plackett-Luce Reduces to Bradley-Terry]
+For $K=2$, the PL model gives: $P(y_1 \succ y_2) = \frac{e^{r(y_1)}}{e^{r(y_1)} + e^{r(y_2)}} = \sigma(r(y_1) - r(y_2))$ --- exactly the Bradley-Terry model. PL is a strict generalization.
+\end{intuitionbox}
+
+\subsubsection*{ListMLE and Rank-Based Losses}
+\label{listmle-and-rank-based-losses}
+
+\begin{keybox}[Listwise Loss Functions]
+\begin{itemize}
+  \item \textbf{ListMLE}~\cite{xia2008listwise}: Directly maximizes the PL likelihood of the ground-truth ranking. Simple and effective.
+  \item \textbf{ListNet}~\cite{cao2007listnet}: Minimizes KL divergence between the model’s top-1 probability distribution and the ground-truth: 
+\[
+\mathcal{L}_{\text{ListNet}} = -\sum_{i=1}^{K} P_{\text{true}}(y_i \text{ is best}) \cdot \log P_{\text{model}}(y_i \text{ is best})
+\]
+ where $P_{\text{model}}(y_i \text{ is best}) = \frac{e^{r_\phi(y_i)}}{\sum_j e^{r_\phi(y_j)}}$.
+  \item \textbf{LambdaRank}~\cite{burges2006lambdarank}: Weights pairwise gradients by the change in ranking metric (e.g., NDCG). Useful when ranking quality matters more at the top.
+  \item \textbf{RankNet}~\cite{burges2005ranknet}: Pairwise cross-entropy summed over all pairs --- equivalent to BT on all $\binom{K}{2}$ pairs extracted from the ranking.
+\end{itemize}
+\end{keybox}
+
+\subsubsection*{Listwise Rewards for GRPO and Rejection Sampling}
+\label{listwise-rewards-for-grpo-and-rejection-sampling}
+
+\begin{keybox}[Integration with GRPO]
+GRPO naturally produces ranked groups: for each prompt, $N$ responses are scored and ranked. A listwise reward model can be trained directly on these rankings:
+
+\begin{enumerate}
+  \item \textbf{Generate}: Sample $N=8$ responses per prompt from the policy.
+  \item \textbf{Rank}: Use an existing reward model (or human annotators) to produce a full ranking $\pi$.
+  \item \textbf{Train listwise RM}: Optimize the PL loss on $(q, \pi)$ tuples.
+  \item \textbf{Use in GRPO}: The listwise RM assigns scalar rewards $r(y_i, q)$ to each response; GRPO computes advantages as $\hat{A}_i = (r_i - \mu) / \sigma$.
+\end{enumerate}
+
+\textbf{Advantage over pairwise}: The listwise RM sees all $N$ responses simultaneously, learning that rank-1 should have much higher reward than rank-$N$ (not just ``slightly better than one other response'').
+\end{keybox}
+
+\subsubsection*{Practical Considerations}
+\label{practical-considerations}
+
+\begin{warningbox}[Listwise Training Challenges]
+\begin{itemize}
+  \item \textbf{Annotation cost}: Full rankings are expensive. Partial rankings (top-3 out of 8) reduce cost with minimal quality loss.
+  \item \textbf{Ties}: Real rankings often have ties. Use the Plackett-Luce extension for ties: assign equal probability mass to tied items.
+  \item \textbf{Position bias}: Annotators tend to prefer items shown first. Randomize presentation order and train debiasing.
+  \item \textbf{List length}: Training on $K=4$--8 is typical. Longer lists ($K>16$) add noise without much benefit.
+  \item \textbf{Consistency}: Rankings from different annotators may disagree. Use inter-annotator agreement ($\kappa > 0.6$) as a quality filter.
+\end{itemize}
+\end{warningbox}
+
+\begin{examplebox}[Plackett-Luce Training Code]
+\begin{lstlisting}[style=pythonstyle]
+import torch
+import torch.nn.functional as F
+
+def plackett_luce_loss(rewards, rankings):
+    """
+    Args:
+        rewards: (batch, K) - predicted scalar rewards for K responses
+        rankings: (batch, K) - ground-truth ranking indices (0 = best)
+    Returns:
+        scalar loss
+    """
+    batch_size, K = rewards.shape
+    # Sort rewards by ground-truth ranking order
+    sorted_rewards = torch.gather(rewards, 1, rankings)  # (batch, K)
+    
+    # PL log-likelihood: sum over positions
+    loss = 0.0
+    for i in range(K - 1):
+        # Log-softmax over remaining items (position i to K)
+        remaining = sorted_rewards[:, i:]           # (batch, K-i)
+        log_probs = remaining[:, 0] - torch.logsumexp(remaining, dim=1)
+        loss -= log_probs.mean()
+    
+    return loss / (K - 1)
+
+# Example: 8 responses per prompt, ranked by annotator
+rewards = reward_model(responses)          # (batch, 8)
+rankings = torch.argsort(human_scores, descending=True)  # best first
+loss = plackett_luce_loss(rewards, rankings)
+loss.backward()
+\end{lstlisting}
+\end{examplebox}
+
