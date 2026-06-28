@@ -1,0 +1,3 @@
+    # 2. Score with reward model
+    texts = [tokenizer.decode(r, skip_special_tokens=True) for r in response_tensors]
+    rewards = [torch.tensor(reward_model.score(q, r)) for q, r in zip(batch["query"], texts)]

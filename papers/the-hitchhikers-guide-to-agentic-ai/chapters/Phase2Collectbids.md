@@ -1,0 +1,12 @@
+        # Phase 2: Collect bids
+        bids = await asyncio.gather(*[
+            self._request_bid(agent, announcement)
+            for agent in candidate_agents
+        ], return_exceptions=True)
+
+        valid_bids = [(agent, bid) for agent, bid in zip(candidate_agents, bids)
+                      if not isinstance(bid, Exception) and bid is not None]
+
+        if not valid_bids:
+            raise RuntimeError(f"No agents bid on task {task.id}")
+
