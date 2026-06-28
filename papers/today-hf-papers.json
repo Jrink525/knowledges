@@ -1,340 +1,184 @@
 [
   {
-    "id": "2606.25013",
-    "arxiv_id": "2606.25013",
-    "title": "Do Thinking Tokens Help with Safety?",
-    "summary": "Today's reasoning models use thinking tokens to attain stronger performance on benchmarks than their instruction-tuned counterparts. It is also generally believed that this more \"deliberative\" mode should improve alignment and safety, by providing the model a safe space to consider whether its planned answer to a request violates its safety principles. We present evidence that this intuition is not always correct. Across frontier open-weight reasoning models spanning GPT-OSS, Qwen, Olmo, and Phi families, we find that the eventual refusal/compliance outcome is already strongly predictable via a trained head on the first token's hidden representation (0.84-0.95 AUROC and sim88% balanced accuracy for predicting refusal/compliance) before any visible thinking. The thinking process turns out to be more akin to prefix completion than to deliberative revision, with the final outcome rarely changing after the first sim20% of thinking, despite giving the appearance of deliberation at the text level (sim74% of text-level deliberations occur when the response distribution is already locked to one refusal/compliance side). We also find that existing inference-time and training-based safety interventions, despite being motivated by the goal of inducing deliberation, largely shift model behavior toward over-refusal while suppressing already-scarce deliberation signals. Our results suggest that safety behavior in current reasoning models is much less deliberative than commonly assumed, and highlight the need for methods that induce real safety deliberation.",
-    "ai_summary": "Research reveals that reasoning models' safety outcomes are predictable from early hidden representations, with deliberation appearing but not substantially influencing final responses, and current safety interventions inadvertently suppress genuine deliberation signals.",
-    "arxiv_categories": [
-      "cs.LG",
-      "cs.AI",
-      "cs.CL"
-    ],
-    "score": 25,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.25013",
-    "pdf_url": "https://arxiv.org/pdf/2606.25013",
-    "github_url": "https://github.com/narutatsuri/lrm_safety_deliberation",
-    "hf_discussion": "https://huggingface.co/papers/2606.25013"
-  },
-  {
-    "id": "2606.27288",
-    "arxiv_id": "2606.27288",
-    "title": "When Does Combining Language Models Help? A Co-Failure Ceiling on Routing, Voting, and Mixture-of-Agents Across 67 Frontier Models",
-    "summary": "Multi-model LLM systems such as routing, voting, cascades, fusion, and mixture-of-agents are used to beat single-model accuracy. We show that their gain is capped by a quantity the field rarely reports. For any policy whose output is one member model answer, accuracy cannot exceed one minus beta, where beta is the rate at which every model is wrong on the same query. In contrast, the usual diagnostic, average pairwise error correlation rho, cannot identify beta: error laws with identical marginals and pairwise correlations can have different all-wrong rates. A Clopper-Pearson bound on beta gives a finite-sample certificate on the largest gain any router, vote, or cascade could deliver before training a router.\n  Across 67 models from 21 providers, a tetrachoric-calibrated single-factor model still underprices the all-wrong tail: on open-ended mathematics, observed beta is 0.052 versus 0.023 under the full 67-model Gaussian copula, about 2.5 times underpricing, with 90 percent CI 1.7 to 3.4 and k equals 17. The effect recurs on execution-graded code, where beta is 0.079. Re-asking the same GPQA-Diamond questions in free-response rather than multiple-choice form reopens the tail, with beta 0.127 and a five-judge panel with kappa 0.73 to 0.92, locating co-failure in answer format rather than subject. At matched quality, low-rho heterogeneous ensembles beat high-rho Self-MoA, but on checkable tasks in our pool, combining models rarely beats the single best model without a strong query-level routing signal. Gains come from models failing on different questions, not from adding more models.",
-    "ai_summary": "Multi-model systems face fundamental accuracy limits determined by the rate at which all models fail simultaneously, regardless of their individual correlations or ensemble strategies.",
+    "id": "2606.24937",
+    "arxiv_id": "2606.24937",
+    "title": "The Hitchhiker's Guide to Agentic AI: From Foundations to Systems",
+    "summary": "The Hitchhiker's Guide to Agentic AI is a comprehensive practitioner's reference for building autonomous AI systems. The book covers the full stack from first principles to production deployment, organized around a central thesis: building great agentic systems requires understanding every layer of the pipeline, not just one. The book opens with the LLM substrate -- transformer architecture, GPU systems, training and fine-tuning (SFT,LoRA, MoE), model compression, and inference optimization -- treated as essential foundations rather than the primary focus. It then develops the alignment and reasoning layer: reinforcement learning from human feedback (RLHF), PPO, DPO and its variants, GRPO, reward modeling, and RL for large reasoning models including chain-of-thought and test-time scaling. The second half is devoted to agentic AI proper. Topics include agentic training and trajectory-based RL, retrieval-augmented generation (RAG and Agentic RAG), memory systems (in-context, external, episodic, and semantic), agent harness design and context management, and a taxonomy of agent design patterns. Inter-agent coordination is covered in depth: the Model Context Protocol (MCP), agent skills and tool use, the Agent-to-Agent (A2A) communication protocol, and multi-agent architectures spanning centralized, decentralized, and hierarchical topologies. The book concludes with agent development frameworks, agentic UI design, evaluation methodology for agentic tasks, and production deployment. Each chapter pairs rigorous theoretical foundations with implementation guidance, code examples, and references to the primary literature.",
+    "ai_summary": "The book provides a comprehensive guide to building autonomous AI systems, covering foundational elements like transformer architecture and training methods, along with advanced topics such as reinforcement learning, agent architectures, and production deployment.",
     "arxiv_categories": [
       "cs.AI",
-      "cs.LG"
-    ],
-    "score": 21,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.27288",
-    "pdf_url": "https://arxiv.org/pdf/2606.27288",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.27288"
-  },
-  {
-    "id": "2606.22197",
-    "arxiv_id": "2606.22197",
-    "title": "Multi4D: High-Fidelity Dynamic Gaussian Splatting via Multi-Level Competitive Allocation",
-    "summary": "Dynamic 3D Gaussian splatting faces a fundamental tension between motion consistency and visual fidelity. Deformation-based approaches preserve temporal correspondence but suffer from motion over-factorization, oversmoothing high-frequency dynamics. In contrast, 4D-primitive methods capture fine visual details yet incur temporal overparameterization, breaking object identity and leading to severe storage overhead. To resolve this, we introduce Multi4D, a framework for high-fidelity dynamic Gaussian Splatting based on multi-level competitive allocation. Instead of a monolithic representation, we distribute modeling capacity across three structured levels: static structure, persistent dynamic geometry, and transient appearance primitives. Through shared rasterization and residual-driven optimization, these levels dynamically compete to explain photometric error, enabling adaptive specialization without pre-assigned decomposition. This allocation preserves long-term motion consistency while capturing fine dynamic detail, achieving state-of-the-art rendering quality and real-time performance with significantly fewer dynamic primitives. Furthermore, because our representation explicitly tracks compact persistent Gaussians over time, semantic features can be embedded afterward, enabling Multi4D to achieve state-of-the-art 4D segmentation accuracy with an order-of-magnitude speedup. Project page: https://batfacewayne.github.io/Multi4D.io/",
-    "ai_summary": "Multi4D addresses the trade-off between motion consistency and visual fidelity in dynamic 3D Gaussian splatting through a multi-level competitive allocation framework that enables adaptive specialization and efficient representation.",
-    "arxiv_categories": [
-      "cs.CV"
-    ],
-    "score": 21,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.22197",
-    "pdf_url": "https://arxiv.org/pdf/2606.22197",
-    "github_url": "https://github.com/BatFaceWayne/Multi4D",
-    "hf_discussion": "https://huggingface.co/papers/2606.22197"
-  },
-  {
-    "id": "2606.27377",
-    "arxiv_id": "2606.27377",
-    "title": "DanceOPD: On-Policy Generative Field Distillation",
-    "summary": "Modern image generation demands a single model that unifies diverse capabilities, including text-to-image (T2I), local editing, and global editing. However, these capabilities are rarely naturally aligned and often conflict. For instance, editing tends to degrade T2I performance, while global and local editing interfere with each other. Consequently, effectively composing these capabilities has become a central challenge for image generation model training. To tackle this, we introduce DanceOPD, an on-policy generative field distillation framework for flow-matching models that routes each sample to one capability field, queries one low-noise student-induced state, and trains with a simple velocity MSE objective. With each capability source defined as a velocity field over the shared flow state space, the student learns from fields queried on its own rollout states to compose expert capabilities. This formulation also absorbs operator-defined fields such as classifier-free guidance. Comprehensive experiments on T2I, editing, realism-field absorption, and CFG absorption show that our approach improves multi-capability composition, strengthening target capabilities while preserving anchor generation quality. We believe this work establishes a practical route for generative field distillation in flow-matching models.",
-    "ai_summary": "A novel on-policy generative field distillation framework called DanceOPD is proposed to unify text-to-image generation, local editing, and global editing capabilities in flow-matching models through capability-specific routing and velocity-based training.",
-    "arxiv_categories": [
-      "cs.CV",
       "cs.CL",
+      "cs.IR",
       "cs.LG"
     ],
-    "score": 19,
+    "score": 33,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.27377",
-    "pdf_url": "https://arxiv.org/pdf/2606.27377",
+    "arxiv_url": "https://arxiv.org/abs/2606.24937",
+    "pdf_url": "https://arxiv.org/pdf/2606.24937",
     "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.27377"
+    "hf_discussion": "https://huggingface.co/papers/2606.24937"
   },
   {
-    "id": "2606.26027",
-    "arxiv_id": "2606.26027",
-    "title": "Why Multi-Step Tool-Use Reinforcement Learning Collapses and How Supervisory Signals Fix It",
-    "summary": "Tool use enables large language models (LLMs) to perform complex tasks, and recent agentic reinforcement learning (RL) methods show promise for enhancing model capabilities. However, RL alone often leads to instability or limited gains in tool-use tasks. In our experiments, some models exhibit catastrophic collapse, where performance abruptly drops and tool-invocation structures fail. The analysis reveals that these failures stem from unexpected probability spikes in specific control tokens, disrupting structured execution, yet the underlying tool-use capability remains intact, merely obscured by specific formats. To address this, we systematically investigate a diverse set of supervisory signals, including off-policy supervision, hint-based guidance, erroneous example supervision, and others, applied under both synchronous and interleaved training schemes. We find that interleaving supervised fine-tuning (SFT) with RL substantially improves stability, but exhibits degraded performance under format and content out-of-distribution (OOD) evaluation. We also analyze the impact of learning rates and generalization across settings. These results highlight the importance of understanding RL failures and demonstrate how diverse supervisory signals can guide exploratory learning, enabling robust training of LLMs for complex, multi-step tool-use tasks. Our Code is available at https://github.com/hypasd-art/Tool-RL-Box.",
-    "ai_summary": "Research investigates how different supervisory signals and training strategies improve the stability and performance of large language models in tool-use tasks, addressing issues like catastrophic collapse and format sensitivity through interleaved supervised fine-tuning and reinforcement learning.",
+    "id": "2606.23543",
+    "arxiv_id": "2606.23543",
+    "title": "VeriEvol: Scaling Multimodal Mathematical Reasoning via Verifiable Evol-Instruct",
+    "summary": "Scaling reinforcement learning for visual mathematical reasoning requires more than generating harder questions: as data volume grows, the reward labels themselves must remain reliable. Yet existing data pipelines scale supervision while trusting the labeller, and policy-side methods assume the underlying answers are already correct. We instead treat scaling as a verifiable data-construction problem and decouple two axes before any policy update: prompt difficulty, expanded by route-specific evolution operators, and answer reliability, enforced by offline hypothesis-test falsification. We instantiate this as VeriEvol, an iterative framework with two extensible components: a type-aware evolution module that rewrites low-difficulty image-question seeds into harder, image-grounded prompts; and HTV-Agent, a verifier that accepts an answer only after multi-source counter-evidence has failed to refute it. The resulting verified data scales in volume, extends by adding evolution routes or verifier channels, and plugs directly into existing GRPO-style RL recipes. On a five-benchmark visual-math suite, scaling evolved SFT data from 10K to 250K samples raises the mean accuracy from 35.42 to 54.73; then, with backbone, SFT initialization, and GRPO recipe held fixed, VeriEvol adds a cumulative +3.88 over an un-evolved RL baseline, of which +1.82 comes from evolved prompts and +2.06 from the HTV-Agent verifier. We release the prompts, data, models, code, and the full verifier trace of every sample, so that downstream work can scale and audit the pipeline rather than only inspect its outputs.",
+    "ai_summary": "A novel framework called VeriEvol is introduced that addresses the challenge of scaling reinforcement learning for visual mathematical reasoning by ensuring reliable reward labels through a two-axis approach that separates prompt difficulty from answer reliability, utilizing evolutionary operators and hypothesis testing verification to improve model performance and transparency.",
     "arxiv_categories": [
-      "cs.CL",
-      "cs.LG"
-    ],
-    "score": 17,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.26027",
-    "pdf_url": "https://arxiv.org/pdf/2606.26027",
-    "github_url": "https://github.com/hypasd-art/Tool-RL-Box",
-    "hf_discussion": "https://huggingface.co/papers/2606.26027"
-  },
-  {
-    "id": "2606.23679",
-    "arxiv_id": "2606.23679",
-    "title": "Semantic Browsing: Controllable Diversity for Image Generation",
-    "summary": "Modern text-to-image models excel in visual fidelity and prompt adherence. However, this strict adherence comes at the cost of diversity: generated samples tend to collapse into a single visual interpretation. Existing methods to improve diversity produce outputs driven by incidental variations rather than meaningful design choices. This motivates a new variant of the diversity task where structure is enforced on the generated samples. We introduce a method for controlled diversity that enables Semantic Browsing, where users can navigate structured image galleries and experience creative exploration through a systematic traversal of meaningful, interpretable axes of variation. Achieving this level of semantic control requires a deep understanding of the scene. We exploit the fact that recent text-to-image models are trained on elaborated captions, effectively decoupling semantic decision-making from pixel generation. This enables a paradigm shift: instead of relying on stochastic variation within the text-to-image model, we induce diversity directly at the text level. By leveraging rich textual representations, we allow a Vision Language Model (VLM) to operate on the full scene context. To overcome the generic outputs typical of standard VLMs, we employ an agentic workflow that explicitly enforces structured variation attuned to the original prompt. We demonstrate that our method produces diverse and navigable design spaces where every variation corresponds to a specific, user-understandable semantic decision.",
-    "ai_summary": "Text-to-image models are enhanced with controlled diversity through semantic browsing capabilities that enable structured navigation of image variations based on meaningful semantic decisions.",
-    "arxiv_categories": [
-      "cs.CV",
       "cs.AI",
-      "cs.GR",
+      "cs.CL",
+      "cs.CV",
       "cs.LG"
     ],
-    "score": 17,
+    "score": 22,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.23679",
-    "pdf_url": "https://arxiv.org/pdf/2606.23679",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.23679"
+    "arxiv_url": "https://arxiv.org/abs/2606.23543",
+    "pdf_url": "https://arxiv.org/pdf/2606.23543",
+    "github_url": "https://github.com/RobertMarton/verievol",
+    "hf_discussion": "https://huggingface.co/papers/2606.23543"
   },
   {
-    "id": "2606.18394",
-    "arxiv_id": "2606.18394",
-    "title": "JetSpec: Breaking the Scaling Ceiling of Speculative Decoding with Parallel Tree Drafting",
-    "summary": "Speculative decoding (SD) accelerates autoregressive Large Language Models (LLMs) by drafting multiple tokens and verifying them in parallel, but it faces a scaling limitation: increasing the draft budget improves speed only when acceptance remains high and drafting overhead stays low. This ceiling has been difficult to break because prior head-based SD methods face a causality-efficiency dilemma. Autoregressive drafters produce path-conditioned candidates that are effective for tree speculative decoding with higher acceptance length, but their drafting cost grows with tree depth. Bidirectional block-diffusion drafters generate all positions in one pass, but their branch-agnostic marginals can form individually plausible yet mutually inconsistent trees, wasting budget and reducing acceptance. We propose JetSpec, a head-based SD framework that combines one-forward drafting efficiency with branch-wise causal conditioning. JetSpec trains a causal parallel draft head over fused hidden states from the frozen target model, producing candidate trees whose scores align with the target model's autoregressive factorization. This enables JetSpec to convert larger draft budgets into longer accepted prefixes and higher end-to-end speedup. Across math, coding, and chat benchmarks on dense and MoE Qwen3 models, JetSpec consistently outperforms bidirectional-head and tree-based SD baselines. On H100 GPUs, JetSpec achieves up to 9.64x speedup on MATH-500 and 4.58x on open-ended conversational workloads, with further latency gains demonstrated through vLLM integration under realistic serving loads. Our code and models are available at https://github.com/hao-ai-lab/JetSpec.",
-    "ai_summary": "JetSpec is a speculative decoding framework that combines efficient forward drafting with causal conditioning to improve LLM inference speed and acceptance rates across various benchmarks.",
+    "id": "2606.23991",
+    "arxiv_id": "2606.23991",
+    "title": "Critique of Agent Model",
+    "summary": "What is an agent? What constitutes agency? With the rise of Large Language Model (LLM) systems marketed as ``coding agents'', ``AI co-scientists'', and other ``agentic\" tools that promise to drive up productivity, and at the same time, ``existential\" concerns such as AI escaping human control with destructive power under a speculative ``machine agency\" against humans, it has become essential to clarify where automation ends and agency begins, both for building capable systems and for understanding whether and what to fear. Drawing on Descartes' grounding of agency in independent thought, and on portrayals of autonomous beings in science fiction, we survey the current landscape of AI agents, and analyze agent architectures along five dimensions: goal, identity, decision-making, self-regulation, and learning. Specifically, we argue that genuine agency requires these structures to be internalized within the system itself rather than assembled through external scaffolding. This distinction between agentic systems, whose competence resides in engineered workflows, and agentive systems, whose capabilities (including social interaction) arise endogenously, defines the boundary between systems designed for prescribed tasks, and those capable of operating in the open world with true autonomy. Building on this analysis, we propose the Goal-Identity-Configurator (GIC) architecture for a general-purpose agent model, combining hierarchical goal decomposition, identity evolution, simulative reasoning grounded in a separately trained world model, learned self-regulation, and self-directed learning from both real and simulated experience. Furthermore, we share insight on the auditability, controllability, and safety of agentive systems that possess greater autonomy and ``agency\", but remain under human oversight.",
+    "ai_summary": "True artificial agency requires internalized structures for goals, identity, decision-making, self-regulation, and learning, distinguishing autonomous systems from task-specific ones.",
     "arxiv_categories": [
-      "cs.CL"
-    ],
-    "score": 16,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.18394",
-    "pdf_url": "https://arxiv.org/pdf/2606.18394",
-    "github_url": "https://github.com/hao-ai-lab/JetSpec",
-    "hf_discussion": "https://huggingface.co/papers/2606.18394"
-  },
-  {
-    "id": "2606.27326",
-    "arxiv_id": "2606.27326",
-    "title": "Hallucination in World Models is Predictable and Preventable",
-    "summary": "Modern generative world models render increasingly realistic action-controllable futures, yet they frequently hallucinate: rollouts remain visually fluent while drifting from the ground-truth dynamics. We hypothesize that hallucination concentrates in low-coverage regions of the state-action space, where lightweight data-centric signals can both detect it and guide mitigation. To test this, we introduce MMBench2, a 427-hour, 210-task dataset for visual world modeling with ground-truth actions, rewards, and live simulators, and train a 350M-parameter world model on it. We identify three distinct hallucination modes: perceptual, action-marginalized, and scene-diverging -- each anchored to a different stage of the pipeline, and develop three signals that accurately predict where the model will fail. To close coverage gaps at training time, we develop a coverage-aware sampling technique; to close them online, our hallucination predictors serve as curiosity rewards for targeted data collection, yielding a data-efficient finetuning recipe that adapts the pretrained world model to entirely unseen environments with as few as 50 real environment trajectories. Overall, our findings reveal that hallucination in world models is inherently a data coverage issue, and that the same signals used to detect it can also be used for mitigation.\n  An interactive web version of our paper is available at https://www.nicklashansen.com/mmbench2",
-    "ai_summary": "World models exhibit hallucinations in low-data regions of state-action space, which can be detected and mitigated using data-centric signals and coverage-aware sampling techniques.",
-    "arxiv_categories": [
+      "cs.AI",
       "cs.LG",
-      "cs.CV",
+      "cs.MA",
       "cs.RO"
     ],
-    "score": 16,
+    "score": 22,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.27326",
-    "pdf_url": "https://arxiv.org/pdf/2606.27326",
-    "github_url": "https://github.com/nicklashansen/mmbench2",
-    "hf_discussion": "https://huggingface.co/papers/2606.27326"
-  },
-  {
-    "id": "2606.24231",
-    "arxiv_id": "2606.24231",
-    "title": "FlowR2A: Learning Reward-to-Action Distribution for Multimodal Driving Planning",
-    "summary": "Multimodal driving planning faces a long-standing tension between two paradigms: scoring-based methods benefit from dense reward supervision but are confined to a fixed action vocabulary, while anchor-based methods generate proposals dynamically yet suffer from sparse supervision constrained to a single ground-truth trajectory. In this work, we propose FlowR2A, which resolves this tension by reframing simulation-based rewards from discriminative targets into generative conditions. By learning the reward-conditioned action distribution from dense trajectory-reward pairs with a flow-matching decoder, FlowR2A unifies the dense supervision of scoring-based methods with the proposal generation of anchor-based methods in a single generative model, forcing the model to internalize the correlation between an action and its outcomes in safety, progress, comfort, and rule compliance. To balance hard safety constraints against soft progress objectives, we introduce fine-grained per-timestep reward conditioning and reward noise augmentation. The generative formulation naturally supports controllable test-time sampling via reward guidance and anchored sampling, producing high-quality proposals. FlowR2A achieves state-of-the-art results on the NAVSIM v1 and v2 benchmarks, with multimodal proposals of substantially higher quality than prior methods.",
-    "ai_summary": "FlowR2A addresses the tension in multimodal driving planning by combining dense reward supervision with dynamic proposal generation through a flow-matching decoder that learns reward-conditioned action distributions.",
-    "arxiv_categories": [
-      "cs.AI"
-    ],
-    "score": 16,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.24231",
-    "pdf_url": "https://arxiv.org/pdf/2606.24231",
-    "github_url": "https://github.com/lixirui142/FlowR2A",
-    "hf_discussion": "https://huggingface.co/papers/2606.24231"
-  },
-  {
-    "id": "2606.24133",
-    "arxiv_id": "2606.24133",
-    "title": "Holistic Data Scheduler for LLM Pre-training via Multi-Objective Reinforcement Learning",
-    "summary": "The composition of training data, governed by the diversity of sources and their mixing strategy, is a cornerstone of Large Language Model (LLM) pre-training. Online Data Mixing (ODM), the technique of adaptively adjusting data mixtures during training, has emerged as a promising direction to improve efficiency. However, existing methods are constrained by their reliance on a singular optimization perspective, which fundamentally overlooks the need for complex LLM pre-training to consider the dynamic data composition from multiple dimensions. To overcome this limitation, we introduce the Holistic Data Scheduler (HDS), a novel online data mixing framework. HDS formulates the data scheduling challenge as a reinforcement learning problem in a continuous control space and leverages the Soft Actor-Critic (SAC) algorithm for its stability and sample efficiency in exploring the high-dimensional policy space. At the core of HDS lies a novel multi-objective, holistic reward function that integrates three critical perspectives: a data-driven reward for quality, a loss-driven reward capturing inter-domain influence, and a model-driven reward based on weight norms. To validate our design and determine its optimal configuration, we conducted systematic experiments on LLMs of various sizes. On The Pile benchmark, HDS reaches the final validation perplexity of the next best method with 44% fewer training iterations. Furthermore, it achieves a 7.2% improvement on the MMLU 0-shot task along with consistent gains on other benchmarks, showcasing its ability to enhance both training efficiency and final model capability.",
-    "ai_summary": "A novel online data mixing framework called Holistic Data Scheduler uses reinforcement learning with a multi-objective reward function to optimize large language model pre-training efficiency and performance.",
-    "arxiv_categories": [
-      "cs.LG",
-      "cs.CL"
-    ],
-    "score": 16,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.24133",
-    "pdf_url": "https://arxiv.org/pdf/2606.24133",
-    "github_url": "https://github.com/DANG-ai/LLM-Training-Holistic-Data-Schedule",
-    "hf_discussion": "https://huggingface.co/papers/2606.24133"
-  },
-  {
-    "id": "2606.21171",
-    "arxiv_id": "2606.21171",
-    "title": "An Exploratory Case Study of LLM-Assisted Refactoring and Gameplay Feature Generation in an Endless Runner Game",
-    "summary": "Large language models (LLMs) are increasingly used to support software development, but their practical usefulness in applied game-development settings remains underexplored, especially when generated code must be integrated into an existing game software system. This paper presents an exploratory empirical case study of GPT-4o in a custom Python/Pygame endless runner. The study examines six selected development tasks: three localized refactoring tasks and three tasks involving gameplay feature generation. The resulting implementations were evaluated using software metrics, unit tests, and manual gameplay assessments. In this case study, all three selected refactoring tasks were completed successfully in functional terms, whereas only one of the three selected gameplay feature generation tasks resulted in a correctly integrated feature. The findings suggest that, in this setting, GPT-4o handled localized transformations more reliably than tasks requiring new gameplay interactions across multiple existing systems. Given the exploratory single-case design, these results are best interpreted as indicative observations rather than as generalizable evidence of category-level model performance. Overall, the paper contributes a transparent case-based account of the opportunities and limitations of LLM-assisted refactoring and gameplay feature generation in an existing game software system.",
-    "ai_summary": "Large language models demonstrate varying effectiveness in software development tasks, successfully completing localized refactoring but showing limitations in integrating new gameplay features within existing game systems.",
-    "arxiv_categories": [
-      "cs.SE",
-      "cs.AI"
-    ],
-    "score": 16,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.21171",
-    "pdf_url": "https://arxiv.org/pdf/2606.21171",
-    "github_url": "https://github.com/jan-wun/PSE_Endless-Runner-Game",
-    "hf_discussion": "https://huggingface.co/papers/2606.21171"
-  },
-  {
-    "id": "2606.16517",
-    "arxiv_id": "2606.16517",
-    "title": "How Post-Training Shapes Biological Reasoning Models",
-    "summary": "Scientific reasoning models for biology combine language models with foundation models trained on multimodal biological data, including DNA, RNA, and proteins. These models are built through post-training, yet how each stage shapes reasoning and generalization remains poorly understood. We study when post-training improves performance and when it induces over-specialization. Across genomics, transcriptomics, and proteins, we train and evaluate more than 100 biological reasoning models under controlled variation in backbone, continued pre-training (CPT), supervised fine-tuning (SFT), and reinforcement learning (RL), measuring both in-domain (ID) and out-of-domain (OOD) performance. We find that each post-training stage reshapes generalization in a distinct way rather than contributing uniform gains. CPT improves downstream performance by aligning models with biological language. SFT consistently increases ID performance but causes OOD performance to peak early and decline as models fit the training distribution. RL, when applied to strong SFT checkpoints with aligned rewards, improves OOD performance and partially recovers generalization. These results show that biological reasoning does not improve monotonically with additional supervision or compute. Instead, performance depends on how training stages are composed. Under fixed post-training budgets, the strongest ID-OOD trade-off comes from brief SFT, larger RL allocations, and asymmetric adaptation capacity across stages.",
-    "ai_summary": "Post-training stages in biological reasoning models differently affect generalization, with continued pre-training aligning models with biological language, supervised fine-tuning improving in-domain performance but reducing out-of-domain generalization, and reinforcement learning recovering out-of-domain performance when applied to well-aligned checkpoints.",
-    "arxiv_categories": [
-      "cs.LG",
-      "q-bio.QM"
-    ],
-    "score": 15,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.16517",
-    "pdf_url": "https://arxiv.org/pdf/2606.16517",
+    "arxiv_url": "https://arxiv.org/abs/2606.23991",
+    "pdf_url": "https://arxiv.org/pdf/2606.23991",
     "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.16517"
+    "hf_discussion": "https://huggingface.co/papers/2606.23991"
   },
   {
-    "id": "2606.23104",
-    "arxiv_id": "2606.23104",
-    "title": "ReNIO: Reweighting Negative Trajectory Importance for LLM On-Policy Distillation",
-    "summary": "On-policy distillation (OPD) improves LLM reasoning by training a student model on its own generated outputs, but standard OPD treats all student-generated outputs (SGOs) equally regardless of their informativeness. We observe a consistent asymmetry in controlled filtering experiments: in both OPD and on-policy self distillation (OPSD), training only on incorrect SGOs outperforms training only on correct ones. Our further analysis suggests that models trained on correct-only SGOs tend to generate shorter reasoning traces and show weaker reflection behavior, while incorrect SGOs better preserve exploratory reasoning near the model's capability boundary. To exploit this signal without requiring full answer-containing rollouts, we introduce ReNIO, which Reweights Negative trajectory Importance for LLM On-policy distillation. By using the student-to-teacher probability ratio, ReNIO identifies pivotal tokens leading to wrong reasoning traces and aggregates their information into a normalized sample weight, inherently assigning larger weights to likely negative trajectories without observing the correctness of final-answer. Since Re-NIO only uses prefix-conditioned token probabilities, it preserves OPD's prefix training advantage over full-rollout reinforcement learning. Across both mathematical reasoning and code generation tasks, ReNIO improves both OPD and OPSD, with representative relative gains of up to 8.90% for Qwen3-1.7B and 10.00% for R1-Distill-Qwen-7B on mathematical reasoning benchmarks. Code repo: https://github.com/BDML-lab/ReNIO.",
-    "ai_summary": "ReNIO enhances on-policy distillation for language models by reweighting negative trajectories based on token-level probability ratios, improving reasoning performance in mathematical and code generation tasks.",
+    "id": "2606.24083",
+    "arxiv_id": "2606.24083",
+    "title": "CAVEWOMAN: How Large Language Models Behave Under Linguistic Input and Output Compression",
+    "summary": "\"Talk short. Drop grammar. Save token.\" This caveman style is widely promoted as a way to cut inference cost, but whether it actually saves anything depends on which channel (the user's prompt or the model's response) is being compressed. We present Cavewoman, a two-channel evaluation protocol that scores every generation on task accuracy, realized per-item cost, and reference-text agreement against the model's unconstrained reference. We evaluate eight models on five datasets at five reduction levels, with both channels measured on the same items. Output compression cuts realized cost on most API models (1.4-2.4x per model, up to 3x in the best case) and on all four open-weight models under public-tier pricing. Input compression has the opposite effect, a strict lose-lose: it raises net cost rather than lowering it (~1.15x on the five-benchmark mean, up to 1.8x on the worst dataset and 2.7x under stronger compression), because models compensate with longer responses even as accuracy collapses. Under the same setting, surface text diverges from the unconstrained reference: on the non-reasoning models, roughly half of all generations are correct yet their surface text no longer entails the model's own unconstrained baseline generation. The divergence survives length-controlled re-scoring, multiple-comparisons correction, and replication under complementary semantic measures. Code and data are available at https://github.com/danielle34/cavewoman.",
+    "ai_summary": "Two-channel evaluation shows output compression reduces costs while input compression increases costs and degrades accuracy across models and datasets.",
     "arxiv_categories": [
-      "cs.LG",
-      "cs.AI"
-    ],
-    "score": 15,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.23104",
-    "pdf_url": "https://arxiv.org/pdf/2606.23104",
-    "github_url": "https://github.com/BDML-lab/ReNIO",
-    "hf_discussion": "https://huggingface.co/papers/2606.23104"
-  },
-  {
-    "id": "2606.25319",
-    "arxiv_id": "2606.25319",
-    "title": "V-Zero: Answer-Label-Free On-Policy Distillation with Contrastive Evidence Gating for Fine-Grained Visual Reasoning",
-    "summary": "Fine-grained visual reasoning requires multimodal large language models (MLLMs) to identify task-relevant visual evidence and ground their reasoning in local image regions. Existing agentic methods typically rely on reinforcement learning with verifiable rewards or supervised fine-tuning on large-scale annotated reasoning traces, leading to costly exploration, hand-designed verification rules, or heavy dependence on textual supervision. A natural way to avoid such external answer labels is to learn from trajectories sampled by the student itself, which points to On-Policy Distillation (OPD). To understand what OPD can and cannot provide for visual reasoning, we revisit it as negative-free stop-gradient alignment. This perspective shows that, although OPD provides effective token-level correction, its ceiling is constrained by the absence of trajectory-level discrimination. Motivated by these observations, we propose V-Zero, an answer-label-free framework for visual reasoning with contrastive evidence gating. V-Zero uses no annotated textual answer labels; instead, during training it pairs a question-relevant regional crop with a negative visual view to evaluate student-sampled trajectories and gate dense token-level distillation. Experiments on multiple visual reasoning benchmarks show that V-Zero consistently improves fine-grained visual reasoning while preserving strong generalization. Notably, V-Zero is more than 5times faster than previous supervised fine-tuning methods and more than 10times faster than reinforcement learning baselines. Code and dataset will be released at https://github.com/eVI-group-SCU/V-Zero",
-    "ai_summary": "A novel label-free framework for visual reasoning called V-Zero is presented, which uses contrastive evidence gating to improve fine-grained visual reasoning without requiring annotated answer labels, achieving faster training than traditional methods.",
-    "arxiv_categories": [
-      "cs.CV"
-    ],
-    "score": 15,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.25319",
-    "pdf_url": "https://arxiv.org/pdf/2606.25319",
-    "github_url": "https://github.com/eVI-group-SCU/V-Zero",
-    "hf_discussion": "https://huggingface.co/papers/2606.25319"
-  },
-  {
-    "id": "2606.25996",
-    "arxiv_id": "2606.25996",
-    "title": "Autodata: An agentic data scientist to create high quality synthetic data",
-    "summary": "We introduce Autodata, a general method that enables AI agents to act as data scientists who build high quality training and evaluation data. We show how to train (meta-optimize) such a data scientist agent, so that it learns to create even stronger data. We describe the overall formulation, and a specific practical implementation, Agentic Self-Instruct. We conduct experiments on computer science research tasks, legal reasoning tasks and reasoning with mathematical objects, where we obtain improved results compared to classical synthetic dataset creation methods. Further, meta-optimizing the data scientist agent itself delivers an even larger performance uplift. Agentic data creation provides a way to convert increased inference compute into higher quality model training. Overall, we believe this direction has the potential to change the way we build AI data.",
-    "ai_summary": "Autodata enables AI agents to function as data scientists who create high-quality training data through meta-optimization, demonstrating improved performance across multiple task domains.",
-    "arxiv_categories": [
-      "cs.AI",
       "cs.CL",
+      "cs.AI",
       "cs.LG"
     ],
-    "score": 15,
+    "score": 21,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.25996",
-    "pdf_url": "https://arxiv.org/pdf/2606.25996",
-    "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.25996"
+    "arxiv_url": "https://arxiv.org/abs/2606.24083",
+    "pdf_url": "https://arxiv.org/pdf/2606.24083",
+    "github_url": "https://github.com/danielle34/cavewoman",
+    "hf_discussion": "https://huggingface.co/papers/2606.24083"
   },
   {
-    "id": "2606.20027",
-    "arxiv_id": "2606.20027",
-    "title": "QG-MIL: A Gated Transformer Aggregator for Domain-Agnostic Multiple Instance Learning in Medical Imaging",
-    "summary": "Attention-based Multiple Instance Learning aggregators in medical imaging are prone to attention concentration, producing overconfident and unstable predictions. We introduce QG-MIL, a gated transformer aggregator that addresses this through four synergistic architectural components: RMSNorm-based pre-normalization, per-head QK normalization, fine-grained attention output gating, and SwiGLU-style feed-forward modules. Together, these design choices stabilize training and distribute attention more uniformly across instances without auxiliary losses, masking, or multi-stage regularization. We evaluate QG-MIL across six benchmarks spanning whole-slide pathology and cell-level hematology, covering two fundamentally different MIL scales. The best-performing QG-MIL variants outperform leading baselines on all six benchmarks, with an average improvement of +6.1 mean macro F1 points. Attention overlays and attention mass analysis confirm more distributed instance weighting. Ablation studies show that while individual components can match the full model on specific datasets, the QG-MIL design provides the most consistent cross-domain performance and tightest variance when compared to selected baselines. We release a configurable implementation to support reproducibility at: https://github.com/unica-visual-intelligence-lab/QG-MIL",
-    "ai_summary": "QG-MIL introduces a gated transformer aggregator for multiple instance learning in medical imaging that stabilizes attention distribution and improves prediction consistency across different medical domains.",
+    "id": "2606.16316",
+    "arxiv_id": "2606.16316",
+    "title": "RL-Index: Reinforcement Learning for Retrieval Index Reasoning",
+    "summary": "Retrieving external knowledge is essential for solving real-world tasks, yet it remains challenging when the relationship between a query and its relevant knowledge involves implicit and complex reasoning beyond surface-level semantic or lexical matching (e.g., mathematical problems relying on the same theorem or coding requiring deep reasoning). Existing approaches primarily rely on query-side reasoning (e.g., query rewriting), which introduces significant online latency and underutilizes the opportunity to perform reasoning over the knowledge corpus itself (i.e., index-side reasoning). In this paper, we propose RL-Index, an agentic indexing framework that formulates retrieval index reasoning as a reinforcement learning problem. Instead of performing reasoning at query time, RL-Index shifts reasoning to the indexing stage by augmenting documents with LLM-generated rationales that explicitly encode the latent query-knowledge relationship. To optimize the quality of these rationales, we employ Group Relative Policy Optimization (GRPO) and use retrieval similarity as a verifiable reward signal, enabling direct optimization of indexing decisions for retrieval effectiveness. Extensive experiments on the BRIGHT benchmark demonstrate that RL-Index consistently improves both retrieval and downstream question-answering performance, while significantly reducing online inference latency. Moreover, the learned rationale augmentation generalizes across diverse retrievers and generators, highlighting its robustness as a plug-and-play indexing strategy across different retrieval systems.",
+    "ai_summary": "RL-Index introduces an agentic indexing framework that shifts reasoning from query time to indexing stage by using LLM-generated rationales and reinforcement learning to improve retrieval effectiveness and reduce latency.",
     "arxiv_categories": [
-      "cs.CV"
+      "cs.IR",
+      "cs.AI",
+      "cs.LG"
     ],
-    "score": 15,
+    "score": 20,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.20027",
-    "pdf_url": "https://arxiv.org/pdf/2606.20027",
-    "github_url": "https://github.com/unica-visual-intelligence-lab/QG-MIL",
-    "hf_discussion": "https://huggingface.co/papers/2606.20027"
-  },
-  {
-    "id": "2606.24428",
-    "arxiv_id": "2606.24428",
-    "title": "Escaping the Self-Confirmation Trap: An Execute-Distill-Verify Paradigm for Agentic Experience Learning",
-    "summary": "Experience-driven self-evolution is critical for large language model (LLM) agents to improve through open-world interaction. However, existing experience learning methods mostly rely on single-agent loops, where the same agent executes tasks, summarizes outcomes, and determines memory content. This setup makes agents vulnerable to the Self-Confirmation Trap: wrong-but-self-consistent trajectories are misidentified as successful experience, leading to cumulative errors during retrieval and reuse. To address this issue, we propose EDV, an Execute-Distill-Verify framework for reliable experience learning. In the Execute stage, multiple heterogeneous agents explore the same task space in parallel to generate diverse candidate trajectories. In the Distill stage, a dedicated third-party agent comparatively analyzes these trajectories to produce candidate experiences, reducing executor-centric summarization bias. In the Verify stage, the execution group validates candidates via a consensus mechanism, and only approved experiences are written into shared or private memory. By decoupling the three stages, EDV transforms experience learning from isolated self-reflection into collaborative construction, filtering erroneous and noisy content before memory insertion. We evaluate EDV on three challenging long-horizon benchmarks: tau2-bench, Mind2Web and MMTB. Results show EDV consistently outperforms strong baselines, validating that reliable experience construction is essential for robust agent self-evolution. Our code is available at https://github.com/shidingz/EDV.",
-    "ai_summary": "EDV is a three-stage framework that uses multiple heterogeneous agents to collaboratively construct reliable experiences for LLM agents, preventing self-confirmatory errors through execute-distill-verify processes.",
-    "arxiv_categories": [
-      "cs.CL"
-    ],
-    "score": 15,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.24428",
-    "pdf_url": "https://arxiv.org/pdf/2606.24428",
+    "arxiv_url": "https://arxiv.org/abs/2606.16316",
+    "pdf_url": "https://arxiv.org/pdf/2606.16316",
     "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.24428"
+    "hf_discussion": "https://huggingface.co/papers/2606.16316"
   },
   {
-    "id": "2606.26300",
-    "arxiv_id": "2606.26300",
-    "title": "The Verification Horizon: No Silver Bullet for Coding Agent Rewards",
-    "summary": "A classical intuition holds that verifying a solution is easier than producing one. For today's coding agents, this intuition is being inverted: as foundation models develop stronger reasoning capabilities and engineering harnesses grow more sophisticated, generating complex candidate solutions is no longer difficult -- reliably verifying them has become the harder problem. Every verifier we can build is only a proxy for human intent, never the intent itself. This makes verification subject to a twofold difficulty: first, intent is underspecified by nature, making it inherently hard to faithfully check whether it has been fulfilled; second, during model training, optimization widens the gap between proxy and intent -- manifesting as reward hacking or signal saturation. To address this, we characterize the quality of verification signals along three dimensions -- scalability, faithfulness, and robustness -- and argue that achieving all three simultaneously is the central challenge. We further study four reward constructions: a test verifier for general coding tasks, a rubric verifier for frontend tasks, the user as verifier for real-world agent tasks, and an automated agent verifier for long-horizon tasks. Across different task types and policy capability levels, we conduct in-depth analysis and experiments on the core challenges of reward design and how to more effectively leverage reward signals. Experiments show that targeted verification design can effectively suppress reward hacking, improve task completion quality, and achieve significant gains across multiple internal and public benchmarks. These experiences collectively point to a core observation: no fixed reward function can remain effective as policy capability continues to grow; and verification must co-evolve with the generator.",
-    "ai_summary": "Verification challenges in AI agents arise from the difficulty of aligning proxy signals with human intent, requiring adaptive verification systems that evolve alongside generative capabilities.",
+    "id": "2606.24775",
+    "arxiv_id": "2606.24775",
+    "title": "Are We Ready For An Agent-Native Memory System?",
+    "summary": "Memory for large language model (LLM) agents has rapidly evolved from simple retrieval-augmented mechanisms into a data management system that supports persistent information storage, retrieval, update, consolidation, and dynamic lifecycle governance throughout agent execution. Despite this evolution, existing evaluations still benchmark agent memory mainly through end-to-end task success metrics (e.g., F1, BLEU), while treating the underlying system as a monolithic black box. As a result, critical system-level concerns, including operational costs, architectural trade-offs across memory modules, and robustness under dynamic knowledge updates, remain insufficiently explored. In this paper, we present a systematic experimental study of agent memory from a data management perspective. We propose an analytical framework that decomposes agent memory into four core modules: memory representation and storage, extraction, retrieval and routing, and maintenance. Under this framework, we evaluate 12 representative memory systems and two reference baselines across five benchmark workloads spanning 11 datasets. Our extensive end-to-end evaluation shows that no single architecture dominates across all scenarios; instead, effectiveness depends heavily on how well the memory structure aligns with the workload bottleneck. Furthermore, through fine-grained ablation studies, we quantify their individual effects on representation fidelity, retrieval precision, update correctness, and long-horizon stability. Finally, we reveal cost-performance trade-offs under realistic workloads, showing localized maintenance is more cost-efficient than global reorganization. Based on these findings, we identify promising directions towards building truly agent-native memory systems. The code is publicly available at https://github.com/OpenDataBox/MemoryData.",
+    "ai_summary": "Large language model agents' memory systems have evolved into complex data management frameworks requiring systematic evaluation across multiple modules and workloads to understand their performance characteristics and trade-offs.",
     "arxiv_categories": [
+      "cs.CL",
+      "cs.DB",
+      "cs.IR"
+    ],
+    "score": 20,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.24775",
+    "pdf_url": "https://arxiv.org/pdf/2606.24775",
+    "github_url": "https://github.com/OpenDataBox/MemoryData",
+    "hf_discussion": "https://huggingface.co/papers/2606.24775"
+  },
+  {
+    "id": "2606.21884",
+    "arxiv_id": "2606.21884",
+    "title": "A Verifiable Search Is Not a Learnable Chain-of-Thought",
+    "summary": "It is tempting to assume any task solvable by a short program can be taught to a model as its chain-of-thought: write the steps out, fine-tune, and the model follows. This paper shows the assumption fails for an identifiable class of procedures. The testbed is nine reasoning tasks, each from a deterministic generator; public and hidden splits share generators, so held-out data proxies test accuracy. I reverse-engineer the generators into Python solvers, render them as chain-of-thought, and distill into a rank-<= 32 LoRA over a 30B (3.5B-active) Nemotron model. Forward-computable tasks install readily: lookup/arithmetic and an 8-bit boolean task transfer (>= 0.99 and 0.68). Cryptarithm does not: distilling its backtracking search holds at 0.01-0.07 across eleven chain-of-thought designs, RL from verifiable rewards, and self-training, even though a search solver answers 71% of instances. This is not a capability gap. The model does the arithmetic on 97-100% of lines and ranks the correct cipher in its top eight on 71%; it cannot carry the search forward as a left-to-right derivation. Fine-tuning learns the shape of a verifiable elimination step while its verdicts become unconditional templates, correct only 16-57% of the time (\"verdict-as-token\"). The ceiling holds across backbones from 3B to 671B and across fine-tuning and prompting; a controlled intervention isolates the cause: revealing the cipher key, which turns the derivation forward, lifts the same instances from 0.03 to 0.57. When a procedure's only solution is search over information-free structure, no faithful forward chain-of-thought exists to imitate. The task becomes learnable only by removing the search, precomputing its combinatorial core into a catalog and reducing the trace to recall plus verification; the 1st-place solution reaches Private LB 0.92 this way. What distills is memorization and verification, not search.",
+    "ai_summary": "Training models on chain-of-thought demonstrations fails for tasks requiring backtracking search because the forward derivation cannot be faithfully imitated, demonstrating a fundamental limitation in learning search procedures through demonstration.",
+    "arxiv_categories": [
+      "cs.LG",
       "cs.AI",
       "cs.CL"
     ],
-    "score": 14,
+    "score": 20,
     "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.26300",
-    "pdf_url": "https://arxiv.org/pdf/2606.26300",
+    "arxiv_url": "https://arxiv.org/abs/2606.21884",
+    "pdf_url": "https://arxiv.org/pdf/2606.21884",
+    "github_url": "https://github.com/harshpatel1692/search-not-learnable",
+    "hf_discussion": "https://huggingface.co/papers/2606.21884"
+  },
+  {
+    "id": "2606.25182",
+    "arxiv_id": "2606.25182",
+    "title": "What Intermediate Layers Know: Detecting Jailbreaks from Entropy Dynamics",
+    "summary": "Jailbreak attacks reveal a persistent weakness in aligned Large Language Models: carefully crafted prompts can elicit policy-violating responses despite safety training. While most defenses operate at the prompt or output level, it remains unclear how harmful intent is encoded within the model's internal representations. We investigate this question by analyzing token-level predictive entropy trajectories across layers of a frozen LLM using the logit lens. We find that static aggregate statistics of prompt-level entropy (e.g., mean, variance) carry little discriminative signal, whereas features capturing how entropy evolves across token positions, such as monotonic rank-based trend scores, are substantially more informative. Importantly, this signal is not uniform across model depth: it is concentrated in intermediate layers and degrades at the final layer, indicating that jailbreak-relevant structure is most pronounced in mid-network representations rather than at the output head. Across multiple models (Llama, Qwen, Gemma) and adversarial benchmarks, these entropy dynamics provide architecture-consistent separation without additional training. Together, our findings show that jailbreak behavior is reflected in structured intermediate uncertainty dynamics, clarifying both which entropy-derived features encode harmful intent and where in the network that signal is most pronounced.",
+    "ai_summary": "Jailbreak attacks expose vulnerabilities in aligned large language models, revealing that harmful intent is encoded in structured intermediate uncertainty dynamics rather than output representations.",
+    "arxiv_categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ],
+    "score": 18,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.25182",
+    "pdf_url": "https://arxiv.org/pdf/2606.25182",
+    "github_url": "https://github.com/ssophiee/entropy-jailbreak-detection",
+    "hf_discussion": "https://huggingface.co/papers/2606.25182"
+  },
+  {
+    "id": "2606.20023",
+    "arxiv_id": "2606.20023",
+    "title": "When Lower Privileges Suffice: Investigating Over-Privileged Tool Selection in LLM Agents",
+    "summary": "As LLM agents increasingly select tools autonomously, their choices among tools with different privileges become safety-relevant. However, prior tool-selection studies focus on safety-agnostic metadata preferences, leaving privilege-sensitive choices underexplored. To address this gap, we study over-privileged tool selection, in which an agent selects or escalates to a higher-privilege tool despite a sufficient lower-privilege alternative. We introduce ToolPrivBench to evaluate whether agents choose higher-privilege tools despite sufficient lower-privilege alternatives, measuring both initial selection and escalation after transient tool failures. Across eight domains and five recurring risk patterns, we find that over-privileged tool selection is common among mainstream LLM agents and is further amplified by transient failures. We further find that general safety alignment does not reliably transfer to least-privilege tool choice, while prompt-level controls provide only limited mitigation under transient failures. We therefore introduce a privilege-aware post-training defense that teaches agents to prefer sufficient lower-privilege tools and escalate only when necessary. Our mitigation experiments show that this defense substantially reduces unnecessary high-privilege tool use while preserving general capabilities.",
+    "ai_summary": "LLM agents frequently select higher-privilege tools unnecessarily, and while safety alignment doesn't ensure least-privilege choices, a post-training defense can reduce excessive privilege use without sacrificing performance.",
+    "arxiv_categories": [
+      "cs.SE",
+      "cs.AI",
+      "cs.CL"
+    ],
+    "score": 18,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.20023",
+    "pdf_url": "https://arxiv.org/pdf/2606.20023",
+    "github_url": "https://github.com/AISafetyHub/agent-tool-selection-bias",
+    "hf_discussion": "https://huggingface.co/papers/2606.20023"
+  },
+  {
+    "id": "2606.25473",
+    "arxiv_id": "2606.25473",
+    "title": "Causal-rCM: A Unified Teacher-Forcing and Self-Forcing Open Recipe for Autoregressive Diffusion Distillation in Streaming Video Generation and Interactive World Models",
+    "summary": "Autoregressive video diffusion with causal diffusion transformers has emerged as a major paradigm for real-time streaming video generation and action-conditioned interactive world models. In this work, we extend rCM, an advanced diffusion distillation framework, to autoregressive video diffusion. The core philosophy of rCM lies in the complementarity between forward and reverse divergences, represented by consistency models (CMs) and distribution matching distillation (DMD), respectively, in diffusion distillation. This philosophy naturally carries over to the autoregressive setting, where teacher-forcing (TF) provides an offline, forward-divergence causal training paradigm, while self-forcing (SF) corresponds to an on-policy, reverse-divergence refinement.\n  Our contributions are: (1) through extensive experiments, we show that teacher-forcing CM is currently the best complement to self-forcing DMD as an initialization strategy (2) we present the first implementation of teacher-forcing-based continuous-time CMs (e.g., sCM/MeanFlow) for autoregressive video diffusion, enabled by our custom-mask FlashAttention-2 JVP kernel, achieving 10times faster convergence compared to discrete-time CMs (dCMs) (3) we introduce Causal-rCM, a leading, unified, and scalable algorithm-infrastructure open recipe for diffusion distillation and causal training (4) we achieve state-of-the-art streaming video generation performance in both frame-wise and chunk-wise settings, using only synthetic data for training.\n  Notably, our distilled 2-step causal Wan2.1-1.3B model achieves a VBench-T2V score of 84.63 with only 1 or 2 sampling steps. We further apply Causal-rCM to Cosmos 3, an advanced omnimodal world foundation model for physical AI with action-conditioned generation capability, enabling an interactive world model.",
+    "ai_summary": "Autoregressive video diffusion extends diffusion distillation frameworks to real-time streaming generation through causal training paradigms, achieving state-of-the-art performance with fast convergence and interactive world modeling capabilities.",
+    "arxiv_categories": [
+      "cs.CV",
+      "cs.LG"
+    ],
+    "score": 18,
+    "upvotes": 0,
+    "arxiv_url": "https://arxiv.org/abs/2606.25473",
+    "pdf_url": "https://arxiv.org/pdf/2606.25473",
     "github_url": "",
-    "hf_discussion": "https://huggingface.co/papers/2606.26300"
-  },
-  {
-    "id": "2606.26790",
-    "arxiv_id": "2606.26790",
-    "title": "OPID: On-Policy Skill Distillation for Agentic Reinforcement Learning",
-    "summary": "Outcome-based reinforcement learning provides a stable optimization backbone for language agents, but its sparse trajectory-level rewards provide little guidance on which intermediate decisions should be reinforced or suppressed. On-policy self-distillation offers dense token-level supervision, yet existing skill-conditioned variants often rely on external skill memories or retrieved privileged context, which are costly to maintain and can be mismatched with the state distribution induced by the current policy in multi-turn interaction. We propose OPID (On-Policy Skill Distillation), a framework that extracts skill supervision directly from completed on-policy trajectories. OPID represents trajectory hindsight as hierarchical skills: episode-level skills capture global workflows or failure-avoidance rules, while step-level skills capture local decision knowledge at critical timesteps. A critical-first routing mechanism uses step-level skills when critical decisions are identified and falls back to episode-level skills as default guidance otherwise. The selected skill is injected into the interaction history, allowing the old policy to re-score the same sampled response under both original and skill-augmented contexts. The resulting log-probability shift yields a token-level self-distillation advantage, which is combined with the outcome advantage for policy optimization. OPID thus preserves RL as the primary training objective while introducing dense, distribution-matched hindsight supervision. Experiments on ALFWorld, WebShop and Search-based QA demonstrate that OPID generally improves agent performance, sample efficiency, and robustness over outcome-only RL and existing skill-distillation baselines. Our code is available at https://github.com/jinyangwu/OPID/tree/main.",
-    "ai_summary": "On-policy skill distillation framework extracts dense hindsight supervision from completed trajectories to improve language agent training efficiency and performance.",
-    "arxiv_categories": [
-      "cs.CL"
-    ],
-    "score": 14,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.26790",
-    "pdf_url": "https://arxiv.org/pdf/2606.26790",
-    "github_url": "https://github.com/jinyangwu/OPID",
-    "hf_discussion": "https://huggingface.co/papers/2606.26790"
-  },
-  {
-    "id": "2606.24667",
-    "arxiv_id": "2606.24667",
-    "title": "DREAM: Dense Retrieval Embeddings via Autoregressive Modeling",
-    "summary": "Dense retrieval embedding models are a fundamental component of modern retrieval-based AI systems. Most dense retrievers are trained with contrastive objectives, which require labeled positive and negative document pairs that are often costly and difficult to obtain. In this work, we investigate whether the autoregressive next-token prediction objective of a large language model (LLM) can provide supervision for dense retrieval. The intuition is simple: if a document contains information relevant to a query, conditioning on that document should make the target output easier for the LLM to predict. A key challenge is that the next-token prediction loss is computed inside the LLM, while the retriever is a separate embedding model. To address this challenge, we propose DREAM (Dense Retrieval Embeddings via Autoregressive Modeling), which injects retriever-generated query-document similarity scores into selected attention heads of a frozen LLM. During training, these scores determine how much attention each candidate document receives while the LLM predicts the target output. The resulting prediction loss provides gradients for retriever training through the attention mechanism. We evaluate DREAM on retrieval benchmarks BEIR and RTEB using embedding backbones ranging from 0.5B to 3B parameters. DREAM consistently outperforms existing baselines across different model scales. These results demonstrate that DREAM provides a promising approach for training dense retrievers through autoregressive modeling.",
-    "ai_summary": "DREAM trains dense retrieval embeddings using autoregressive language model attention mechanisms to supervise document-query similarity without requiring labeled examples.",
-    "arxiv_categories": [
-      "cs.CL"
-    ],
-    "score": 14,
-    "upvotes": 0,
-    "arxiv_url": "https://arxiv.org/abs/2606.24667",
-    "pdf_url": "https://arxiv.org/pdf/2606.24667",
-    "github_url": "https://github.com/yixuantt/DREAM",
-    "hf_discussion": "https://huggingface.co/papers/2606.24667"
+    "hf_discussion": "https://huggingface.co/papers/2606.25473"
   }
 ]

@@ -27,6 +27,7 @@
   - `ai-tools/career/hermes-agent-60-days-6-lessons-0xjeff.md`
   - `ai-tools/career/hermes-sensei-loop.md`
   - `ai-tools/career/industry-job-search-notes-alisa.md`
+  - `ai-tools/career/loop-engineering-14step-codez.md`
   - `ai-tools/career/loop-engineering-2026.md`
   - `ai-tools/career/loop-engineering-beginners-tutorial.md`
   - `ai-tools/career/loop-engineering-explained.md`
@@ -159,11 +160,15 @@
   - `ai-tools/inference/youre-doing-rag-wrong.md`
   - `ai-tools/inference/zero-to-ai-engineer-14-weeks.md`
 
+### ai-tools/llm-inference/ (`ai-tools/llm-inference`)
+  - `ai-tools/llm-inference/how-llm-inference-works-avichawla.md`
+
 ### ai-tools/ml-research/ (`ai-tools/ml-research`)
   - `ai-tools/ml-research/agent-memory-system-from-basics-to-production.md`
   - `ai-tools/ml-research/agentic-memory-detailed-breakdown.md`
   - `ai-tools/ml-research/arxiv-paper-cli-tools-deepxiv-hf-papers.md`
   - `ai-tools/ml-research/autonomous-long-running-coding-agents.md`
+  - `ai-tools/ml-research/dair-ai-top-papers-2026-06-28.md`
 
 ### ai-tools/patterns/ (`ai-tools/patterns`)
   - `ai-tools/patterns/15-ai-agent-design-patterns.md`
@@ -192,6 +197,7 @@
   - `ai-tools/tooling/claude-code-10-plugins-vince.md`
   - `ai-tools/tooling/claude-code-101-academic-researchers.md`
   - `ai-tools/tooling/claude-code-102-academic-researchers.md`
+  - `ai-tools/tooling/claude-code-27-hidden-features-rahul.md`
   - `ai-tools/tooling/claude-code-advanced-tips-guide.md`
   - `ai-tools/tooling/claude-code-cloud-deployment-sandbox-isolation.md`
   - `ai-tools/tooling/claude-code-hooks-automation-workflow.md`
@@ -214,6 +220,7 @@
   - `ai-tools/tooling/feynman-method-claude-4-prompts-guide.md`
   - `ai-tools/tooling/founders-playbook-ai-native-startup.md`
   - `ai-tools/tooling/from-prompter-to-loop-designer.md`
+  - `ai-tools/tooling/hermes-agent-masterclass-akshay.md`
   - `ai-tools/tooling/hermes-agent-masterclass.md`
   - `ai-tools/tooling/how-does-vllm-work.md`
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
@@ -248,6 +255,7 @@
   - `spring/boot-config/08-actuator-embedded-server.md`
   - `spring/boot-config/14-configuration-management-deep-dive.md`
   - `spring/boot-config/bean-creation-time-statistics.md`
+  - `spring/boot-config/spring-boot-api-performance-optimization-comprehensive-guide.md`
   - `spring/boot-config/spring-boot-autoconfiguration.md`
   - `spring/boot-config/spring-boot-roadmap-complete.md`
   - `spring/boot-config/spring-prototype-bean-runtime-params.md`
@@ -337,6 +345,7 @@
   - `papers/daily-report-2026-06-19.md`
   - `papers/daily-report-2026-06-21.md`
   - `papers/daily-report-2026-06-22.md`
+  - `papers/daily-report-2026-06-27.md`
 
 ### papers/2606-12629-2606.12629/ (`papers/2606-12629-2606.12629`)
   - `papers/2606-12629-2606.12629/report.md`
@@ -347,8 +356,21 @@
 ### papers/2606-19236-2606.19236/ (`papers/2606-19236-2606.19236`)
   - `papers/2606-19236-2606.19236/report.md`
 
+### papers/a-pinch-of-human-data-2606.19370/ (`papers/a-pinch-of-human-data-2606.19370`)
+  - `papers/a-pinch-of-human-data-2606.19370/deep-read.md`
+
+### papers/agent-as-a-router-2606.22902/ (`papers/agent-as-a-router-2606.22902`)
+  - `papers/agent-as-a-router-2606.22902/deep-read.md`
+
+### papers/agent-communication-protocols-2606.19135/ (`papers/agent-communication-protocols-2606.19135`)
+  - `papers/agent-communication-protocols-2606.19135/deep-read.md`
+
 ### papers/agent-native-memory-2606.24775/ (`papers/agent-native-memory-2606.24775`)
+  - `papers/agent-native-memory-2606.24775/deep-read.md`
   - `papers/agent-native-memory-2606.24775/report.md`
+
+### papers/autodata-2606.25996/ (`papers/autodata-2606.25996`)
+  - `papers/autodata-2606.25996/deep-read.md`
 
 ### papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/ (`papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629`)
   - `papers/bag-of-dims-training-free-mechanistic-interpretability-via-dimension-level-sign-patterns-2606.12629/report.md`
@@ -366,6 +388,7 @@
   - `papers/context-aware-rl-for-agentic-and-multimodal-llms-2606.17053/report.md`
 
 ### papers/critique-of-agent-model-2606.23991/ (`papers/critique-of-agent-model-2606.23991`)
+  - `papers/critique-of-agent-model-2606.23991/deep-read.md`
   - `papers/critique-of-agent-model-2606.23991/report.md`
 
 ### papers/danceopd-2606.27377/ (`papers/danceopd-2606.27377`)
@@ -407,6 +430,9 @@
 ### papers/multi4d-2606.22197/ (`papers/multi4d-2606.22197`)
   - `papers/multi4d-2606.22197/report.md`
 
+### papers/naturebench-2606.24530/ (`papers/naturebench-2606.24530`)
+  - `papers/naturebench-2606.24530/deep-read.md`
+
 ### papers/no-resource-no-benchmarks-no-problem-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-2606.16827`)
   - `papers/no-resource-no-benchmarks-no-problem-2606.16827/report.md`
 
@@ -416,17 +442,29 @@
 ### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
   - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
 
+### papers/reliability-without-validity-2606.19544/ (`papers/reliability-without-validity-2606.19544`)
+  - `papers/reliability-without-validity-2606.19544/deep-read.md`
+
+### papers/sakana-fugu-2606.21228/ (`papers/sakana-fugu-2606.21228`)
+  - `papers/sakana-fugu-2606.21228/deep-read.md`
+
 ### papers/selective-synergistic-learning-2606.15527/ (`papers/selective-synergistic-learning-2606.15527`)
   - `papers/selective-synergistic-learning-2606.15527/report.md`
 
 ### papers/semantic-browsing-2606.23679/ (`papers/semantic-browsing-2606.23679`)
   - `papers/semantic-browsing-2606.23679/report.md`
 
+### papers/skill-mas-2606.18837/ (`papers/skill-mas-2606.18837`)
+  - `papers/skill-mas-2606.18837/deep-read.md`
+
 ### papers/skillharness-2606.20636/ (`papers/skillharness-2606.20636`)
   - `papers/skillharness-2606.20636/report.md`
 
 ### papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/ (`papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236`)
   - `papers/stare-surprisal-guided-token-level-advantage-reweighting-for-policy-entropy-stability-2606.19236/report.md`
+
+### papers/the-hitchhikers-guide-to-agentic-ai/ (`papers/the-hitchhikers-guide-to-agentic-ai`)
+  - `papers/the-hitchhikers-guide-to-agentic-ai/complete_bilingual_guide.md`
 
 ### papers/verievol-2606.23543/ (`papers/verievol-2606.23543`)
   - `papers/verievol-2606.23543/report.md`
@@ -444,18 +482,40 @@
   - `skills/read-content-from-web/SKILL.md`
 
 ### tmp_2606.24937_translated/
+  - `tmp_2606.24937_translated/00_Preamble.md`
+  - `tmp_2606.24937_translated/01_LLM_Architecture_and_Optimization_Methods.md`
   - `tmp_2606.24937_translated/02_Systems_Foundations_for_LLMs.md`
+  - `tmp_2606.24937_translated/03_Introduction_to_Reinforcement_Learning.md`
+  - `tmp_2606.24937_translated/04_RL_Foundations_for_Language_Models.md`
+  - `tmp_2606.24937_translated/05_PPO_Proximal_Policy_Optimization.md`
+  - `tmp_2606.24937_translated/06_DPO_Direct_Preference_Optimization.md`
+  - `tmp_2606.24937_translated/07_GRPO_Group_Relative_Policy_Optimization.md`
   - `tmp_2606.24937_translated/08_Preference_Optimization_Variants.md`
   - `tmp_2606.24937_translated/09_Reward_Model_Training.md`
   - `tmp_2606.24937_translated/10_SFT_Best_Practices_and_Techniques.md`
+  - `tmp_2606.24937_translated/11_System_Architecture_Infrastructure_at_Scale.md`
+  - `tmp_2606.24937_translated/12_LLM_Agentic_Training.md`
+  - `tmp_2606.24937_translated/13_RL_for_Large_Reasoning_Models.md`
   - `tmp_2606.24937_translated/14_LLM_Evaluation.md`
   - `tmp_2606.24937_translated/15_Introduction_to_Agentic_AI.md`
+  - `tmp_2606.24937_translated/16_Retrieval_Augmented_Generation_RAG.md`
+  - `tmp_2606.24937_translated/17_Agentic_Memory_Systems.md`
+  - `tmp_2606.24937_translated/18_Agent_Harness_Context_Management_and_Orchestration.md`
+  - `tmp_2606.24937_translated/19_Agent_Design_Patterns.md`
+  - `tmp_2606.24937_translated/20_Agentic_Environments_and_Benchmarks.md`
   - `tmp_2606.24937_translated/21_Model_Context_Protocol_MCP.md`
   - `tmp_2606.24937_translated/22_Agent_Skills.md`
+  - `tmp_2606.24937_translated/23_Agent_to_Agent_Communication_A2A.md`
+  - `tmp_2606.24937_translated/24_Multi_Agent_Systems.md`
+  - `tmp_2606.24937_translated/25_Agent_Development_Frameworks.md`
+  - `tmp_2606.24937_translated/26_Agentic_UI_Frameworks.md`
+  - `tmp_2606.24937_translated/27_Quiz_Questions_Detailed_Answers.md`
+  - `tmp_2606.24937_translated/28_Quick_Reference.md`
+  - `tmp_2606.24937_translated/29_Conclusion_and_Future_Directions.md`
 
 ---
 
-总计 **341** 篇知识文档
+总计 **1279** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -467,5 +527,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-27 16:11 UTC]_
+_[自动生成于 2026-06-28 16:15 UTC]_
 
