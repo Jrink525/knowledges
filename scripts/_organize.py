@@ -558,7 +558,7 @@ def git_commit_and_push(moves: list, split_moves: list, classify_count: int):
     # git add -A: 自动处理新增/修改/删除/重命名，比手工拼路径更可靠
     subprocess.run(
         ["git", "add", "-A"],
-        capture_output=True, timeout=15
+        capture_output=True, timeout=120
     )
 
     # 检查是否有 staged 变更

@@ -26,6 +26,7 @@ skills/
 node_modules/
 tmp_*.mp4
 tmp_*.mp3
+tmp_*.html
 tmp_*.wav
 *.wav
 chunk_*
@@ -36,3 +37,15 @@ claude-agent-sdk-transcript.txt
 
 # Podcast audio files (large, not tracked in git)
 papers/podcast-*.mp3
+
+# Temp / build artifacts
+pylib/lib/
+test-results/
+.cache/ms-playwright/
+.cache/
+libs/
+.locallibs/
+.playwright/
+browsers/
+NotoSansSC-Regular.ttf
+gen_pdf*.js
