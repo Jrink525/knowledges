@@ -49,3 +49,8 @@ libs/
 browsers/
 NotoSansSC-Regular.ttf
 gen_pdf*.js
+.agents/
+.local/
+.npm/
+.tmp/
+.agently-cli/
