@@ -39,7 +39,7 @@ claude-agent-sdk-transcript.txt
 papers/podcast-*.mp3
 
 # Temp / build artifacts
-pylib/lib/
+pylib/
 test-results/
 .cache/ms-playwright/
 .cache/
