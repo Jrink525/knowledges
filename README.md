@@ -17,6 +17,7 @@
 ### ai-tools/career/ (`ai-tools/career`)
   - `ai-tools/career/agent-loop-architecture.md`
   - `ai-tools/career/agentic-code-review-addy-osmani.md`
+  - `ai-tools/career/ai-company-moat-org-shape.md`
   - `ai-tools/career/claude-code-learn-any-field.md`
   - `ai-tools/career/dan-koe-fix-your-life.md`
   - `ai-tools/career/dklineii-ai-morning-brief.md`
@@ -138,11 +139,13 @@
   - `ai-tools/inference/how-we-build-evals-for-deep-agents.md`
   - `ai-tools/inference/inference-engines-decision-guide-2026-ahmad.md`
   - `ai-tools/inference/josh-long-spring-ai-workshop-notes.md`
+  - `ai-tools/inference/karpathy-agentic-engineering-google.md`
   - `ai-tools/inference/karpathy-llm-wiki-layer-token-saving.md`
   - `ai-tools/inference/kv-caching-in-llms.md`
   - `ai-tools/inference/learning-path-llm-agent.md`
   - `ai-tools/inference/llm-engineering-projects-roadmap-2026.md`
   - `ai-tools/inference/llm-engineering-roadmap-2026.md`
+  - `ai-tools/inference/llm-wiki-second-brain.md`
   - `ai-tools/inference/llms101-practical-guide-2026-ahmad.md`
   - `ai-tools/inference/loop-engineering-roadmap.md`
   - `ai-tools/inference/memory-bandwidth-local-ai-2026-ahmad.md`
@@ -226,6 +229,7 @@
   - `ai-tools/tooling/how-to-build-a-self-improvement-loop-for-your-skills.md`
   - `ai-tools/tooling/karpathy-how-i-use-ai-2025.md`
   - `ai-tools/tooling/karpathy-knowledge-stack.md`
+  - `ai-tools/tooling/loop-engineering-build-ai-that-codes-while-you-sleep-phosphen.md`
   - `ai-tools/tooling/loop-engineering-roadmap.md`
   - `ai-tools/tooling/loops-explained.md`
   - `ai-tools/tooling/mattyp-claude-agent-sdk-replit-deep-dive.md`
@@ -346,6 +350,7 @@
   - `papers/daily-report-2026-06-21.md`
   - `papers/daily-report-2026-06-22.md`
   - `papers/daily-report-2026-06-27.md`
+  - `papers/daily-report-2026-06-28.md`
 
 ### papers/2606-12629-2606.12629/ (`papers/2606-12629-2606.12629`)
   - `papers/2606-12629-2606.12629/report.md`
@@ -515,7 +520,7 @@
 
 ---
 
-总计 **1279** 篇知识文档
+总计 **1301** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -527,5 +532,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-28 16:15 UTC]_
+_[自动生成于 2026-06-29 16:15 UTC]_
 
