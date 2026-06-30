@@ -259,6 +259,7 @@
   - `spring/boot-config/08-actuator-embedded-server.md`
   - `spring/boot-config/14-configuration-management-deep-dive.md`
   - `spring/boot-config/bean-creation-time-statistics.md`
+  - `spring/boot-config/beanfactorypostprocessor-property-injection-guide.md`
   - `spring/boot-config/spring-boot-api-performance-optimization-comprehensive-guide.md`
   - `spring/boot-config/spring-boot-autoconfiguration.md`
   - `spring/boot-config/spring-boot-roadmap-complete.md`
@@ -351,6 +352,7 @@
   - `papers/daily-report-2026-06-22.md`
   - `papers/daily-report-2026-06-27.md`
   - `papers/daily-report-2026-06-28.md`
+  - `papers/daily-report-2026-06-29.md`
 
 ### papers/2606-12629-2606.12629/ (`papers/2606-12629-2606.12629`)
   - `papers/2606-12629-2606.12629/report.md`
@@ -520,7 +522,7 @@
 
 ---
 
-总计 **1301** 篇知识文档
+总计 **1303** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -532,5 +534,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-29 16:15 UTC]_
+_[自动生成于 2026-06-30 16:04 UTC]_
 
