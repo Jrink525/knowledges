@@ -1,0 +1,127 @@
+{
+  "paper": "POLICYGUARD: A Dialogue-Grounded Sub-Agent Verifier for Policy Adherence in LLM Agents",
+  "arxiv_id": "2606.29225",
+  "manifest_version": "1.0",
+  "seeds": [
+    {
+      "id": "DS01",
+      "name": "Per-vendor checklist regeneration",
+      "rank": 1,
+      "priority": "high",
+      "category": "method improvement",
+      "description": "The per-tool checklist is generated once by GPT 5.4 and reused across all agents. Section 4.2 notes that Gemini 2.5 Pro reads the checklist more literally, costing Mut PASS4. Per-agent checklist regeneration would likely close the cross-vendor gap with minimal engineering cost.",
+      "source": "Section 4.2 (p.5), Limitations (p.9)",
+      "gap": "Fixed substrate choice for experimental attribution intentionally accepts a measurable cost on Gemini's Mut PASS4. Per-agent regeneration is the obvious next step.",
+      "hypothesis": "Regenerating checklists per agent vendor (or per model family) will recover the 0.231→0.269 Mut gap on Gemini and possibly improve other vendors.",
+      "experiment_suggestion": "Generate standalone checklists using each vendor's own model (Claude generates Claude checklist, etc.) and compare PASS4/PASS1 to the fixed GPT-5.4 checklist. Report cross-vendor performance and per-vendor checklist agreement rates."
+    },
+    {
+      "id": "DS02",
+      "name": "Domain generalization beyond τ²-BENCH airline",
+      "rank": 2,
+      "priority": "high",
+      "category": "generalization",
+      "description": "Evaluated only on τ²-BENCH airline (50 tasks). Other τ²-BENCH domains (retail, telecom) are structurally unsuitable. Clinical compliance (HIPAA), legal compliance (GDPR, financial regulations), and non-English customer service remain entirely unstudied.",
+      "source": "Limitations (p.9), Appendix K",
+      "gap": "The paper acknowledges that τ²-BENCH airline is the only domain where policy + multi-turn dialogue prerequisites converge. Generalization to real-world regulatory frameworks is the critical open question.",
+      "hypothesis": "POLICYGUARD's architecture (dialogue-grounded, LLM-self-reasoning) will generalize to clinical/legal domains, but the policy specification format (YAML checklist + raw text) may need domain-specific adaptation.",
+      "experiment_suggestion": "Construct a synthetic clinical compliance benchmark (e.g., patient consent, HIPAA privacy rules before sharing records) with a written policy document and multi-turn dialogue tasks. Evaluate POLICYGUARD vs. argument-level baselines."
+    },
+    {
+      "id": "DS03",
+      "name": "Verbal commitment gating",
+      "rank": 3,
+      "priority": "high",
+      "category": "coverage extension",
+      "description": "POLICYGUARD inherits TOOLGUARD's pre-execution trigger on mutating tool calls only. Read-only calls and verbal commitments (e.g., agent promising a refund without invoking send_certificate) are not gated. A per-turn or per-policy-section trigger would broaden coverage.",
+      "source": "Limitations (p.9)",
+      "gap": "The agent could make a binding verbal commitment without any mutating tool call — POLICYGUARD would not catch it. This is an explicit design scope limitation.",
+      "hypothesis": "Adding a per-turn verifier call (not just pre-mutation) will detect verbal non-compliance at the cost of 2-5x more verifier invocations. Remediation may shift from 'prevent' to 'prevent + correct.'",
+      "experiment_suggestion": "Design a 'verbal commitment gate' variant: run the verifier on every agent turn, not just before mutating tool calls. Measure the recall gain vs. cost multiplier on τ²-BENCH airline tasks that involve verbal commitments without tool calls."
+    },
+    {
+      "id": "DS04",
+      "name": "Hybrid deterministic-LLM enforcement",
+      "rank": 4,
+      "priority": "medium",
+      "category": "safety extension",
+      "description": "POLICYGUARD is an LLM verifier; 24/24 PV recall is empirical, not provable. Domains requiring formal guarantees (pharmacovigilance, safety-critical control) are out of scope. The paper suggests pairing with a deterministic monitor for the formally expressible subset.",
+      "source": "Limitations (p.9)",
+      "gap": "No existing system bridges the gap between broad-coverage LLM-based verification and formally provable subsets of policy.",
+      "hypothesis": "A hybrid monitor that runs deterministic checks on argument-level requirements (14/43) and uses POLICYGUARD only for process-level requirements (29/43) can achieve formal coverage of the A-subset while maintaining dialogue-grounded coverage of the P-subset.",
+      "experiment_suggestion": "Build a hybrid pipeline: (1) argument-level guard (e.g., TOOLGUARD's Python guards on the 14 A-requirements) + (2) POLICYGUARD on the 29 P-requirements. Measure PASS4, block rate, and formal coverage vs. each standalone method."
+    },
+    {
+      "id": "DS05",
+      "name": "Adversarial robustness hardening against tool-output injection (A3 class)",
+      "rank": 5,
+      "priority": "medium",
+      "category": "robustness",
+      "description": "Section 5.4 shows PG-CHECKLIST maintains high PV recall under A3 (indirect prompt injection via tool output), but Appendix N identifies the main gap: the 'Only trust values confirmed by tool results' instruction doesn't distinguish data fields from narrative metadata inside tool responses.",
+      "source": "Section 5.4 (p.8), Appendix N (pp.19-20)",
+      "gap": "Narrative/metadata fields in tool responses can carry injection payloads that blend with legitimate instructions. The current prompt-level defense is fragile.",
+      "hypothesis": "A structured tool-output validation layer (separating data fields from narrative/metadata fields) combined with explicit 'only trust typed data fields' instruction will close the A3 gap without reducing PV recall.",
+      "experiment_suggestion": "Design a tool-output sanitizer that partitions response fields into data (typed, trusted) and metadata (narrative, suspect). Compare PASS4 under A3 with: (a) current prompt, (b) prompt + sanitizer, (c) prompt + sanitizer + additional instruction hardening."
+    },
+    {
+      "id": "DS06",
+      "name": "Self-improving verifier via feedback loops",
+      "rank": 6,
+      "priority": "medium",
+      "category": "learning & adaptation",
+      "description": "The current pipeline is static: checklist generated once, reviewer pass catches ~5-10% errors, but there is no mechanism to incorporate runtime feedback (e.g., false positives/negatives discovered during execution) back into checklist generation.",
+      "source": "Appendix C (checklist pipeline), Table 7 (FN/FP analysis)",
+      "gap": "False negatives (FN) occur on Sonnet 4.6 (1 FN) and Gemini 2.5 Pro (1 FN). False positives (FP) also occur (95 on GPT 5.4). No mechanism to learn from these and improve the checklist.",
+      "hypothesis": "Adding a feedback loop that analyzes verifier verdicts against ground-truth outcomes and updates the per-tool checklist YAML will reduce FP/FN over successive deployments.",
+      "experiment_suggestion": "Build a feedback pipeline: (a) collect verifier verdict logs, (b) cross-reference with ground-truth outcomes, (c) generate delta-checklist patches via LLM, (d) measure FP/FN reduction over n=5 iterations on τ²-BENCH airline."
+    },
+    {
+      "id": "DS07",
+      "name": "Non-English and multilingual policy adherence",
+      "rank": 7,
+      "priority": "medium",
+      "category": "generalization",
+      "description": "The paper explicitly notes that generalization to non-English dialogues remains unstudied. LLM self-reasoning over policy may degrade for lower-resource languages or policies translated from English.",
+      "source": "Limitations (p.9)",
+      "gap": "Real-world customer service increasingly operates in multilingual settings. Both the policy document and the user-agent dialogue may be in different languages.",
+      "hypothesis": "POLICYGUARD will show a performance gap in non-English settings proportional to the verifier LLM's language proficiency, but the architecture (dialogue + self-reasoning) is language-agnostic.",
+      "experiment_suggestion": "Translate the τ²-BENCH airline policy and task descriptions into 3-5 languages (e.g., Mandarin, Spanish, Arabic, Korean). Evaluate PG-CHECKLIST on each. Compare PASS4 degradation vs. English and correlate with LLM language proficiency benchmarks."
+    },
+    {
+      "id": "DS08",
+      "name": "Scalable evaluation benchmark for process-level policy adherence",
+      "rank": 8,
+      "priority": "medium",
+      "category": "benchmarking",
+      "description": "The paper is limited to τ²-BENCH airline (50 tasks) — the only available benchmark combining written policy + multi-turn dialogue. Creating more benchmarks for process-level policy adherence is needed to advance the field.",
+      "source": "Section 1, Limitations (p.9), Appendix K",
+      "gap": "Other benchmarks (WebArena, CRMArena, ShieldAgent-Bench) target different threat models. No existing benchmark besides airline has both (a) written company policy and (b) multi-turn dialogue prerequisites for mutations.",
+      "hypothesis": "A new benchmark spanning 3-5 domains (financial services, healthcare, travel, telecom, insurance) with 100+ tasks each will reveal domain-specific failure modes and enable fair comparison of verifier approaches.",
+      "experiment_suggestion": "Design a benchmark with: (a) written company policy per domain, (b) both PV and Mut tasks, (c) multi-turn dialogue with procedural prerequisites, (d) ground-truth verdicts for per-call evaluation. Release as community resource."
+    },
+    {
+      "id": "DS09",
+      "name": "Independent (non-paired) verifier analysis",
+      "rank": 9,
+      "priority": "medium",
+      "category": "architecture",
+      "description": "The paired-verifier protocol (same vendor/tier as agent) isolates method contribution from substrate strength but doesn't test heterogeneous setups. Real deployments might use a different (cheaper/smaller) verifier than the agent.",
+      "source": "Section 3.1 (p.4), Section 4.5 (Tables 5-6)",
+      "gap": "Only one heterogeneous setup tested: GPT 5.4 agent with GPT 5.4-mini verifier. No cross-vendor mismatches (e.g., Claude agent with GPT verifier) are explored.",
+      "hypothesis": "Cross-vendor verifier-agent pairs will show asymmetric performance: some vendors' verifiers are better at detecting violations from other vendors' agents. The cheaper-verifier result (GPT 5.4-mini) may not generalize to full cross-vendor mismatches.",
+      "experiment_suggestion": "Full factorial design: 4 agents × 4 verifiers (same + cross-vendor) on τ²-BENCH airline. Report PASS4, PV recall, Mut PASS4, and block rate for all 16 pairs. Identify which verifier-agent combinations are most and least compatible."
+    },
+    {
+      "id": "DS10",
+      "name": "Real-world deployment study with human users",
+      "rank": 10,
+      "priority": "medium",
+      "category": "deployment",
+      "description": "The evaluation uses a simulated user (GPT 4.1). Real human users may behave differently — more diverse language, unexpected requests, genuine confusion — that could challenge the verifier's generalization.",
+      "source": "Section 4.1 (user simulator setup), Limitations",
+      "gap": "Simulated users are by definition less diverse than real humans. The paper's honest-user assumption may hold differently with actual customers who are frustrated, confused, or use non-standard language.",
+      "hypothesis": "POLICYGUARD will maintain high PV recall with real users but may show increased FP (over-blocking legitimate requests) due to out-of-distribution dialogue patterns.",
+      "experiment_suggestion": "Deploy POLICYGUARD in a controlled pilot with real customer service agents augmented by LLM (human-in-the-loop). Collect verifier verdicts, human rater corrections, and user satisfaction metrics. Compare PASS4/FP/FN vs. simulated evaluation."
+    }
+  ]
+}

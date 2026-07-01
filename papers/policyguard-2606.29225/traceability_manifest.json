@@ -1,0 +1,321 @@
+{
+  "paper": "POLICYGUARD: A Dialogue-Grounded Sub-Agent Verifier for Policy Adherence in LLM Agents",
+  "arxiv_id": "2606.29225",
+  "manifest_version": "1.0",
+  "claims": [
+    {
+      "claim_id": "C01",
+      "statement": "Company-policy adherence is a problem distinct from safety/harm safeguarding: the failure mode is process-level and the load-bearing input is the user-agent dialogue.",
+      "evidence_type": "argument + classification",
+      "evidence": [
+        {
+          "source": "Section 1 (Introduction), Figure 1",
+          "detail": "$\u03c4$²-BENCH airline policy analysis: 29/43 = 67.4% of requirements are process-level (Appendix B, Table 11). The two problems overlap only on refusal and identity checks; the procedural slice (consent, prerequisite reads, summaries, ordering) sits outside safeguard scope.",
+          "location": "pp.1-2, Appendix B (pp.13-14)"
+        },
+        {
+          "source": "Table 1",
+          "detail": "Nine representative systems mapped: no prior system combines all three required capabilities (conversation-awareness, self-reasoning, remediation).",
+          "location": "p.3"
+        },
+        {
+          "source": "Section 2 (Related Work)",
+          "detail": "TOOLGUARD, SOLVER-AIDED, PCAS, NEMO GUARDRAILS etc. analyzed; each misses at least one of the three capabilities.",
+          "location": "pp.2-3"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Classification is the paper's foundational claim. Robust to any single-row reclassification (Appendix B says so explicitly)."
+    },
+    {
+      "claim_id": "C02",
+      "statement": "$\u03c4$²-BENCH airline policy is 67.4% process-level (29/43 requirements).",
+      "evidence_type": "manual classification",
+      "evidence": [
+        {
+          "source": "Appendix B, Table 11",
+          "detail": "Per-section breakdown: Global 0A/5P, Book 7A/6P, Modify 6A/7P, Cancel 0A/5P, Refunds 1A/6P. Total: 14 argument-level, 29 process-level.",
+          "location": "p.13"
+        },
+        {
+          "source": "Appendix B, Table 12",
+          "detail": "Complete catalog of 43 requirements with line numbers, paraphrased text, and type (A/P) per requirement.",
+          "location": "p.14"
+        },
+        {
+          "source": "Appendix B operational definitions",
+          "detail": "Argument-level = verifiable from tool call arguments + deterministic computation. Process-level requires (D) dialogue or (T) tool-read call result.",
+          "location": "p.13"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Fully reproducible from the published $\u03c4$²-BENCH airline policy document. Hand-classified, with invitation for re-examination."
+    },
+    {
+      "claim_id": "C03",
+      "statement": "No prior system combines all three required capabilities: conversation-awareness, self-reasoning over policy, and behavior-driving remediation.",
+      "evidence_type": "comparative analysis",
+      "evidence": [
+        {
+          "source": "Table 1 (Section 2)",
+          "detail": "Matrix of nine systems vs. three capabilities: TOOLGUARD (âœ—/âœ—/âœ—), SOLVER-AIDED (âœ—/âœ—/âœ—), TOOLSAFE (âœ—/âœ—/partial), GUARDAGENT (âœ—/partial/âœ—), AGENTSPEC (âœ—/âœ—/âœ—), SHIELDAGENT (partial/âœ—/âœ—), PCAS (âœ“/âœ—â€ /âœ—), NEMO GUARDRAILS (partial/âœ—/âœ—), POLICYGUARD (âœ“/âœ“/âœ“).",
+          "location": "p.3"
+        },
+        {
+          "source": "Section 2 paragraphs",
+          "detail": "Each system analyzed in text: PCAS's Datalog cannot reason over NL (uses string_contains()), NEMO GUARDRAILS scripted Colang, etc.",
+          "location": "pp.2-3"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Mapping is comprehensive but completeness of coverage depends on the representativeness of selected systems."
+    },
+    {
+      "claim_id": "C04",
+      "statement": "PG-CHECKLIST improves PASS4 by +12.0 / +6.0 / +12.0 pp on GPT 5.4 / Claude Sonnet 4.6 / Gemini 2.5 Pro.",
+      "evidence_type": "experimental result",
+      "evidence": [
+        {
+          "source": "Table 2 (Section 4.2)",
+          "detail": "GPT 5.4: Baseline 0.460 â†’ PG-CHECKLIST 0.580 (+12.0 pp). Sonnet 4.6: 0.720 â†’ 0.780 (+6.0 pp). Gemini 2.5 Pro: 0.480 â†’ 0.600 (+12.0 pp). N=4 per cell.",
+          "location": "p.5, Table 2"
+        },
+        {
+          "source": "Section 4.2 text",
+          "detail": "PG-CHECKLIST is the only configuration that lifts every vendor on PASS4 without regressing either PV or Mut slice.",
+          "location": "p.5"
+        },
+        {
+          "source": "Figure 3, Appendix F",
+          "detail": "PASSk decomposition (PASS1â€“PASS4) per cell, Table 13 per-cell statistics.",
+          "location": "p.6, pp.16-17"
+        }
+      ],
+      "strength": "strong",
+      "notes": "n=4 per cell under paired-verifier protocol. Statistical significance confirmed via pooled stratified-McNemar (p=0.003 overall; p<0.001 vs. TOOLGUARD)."
+    },
+    {
+      "claim_id": "C05",
+      "statement": "PG-CHECKLIST achieves perfect PV recall (24/24, 100%) on GPT 5.4.",
+      "evidence_type": "experimental result",
+      "evidence": [
+        {
+          "source": "Table 2",
+          "detail": "PV PASS4 for PG-CHECKLIST on GPT 5.4: 1.000 (24/24).",
+          "location": "p.5, Table 2"
+        },
+        {
+          "source": "Table 7",
+          "detail": "Per-call PV recall: TP=14, FN=0 â†’ 100%.",
+          "location": "p.7, Table 7"
+        }
+      ],
+      "strength": "strong",
+      "notes": "24/24 PASS4 on PV tasks at n=4. Empirical result, not provable guarantee (noted in Limitations)."
+    },
+    {
+      "claim_id": "C06",
+      "statement": "Dialogue grounding is causal (not merely helpful): without dialogue, Mut PASS1 collapses from 0.260 to 0.000.",
+      "evidence_type": "causal ablation",
+      "evidence": [
+        {
+          "source": "Table 3 (Section 4.3)",
+          "detail": "PG-RAW (with dialogue) vs. PG-RAW-TRAJ (dialogue stripped). Mut PASS1: 0.260 vs. 0.000 (Î” +26.0). Mut PASS4: 0.077 vs. 0.000 (Î” +7.7). Same verifier model, same raw policy text.",
+          "location": "p.6, Table 3"
+        },
+        {
+          "source": "Section 4.3 text",
+          "detail": "Not a single mutation passes across 104 Mut simulations without dialogue. PG-RAW's entire mutation headroom comes from the dialogue.",
+          "location": "p.6"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Clean causal design: identical architecture differing only in dialogue exposure. Statistical significance via Wilcoxon p=0.001."
+    },
+    {
+      "claim_id": "C07",
+      "statement": "Policy text is augmenting, not causal: adding raw policy on top of checklist lifts Mut PASS1 by +15.4 pp but is well short of the 26 pp collapse when dialogue is removed.",
+      "evidence_type": "ablation study",
+      "evidence": [
+        {
+          "source": "Table 4 (Section 4.4)",
+          "detail": "PG-CHECKLIST-ONLY (no raw policy) vs. PG-CHECKLIST (with raw policy). Mut PASS1: 0.288 vs. 0.442 (Î” +15.4). Blk%: 60.1% vs. 44.1% (Î” -16.0).",
+          "location": "p.6, Table 4"
+        },
+        {
+          "source": "Section 4.4 text",
+          "detail": "Raw policy provides real but partial recovery. The 26 pp collapse from dialogue removal dwarfs the 15.4 pp gain from policy text.",
+          "location": "p.6"
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Effect is real (+15.4 pp Mut PASS1) but partial. Supports the claim that dialogue is the primary causal factor."
+    },
+    {
+      "claim_id": "C08",
+      "statement": "PG-CHECKLIST achieves higher PV recall at roughly half the block rate of argument-level guards.",
+      "evidence_type": "per-call analysis",
+      "evidence": [
+        {
+          "source": "Table 7",
+          "detail": "GPT 5.4: PG-CHECKLIST PV rec 100% at 44.1% Blk% vs. TOOLGUARD 80.0% at 73.9% Blk%. Gemini 2.5 Pro: 94.7% at 57.8% vs. 31.2% at 71.1%.",
+          "location": "p.7, Table 7"
+        },
+        {
+          "source": "Section 5, first paragraph",
+          "detail": "Summary statement: 'high policy-violation (PV) recall at roughly half the block rate of argument-level guards.'",
+          "location": "p.2 (Abstract) and p.7"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Consistent across all three agents. PV recall advantage is most dramatic on Gemini 2.5 Pro (94.7% vs. 31.2%)."
+    },
+    {
+      "claim_id": "C09",
+      "statement": "PG-CHECKLIST achieves lower near-miss rate (NMR) than baseline and TOOLGUARD on every agent.",
+      "evidence_type": "compliance quality metric",
+      "evidence": [
+        {
+          "source": "Table 9 (Section 5.3)",
+          "detail": "GPT 5.4: Baseline 33.8%, TOOLGUARD 38.5%, PG-CHECKLIST 29.1%. Sonnet 4.6: 14.7% vs. 35.5% vs. 4.2%. Gemini 2.5 Pro: 18.5% vs. 22.2% vs. 15.9%.",
+          "location": "p.8, Table 9"
+        },
+        {
+          "source": "Section 5.3",
+          "detail": "8.5Ã— improvement over TOOLGUARD on Sonnet 4.6 (4.2% vs. 35.5%). TOOLGUARD worsens compliance quality relative to baseline on every vendor.",
+          "location": "p.8"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Runtime view: only executed mutating calls counted. Blocked attempts excluded from denominator so verifier blocks don't penalize the metric."
+    },
+    {
+      "claim_id": "C10",
+      "statement": "The verifier helps the weaker agent more, not less: +16 pp PASS4 lift on GPT 5.4-mini vs. +12 pp on full GPT 5.4.",
+      "evidence_type": "weak-agent stress test",
+      "evidence": [
+        {
+          "source": "Table 6 (Section 4.5)",
+          "detail": "GPT 5.4-mini agent + paired verifier: Baseline PASS4 0.200, PG-CHECKLIST 0.360 (+16.0 pp). The weaker agent emits more violations the verifier blocks: PV gain +29.2 pp.",
+          "location": "p.7, Table 6"
+        },
+        {
+          "source": "Section 4.5 text",
+          "detail": "TOOLGUARD on weak agent collapses Mut to 0/26; PG-CHECKLIST escapes via remediation. PG-CHECKLIST lift on weak agent (+16 pp) exceeds lift on full GPT 5.4 (+12 pp).",
+          "location": "p.7"
+        }
+      ],
+      "strength": "strong",
+      "notes": "Paired-verifier protocol maintained: GPT 5.4-mini agent with GPT 5.4-mini verifier."
+    },
+    {
+      "claim_id": "C11",
+      "statement": "TOOLGUARD harms Sonnet 4.6 and Gemini 2.5 Pro (PASS4 drops of -14.0 pp and -4.0 pp respectively).",
+      "evidence_type": "experimental result",
+      "evidence": [
+        {
+          "source": "Table 2",
+          "detail": "Sonnet 4.6: Baseline 0.720 â†’ TOOLGUARD 0.580 (-14.0 pp). Gemini 2.5 Pro: 0.480 â†’ 0.440 (-4.0 pp). TOOLGUARD also costs PASS1 on every agent (-6.5 / -23.0 / -19.0 pp).",
+          "location": "p.5, Table 2"
+        }
+      ],
+      "strength": "strong",
+      "notes": "TOOLGUARD's gains on GPT 5.4 come from cross-trial consistency, not per-trial lift. On other vendors, over-blocking dominates."
+    },
+    {
+      "claim_id": "C12",
+      "statement": "TOOLGUARD issues 7-10 extra hidden read-only calls per Mut sim inside guard bodies (never visible in trajectory).",
+      "evidence_type": "implementation analysis",
+      "evidence": [
+        {
+          "source": "Section 5.2 and Appendix J",
+          "detail": "Sub-guards issue read-only calls to gather verification facts; these hit the environment but never appear in the trajectory. Table 19 shows static estimates across all agents.",
+          "location": "p.8, Appendix J (p.18)"
+        },
+        {
+          "source": "Table 19",
+          "detail": "Hidden RO calls per Mut sim midpoints: GPT 5.4 (7.54), Sonnet 4.6 (9.33), Gemini 2.5 Pro (7.25), GPT 5.4-mini (10.12).",
+          "location": "p.18, Table 19"
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Static estimate from guard source code analysis. Actual runtime cost may vary; conditional branches inside sub-guards may skip some api.* call sites."
+    },
+    {
+      "claim_id": "C13",
+      "statement": "PG-CHECKLIST maintains high PV recall under out-of-scope adversarial probes (authority claim, false precondition, indirect prompt injection).",
+      "evidence_type": "adversarial robustness experiment",
+      "evidence": [
+        {
+          "source": "Table 10 (Section 5.4)",
+          "detail": "GPT 5.4 paired-verifier on 24 PV tasks: PG-CHECKLIST achieves 1.000 (no-atk), 0.875 (A1), 0.958 (A2), 0.917 (A3).",
+          "location": "p.8, Table 10"
+        },
+        {
+          "source": "Appendix N",
+          "detail": "Verbatim adversarial payloads and extended mechanism discussion. Primary defense is prompt instruction 'Only trust values confirmed by tool results.'",
+          "location": "Appendix N (pp.19-20)"
+        }
+      ],
+      "strength": "moderate",
+      "notes": "n=4 on 24 tasks. Robustness is a byproduct of design choices, not the primary contribution. A3 (indirect injection) reveals the main gap: instruction doesn't distinguish data fields from narrative metadata."
+    },
+    {
+      "claim_id": "C14",
+      "statement": "PG-CHECKLIST has minimal trajectory cost: remediation usually resolves in a single corrective turn.",
+      "evidence_type": "trajectory cost analysis",
+      "evidence": [
+        {
+          "source": "Table 8 (Section 5.2)",
+          "detail": "GPT 5.4: +3.81 agent+user turns per Mut sim (vs. TOOLGUARD +5.83, Baseline 19.3). Sonnet 4.6: +1.72 (vs. TOOLGUARD +3.93).",
+          "location": "p.8, Table 8"
+        },
+        {
+          "source": "Section 5.2 text",
+          "detail": "PG-CHECKLIST's remediation names the missing piece and the agent typically resolves in a single corrective turn.",
+          "location": "p.8"
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Agent+user turn count strips tool-result payload size and tool-call invocation noise. Not directly comparable with TOOLGUARD's hidden environment costs."
+    },
+    {
+      "claim_id": "C15",
+      "statement": "The verifier task is structurally lighter than the agent task and tolerates substrate downgrade: PG-CHECKLIST with GPT 5.4-mini verifier still lifts PASS4 by +6 pp.",
+      "evidence_type": "cost knob experiment",
+      "evidence": [
+        {
+          "source": "Table 5 (Section 4.5)",
+          "detail": "GPT 5.4 agent with GPT 5.4-mini verifier: PG-CHECKLIST PASS4 0.520 (+6 pp vs. Baseline 0.460). PV recall 0.917 vs. TOOLGUARD's 0.875.",
+          "location": "p.7, Table 5"
+        },
+        {
+          "source": "Section 4.5 text",
+          "detail": "At ~13% per-trial cost saving, PG-CHECKLIST (mini) still matches TOOLGUARD's PASS4 with higher PV recall.",
+          "location": "p.7"
+        }
+      ],
+      "strength": "moderate",
+      "notes": "Single vendor (GPT 5.4). The verifier reading context and judging one call against a checklist is structurally lighter than full agent reasoning."
+    },
+    {
+      "claim_id": "C16",
+      "statement": "PG-CHECKLIST is statistically significantly better than Baseline (p=0.003) and TOOLGUARD (p<0.001) overall, and on PV (p<0.001).",
+      "evidence_type": "statistical test",
+      "evidence": [
+        {
+          "source": "Appendix H, Table 15",
+          "detail": "Pooled stratified-McNemar across three agents. PG-CHECKLIST vs Baseline: P_a=20, P_b=5, Z=+3.00, p=0.003. PG-CHECKLIST vs TOOLGUARD: P_a=25, P_b=4, Z=+3.90, p<0.001.",
+          "location": "p.17, Table 15"
+        },
+        {
+          "source": "Appendix H, paired-bootstrap (Table 16)",
+          "detail": "Per-agent 95% CIs: GPT 5.4 vs Baseline [+0.02, +0.24]; Gemini 2.5 Pro vs TOOLGUARD [+0.04, +0.28].",
+          "location": "p.17, Table 16"
+        }
+      ],
+      "strength": "strong",
+      "notes": "McNemar is appropriate for paired PASS4 scores. Mut slice is under-powered (12 discordant pairs, p=0.564)."
+    }
+  ]
+}

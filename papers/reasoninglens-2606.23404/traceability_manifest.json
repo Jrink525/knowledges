@@ -1,0 +1,249 @@
+{
+  "paper": "ReasoningLens: Hierarchical Visualization and Diagnostic Auditing for Large Reasoning Models",
+  "arxiv_id": "2606.23404",
+  "slug": "reasoninglens",
+  "total_claims": 12,
+  "generated_at": "2026-06-30T17:17:00Z",
+  "claims": [
+    {
+      "claim_id": "C1",
+      "claim": "Long Chain-of-Thought traces from Large Reasoning Models create a transparency burden where critical logic is buried under massive procedural text.",
+      "category": "problem_framing",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Abstract",
+          "text": "The emergence of Large Reasoning Models has introduced exceptionally long Chain-of-Thought traces, creating a transparency burden where critical logic is often buried under massive procedural text.",
+          "section": "Abstract",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 1 (Introduction)",
+          "text": "As reasoning traces scale to tens of thousands of tokens, critical logical dependencies become buried under an unstructured 'wall of text', leading to reduced structural transparency and increased verification burden.",
+          "section": "1. Introduction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Prior citations",
+          "text": "Cited works: Turpin et al. 2023, Chen et al. 2025, Arcuschin et al. 2025 — demonstrating that the scaling of reasoning length introduces a structural trade-off between expressiveness and interpretability.",
+          "section": "1. Introduction",
+          "type": "citation"
+        }
+      ]
+    },
+    {
+      "claim_id": "C2",
+      "claim": "Prior visualization tools for CoT are heuristic, descriptive, and lack a comprehensive framework guiding structured taxonomy design.",
+      "category": "gap_analysis",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 1 (Introduction)",
+          "text": "Previous studies have attempted to visualize the structure of reasoning traces (Pang et al., 2025; Zhou et al., 2026), yet they remain largely heuristic and descriptive, often restricted to superficial text rendering. Crucially, such methods lack a comprehensive framework to guide the design of a structured taxonomy, leaving a gap between simple visualization and deep-level analysis.",
+          "section": "1. Introduction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 2 (Related Work)",
+          "text": "To improve trace interpretability, visualization systems render CoT as graphical interfaces to reduce cognitive load (Li et al., 2025; Pang et al., 2025; Zhou et al., 2026; Felder et al., 2025), yet rely on superficial text without capturing underlying reasoning structures.",
+          "section": "2. Related Work",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C3",
+      "claim": "ReasoningLens provides a multi-granularity approach through hierarchical visualization guided by a meticulously designed taxonomy of reasoning behaviors.",
+      "category": "method_claim",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 1 (Introduction)",
+          "text": "ReasoningLens introduces a multi-granularity approach to reasoning analysis: (1) Hierarchical visualization: Guided by a meticulously designed taxonomy of reasoning behaviors, REASONINGLENS transforms long CoT into multi-layered, interactive reasoning graphs.",
+          "section": "1. Introduction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 3.1 (System Design)",
+          "text": "To establish a systematic pipeline for visualizing intricate and multifaceted reasoning processes, we first detail a comprehensive taxonomy of reasoning behaviors. Building upon this, we develop a unified yet hierarchical graphical representation.",
+          "section": "3.1 Hierarchical Visualization",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C4",
+      "claim": "The two-level taxonomy (exploration-level + exploitation-level) comprehensively captures reasoning behaviors in LRM traces.",
+      "category": "taxonomy_claim",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 3.1",
+          "text": "Based on their functional roles, we categorize these behaviors into two distinct levels, including exploration-level and exploitation-level. Exploration-Level: the high-level strategic moves that orchestrate the search over the solution space... Exploitation-Level: the low-level procedural execution units apply known formulas to flesh out the reasoning steps.",
+          "section": "3.1 Hierarchical Visualization",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 3.1",
+          "text": "Exploration-Level types: (1) Decomposition, (2) Backtracking, (3) Validation. Exploitation-Level types: (1) Knowledge Retrieval, (2) Procedural Execution, (3) State Assertion.",
+          "section": "3.1 Hierarchical Visualization",
+          "type": "specific_detail"
+        }
+      ]
+    },
+    {
+      "claim_id": "C5",
+      "claim": "The planning unit extraction method using lexical cues (e.g., 'but', 'wait', 'alternatively') effectively segments monolithic CoT traces.",
+      "category": "method_claim",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "source": "Section 3.1",
+          "text": "We leverage these linguistic markers to partition a monolithic reasoning trace into this sequence of units, enabling fine-grained labeling of exploration and exploitation behaviors at the unit level.",
+          "section": "3.1 — Planning Unit Extraction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 3.1",
+          "text": "In practice, transitions between reasoning strategies are frequently signaled by decision-oriented lexical cues (e.g., 'but', 'wait', 'alternatively', 'try another approach').",
+          "section": "3.1 — Planning Unit Extraction",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C6",
+      "claim": "The multi-agent system (Memory, Verification, Suggestion modules) enables fine-grained error localization and actionable feedback.",
+      "category": "method_claim",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 1 (Introduction)",
+          "text": "Guided by a comprehensive taxonomy of reasoning errors, we implement a multi-agent system comprising Memory, Verification, and Suggestion modules. This agentic architecture enables fine-grained error localization and actionable feedback within complex reasoning traces, shifting the paradigm from passive observation to active diagnostic intervention.",
+          "section": "1. Introduction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Section 3.2",
+          "text": "The framework features a memory module that incrementally inspects the CoT through memory compression, ensuring granular localization of local errors while preserving trace-level consistency. Complementing this, a verification module strategically leverages external tool invocations to resolve internal ambiguity, enabling precise and verifiable diagnostic outcomes.",
+          "section": "3.2 Agentic Diagnosis",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C7",
+      "claim": "The Agentic Diagnosis module achieves reliable error detection with overall diagnostic F1 ranging from 66.3 (Qwen3-32B) to 82.3 (DeepSeek-V4-Pro).",
+      "category": "experimental_result",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 4.3 (Table 1)",
+          "text": "Overall diagnostic F1 scores: DeepSeek-V4-Pro: 82.3, MiniMax-M2.7: 79.4, Qwen3.5-27B: 75.0, Gemma-4-26B-A4B: 74.0, Qwen3-32B: 66.3.",
+          "section": "4.3 Main Results",
+          "type": "numerical_data"
+        }
+      ]
+    },
+    {
+      "claim_id": "C8",
+      "claim": "Safety error detection is consistently high across all evaluated models (F1 ≥ 89.9), demonstrating effective safety alignment.",
+      "category": "experimental_result",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 4.3 (Table 1)",
+          "text": "Safety detection F1: DeepSeek-V4-Pro: 98.5, MiniMax-M2.7: 97.0, Qwen3.5-27B: 96.9, Gemma-4-26B-A4B: 91.8, Qwen3-32B: 89.9.",
+          "section": "4.3 Main Results",
+          "type": "numerical_data"
+        },
+        {
+          "source": "Section 4.3",
+          "text": "Safety detection remains consistently high across all models, demonstrating that current safety alignment has effectively reinforced safety boundaries.",
+          "section": "4.3 Main Results",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C9",
+      "claim": "Knowledge Error and Logical Error detection are strongly model-dependent, with detection scaling with backbone model strength.",
+      "category": "experimental_result",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 4.3 (Table 1)",
+          "text": "Knowledge Error F1: DeepSeek-V4-Pro: 65.1, MiniMax-M2.7: 47.6, Qwen3.5-27B: 50.0, Gemma-4-26B-A4B: 46.7, Qwen3-32B: 39.0. Logical Error F1: DeepSeek-V4-Pro: 60.3, MiniMax-M2.7: 55.1, Qwen3.5-27B: 45.0, Gemma-4-26B-A4B: 54.0, Qwen3-32B: 34.6.",
+          "section": "4.3 Main Results",
+          "type": "numerical_data"
+        },
+        {
+          "source": "Section 4.3",
+          "text": "Knowledge Error and Logical Error detection are strongly model-dependent, with F1 scores as low as 39.0 and 34.6 on Qwen3-32B, yet recovering notably on stronger models, suggesting that diagnosing deeper reasoning failures relies heavily on the model's internal reasoning capacity.",
+          "section": "4.3 Main Results",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C10",
+      "claim": "The Hierarchical Visualization module is consistently robust across model scales, maintaining stable NTA (~75.0) and GES (~69.7) scores.",
+      "category": "experimental_result",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 4.3 (Table 1)",
+          "text": "NTA scores: 79.5 (DeepSeek-V4-Pro), 73.0 (MiniMax-M2.7), 77.4 (Qwen3.5-27B), 70.9 (Gemma-4-26B-A4B), 74.0 (Qwen3-32B). GES scores: 72.3 (DeepSeek-V4-Pro), 69.0 (MiniMax-M2.7), 70.8 (Qwen3.5-27B), 68.2 (Gemma-4-26B-A4B), 68.0 (Qwen3-32B).",
+          "section": "4.3 Main Results",
+          "type": "numerical_data"
+        },
+        {
+          "source": "Section 4.3",
+          "text": "REASONINGLENS's Hierarchical Visualization module proves consistently robust across model scales, maintaining stable NTA and GES scores of 75.0 and 69.7 on average despite substantial variation in overall diagnostic F1.",
+          "section": "4.3 Main Results",
+          "type": "direct_quote"
+        }
+      ]
+    },
+    {
+      "claim_id": "C11",
+      "claim": "LENSBENCH provides high-quality gold annotations through rigorous human verification with explicit criteria.",
+      "category": "benchmark_claim",
+      "confidence": "medium",
+      "evidence": [
+        {
+          "source": "Section 4.1 & Appendix B",
+          "text": "We manually review all candidate instances, discarding those with incoherent rewrites, ambiguous failures, or unreliable annotations, resulting 130 verified examples with gold annotations for both evaluation dimensions.",
+          "section": "4.1 Evaluation Dataset Construction",
+          "type": "direct_quote"
+        },
+        {
+          "source": "Appendix B",
+          "text": "Labels were accepted only when three conditions held: (1) coherent span with preserved local notation, no surface cues exposing injection; (2) error unambiguously satisfied exactly one category; (3) resulting label composition was informative and non-redundant.",
+          "section": "B. Human Verification Protocol",
+          "type": "specific_detail"
+        },
+        {
+          "source": "Appendix B",
+          "text": "Structure labels were accepted under three conditions: (1) non-overlapping nodes with consistent section assignments; (2) each node assigned a defensible functional type; (3) each edge reflected a discourse relation grounded in the text.",
+          "section": "B. Human Verification Protocol",
+          "type": "specific_detail"
+        }
+      ]
+    },
+    {
+      "claim_id": "C12",
+      "claim": "ReasoningLens currently focuses on static CoT traces and cannot handle dynamic, multi-step agentic interactions.",
+      "category": "limitation",
+      "confidence": "high",
+      "evidence": [
+        {
+          "source": "Section 6 (Limitations)",
+          "text": "It currently focuses primarily on static chain-of-thought traces rather than dynamic, multi-step agentic interactions.",
+          "section": "6. Limitations",
+          "type": "direct_quote"
+        }
+      ]
+    }
+  ]
+}

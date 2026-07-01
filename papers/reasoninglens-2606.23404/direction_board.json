@@ -1,0 +1,108 @@
+{
+  "paper": "ReasoningLens: Hierarchical Visualization and Diagnostic Auditing for Large Reasoning Models",
+  "arxiv_id": "2606.23404",
+  "slug": "reasoninglens",
+  "generated_at": "2026-06-30T17:17:00Z",
+  "seeds": [
+    {
+      "rank": 1,
+      "name": "Agentic Trajectory Extension for Plan-Act-Observe Cycles",
+      "type": "extension",
+      "description": "Extend ReasoningLens beyond static CoT to handle multi-step agentic interactions. The Plan-Act-Observe cycle introduces new behaviors (tool selection, observation interpretation, plan revision) that require extensions to both the behavior taxonomy and the error taxonomy. This is explicitly acknowledged as future work by the authors.",
+      "rationale": "LRMs are increasingly deployed as agents; static trace analysis is insufficient. The authors explicitly prioritize this. New taxonomies for action execution failures, observation misinterpretation, and plan revision cycles would open a major research direction.",
+      "feasibility": "high",
+      "impact": "high",
+      "source": "Section 6 (Limitations) — explicit future work"
+    },
+    {
+      "rank": 2,
+      "name": "Modular Plugin Ecosystem for Process-Based Training Supervision",
+      "type": "infrastructure",
+      "description": "Evolve ReasoningLens from a monolithic pipeline into a modular plugin ecosystem that can be integrated into training pipelines for process-based supervision (reward modeling, RL with process rewards, process-supervised fine-tuning).",
+      "rationale": "Current system is monolithic; plugin architecture would allow research groups to swap visualization, diagnosis, or profiling modules independently. Direct integration with training pipelines would enable online, during-training error detection rather than post-hoc analysis.",
+      "feasibility": "medium",
+      "impact": "high",
+      "source": "Section 6 (Limitations) — explicit future work"
+    },
+    {
+      "rank": 3,
+      "name": "Scaled Benchmark Construction (LENSBENCH++)",
+      "type": "resource",
+      "description": "Expand LENSBENCH from 130 to 500+ instances with broader coverage: more diverse domains (law, medicine, science), natural (non-injected) errors, multi-model annotation, and harder structural cases.",
+      "rationale": "Current N=130 limits statistical power and may not capture the full diversity of reasoning failures. A larger benchmark with natural errors would provide a more robust evaluation foundation and could become a standard evaluation suite for reasoning transparency.",
+      "feasibility": "medium",
+      "impact": "high",
+      "source": "Inferred from benchmark evaluation limitations"
+    },
+    {
+      "rank": 4,
+      "name": "Systemic Profiling Validation and Cross-Model Comparison Framework",
+      "type": "experimental",
+      "description": "Design and run experiments validating the Systemic Profiling module's three-axis representation (exploration habits, verification reliability, stability bottlenecks) across multiple LRMs. Identify model-specific 'signature' profiles and correlate with downstream task performance.",
+      "rationale": "The Systemic Profiling module is described in detail but has zero experimental validation in the current paper. Validating that the three-axis representation captures meaningful model differences would be a significant contribution to model comparison methodology.",
+      "feasibility": "high",
+      "impact": "high",
+      "source": "Inferred — profiling module lacks experimental validation"
+    },
+    {
+      "rank": 5,
+      "name": "Real-Time Reasoning Monitoring and Guardrailing",
+      "type": "application",
+      "description": "Deploy ReasoningLENS analysis during inference for real-time monitoring: detect unsafe reasoning trajectories mid-generation, trigger early stopping for overthinking, and flag knowledge errors as they emerge.",
+      "rationale": "The diagnostic framework is currently post-hoc. Real-time application would enable runtime guardrailing, which is crucial for deployment safety. Overthinking detection alone could reduce inference costs significantly.",
+      "feasibility": "medium",
+      "impact": "high",
+      "source": "Inferred — practical extension of diagnostic capability"
+    },
+    {
+      "rank": 6,
+      "name": "Ablation Studies on Agentic Diagnosis Components",
+      "type": "experimental",
+      "description": "Design systematic ablation experiments to isolate the contribution of each module in the multi-agent framework: Memory (compression vs. no compression), Verification (tool-augmented vs. pure LLM), and Suggestion (curated repository vs. zero-shot).",
+      "rationale": "The paper does not deconstruct which module contributes most to diagnostic accuracy. Tool-augmented verification, in particular, is a strong claim that deserves isolated validation. Understanding module contributions would guide optimization.",
+      "feasibility": "high",
+      "impact": "medium",
+      "source": "Inferred — missing ablation analysis"
+    },
+    {
+      "rank": 7,
+      "name": "Cross-Lingual and Multimodal Reasoning Analysis",
+      "type": "extension",
+      "description": "Extend the behavior taxonomy, error taxonomy, and planning unit extraction to support non-English reasoning traces (Chinese, Arabic, etc.) and multimodal inputs (text+code+vision).",
+      "rationale": "Current taxonomy and lexical cues are English-centric. As LRMs operate multilingually and multimodally, a generalized framework is needed. Lexical cue patterns likely differ significantly across languages.",
+      "feasibility": "low",
+      "impact": "medium",
+      "source": "Inferred — current scope is English text-only"
+    },
+    {
+      "rank": 8,
+      "name": "Causal Intervention for Reasoning Path Correction",
+      "type": "method",
+      "description": "Move beyond 'detect and suggest fixes' to actually intervening in the reasoning process: identifying the minimal edit to an erroneous reasoning path that would produce a correct outcome (e.g., backtrack to the right point and continue from there).",
+      "rationale": "ReasoningLens detects errors and suggests fixes externally. True reasoning repair requires understanding which reasoning steps are causally responsible for the final error, enabling surgical correction rather than full regeneration.",
+      "feasibility": "low",
+      "impact": "high",
+      "source": "Inferred — natural next step beyond diagnosis"
+    },
+    {
+      "rank": 9,
+      "name": "Benchmark for Naturally Occurring vs. Injected Error Detection",
+      "type": "experimental",
+      "description": "Systematically compare diagnostic performance on injected errors (LENSBENCH) vs. naturally occurring errors from model evaluation runs. Characterize distributional differences and diagnostic biases.",
+      "rationale": "The paper acknowledges injected errors may differ from natural ones. Understanding this gap is important for practical deployment validity. If injected errors are systematically easier/harder, benchmark conclusions may mislead.",
+      "feasibility": "medium",
+      "impact": "medium",
+      "source": "Inferred — acknowledged limitation"
+    },
+    {
+      "rank": 10,
+      "name": "Adversarial Robustness of Reasoning Diagnostic Frameworks",
+      "type": "safety",
+      "description": "Study whether LRMs can produce CoT traces that deliberately evade error detection by ReasoningLens (e.g., inserting misleading lexical cues, mimicking correct reasoning patterns while hiding errors). Evaluate diagnostic system's adversarial robustness.",
+      "rationale": "As diagnostic tools for LRMs become standard, there is a natural adversarial incentive to produce 'audit-evading' reasoning. Understanding vulnerabilities in current taxonomy-based detection is critical for safety.",
+      "feasibility": "low",
+      "impact": "high",
+      "source": "Inferred — safety-oriented research direction"
+    }
+  ]
+}

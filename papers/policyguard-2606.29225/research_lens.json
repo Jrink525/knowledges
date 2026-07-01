@@ -1,0 +1,127 @@
+{
+  "paper": "POLICYGUARD: A Dialogue-Grounded Sub-Agent Verifier for Policy Adherence in LLM Agents",
+  "arxiv_id": "2606.29225",
+  "manifest_version": "1.0",
+  "research_equation": {
+    "target": "Achieve reliable policy adherence for LLM agents executing customer-facing tool calls",
+    "formulation": "Given a company policy P (natural language document), an agent A with dialogue history H executing mutating tool call T, ensure that T is blocked if any procedural precondition in P is unmet, OR passed with confidence that all preconditions are satisfied.",
+    "key_tension": "Prior work treats policy adherence as a safeguarding problem (argument-level checks on tool calls). However, ~67% of real policy requirements are process-level (dialogue-dependent), requiring conversation-awareness, self-reasoning over NL policy text, and actionable remediation — three capabilities no prior system combines."
+  },
+  "problem_decomposition": {
+    "core_challenge": {
+      "name": "Process-level policy verification",
+      "description": "Company policies require verifying speech acts (user consent, identity confirmation, insurance offer/response) and prior read-only tool results — predicates over open-ended dialogue, not tool arguments.",
+      "difficulty": "Cannot be solved by argument-level precompiled predicates; requires natural language understanding of dialogue context."
+    },
+    "sub_challenges": [
+      {
+        "id": "SC1",
+        "name": "Conversation-awareness",
+        "description": "The verifier must have access to the full agent-user dialogue, not just the current tool call's arguments. Prior argument-level guards (TOOLGUARD, SOLVER-AIDED) structurally cannot access chat_history.",
+        "module_in_paper": "Verifier prompt includes formatted message history; read-only calls bypass verifier, mutating calls evaluated with full dialogue context.",
+        "evaluation": "PG-RAW-TRAJ ablation: stripping dialogue collapses Mut PASS1 from 0.260 to 0.000 — causal proof that dialogue is necessary."
+      },
+      {
+        "id": "SC2",
+        "name": "Self-reasoning over NL policy",
+        "description": "The verifier must read and reason over the raw natural-language policy document in context, rather than relying on precompiled predicates, keyword lists, or DSL translations.",
+        "module_in_paper": "Verifier prompt includes raw policy text as authoritative source; per-tool YAML checklist is advisory. Two key instructions enforce self-reasoning: 'Only trust values confirmed by tool results' and 'If a required action was never performed, treat it as NOT MET.'",
+        "evaluation": "PG-CHECKLIST-ONLY ablation: stripping raw policy raises block rate by 16 pp and drops Mut PASS1 by 15.4 pp — policy text provides real augmentation."
+      },
+      {
+        "id": "SC3",
+        "name": "Behavior-driving remediation",
+        "description": "A block alone is insufficient — the verifier must provide conversation-specific feedback that tells the agent what is missing and what to do next, enabling recovery within the same trial.",
+        "module_in_paper": "On BLOCK, verifier returns 1-3 sentence AGENT_MESSAGE grounded in the conversation (e.g., 'offer insurance, then ask the user to confirm the full booking summary'). Orchestrator pops the assistant turn and routes a ToolMessage(error) with remediation back to agent.",
+        "evaluation": "Two mechanisms compose: per-trial lift (remediation recovers same trial) and cross-trial consistency (same checks triggered reliably). Remediation typically resolves in a single corrective turn (Table 8)."
+      },
+      {
+        "id": "SC4",
+        "name": "Checklist generation fidelity",
+        "description": "Converting raw policy into structured per-tool checklists without human authoring, minimizing hallucination/omission (~5-10% even with reviewer pass).",
+        "module_in_paper": "4-step LLM pipeline: (1) tool classification, (2) per-tool YAML, (3) general rules, (4) reviewer pass. GPT 5.4 generates once, reused across vendors.",
+        "evaluation": "Reviewer catch rate ~5-10%. Gemini 2.5 Pro reads checklist more literally, costing Mut PASS4 — suggesting per-agent regeneration would close the gap."
+      },
+      {
+        "id": "SC5",
+        "name": "Cost-efficient gating",
+        "description": "Verifier calls add compute cost and latency. Must minimize overhead while maintaining coverage. Only mutating tool calls should trigger verification; read-only calls bypass.",
+        "module_in_paper": "Read-only calls bypass verifier (zero cost). Mini verifier ablation (GPT 5.4-mini) achieves ~13% cost saving with only -6 pp PASS4 drop. Total measured spend ~$680 for all experiments.",
+        "evaluation": "Verifier task is structurally lighter than agent task; tolerates substrate downgrade well. Overhead vs. baseline: $0.35-$0.80 per trial."
+      },
+      {
+        "id": "SC6",
+        "name": "Generalization across agent vendors",
+        "description": "The verifier must work across different frontier LLM agents (GPT, Claude, Gemini) without per-vendor tuning of the policy specification.",
+        "module_in_paper": "Single checklist (GPT 5.4-generated) reused across all three agents. Paired-verifier protocol isolates method contribution from substrate strength.",
+        "evaluation": "PG-CHECKLIST lifts PASS4 on all three vendors. However, Gemini reads checklist more literally. Per-agent regeneration likely closes the gap."
+      }
+    ]
+  },
+  "challenge_to_module_map": [
+    {
+      "sub_challenge_id": "SC1",
+      "primary_modules": ["Verifier prompt design (formatted_history)", "Orchestrator monkey-patch", "PG-RAW-TRAJ ablation protocol"],
+      "experiments": ["Table 3: Dialogue ablation (PG-RAW vs PG-RAW-TRAJ)"],
+      "key_result": "MUT PASS1 collapse 0.260 → 0.000; dialogue is causal"
+    },
+    {
+      "sub_challenge_id": "SC2",
+      "primary_modules": ["Verifier prompt (authoritative raw policy text)", "Advisory checklist regime", "Prompt instructions forcing positive evidence"],
+      "experiments": ["Table 4: Policy-text ablation (PG-CHECKLIST vs PG-CHECKLIST-ONLY)"],
+      "key_result": "+15.4 pp Mut PASS1, -16.0 pp Blk% from adding raw policy"
+    },
+    {
+      "sub_challenge_id": "SC3",
+      "primary_modules": ["AGENT_MESSAGE remediation output", "Orchestrator block handling (pop + ToolMessage error)", "Two-mechanism decomposition"],
+      "experiments": ["Table 8: Trajectory cost", "Table 9: Near-miss rate", "Figure 3: PASSk decomposition"],
+      "key_result": "Remediation resolves in 1 turn; NMR below baseline on all agents"
+    },
+    {
+      "sub_challenge_id": "SC4",
+      "primary_modules": ["4-step LLM pipeline (tool class → YAML → general rules → reviewer)", "Fixed GPT 5.4 generator"],
+      "experiments": ["Table 2 main results (checklist reused across vendors)", "Gemini literal-read gap"],
+      "key_result": "~5-10% hallucination/omission caught by reviewer; cross-vendor gap suggests per-agent regeneration"
+    },
+    {
+      "sub_challenge_id": "SC5",
+      "primary_modules": ["Read-only bypass", "Verifier cost knob (mini verifier)", "Orchestrator gating architecture"],
+      "experiments": ["Table 5: Verifier cost knob", "Table 6: Weak agent", "Appendix M: Measured cost"],
+      "key_result": "$0.35-$0.80 overhead/trial; mini verifier still +6 pp PASS4"
+    },
+    {
+      "sub_challenge_id": "SC6",
+      "primary_modules": ["Paired-verifier protocol", "Fixed checklist (GPT 5.4 across all vendors)", "Cross-vendor comparison framework"],
+      "experiments": ["Table 2: Three vendor main results", "Appendix F: PASSk per vendor"],
+      "key_result": "Lifts all three; Gemini gap suggests regeneration improvement"
+    }
+  ],
+  "research_lens_analysis": {
+    "paradigm_shift_claimed": "From safeguarding (argument-level, adversarial assumption) to policy adherence (process-level, honest-party assumption). The paper argues this is a distinct problem class requiring fundamentally different capabilities.",
+    "boundary_conditions": [
+      "Evaluated only on τ²-BENCH airline (50 tasks) — the only domain with proper written policy + multi-turn dialogue prerequisites",
+      "Honest-user assumption: no adversarial user or agent (though adversarial robustness probed as a bonus)",
+      "English-language, customer-service domain (generalization to clinical/legal/NL-other unstudied)",
+      "Mutating tool calls only; read-only calls and verbal commitments not gated",
+      "LLM-based — probabilistic, not formally provable"
+    ],
+    "key_design_tradeoffs": [
+      {
+        "tension": "Paired verifier (same vendor/tier) vs. independent verifier",
+        "choice": "Paired protocol to isolate method contribution from substrate strength. Accepts cross-vendor attribution confidence but doesn't test heterogeneous setups."
+      },
+      {
+        "tension": "Advisory checklist + raw policy vs. strict checklist-only",
+        "choice": "Advisory regime (PG-CHECKLIST) chosen as headline — achieves best balance of PV recall and low block rate at the cost of not forcing strict compliance."
+      },
+      {
+        "tension": "Pre-execution gating on mutating calls only vs. per-turn or verbal-commitment gating",
+        "choice": "Mutating-only gate minimizes cost and latency but leaves verbal commitments unmonitored."
+      },
+      {
+        "tension": "Single checklist generated once vs. per-vendor regeneration",
+        "choice": "Fixed substrate for experimental attribution; accepts a measurable cost on Gemini 2.5 Pro Mut PASS4."
+      }
+    ]
+  }
+}

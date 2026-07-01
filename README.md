@@ -388,6 +388,9 @@
 ### papers/coding-agents-misalignment-2605.29442/ (`papers/coding-agents-misalignment-2605.29442`)
   - `papers/coding-agents-misalignment-2605.29442/report.md`
 
+### papers/cognitive-episodes-in-llm-reasoning-traces-2606.28186/ (`papers/cognitive-episodes-in-llm-reasoning-traces-2606.28186`)
+  - `papers/cognitive-episodes-in-llm-reasoning-traces-2606.28186/report.md`
+
 ### papers/connect-the-dots-2606.20002/ (`papers/connect-the-dots-2606.20002`)
   - `papers/connect-the-dots-2606.20002/report.md`
 
@@ -446,8 +449,14 @@
 ### papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/ (`papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827`)
   - `papers/no-resource-no-benchmarks-no-problem-evaluating-and-improving-llms-for-code-generation-in-no-resource-languages-2606.16827/report.md`
 
+### papers/policyguard-2606.29225/ (`papers/policyguard-2606.29225`)
+  - `papers/policyguard-2606.29225/report.md`
+
 ### papers/re-centering-humans-in-llm-personalization-2606.06614/ (`papers/re-centering-humans-in-llm-personalization-2606.06614`)
   - `papers/re-centering-humans-in-llm-personalization-2606.06614/report.md`
+
+### papers/reasoninglens-2606.23404/ (`papers/reasoninglens-2606.23404`)
+  - `papers/reasoninglens-2606.23404/report.md`
 
 ### papers/reliability-without-validity-2606.19544/ (`papers/reliability-without-validity-2606.19544`)
   - `papers/reliability-without-validity-2606.19544/deep-read.md`
@@ -522,7 +531,7 @@
 
 ---
 
-总计 **1303** 篇知识文档
+总计 **1307** 篇知识文档
 
 ## 🤖 分类说明
 
@@ -534,5 +543,5 @@
 4. 标题关键词额外加分（+5）
 5. 得分最高者胜出
 
-_[自动生成于 2026-06-30 16:04 UTC]_
+_[自动生成于 2026-07-01 16:14 UTC]_
 

@@ -1,0 +1,118 @@
+{
+  "paper": "ReasoningLens: Hierarchical Visualization and Diagnostic Auditing for Large Reasoning Models",
+  "arxiv_id": "2606.23404",
+  "slug": "reasoninglens",
+  "generated_at": "2026-06-30T17:17:00Z",
+  "research_equation": {
+    "problem": "As LRMs generate increasingly long CoT traces (tens of thousands of tokens), critical logic is buried under vast procedural text, making manual inspection, error diagnosis, and safety assurance prohibitively difficult.",
+    "approach": "Taxonomy-guided hierarchical parsing of reasoning traces + multi-agent automated error detection with tool-augmented verification + cross-trajectory systemic profiling to uncover model-level blind spots.",
+    "validation": "LENSBENCH benchmark of 130 long-CoT instances with dual gold annotations (structural + error) evaluated across 5 backbone models (DeepSeek-V4-Pro, MiniMax-M2.7, Qwen3.5-27B, Gemma-4-26B-A4B, Qwen3-32B).",
+    "output": "An open-source framework that transforms opaque reasoning walls-of-text into structured, auditable, and actionable diagnostic insights.",
+    "equation_string": "TransparencyBurden(LRM_CoT) → TaxonomyGuidedParsing(+LexicalCues) → HierarchicalGraph(Exploration⨁Exploitation) → MultiAgentDiagnosis(Memory⊗Verification⊗Suggestion) → SystemicProfile(ExplorationHabits×VerificationReliability×StabilityBottlenecks) → ActionableInsights"
+  },
+  "challenge_to_module_map": [
+    {
+      "challenge": "Long CoT traces are unstructured and human-unreadable at scale",
+      "module": "Hierarchical Visualization",
+      "mechanism": "Planning unit extraction via lexical cues → exploration-level macro-graph → exploitation-level micro-subgraphs",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Reasoning errors are implicit and obscured by verbosity",
+      "module": "Agentic Diagnosis — Memory Module",
+      "mechanism": "Incremental CoT inspection through memory compression for granular localization",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Internal ambiguity in CoT claims cannot be resolved by the model alone",
+      "module": "Agentic Diagnosis — Verification Module",
+      "mechanism": "External tool invocations (code executors, calculators, knowledge bases) for precise verification",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Diagnosis without remediation is not actionable",
+      "module": "Agentic Diagnosis — Suggestion Module",
+      "mechanism": "Curated repository mapping error types to training-free and post-training mitigation strategies",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Single-trace analysis misses model-level recurring weaknesses",
+      "module": "Systemic Profiling",
+      "mechanism": "Cross-trajectory shared representation → semantic deduplication → three-axis behavioral profile",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Existing error taxonomies are fragmented (math/coding-only)",
+      "module": "Unified Error Taxonomy",
+      "mechanism": "Five-category synthesis: Overthinking, Safety, Knowledge Error, Logical Error, Formal Error",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "No unified benchmark exists for long CoT structure + error diagnosis",
+      "module": "LENSBENCH",
+      "mechanism": "130 instances with controlled error injection and dual gold annotations (structure + errors)",
+      "address_level": "direct"
+    },
+    {
+      "challenge": "Existing visualization doesn't separate strategic and execution-level reasoning",
+      "module": "Two-Level Behavior Taxonomy",
+      "mechanism": "Exploration-level (decomposition, backtracking, validation) vs. Exploitation-level (knowledge retrieval, procedural execution, state assertion)",
+      "address_level": "direct"
+    }
+  ],
+  "key_insights": [
+    {
+      "insight": "Safety error detection is universally robust (F1≥89.9) because alignment training has effectively reinforced safety boundaries across all model scales and families.",
+      "evidence": "Table 1: Safety F1: 89.9 (Qwen3-32B) to 98.5 (DeepSeek-V4-Pro)",
+      "implication": "Safety alignment generalizes well; safety monitoring may not require the strongest backbone."
+    },
+    {
+      "insight": "Knowledge and Logical error diagnosis is a metacognitive task that scales with backbone model strength — only top-tier models can reliably diagnose deeper reasoning failures.",
+      "evidence": "Knowledge F1: 39.0→65.1; Logical F1: 34.6→60.3 across model spectrum",
+      "implication": "Self-diagnosis of reasoning quality demands reasoning capacity — weak models cannot reliably audit their own outputs."
+    },
+    {
+      "insight": "Hierarchical visualization decouples structural analysis from diagnostic capability — the visualization module is robust regardless of backbone (NTA/GES stable) while diagnosis varies widely.",
+      "evidence": "NTA 70.9–79.5 (range 8.6); GES 68.0–72.3 (range 4.3); vs Diagnostic F1 66.3–82.3 (range 16.0)",
+      "implication": "The design choice to convert long-context understanding into locally-scoped labeling successfully isolates structure recovery from backbone quality."
+    },
+    {
+      "insight": "The two-level taxonomy (exploration + exploitation) provides a cognitive-science-grounded abstraction bridge between high-level strategy and low-level execution.",
+      "evidence": "Design description; validated by stable structural reconstruction performance",
+      "implication": "This abstraction is general and could be applied to other domains requiring hierarchical process understanding."
+    }
+  ],
+  "research_gaps": [
+    {
+      "gap": "Systemic Profiling module lacks experimental validation — it is described but not evaluated.",
+      "severity": "high",
+      "suggestion": "Design experiments comparing profiling outputs (exploration habits, verification reliability, stability bottlenecks) across models to validate the three-axis representation."
+    },
+    {
+      "gap": "LENSBENCH uses GPT-5.4 for both annotation and error injection, potentially encoding systematic bias.",
+      "severity": "medium",
+      "suggestion": "Cross-annotate with multiple models (e.g., DeepSeek-V4, Claude) to measure annotation bias; or use human-generated errors."
+    },
+    {
+      "gap": "Benchmark size (N=130) is modest for 5 error types × 2 tasks.",
+      "severity": "medium",
+      "suggestion": "Expand LENSBENCH; consider community contributions or adversarial filtering for natural errors."
+    },
+    {
+      "gap": "Injected errors may not reflect natural error distributions or patterns.",
+      "severity": "medium",
+      "suggestion": "Collect naturally-occurring erroneous CoT traces from model evaluations; compare diagnostic performance on injected vs. natural errors."
+    },
+    {
+      "gap": "Framework only handles static CoT traces, not agentic Plan-Act-Observe cycles.",
+      "severity": "high (acknowledged)",
+      "suggestion": "Extend taxonomy to include action execution, observation interpretation, and plan revision behaviors."
+    },
+    {
+      "gap": "No ablation studies on the three agentic modules (Memory vs. Verification vs. Suggestion contributions).",
+      "severity": "medium",
+      "suggestion": "Ablation: run diagnosis with/without tool verification; with/without memory compression to isolate each module's contribution."
+    }
+  ],
+  "problem_reconstruction": "The paper reframes the 'interpretability problem' for LRMs not as a visualization challenge (show more text) but as a **structural modeling + diagnostic intervention** challenge. The key insight is that the same long traces that burden human inspection contain latent structure (strategies, errors, topology) that can be recovered through purposeful taxonomies and parsed into actionable representations. This shift from 'passive rendering' to 'active diagnosis' represents a genuine paradigm advancement."
+}

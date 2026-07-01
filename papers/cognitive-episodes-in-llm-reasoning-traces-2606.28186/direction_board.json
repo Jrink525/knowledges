@@ -1,0 +1,132 @@
+[
+  {
+    "rank": 1,
+    "seed": "Cross-LRM Generalization of Episode Dynamics",
+    "question": "Do episode-dynamic signatures of difficulty (more Implement, more Analyze→Implement transitions) generalize across different LRM families?",
+    "hypothesis": "Episode-dynamic patterns are robust across LRMs with different training methods (RL-based like DeepSeek-R1, distillation-based like R1-Distill, supervised like GPT-5), but absolute feature values may shift due to differences in verbosity and trace organization.",
+    "minimal_viable_experiment": {
+      "design": "Collect reasoning traces for SAT Math items from 5+ LRMs (DeepSeek-R1, GPT-5, Claude-Reasoning, Gemini-Reasoning). Apply the same episode classifier and feature extraction. Train separate predictors for each LRM. Measure rank correlation of feature importance and directional effects across models.",
+      "expected_output": "Rank correlation >0.7 for feature importance and >0.6 for directional effects across models.",
+      "key_metric": "Spearman rank correlation of standardized average marginal effects across LRMs",
+      "data_needed": "SAT Math dataset (1,075 items) + traces from 5+ LRMs",
+      "effort": "Medium (3-5 LRM queries per item × LLM cost, analysis pipeline exists)"
+    }
+  },
+  {
+    "rank": 2,
+    "seed": "Reducing Computational Cost of Multi-Profile Aggregation",
+    "question": "Can we reduce the number of required traces per item while maintaining prediction quality?",
+    "hypothesis": "A single optimally-chosen student profile (e.g., 'medium') or a learned profile selection method may achieve comparable performance to full 8-trace aggregation.",
+    "minimal_viable_experiment": {
+      "design": "Systematic ablation of profile combinations. Test all 2^4 subsets of {direct, weak, medium, strong} profiles and measure performance on SAT Math. Identify minimal profile set achieving within 1% of full performance. Also test if profile-conditioned prompts can be consolidated into one 'multi-perspective' prompt.",
+      "expected_output": "2-3 profile combinations (e.g., direct+weak, or medium only) achieve >95% of full-8 performance at 25-50% cost.",
+      "key_metric": "Relative accuracy vs. full 8-trace aggregation, cost per item",
+      "data_needed": "Existing SAT Math trace data with all 4 profiles from both LRMs",
+      "effort": "Low (re-analysis of existing data)"
+    }
+  },
+  {
+    "rank": 3,
+    "seed": "Causal Relationship Between Episode Dynamics and Difficulty",
+    "question": "Do episode-dynamic patterns cause difficulty, or are they merely correlated epiphenomena?",
+    "hypothesis": "Manipulating an item to induce more Implement or more Analyze→Implement transitions (e.g., by adding intermediate calculations, removing scaffolding) causally increases its empirical human difficulty.",
+    "minimal_viable_experiment": {
+      "design": "Select 30 SAT Math items. For each item, create a 'harder' variant by removing intermediate cues, and an 'easier' variant by adding scaffolding. Generate LRM traces for original and variants. Verify directional changes in episode features. Conduct small-scale human calibration study (N=50/condition) to confirm empirical difficulty changes match predicted direction.",
+      "expected_output": "Episode feature deltas between variants predict human difficulty deltas with ρ > 0.5.",
+      "key_metric": "Correlation between Δ(Implement ratio) and Δ(human difficulty), human rating agreement",
+      "data_needed": "30 triplets of items (easy/original/hard variants) + human calibration study",
+      "effort": "High (requires item design expertise and human subjects)"
+    }
+  },
+  {
+    "rank": 4,
+    "seed": "From Prediction to Item Generation: Episode-Aware Test Design",
+    "question": "Can episode-dynamic targets be used as design specifications for generating or selecting test items with desired difficulty?",
+    "hypothesis": "Given a target difficulty level, we can specify desired episode ranges (e.g., Implement count > 30%, Analyze→Implement > 5% of transitions) and either select existing items meeting those targets or generate new items via LLM with those episode constraints.",
+    "minimal_viable_experiment": {
+      "design": "Build an episode-property lookup table from existing SAT Math corpus (N=1075). For each item, store its (difficulty, {feature vector}) pair. Given a target difficulty level, retrieve items whose predicted features fall within the desired range. Validate that retrieved items show empirical difficulty consistent with targets. Extend to LLM-based item generation conditioned on episode feature targets.",
+      "expected_output": "Top-5 retrieval precision >0.8 for matching distance from target features to target difficulty.",
+      "key_metric": "Retrieval precision, KL divergence between target and retrieved difficulty distributions",
+      "data_needed": "Existing item corpus + feature database; item generation API access",
+      "effort": "Medium (mostly computational, some human validation)"
+    }
+  },
+  {
+    "rank": 5,
+    "seed": "Domain-Specific Episode Taxonomies",
+    "question": "Does Schoenfeld's taxonomy (designed for mathematical problem solving) need adaptation for non-mathematical domains like medical diagnosis or reading comprehension?",
+    "hypothesis": "Medical and reading items may require new episode types (e.g., 'Recall' for factual retrieval, 'Infer' for passage inference) or modified transition dynamics to capture domain-specific reasoning patterns.",
+    "minimal_viable_experiment": {
+      "design": "Collect 200 reasoning traces from USMLE and Cambridge items. Have domain experts (medical faculty, language testing specialists) annotate 50 traces each using an open-coding approach. Compare emergent episode types with Schoenfeld's 8-way taxonomy. Quantify coverage gaps. Train a domain-adapted episode classifier.",
+      "expected_output": "1-3 new episode types identified per domain (e.g., Recall for medical; Infer/Synthesize for reading). Coverage of adapted taxonomy >90% of annotated sentences.",
+      "key_metric": "Inter-annotator agreement (Cohen's κ), taxonomic coverage percentage",
+      "data_needed": "200 traces from USMLE/Cambridge + expert annotations",
+      "effort": "High (requires domain expert annotators)"
+    }
+  },
+  {
+    "rank": 6,
+    "seed": "Episode Dynamics as Item Discrimination Predictor",
+    "question": "Do episode-dynamic features predict not just difficulty but also item discrimination (the ability to differentiate between high- and low-ability examinees)?",
+    "hypothesis": "Items with high discrimination show distinct episode patterns: stable reasoning processes with clear implementation-verification cycles across solver profiles, while low-discrimination items show inconsistent or truncated processes.",
+    "minimal_viable_experiment": {
+      "design": "Collect SAT Math items with known IRT discrimination parameters. Use existing episode features to train a discrimination prediction model. Compare against text-only baselines (SLM). Analyze which episode features correlate with high discrimination.",
+      "expected_output": "Epi2Diff-based discrimination prediction achieves R² > 0.15, outperforming text-only baseline.",
+      "key_metric": "R² of discrimination prediction, top-3 episode features for discrimination",
+      "data_needed": "SAT Math items with IRT a-parameters (discrimination) + existing episode features",
+      "effort": "Low (requires discrimination labels, which may need IRT calibration from existing data)"
+    }
+  },
+  {
+    "rank": 7,
+    "seed": "Fine-Grained Episode Labeling with Reasoning-Aware Models",
+    "question": "Can a reasoning-aware model (e.g., an LRM itself) label its own episodes more accurately than a RoBERTa classifier?",
+    "hypothesis": "An LRM prompted to segment and label its own reasoning trace into episodes achieves higher accuracy than the cross-architecture RoBERTa classifier (current 0.799 ACC), because it has access to internal state and context.",
+    "minimal_viable_experiment": {
+      "design": "Prompt QwQ-32B and Qwen3-32B to self-annotate their own reasoning traces with episode labels. Compare against the human-verified gold set (7,067 sentences). Also test cross-annotation (QwQ annotates Qwen traces, etc.). Measure accuracy and computational cost trade-off.",
+      "expected_output": "Self-annotation accuracy >0.85, cross-annotation >0.80, but at 10-100x computational cost vs. RoBERTa.",
+      "key_metric": "Self-annotation accuracy vs. gold standard, inference cost per trace",
+      "data_needed": "Existing gold-annotated ThinkARM sentence set + LRM API access",
+      "effort": "Medium (LRM queries + accuracy evaluation)"
+    }
+  },
+  {
+    "rank": 8,
+    "seed": "Temporal Structure Beyond Bigrams: Hierarchical Episode Analysis",
+    "question": "Do reasoning traces exhibit hierarchical episode structure (e.g., sub-routines or nested cycles) that bigram transitions miss?",
+    "hypothesis": "Hard items may have nested substructures: [Plan → (Implement → Verify)^n → Answer]. Uncovering these would reveal higher-level problem-solving strategies not captured by 8×8 adjacency matrices.",
+    "minimal_viable_experiment": {
+      "design": "Apply pattern-mining (e.g., sequential pattern mining, grammar induction) to collapsed episode sequences from SAT Math. Search for recurring multi-step patterns (3-8 episode length). Correlate pattern occurrence with difficulty. Compare against bigram-only representation.",
+      "expected_output": "5-10 recurring multi-episode patterns explain additional variance in difficulty beyond bigram features (ΔR² > 0.05).",
+      "key_metric": "Incremental R² of hierarchical patterns over bigram features",
+      "data_needed": "Existing episode-labeled SAT Math traces",
+      "effort": "Low-medium (computational analysis on existing data)"
+    }
+  },
+  {
+    "rank": 9,
+    "seed": "LRM Trace Diversity Across Item Formats and Modalities",
+    "question": "How do episode dynamics differ across item formats (multiple-choice vs. open-ended vs. fill-in-the-blank) and modalities (text-only vs. diagram-dependent vs. multi-modal)?",
+    "hypothesis": "Open-ended items induce longer Implement episodes but shorter Verify episodes than multiple-choice. Diagram-dependent items show more Read and Analyze episodes as the model processes visual information.",
+    "minimal_viable_experiment": {
+      "design": "Add 300 items across formats (100 MC, 100 open-ended, 100 diagram-dependent) from existing STEM assessments. Generate LRM traces. Compare episode distributions and transition patterns across formats using ANOVA or multi-level modeling.",
+      "expected_output": "Significant differences (p < 0.01) in Implement-to-Verify ratio between MC and open-ended items. Diagram items show 20%+ higher Analyze ratios.",
+      "key_metric": "Epsilon-squared effect size of format on episode distributions",
+      "data_needed": "300 items across formats + LRM traces",
+      "effort": "Medium (item collection + LRM queries + analysis)"
+    }
+  },
+  {
+    "rank": 10,
+    "seed": "Online Adaptation: Few-Shot Difficulty Calibration for New Exam Forms",
+    "question": "Can Epi2Diff be adapted to new exam forms with minimal labeled examples (e.g., 10-20 items)?",
+    "hypothesis": "The episode-induced process representation pre-trained on SAT Math provides a transferable feature space. A linear probe or lightweight fine-tune on 10-20 labeled items from a new form achieves competitive accuracy without full retraining.",
+    "minimal_viable_experiment": {
+      "design": "Simulate few-shot adaptation on Cambridge and USMLE. Train base predictor on SAT Math. Fine-tune on 10, 20, 50 items from target domain. Measure performance. Compare against (a) training from scratch on target data, (b) SLM fine-tuning on target data.",
+      "expected_output": "At N=20, few-shot adapted predictor achieves >90% of full-data Epi2Diff performance, exceeding both baselines.",
+      "key_metric": "RMSE at sample sizes N=10,20,50,100 vs. full-data upper bound",
+      "data_needed": "Existing cross-dataset Epi2Diff features + difficulty labels",
+      "effort": "Low (re-analysis of existing feature representations)"
+    }
+  }
+]

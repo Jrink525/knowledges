@@ -1,0 +1,57 @@
+{
+  "paper_id": "2606.28186",
+  "paper_title": "Cognitive Episodes in LLM Reasoning Traces Enable Interpretable Human Item Difficulty Prediction",
+  "slug": "cognitive-episodes-in-llm-reasoning-traces",
+  "research_equation": {
+    "problem": "Predicting human item difficulty from assessment items with interpretable process evidence",
+    "input": "Assessment item text + LRM reasoning traces (from QwQ-32B, Qwen3-32B under 4 solver profiles)",
+    "transformation": "Sentence-level episode profiling → Episode-induced process features (length, episode distribution, transition) + Sentence-BERT semantic embedding → XGBoost",
+    "output": "Difficulty label (Easy/Medium/Hard or continuous IRT b-parameter / p-value)",
+    "objective": "Minimize prediction error while providing interpretable evidence about the cognitive processes underlying difficulty"
+  },
+  "challenge_module_map": {
+    "C1: Costly human calibration": {
+      "challenge": "CTT/IRT requires extensive field testing with hundreds of examinees per item",
+      "module": "Epi2Diff pipeline as automated alternative using LRM-generated traces"
+    },
+    "C2: Text-only models miss process-level information": {
+      "challenge": "Existing text-based models predict difficulty from item text alone, ignoring how an item is solved",
+      "module": "Episode-induced process representation (83-dim) captures reasoning scale, effort allocation, and reasoning flow"
+    },
+    "C3: Raw reasoning traces are noisy and unstructured": {
+      "challenge": "LRM traces are long, redundant, and noisy; directly using them degrades performance",
+      "module": "Sentence-level episode classification (RoBERTa, 0.799 ACC) + compact feature extraction (length, episode distribution, transitions)"
+    },
+    "C4: LLM direct difficulty judgments are unreliable": {
+      "challenge": "LLMs show poor alignment with human difficulty; their difficulty estimates reflect model-centric rather than human-centric difficulty (Li et al., 2025a)",
+      "module": "Process-based approach: difficulty is inferred from reasoning trace dynamics rather than direct LLM rating"
+    },
+    "C5: Single LRM trace may be unrepresentative": {
+      "challenge": "A single reasoning trace may not capture the full difficulty spectrum due to stochasticity",
+      "module": "Multi-profile aggregation: average process features across weak/medium/strong simulated students + 2 LRM sources (8 traces per item)"
+    },
+    "C6: Episode labeling requires costly human annotation": {
+      "challenge": "Manual episode annotation at sentence level is labor-intensive",
+      "module": "RoBERTa automatic episode labeler trained on 231,913 GPT-5 annotated sentence–episode pairs with human-verified gold test set"
+    },
+    "C7: Trade-off between feature richness and prediction quality": {
+      "challenge": "Richer/higher-dimensional representations do not always improve difficulty prediction (Fulari & Rusert, 2024)",
+      "module": "Compact 83-dim feature set (3 length + 16 episode distribution + 64 transition) with XGBoost, validated via systematic feature ablation"
+    }
+  },
+  "design_principles": [
+    "Cognitive grounding: use Schoenfeld's Episode Theory as validated ontology for problem-solving stages",
+    "Process ≠ verbosity: explicitly model effort allocation and flow, not just length",
+    "Multiple perspectives: aggregate across solver profiles (weak/medium/strong) and LRM sources for robustness",
+    "Compactness: 83 feature dimensions avoid noise from high-dimensional raw traces",
+    "Complementarity: semantic embeddings + process features capture both 'what' and 'how' of item solving",
+    "Interpretability: each feature group (scale/allocation/flow) maps to an interpretable aspect of problem solving"
+  ],
+  "paper_schema": {
+    "arxiv_id": "2606.28186",
+    "venue": "arXiv preprint",
+    "date": "June 2026",
+    "code": "https://github.com/c-steve-wang/Epi2Diff",
+    "institutions": ["Virginia Tech", "University of Maryland", "MBZUAI", "University of Pittsburgh"]
+  }
+}
